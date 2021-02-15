@@ -1,0 +1,8 @@
+# VS and builds
+.vs/
+Build/
+*.user
+*.vcxproj
+*.filters
+*.sln
+

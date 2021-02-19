@@ -12,7 +12,7 @@ project "Sandbox"
     objdir (intermediate_dir)
 
     files { "Source/**.h", "Source/**.cpp" }
-    includedirs { "Source/" }    
+    includedirs { "Source/", "../Hermes/Source" }
     defines { "HERMES_BUILD_ENGINE", "HERMES_GAME_NAME=\"Sandbox\"" }
 
     filter "configurations:Debug"

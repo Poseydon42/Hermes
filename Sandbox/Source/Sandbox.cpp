@@ -2,9 +2,34 @@
 
 #include <windows.h>
 
-extern "C" _declspec(dllexport) void InitGame()
+#include "Core/Application/Application.h"
+
+class SandboxApp : public Hermes::IApplication
 {
-	OutputDebugStringA("Hello from game\n");
+public:
+	bool Init() override
+	{
+		OutputDebugString(TEXT("SandboxApp init\n"));
+
+		return true;
+	}
+
+	void Run(float Delta) override
+	{
+		
+	}
+
+	void Shutdown() override
+	{
+		OutputDebugString(TEXT("SandboxApp shutdown\n"));
+	}
+};
+
+extern "C" _declspec(dllexport) Hermes::IApplication* CreateApplicationInstance()
+{
+	auto App = new SandboxApp;
+
+	return App;
 }
 
 #endif

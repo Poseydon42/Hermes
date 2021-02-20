@@ -5,7 +5,7 @@
 
 namespace Hermes
 {
-	class ApplicationLoop
+	class HERMES_API ApplicationLoop
 	{
 	public:
 		ApplicationLoop(IApplication* App);

@@ -8,7 +8,7 @@ namespace Hermes
 	 * Instance of application that could be run by the engine
 	 * Each game module has to implement at least one child class of it and return it when CreateApplicationInstance() is called
 	 */
-	class IApplication
+	class HERMES_API IApplication
 	{
 	public:
 		/**

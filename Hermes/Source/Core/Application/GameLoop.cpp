@@ -1,9 +1,15 @@
 #include "GameLoop.h"
 
+#include "Core/Log/Logger.h"
+#include "Core/Log/DebugLogDevice.h"
+
 namespace Hermes
 {
 	ApplicationLoop::ApplicationLoop(IApplication* App)
 	{
+		Logger::SetLogLevel(LogLevel::Debug);
+		Logger::AttachLogDevice(new DebugLogDevice());
+		Logger::Debug(L"Initializing game loop");
 		Application = App;
 		App->Init();
 	}

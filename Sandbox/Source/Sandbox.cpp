@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include "Core/Core.h"
+#include "Platform/GenericPlatform/PlatformDebug.h"
 #include "Core/Application/Application.h"
 
 class SandboxApp : public Hermes::IApplication
@@ -10,8 +11,7 @@ class SandboxApp : public Hermes::IApplication
 public:
 	bool Init() override
 	{
-		OutputDebugString(TEXT("SandboxApp init\n"));
-
+		Hermes::PlatformDebug::PrintString(TEXT("Hello from SandboxApp::Init!\n"));
 		return true;
 	}
 

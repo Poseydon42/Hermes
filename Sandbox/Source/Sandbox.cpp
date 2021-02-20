@@ -2,6 +2,7 @@
 
 #include <windows.h>
 
+#include "Core/Core.h"
 #include "Core/Application/Application.h"
 
 class SandboxApp : public Hermes::IApplication

@@ -11,9 +11,11 @@ project "Sandbox"
     targetdir(build_dir)
     objdir (intermediate_dir)
 
+    dependson { "Hermes" }
+    libdirs { build_dir }
     files { "Source/**.h", "Source/**.cpp" }
     includedirs { "Source/", "../Hermes/Source" }
-    defines { "HERMES_BUILD_ENGINE", "HERMES_GAME_NAME=\"Sandbox\"" }
+    defines { "HERMES_BUILD_APPLICATION", "HERMES_GAME_NAME=\"Sandbox\"" }
 
     filter "configurations:Debug"
         defines { "HERMES_DEBUG" }
@@ -36,6 +38,8 @@ project "Sandbox"
         runtime "Release"
 
     filter "platforms:Windows"
+        -- FIXME : links option does not seem to work correctly when you're linking to executable project, so currently I'm using this workaround --
+        linkoptions { build_dir.."/Hermes.lib"}
         system "windows"
         defines { "HERMES_PLATFORM_WINDOWS" }
     filter "system:Windows"

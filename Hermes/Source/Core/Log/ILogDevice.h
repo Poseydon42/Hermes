@@ -14,6 +14,6 @@ namespace Hermes
 	public:
 		virtual void Write(String Text) = 0;
 
-		virtual void WriteLing(String Text) = 0;
+		virtual void WriteLine(String Text) = 0;
 	};
 }

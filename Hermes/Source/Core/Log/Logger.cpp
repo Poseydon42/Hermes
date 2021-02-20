@@ -1,5 +1,7 @@
 #include "Logger.h"
 
+#include "Core/Log/ILogDevice.h"
+
 namespace Hermes
 {
 	std::vector<ILogDevice*> Logger::LogDevices;
@@ -8,7 +10,7 @@ namespace Hermes
 
 	void Logger::LogImpl(LogLevel Level, const String& Text, va_list Args)
 	{
-		wchar_t Buffer[BufferSize];
+		wchar_t Buffer[BufferSize + 1];
 
 		vswprintf(Buffer, Text.c_str(), Args);
 
@@ -17,7 +19,7 @@ namespace Hermes
 
 		for (auto Device : LogDevices)
 		{
-			Device->WriteLine(Buffer);
+			Device->WriteLine(Level, Buffer);
 		}
 	}
 

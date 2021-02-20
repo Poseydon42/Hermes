@@ -4,7 +4,6 @@
 #include <varargs.h>
 
 #include "Core/Core.h"
-#include "Core/Log/ILogDevice.h"
 
 namespace Hermes
 {

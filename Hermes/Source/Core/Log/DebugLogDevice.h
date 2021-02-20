@@ -9,15 +9,31 @@ namespace Hermes
 	class DebugLogDevice : public ILogDevice
 	{
 	public:
-		void Write(String Text) override
+		inline DebugLogDevice(LogLevel InitialLogLevel = LogLevel::Trace) : CurrentLogLevel(InitialLogLevel) {}
+
+		inline void Write(LogLevel Level, String Text) override
 		{
-			PlatformDebug::PrintString(Text);
+			if (Level >= CurrentLogLevel)
+				PlatformDebug::PrintString(Text);
 		}
 
-
-		void WriteLine(String Text) override
+		inline void WriteLine(LogLevel Level, String Text) override
 		{
-			PlatformDebug::PrintString(Text + L"\n");
+			if (Level >= CurrentLogLevel)
+				PlatformDebug::PrintString(Text + L"\n");
 		}
+
+		inline LogLevel GetCurrentLogLevel() override
+		{
+			return CurrentLogLevel;
+		}
+
+		inline void SetCurrentLogLevel(LogLevel NewLevel) override
+		{
+			CurrentLogLevel = NewLevel;
+		}
+
+	private:
+		LogLevel CurrentLogLevel;
 	};
 }

@@ -66,6 +66,10 @@ namespace Hermes
 		 * %m - minutes
 		 * %s - seconds
 		 * %u - milliseconds
+		 * %Y - year in 4-digit format
+		 * %y - year in 2-digit format
+		 * %M - month in numeric format
+		 * %d - day in numeric format
 		 */
 		static void SetLogFormat(const String& NewFormat);
 

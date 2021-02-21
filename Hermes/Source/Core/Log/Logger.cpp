@@ -67,6 +67,10 @@ namespace Hermes
 				case L'm':
 				case L's':
 				case L'u':
+				case L'y':
+				case L'Y':
+				case L'M':
+				case L'd':
 				{
 					// Avoiding many calls to GetPlatformTime() as it may be very time consuming
 					PlatformTimestamp Time = PlatformTime::GetPlatformTime();
@@ -83,6 +87,18 @@ namespace Hermes
 						break;
 					case L'u':
 						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%03hu", Time.Milisecond);
+						break;
+					case L'y':
+						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Year % 1000);
+						break;
+					case L'Y':
+						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%04hu", Time.Year);
+						break;
+					case L'M':
+						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Month);
+						break;
+					case L'd':
+						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Day);
 						break;
 					}
 					break;

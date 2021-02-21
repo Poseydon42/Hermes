@@ -8,7 +8,7 @@ namespace Hermes
 	ApplicationLoop::ApplicationLoop(IApplication* App)
 	{
 		Logger::SetLogLevel(LogLevel::Debug);
-		Logger::SetLogFormat(L"[%h:%m:%s:%u][%l] %v");
+		Logger::SetLogFormat(L"[%Y-%M-%d %h:%m:%s:%u][%l] %v");
 		Logger::AttachLogDevice(new DebugLogDevice());
 		Logger::Debug(L"Initializing game loop");
 		Application = App;

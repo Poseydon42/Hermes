@@ -14,7 +14,7 @@ namespace Hermes
 
 	String Logger::CurrentFormat;
 
-	void Logger::LogImpl(LogLevel Level, const wchar_t* Text, va_list Args)
+	void Logger::LogImpl(LogLevel Level, const wchar_t* Filename, int32 Line, const wchar_t* Text, va_list Args)
 	{
 		wchar_t MessageBuffer[BufferSize + 1];
 		wchar_t FinalBuffer[BufferSize + 1];
@@ -23,14 +23,14 @@ namespace Hermes
 			return;
 
 		vswprintf(MessageBuffer, BufferSize + 1, Text, Args);
-		ApplyFormating(Level, FinalBuffer, BufferSize + 1, MessageBuffer);
+		ApplyFormating(Level, Filename, Line, FinalBuffer, BufferSize + 1, MessageBuffer);
 		for (auto Device : LogDevices)
 		{
 			Device->WriteLine(Level, FinalBuffer);
 		}
 	}
 
-	void Logger::ApplyFormating(LogLevel Level, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message)
+	void Logger::ApplyFormating(LogLevel Level, const wchar_t* Filename, int32 Line, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message)
 	{
 		memset(Buffer, 0, BufferCount * sizeof(Buffer[0]));
 		const wchar_t* s = CurrentFormat.c_str();
@@ -103,6 +103,12 @@ namespace Hermes
 					}
 					break;
 				}
+				case L'f':
+					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%s", Filename);
+					break;
+				case L'#':
+					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%d", Line);
+					break;
 				}
 			}
 			else
@@ -119,7 +125,15 @@ namespace Hermes
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(Level, Text, Args);
+		LogImpl(Level, L"", 0, Text, Args);
+		va_end(Args);
+	}
+
+	void Logger::LogWithFilename(LogLevel Level, const wchar_t* Filename, int32 Line, const wchar_t* Text, ...)
+	{
+		va_list Args;
+		va_start(Args, Text);
+		LogImpl(Level, Filename, Line, Text, Args);
 		va_end(Args);
 	}
 
@@ -127,7 +141,7 @@ namespace Hermes
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Trace, Text, Args);
+		LogImpl(LogLevel::Trace, L"", 0, Text, Args);
 		va_end(Args);
 	}
 
@@ -135,7 +149,7 @@ namespace Hermes
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Debug, Text, Args);
+		LogImpl(LogLevel::Debug, L"", 0, Text, Args);
 		va_end(Args);
 	}
 
@@ -143,7 +157,7 @@ namespace Hermes
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Warning, Text, Args);
+		LogImpl(LogLevel::Warning, L"", 0, Text, Args);
 		va_end(Args);
 	}
 
@@ -151,7 +165,7 @@ namespace Hermes
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Error, Text, Args);
+		LogImpl(LogLevel::Error, L"", 0, Text, Args);
 		va_end(Args);
 	}
 
@@ -159,7 +173,7 @@ namespace Hermes
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Fatal, Text, Args);
+		LogImpl(LogLevel::Fatal, L"", 0, Text, Args);
 		va_end(Args);
 	}
 

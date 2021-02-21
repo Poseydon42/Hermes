@@ -31,6 +31,8 @@ namespace Hermes
 		 */
 		static void Log(LogLevel CurrentLevel, const wchar_t* Text, ...);
 
+		static void LogWithFilename(LogLevel Level, const wchar_t* Filename, int32 Line, const wchar_t* Text, ...);
+
 		static void Trace(const wchar_t* Text, ...);
 
 		static void Debug(const wchar_t* Text, ...);
@@ -70,6 +72,8 @@ namespace Hermes
 		 * %y - year in 2-digit format
 		 * %M - month in numeric format
 		 * %d - day in numeric format
+		 * %f - file name
+		 * %# - line number
 		 */
 		static void SetLogFormat(const String& NewFormat);
 
@@ -79,9 +83,9 @@ namespace Hermes
 		 */
 		static const size_t BufferSize = 4095; // + 1 symbol for null terminator
 	private:
-		static void LogImpl(LogLevel CurrentLevel, const wchar_t* Text, va_list Args);
+		static void LogImpl(LogLevel CurrentLevel, const wchar_t* Filename, int32 Line, const wchar_t* Text, va_list Args);
 
-		static void ApplyFormating(LogLevel Level, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message);
+		static void ApplyFormating(LogLevel Level, const wchar_t* Filename, int32 Line, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message);
 
 		static std::vector<ILogDevice*> LogDevices;
 
@@ -91,8 +95,12 @@ namespace Hermes
 	};
 }
 
-#define HERMES_LOG_TRACE(Text, ...)   ::Hermes::Logger::Trace((Text), __VA_ARGS__)
-#define HERMES_LOG_DEBUG(Text, ...)   ::Hermes::Logger::Debug((Text), __VA_ARGS__)
-#define HERMES_LOG_WARNING(Text, ...) ::Hermes::Logger::Warning((Text), __VA_ARGS__)
-#define HERMES_LOG_ERROR(Text, ...)   ::Hermes::Logger::Error((Text), __VA_ARGS__)
-#define HERMES_LOG_FATAL(Text, ...)   ::Hermes::Logger::Fatal((Text), __VA_ARGS__)
+#define MAKE_WIDE1(x) L##x
+#define MAKE_WIDE2(x) MAKE_WIDE1(x)
+#define __WFILE__ MAKE_WIDE2(__FILE__)
+
+#define HERMES_LOG_TRACE(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Trace, __WFILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_DEBUG(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Debug, __WFILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_WARNING(Text, ...) ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Warning, __WFILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_ERROR(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Error, __WFILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_FATAL(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Fatal, __WFILE__, __LINE__, (Text), __VA_ARGS__)

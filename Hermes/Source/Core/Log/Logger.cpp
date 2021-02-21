@@ -22,21 +22,23 @@ namespace Hermes
 			return;
 
 		vswprintf(MessageBuffer, BufferSize + 1, Text, Args);
-		ApplyFormating(FinalBuffer, BufferSize + 1, MessageBuffer);
+		ApplyFormating(Level, FinalBuffer, BufferSize + 1, MessageBuffer);
 		for (auto Device : LogDevices)
 		{
 			Device->WriteLine(Level, FinalBuffer);
 		}
 	}
 
-	void Logger::ApplyFormating(wchar_t* Buffer, size_t BufferCount, const wchar_t* Message)
+	void Logger::ApplyFormating(LogLevel Level, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message)
 	{
 		memset(Buffer, 0, BufferCount * sizeof(Buffer[0]));
 		const wchar_t* s = CurrentFormat.c_str();
 		wchar_t* t = Buffer;
 		while (*s)
 		{
-			if ((size_t)(t - Buffer) >= BufferCount)
+			size_t SpaceLeft = BufferCount - (t - Buffer) - 1;
+			size_t SpaceTaken = 0;
+			if (SpaceLeft >= BufferCount)
 				return;
 			if (*s == L'%')
 			{
@@ -44,14 +46,26 @@ namespace Hermes
 				switch (*s)
 				{
 				case L'v': // Actual message
-					swprintf_s(t, BufferCount - (t - Buffer), L"%s", Message);
+					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%s", Message);
+					break;
+				case L's':
+					const wchar_t* Lookup[] = {
+						L"Trace",
+						L"Debug",
+						L"Warning",
+						L"Error",
+						L"Fatal"
+					};
+					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%s", Lookup[(size_t)Level]);
 					break;
 				}
 			}
 			else
 			{
-
+				*t = *s;
+				SpaceTaken = 1;
 			}
+			t += SpaceTaken;
 			s++;
 		}
 	}

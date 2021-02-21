@@ -61,7 +61,11 @@ namespace Hermes
 		/**
 		 * Opcodes:
 		 * %v - log message
-		 * %s - log level
+		 * %l - log level
+		 * %h - hours
+		 * %m - minutes
+		 * %s - seconds
+		 * %u - milliseconds
 		 */
 		static void SetLogFormat(const String& NewFormat);
 

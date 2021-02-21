@@ -4,6 +4,7 @@
 #include <cwchar>
 
 #include "Core/Log/ILogDevice.h"
+#include "Platform/GenericPlatform/PlatformTime.h"
 
 namespace Hermes
 {
@@ -46,9 +47,12 @@ namespace Hermes
 				switch (*s)
 				{
 				case L'v': // Actual message
+				{
 					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%s", Message);
 					break;
-				case L's':
+				}
+				case L'l':
+				{
 					const wchar_t* Lookup[] = {
 						L"Trace",
 						L"Debug",
@@ -58,6 +62,31 @@ namespace Hermes
 					};
 					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%s", Lookup[(size_t)Level]);
 					break;
+				}
+				case L'h':
+				case L'm':
+				case L's':
+				case L'u':
+				{
+					// Avoiding many calls to GetPlatformTime() as it may be very time consuming
+					PlatformTimestamp Time = PlatformTime::GetPlatformTime();
+					switch (*s)
+					{
+					case L'h':
+						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Hour);
+						break;
+					case L'm':
+						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Minute);
+						break;
+					case L's':
+						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Second);
+						break;
+					case L'u':
+						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%03hu", Time.Milisecond);
+						break;
+					}
+					break;
+				}
 				}
 			}
 			else

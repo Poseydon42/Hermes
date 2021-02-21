@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <varargs.h>
 
 #include "Core/Core.h"
 
@@ -9,7 +8,7 @@ namespace Hermes
 {
 	class ILogDevice;
 
-	enum LogLevel
+	enum class LogLevel
 	{
 		Trace,
 		Debug,
@@ -30,17 +29,17 @@ namespace Hermes
 		 * Writes a log message to all available log devices with given log level
 		 * @param Text Text to print, could include format that is recognized by CRT sprintf
 		 */
-		static void Log(LogLevel CurrentLevel, const String& Text, ...);
+		static void Log(LogLevel CurrentLevel, const wchar_t* Text, ...);
 
-		static void Trace(const String& Text, ...);
+		static void Trace(const wchar_t* Text, ...);
 
-		static void Debug(const String& Text, ...);
+		static void Debug(const wchar_t* Text, ...);
 
-		static void Warning(const String& Text, ...);
+		static void Warning(const wchar_t* Text, ...);
 
-		static void Error(const String& Text, ...);
+		static void Error(const wchar_t* Text, ...);
 
-		static void Fatal(const String& Text, ...);
+		static void Fatal(const wchar_t* Text, ...);
 
 		static LogLevel GetLogLevel();
 
@@ -65,7 +64,7 @@ namespace Hermes
 		 */
 		static const size_t BufferSize = 4095; // + 1 symbol for null terminator
 	private:
-		static void LogImpl(LogLevel CurrentLevel, const String& Text, va_list Args);
+		static void LogImpl(LogLevel CurrentLevel, const wchar_t* Text, va_list Args);
 
 		static std::vector<ILogDevice*> LogDevices;
 

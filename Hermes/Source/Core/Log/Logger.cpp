@@ -1,5 +1,7 @@
 #include "Logger.h"
 
+#include <stdarg.h>
+
 #include "Core/Log/ILogDevice.h"
 
 namespace Hermes
@@ -8,22 +10,21 @@ namespace Hermes
 
 	LogLevel Logger::CurrentLevel;
 
-	void Logger::LogImpl(LogLevel Level, const String& Text, va_list Args)
+	void Logger::LogImpl(LogLevel Level, const wchar_t* Text, va_list Args)
 	{
 		wchar_t Buffer[BufferSize + 1];
-
-		vswprintf(Buffer, Text.c_str(), Args);
 
 		if (Level < CurrentLevel)
 			return;
 
+		vswprintf(Buffer, BufferSize + 1, Text, Args);
 		for (auto Device : LogDevices)
 		{
 			Device->WriteLine(Level, Buffer);
 		}
 	}
 
-	void Logger::Log(LogLevel Level, const String& Text, ...)
+	void Logger::Log(LogLevel Level, const wchar_t* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
@@ -31,7 +32,7 @@ namespace Hermes
 		va_end(Args);
 	}
 
-	void Logger::Trace(const String& Text, ...)
+	void Logger::Trace(const wchar_t* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
@@ -39,7 +40,7 @@ namespace Hermes
 		va_end(Args);
 	}
 
-	void Logger::Debug(const String& Text, ...)
+	void Logger::Debug(const wchar_t* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
@@ -47,7 +48,7 @@ namespace Hermes
 		va_end(Args);
 	}
 
-	void Logger::Warning(const String& Text, ...)
+	void Logger::Warning(const wchar_t* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
@@ -55,7 +56,7 @@ namespace Hermes
 		va_end(Args);
 	}
 
-	void Logger::Error(const String& Text, ...)
+	void Logger::Error(const wchar_t* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
@@ -63,7 +64,7 @@ namespace Hermes
 		va_end(Args);
 	}
 
-	void Logger::Fatal(const String& Text, ...)
+	void Logger::Fatal(const wchar_t* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);

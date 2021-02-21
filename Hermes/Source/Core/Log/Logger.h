@@ -72,3 +72,9 @@ namespace Hermes
 		static LogLevel CurrentLevel;
 	};
 }
+
+#define HERMES_LOG_TRACE(Text, ...)   ::Hermes::Logger::Trace((Text), __VA_ARGS__)
+#define HERMES_LOG_DEBUG(Text, ...)   ::Hermes::Logger::Debug((Text), __VA_ARGS__)
+#define HERMES_LOG_WARNING(Text, ...) ::Hermes::Logger::Warning((Text), __VA_ARGS__)
+#define HERMES_LOG_ERROR(Text, ...)   ::Hermes::Logger::Error((Text), __VA_ARGS__)
+#define HERMES_LOG_FATAL(Text, ...)   ::Hermes::Logger::Fatal((Text), __VA_ARGS__)

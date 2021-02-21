@@ -1,6 +1,7 @@
 #include "Logger.h"
 
 #include <stdarg.h>
+#include <cwchar>
 
 #include "Core/Log/ILogDevice.h"
 
@@ -30,7 +31,29 @@ namespace Hermes
 
 	void Logger::ApplyFormating(wchar_t* Buffer, size_t BufferCount, const wchar_t* Message)
 	{
-		memcpy(Buffer, Message, BufferCount * sizeof(Buffer[0]));
+		memset(Buffer, 0, BufferCount * sizeof(Buffer[0]));
+		const wchar_t* s = CurrentFormat.c_str();
+		wchar_t* t = Buffer;
+		while (*s)
+		{
+			if ((size_t)(t - Buffer) >= BufferCount)
+				return;
+			if (*s == L'%')
+			{
+				s++;
+				switch (*s)
+				{
+				case L'v': // Actual message
+					swprintf_s(t, BufferCount - (t - Buffer), L"%s", Message);
+					break;
+				}
+			}
+			else
+			{
+
+			}
+			s++;
+		}
 	}
 
 	void Logger::Log(LogLevel Level, const wchar_t* Text, ...)
@@ -103,5 +126,10 @@ namespace Hermes
 		{
 			LogDevices.erase(FoundDevice);
 		}
+	}
+
+	void Logger::SetLogFormat(const String& NewFormat)
+	{
+		CurrentFormat = NewFormat;
 	}
 }

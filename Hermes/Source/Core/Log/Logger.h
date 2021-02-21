@@ -59,6 +59,12 @@ namespace Hermes
 		static void DetachLogDevice(ILogDevice* Device);
 
 		/**
+		 * Opcodes:
+		 * %v - log message
+		 */
+		static void SetLogFormat(const String& NewFormat);
+
+		/**
 		 * Max size of log string after all formating
 		 * Everything that exceeds it will be trimmed
 		 */

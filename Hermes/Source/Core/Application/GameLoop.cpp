@@ -8,6 +8,7 @@ namespace Hermes
 	ApplicationLoop::ApplicationLoop(IApplication* App)
 	{
 		Logger::SetLogLevel(LogLevel::Debug);
+		Logger::SetLogFormat(L"%v");
 		Logger::AttachLogDevice(new DebugLogDevice());
 		Logger::Debug(L"Initializing game loop");
 		Application = App;

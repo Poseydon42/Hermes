@@ -10,18 +10,27 @@ namespace Hermes
 
 	LogLevel Logger::CurrentLevel;
 
+	String Logger::CurrentFormat;
+
 	void Logger::LogImpl(LogLevel Level, const wchar_t* Text, va_list Args)
 	{
-		wchar_t Buffer[BufferSize + 1];
+		wchar_t MessageBuffer[BufferSize + 1];
+		wchar_t FinalBuffer[BufferSize + 1];
 
 		if (Level < CurrentLevel)
 			return;
 
-		vswprintf(Buffer, BufferSize + 1, Text, Args);
+		vswprintf(MessageBuffer, BufferSize + 1, Text, Args);
+		ApplyFormating(FinalBuffer, BufferSize + 1, MessageBuffer);
 		for (auto Device : LogDevices)
 		{
-			Device->WriteLine(Level, Buffer);
+			Device->WriteLine(Level, FinalBuffer);
 		}
+	}
+
+	void Logger::ApplyFormating(wchar_t* Buffer, size_t BufferCount, const wchar_t* Message)
+	{
+		memcpy(Buffer, Message, BufferCount * sizeof(Buffer[0]));
 	}
 
 	void Logger::Log(LogLevel Level, const wchar_t* Text, ...)

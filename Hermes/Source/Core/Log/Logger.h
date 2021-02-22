@@ -74,6 +74,8 @@ namespace Hermes
 		 * %d - day in numeric format
 		 * %f - file name
 		 * %# - line number
+		 * %% - % char
+		 * Everything else is printed as-is
 		 */
 		static void SetLogFormat(const String& NewFormat);
 

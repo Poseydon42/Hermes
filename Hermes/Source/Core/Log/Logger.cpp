@@ -46,6 +46,10 @@ namespace Hermes
 				s++;
 				switch (*s)
 				{
+				case L'%':
+					SpaceTaken = 1;
+					*t = L'%';
+					break;
 				case L'v': // Actual message
 				{
 					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%s", Message);

@@ -6,7 +6,7 @@
 
 namespace Hermes
 {
-	class DebugLogDevice : public ILogDevice
+	class HERMES_API DebugLogDevice : public ILogDevice
 	{
 	public:
 		inline DebugLogDevice(LogLevel InitialLogLevel = LogLevel::Trace) : CurrentLogLevel(InitialLogLevel) {}

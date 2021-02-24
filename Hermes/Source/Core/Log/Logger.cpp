@@ -60,6 +60,7 @@ namespace Hermes
 					const wchar_t* Lookup[] = {
 						L"Trace",
 						L"Debug",
+						L"Info",
 						L"Warning",
 						L"Error",
 						L"Fatal"

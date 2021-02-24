@@ -12,6 +12,7 @@ namespace Hermes
 	{
 		Trace,
 		Debug,
+		Info,
 		Warning,
 		Error,
 		Fatal
@@ -103,6 +104,7 @@ namespace Hermes
 
 #define HERMES_LOG_TRACE(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Trace, __WFILE__, __LINE__, (Text), __VA_ARGS__)
 #define HERMES_LOG_DEBUG(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Debug, __WFILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_INFO(Text, ...)    ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Info, __WFILE__, __LINE__, (Text), __VA_ARGS__)
 #define HERMES_LOG_WARNING(Text, ...) ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Warning, __WFILE__, __LINE__, (Text), __VA_ARGS__)
 #define HERMES_LOG_ERROR(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Error, __WFILE__, __LINE__, (Text), __VA_ARGS__)
 #define HERMES_LOG_FATAL(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Fatal, __WFILE__, __LINE__, (Text), __VA_ARGS__)

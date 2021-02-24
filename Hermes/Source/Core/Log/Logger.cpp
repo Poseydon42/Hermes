@@ -158,6 +158,14 @@ namespace Hermes
 		va_end(Args);
 	}
 
+	void Logger::Info(const wchar_t* Text, ...)
+	{
+		va_list Args;
+		va_start(Args, Text);
+		LogImpl(LogLevel::Info, L"", 0, Text, Args);
+		va_end(Args);
+	}
+
 	void Logger::Warning(const wchar_t* Text, ...)
 	{
 		va_list Args;

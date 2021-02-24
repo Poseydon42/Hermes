@@ -38,6 +38,8 @@ namespace Hermes
 
 		static void Debug(const wchar_t* Text, ...);
 
+		static void Info(const wchar_t* Text, ...);
+
 		static void Warning(const wchar_t* Text, ...);
 
 		static void Error(const wchar_t* Text, ...);

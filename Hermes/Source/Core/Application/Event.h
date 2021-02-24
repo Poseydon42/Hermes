@@ -7,19 +7,15 @@ namespace Hermes
 	/**
 	 * A single event that needs to be handled
 	 */
-	class HERMES_API Event
+	class HERMES_API IEvent
 	{
 	public:
-		inline Event(const String& EventName, uint32 EventType) : Name(EventName), Type(EventType) { }
+		using EventType = uint32;
 
-		inline const String& GetName() const { return Name;  }
+		virtual ~IEvent() = default;
 
-		inline uint32 GetType() const { return Type; }
+		virtual EventType GetType() const = 0;
 
 		virtual String ToString() const = 0;
-	private:
-		String Name;
-
-		uint32 Type;
 	};
 }

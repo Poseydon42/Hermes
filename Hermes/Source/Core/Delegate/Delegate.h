@@ -80,7 +80,10 @@ namespace Hermes
 		using InternalFunc = void(*)(InstancePtr, ArgsType&&...);
 		using CallbackContainer = std::vector<std::pair<InstancePtr, InternalFunc>>;
 	public:
-		TMulticastDelegate(size_t InitialContainerSize = 4) : Callbacks(InitialContainerSize) {}
+		TMulticastDelegate(size_t InitialContainerSize = 4)
+		{
+			Callbacks.reserve(InitialContainerSize);
+		}
 
 		/**
 		 * Binds new function without touching previous

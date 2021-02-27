@@ -24,6 +24,9 @@ namespace Hermes
 		using InstancePtr = void*;
 		using InternalFunc = RetType(*)(InstancePtr, ArgsType&&...);
 	public:
+		/**
+		 * Binds new function by replacing previous
+		 */
 		template<RetType(*Function)(ArgsType...)>
 		void Bind()
 		{
@@ -62,5 +65,69 @@ namespace Hermes
 
 		InstancePtr Instance;
 		InternalFunc FuncWrapper;
+	};
+
+	/**
+	 * Delegate that supports binding multiple functions
+	 * Each function has to have same signature and may not have return type different from void as it makes no sense
+	 * Usage is similar to TDelegate
+	 */
+	template<typename ...ArgsType>
+	struct TMulticastDelegate
+	{
+	private:
+		using InstancePtr = void*;
+		using InternalFunc = void(*)(InstancePtr, ArgsType&&...);
+		using CallbackContainer = std::vector<std::pair<InstancePtr, InternalFunc>>;
+	public:
+		TMulticastDelegate(size_t InitialContainerSize = 4) : Callbacks(InitialContainerSize) {}
+
+		/**
+		 * Binds new function without touching previous
+		 */
+		template<void(*Function)(ArgsType...)>
+		void Bind()
+		{
+			Callbacks.push_back(std::make_pair<InstancePtr, InternalFunc>(0, &FreeFunctionWrapper<Function>));
+		}
+
+		template<class C, void(C::* Function)(ArgsType...)>
+		void Bind(C* NewInstance)
+		{
+			Callbacks.push_back(std::make_pair<InstancePtr, InternalFunc>(NewInstance, &FreeFunctionWrapper<C, Function>(C)));
+		}
+
+		/**
+		 * Clears all bindings
+		 */
+		void Clear()
+		{
+			Callbacks.clear();
+		}
+
+		void Invoke(ArgsType&&... Args)
+		{
+			for (auto Callback : Callbacks)
+				Callback.second(Callback.first, std::forward<ArgsType>(Args)...);
+		}
+
+		void operator()(ArgsType&&... Args)
+		{
+			Invoke(std::forward<ArgsType>(Args)...);
+		}
+	private:
+		template<void(*Function)(ArgsType...)>
+		static void FreeFunctionWrapper(InstancePtr, ArgsType&&... Args)
+		{
+			return Function(std::forward<ArgsType>(Args)...);
+		}
+
+		template<class C, void(C::* Function)(ArgsType...)>
+		static void MemberFunctionWrapper(InstancePtr InstanceToCall, ArgsType&&... Args)
+		{
+			return (((C*)InstanceToCall->*Function)(std::forward<ArgsType>(Args)...));
+		}
+
+		CallbackContainer Callbacks;
 	};
 }

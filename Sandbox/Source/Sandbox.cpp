@@ -29,6 +29,16 @@ public:
 	}
 };
 
+void MulticastTest1(int a)
+{
+	HERMES_LOG_DEBUG(L"Func1: %d", a);
+}
+
+void MulticastTest2(int a)
+{
+	HERMES_LOG_DEBUG(L"Func2: %d", a);
+}
+
 class SandboxApp : public Hermes::IApplication
 {
 public:
@@ -47,6 +57,11 @@ public:
 		s.X = 15;
 		Delegate.Bind<SqrWrapper, &SqrWrapper::GetXMul>(&s);
 		HERMES_LOG_DEBUG(L"Delegate result #3: %d", Delegate.Invoke(2));
+
+		Hermes::TMulticastDelegate<int> MulticastDelegate;
+		MulticastDelegate.Bind<MulticastTest1>();
+		MulticastDelegate.Bind<MulticastTest2>();
+		MulticastDelegate(5);
 
 		return true;
 	}

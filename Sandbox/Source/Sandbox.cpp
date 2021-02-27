@@ -10,34 +10,15 @@
 
 #include "Core/Delegate/Delegate.h"
 
-int Sqr(int a)
+class CustomEvent : public Hermes::IEvent
 {
-	return a * a;
-}
-
-struct SqrWrapper
-{
-	int X;
-	int GetXMul(int Factor)
-	{
-		return X * Factor;
-	}
+	EVENT_BODY(CustomEvent);
 public:
-	int SqrMul2(int a)
+	Hermes::String ToString() const override
 	{
-		return a * a * 2;
+		return L"CustomEvent";
 	}
 };
-
-void MulticastTest1(int a)
-{
-	HERMES_LOG_DEBUG(L"Func1: %d", a);
-}
-
-void MulticastTest2(int a)
-{
-	HERMES_LOG_DEBUG(L"Func2: %d", a);
-}
 
 class SandboxApp : public Hermes::IApplication
 {
@@ -46,23 +27,7 @@ public:
 	{
 		HERMES_LOG_DEBUG(L"Some text, here's an 32 bit hexadecimal integer %#010X and a float %f", 0x1234FFDD, 42.0f);
 
-		Hermes::TDelegate<int, int> Delegate;
-		Delegate.Bind<Sqr>();
-		HERMES_LOG_DEBUG(L"Delegate result #1: %d", Delegate(5));
-
-		SqrWrapper s;
-		Delegate.Bind<SqrWrapper, &SqrWrapper::SqrMul2>(&s);
-		HERMES_LOG_DEBUG(L"Delegate result #2: %d", Delegate.Invoke(5));
-
-		s.X = 15;
-		Delegate.Bind<SqrWrapper, &SqrWrapper::GetXMul>(&s);
-		HERMES_LOG_DEBUG(L"Delegate result #3: %d", Delegate.Invoke(2));
-
-		Hermes::TMulticastDelegate<int> MulticastDelegate;
-		MulticastDelegate.Bind<MulticastTest1>();
-		MulticastDelegate.Bind<MulticastTest2>();
-		MulticastDelegate(5);
-
+		
 		return true;
 	}
 

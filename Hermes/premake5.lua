@@ -38,5 +38,6 @@ project "Hermes"
     filter "platforms:Windows"
         system "windows"
         defines { "HERMES_PLATFORM_WINDOWS" }
+        disablewarnings "4251"
     filter "system:Windows"
         systemversion "latest"

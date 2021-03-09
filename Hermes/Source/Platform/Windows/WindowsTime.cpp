@@ -1,6 +1,6 @@
 #ifdef HERMES_PLATFORM_WINDOWS
 
-#include <windows.h>
+#include <Windows.h>
 
 #include "Platform/GenericPlatform/PlatformTime.h"
 

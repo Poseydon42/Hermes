@@ -11,6 +11,8 @@ namespace Hermes
 	class HERMES_API ILogDevice
 	{
 	public:
+		virtual ~ILogDevice() {}
+		
 		virtual void Write(LogLevel Level, String Text) = 0;
 
 		virtual void WriteLine(LogLevel Level, String Text) = 0;

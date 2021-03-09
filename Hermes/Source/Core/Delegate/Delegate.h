@@ -63,8 +63,8 @@ namespace Hermes
 			return (((C*)InstanceToCall->*Function)(std::forward<ArgsType>(Args)...));
 		}
 
-		InstancePtr Instance;
-		InternalFunc FuncWrapper;
+		InstancePtr Instance = 0;
+		InternalFunc FuncWrapper = 0;
 	};
 
 	/**

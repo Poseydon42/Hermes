@@ -8,4 +8,6 @@
 #define API_EXPORT _declspec(dllexport)
 #define API_IMPORT _declspec(dllimport)
 
+#define DEBUG_BREAK() __debugbreak();
+
 #endif

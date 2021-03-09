@@ -11,6 +11,8 @@ namespace Hermes
 	class HERMES_API IApplication
 	{
 	public:
+		virtual ~IApplication() {}
+		
 		/**
 		 * Called right after CreateApplicationInstance()
 		 * Here you can initialize all required subsystems

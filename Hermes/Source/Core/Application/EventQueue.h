@@ -61,7 +61,7 @@ namespace Hermes
 	template<class C, void(C::* Function)(const IEvent&)>
 	void EventQueue::Subscribe(IEvent::EventType Type, C* Instance)
 	{
-		CallbackList[Type].Bind<C, Function>(Instance)
+		CallbackList[Type].Bind<C, Function>(Instance);
 	}
 
 }

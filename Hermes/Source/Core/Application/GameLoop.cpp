@@ -2,6 +2,7 @@
 
 #include "Core/Log/Logger.h"
 #include "Core/Log/DebugLogDevice.h"
+#include "Core/Log/FileLogDevice.h"
 
 namespace Hermes
 {
@@ -10,6 +11,7 @@ namespace Hermes
 		Logger::SetLogLevel(LogLevel::Debug);
 		Logger::SetLogFormat(L"[%Y-%M-%d %h:%m:%s:%u][%f:%#][%l] %v");
 		Logger::AttachLogDevice(new DebugLogDevice());
+		Logger::AttachLogDevice(new FileLogDevice(L"TestLog.log", LogLevel::Info));
 		HERMES_LOG_INFO(L"Initializing game loop!");
 		Application = App;
 		App->Init();

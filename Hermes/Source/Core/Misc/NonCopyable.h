@@ -4,7 +4,7 @@
 
 namespace Hermes
 {
-	class INonCopyable
+	class HERMES_API INonCopyable
 	{
 	public:
 		INonCopyable() = default;

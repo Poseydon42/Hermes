@@ -1,61 +1,57 @@
 #ifdef HERMES_PLATFORM_WINDOWS
 
-#include <Windows.h>
-
 #include "Core/Core.h"
-#include "Platform/GenericPlatform/PlatformDebug.h"
 #include "Core/Application/Application.h"
-#include "Core/Log/Logger.h"
-#include "Core/Application/Event.h"
-#include "Core/Application/EventQueue.h"
-
-#include "Core/Delegate/Delegate.h"
-
-class CustomEvent : public Hermes::IEvent
-{
-	EVENT_BODY(CustomEvent);
-public:
-	CustomEvent(const Hermes::String& T) : Text(T) {}
-
-	Hermes::String ToString() const override
-	{
-		return Text;
-	}
-	
-private:
-	Hermes::String Text;
-};
-
-void CustomEventListener(const Hermes::IEvent& Event)
-{
-	HERMES_LOG_DEBUG(L"Received CustomEvent: %s", Event.ToString().c_str());
-}
+#include "Platform/GenericPlatform/PlatformFile.h"
 
 class SandboxApp : public Hermes::IApplication
 {
 public:
 	bool Init() override
 	{
-		HERMES_LOG_DEBUG(L"Some text, here's an 32 bit hexadecimal integer %#010X and a float %f", 0x1234FFDD, 42.0f);
-		GameEventQueue.Subscribe<CustomEventListener>(CustomEvent::GetStaticType());
-		CustomEvent* Event = new CustomEvent(L"SandboxApp::Init");
-		GameEventQueue.PushEvent(*Event);
-		delete Event;
+		bool ShouldBeFalse = Hermes::PlatformFilesystem::FileExists(L"SomeTextFile.txt");
+		HERMES_ASSERT(!ShouldBeFalse);
+		std::shared_ptr<Hermes::IPlatformFile> NullFile = Hermes::PlatformFilesystem::OpenFile(L"SomeTextFile.txt", Hermes::IPlatformFile::FileAccessMode::Read, Hermes::IPlatformFile::FileOpenMode::OpenExisting);
+		HERMES_ASSERT(NullFile.get() == 0);
+		std::shared_ptr<Hermes::IPlatformFile> TxtFile = Hermes::PlatformFilesystem::OpenFile(L"SomeTextFile.txt", Hermes::IPlatformFile::FileAccessMode::Read | Hermes::IPlatformFile::FileAccessMode::Write, Hermes::IPlatformFile::FileOpenMode::Create);
+		HERMES_ASSERT(TxtFile.get() != 0);
+		std::shared_ptr<Hermes::IPlatformFile> NullFile2 = Hermes::PlatformFilesystem::OpenFile(L"SomeTextFile.txt", Hermes::IPlatformFile::FileAccessMode::Read, Hermes::IPlatformFile::FileOpenMode::CreateAlways);
+		HERMES_ASSERT(NullFile2.get() == 0);
+		
+		HERMES_ASSERT(Hermes::PlatformFilesystem::FileExists(L"SomeTextFile.txt"));
+		HERMES_ASSERT(TxtFile->IsValid());
+		HERMES_ASSERT(TxtFile->Tell() == 0);
+
+		Hermes::uint8 Data[256];
+		for (Hermes::uint16 i = 0; i < sizeof(Data); i++)
+			Data[i] = i;
+		HERMES_ASSERT(TxtFile->Write(Data, sizeof(Data)));
+		TxtFile->Flush();
+
+		Hermes::uint8 ReadBuffer[256];
+		TxtFile->Seek(0);
+		HERMES_ASSERT(TxtFile->Read(ReadBuffer, sizeof(ReadBuffer)));
+		HERMES_ASSERT(memcmp(Data, ReadBuffer, sizeof(Data)) == 0);
+
+		TxtFile->Seek(0x10);
+		HERMES_ASSERT(TxtFile->Tell() == 0x10);
+
+		HERMES_ASSERT(TxtFile->Size() == sizeof(Data));
+		TxtFile->Close();
+		Hermes::PlatformFilesystem::RemoveFile(L"SomeTextFile.txt");
+		HERMES_ASSERT(!Hermes::PlatformFilesystem::FileExists(L"SomeTextFile.txt"));
 		
 		return true;
 	}
 
 	void Run(float Delta) override
 	{
-		GameEventQueue.Run();
 	}
 
 	void Shutdown() override
 	{
-		OutputDebugString(TEXT("SandboxApp shutdown\n"));
+		
 	}
-private:
-	Hermes::EventQueue GameEventQueue;
 };
 
 extern "C" _declspec(dllexport) Hermes::IApplication* CreateApplicationInstance()

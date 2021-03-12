@@ -41,4 +41,4 @@ namespace Hermes
 #define HERMES_ASSERT(Expression)
 #endif
 
-#define HERMES_ASSERT_LOG(Expression, Msg, ...) {if(!(Expression)) HERMES_LOG_ERROR(Msg, __VA_ARGS__); DEBUG_BREAK(); }
+#define HERMES_ASSERT_LOG(Expression, Msg, ...) {if(!(Expression)) { HERMES_LOG_ERROR(Msg, __VA_ARGS__); DEBUG_BREAK(); } }

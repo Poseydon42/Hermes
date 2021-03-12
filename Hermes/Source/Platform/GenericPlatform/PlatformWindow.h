@@ -5,10 +5,22 @@
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyable.h"
 #include "Math/Vector2.h"
+#include "Core/Application/Event.h"
 
 namespace Hermes
 {
 	class EventQueue;
+
+	class WindowCloseEvent : public IEvent
+	{
+		EVENT_BODY(WindowCloseEvent)
+	
+	public:
+		String ToString() const override
+		{
+			return L"WindowCloseEvent";
+		}
+	};
 	
 	class HERMES_API IPlatformWindow : public INonCopyable
 	{

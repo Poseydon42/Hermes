@@ -24,17 +24,21 @@ namespace Hermes
 			ClassRegistered = Success;
 		}
 
+		CurrentName = Name;
+		MessagePump = std::make_shared<EventQueue>();
+
 		WindowHandle = CreateWindowExW(
 			0, ClassName, Name.c_str(), WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
 			CW_USEDEFAULT, CW_USEDEFAULT, Size.X, Size.Y,
 			0, 0, AppInstance, this);
 		if (WindowHandle)
+		{
 			UpdateVisibility(true);
+		}
 		else
+		{
 			HERMES_LOG_ERROR(L"Failed to create Win32 window! Error code: %#010X", GetLastError());
-
-		CurrentName = Name;
-		MessagePump = std::make_shared<EventQueue>();
+		}
 	}
 
 	WindowsWindow::~WindowsWindow()
@@ -103,10 +107,28 @@ namespace Hermes
 		return MessagePump;
 	}
 
+	LRESULT WindowsWindow::MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
+	{
+		switch (Message)
+		{
+		case WM_DESTROY:
+			MessagePump->PushEvent(WindowCloseEvent());
+			break;
+		}
+		MessagePump->Run();
+		return DefWindowProcW(Window, Message, WParam, LParam);
+	}
+
 	LRESULT WindowsWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
-		HERMES_LOG_INFO(L"Received window message: %d", uMsg);
-		return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+		if (uMsg == WM_CREATE)
+		{
+			SetWindowLongPtrW(hwnd, 0, (LONG_PTR)((CREATESTRUCTW*)(lParam))->lpCreateParams);
+		}
+		auto Instance = (WindowsWindow*)GetWindowLongPtrW(hwnd, 0);
+		if (!Instance) // This means we still haven't got WM_CREATE
+			return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+		return Instance->MessageHandler(hwnd, uMsg, wParam, lParam);
 	}
 
 	std::shared_ptr<IPlatformWindow> IPlatformWindow::CreatePlatformWindow(const String& Name, Vec2i Size)

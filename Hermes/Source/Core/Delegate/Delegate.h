@@ -97,7 +97,7 @@ namespace Hermes
 		template<class C, void(C::* Function)(ArgsType...)>
 		void Bind(C* NewInstance)
 		{
-			Callbacks.push_back(std::make_pair<InstancePtr, InternalFunc>(NewInstance, &FreeFunctionWrapper<C, Function>(NewInstance)));
+			Callbacks.push_back(std::make_pair<InstancePtr, InternalFunc>((InstancePtr)NewInstance, &MemberFunctionWrapper<C, Function>));
 		}
 
 		/**

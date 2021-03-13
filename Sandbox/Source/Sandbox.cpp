@@ -15,12 +15,6 @@ class SandboxApp : public Hermes::IApplication
 public:
 	bool Init() override
 	{
-		ApplicationWindow = Hermes::IPlatformWindow::CreatePlatformWindow(L"Hermes Engine", Hermes::Vec2i(1280, 720));
-		WindowMessageQueue = ApplicationWindow->WindowQueue();
-		if (auto Queue = WindowMessageQueue.lock())
-		{
-			Queue->Subscribe<WindowEventHandler>(Hermes::WindowCloseEvent::GetStaticType());
-		}
 		return true;
 	}
 

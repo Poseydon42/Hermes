@@ -16,10 +16,15 @@ namespace Hermes
 		EVENT_BODY(WindowCloseEvent)
 	
 	public:
+		WindowCloseEvent(const String& Name) : WindowName(Name) {}
+		
 		String ToString() const override
 		{
-			return L"WindowCloseEvent";
+			return WindowName;
 		}
+	
+	private:
+		String WindowName;
 	};
 	
 	class HERMES_API IPlatformWindow : public INonCopyable
@@ -40,6 +45,8 @@ namespace Hermes
 		virtual Vec2i GetSize() const = 0;
 
 		virtual bool IsValid() const = 0;
+
+		virtual void Run() const = 0;
 
 		virtual std::weak_ptr<EventQueue> WindowQueue() = 0;
 

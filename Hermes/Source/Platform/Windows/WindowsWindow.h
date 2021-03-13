@@ -10,7 +10,7 @@
 
 namespace Hermes
 {
-	class HERMES_API WindowsWindow final : public IPlatformWindow
+	class HERMES_API WindowsWindow : public IPlatformWindow
 	{
 	public:
 		WindowsWindow(const String& Name, Vec2i Size);
@@ -36,6 +36,8 @@ namespace Hermes
 		bool IsValid() const override;
 
 		std::weak_ptr<EventQueue> WindowQueue() override;
+
+		void Run() const override;
 	
 	private:
 		HWND WindowHandle;

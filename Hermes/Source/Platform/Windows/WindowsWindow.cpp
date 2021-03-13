@@ -107,15 +107,26 @@ namespace Hermes
 		return MessagePump;
 	}
 
+	void WindowsWindow::Run() const
+	{
+		MSG Message;
+
+		while (PeekMessageW(&Message, WindowHandle, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&Message);
+			DispatchMessage(&Message);
+		}
+		MessagePump->Run();
+	}
+
 	LRESULT WindowsWindow::MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 	{
 		switch (Message)
 		{
 		case WM_DESTROY:
-			MessagePump->PushEvent(WindowCloseEvent());
+			MessagePump->PushEvent(WindowCloseEvent(GetName()));
 			break;
 		}
-		MessagePump->Run();
 		return DefWindowProcW(Window, Message, WParam, LParam);
 	}
 

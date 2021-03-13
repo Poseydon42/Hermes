@@ -46,6 +46,8 @@ namespace Hermes
 
 		std::shared_ptr<EventQueue> MessagePump;
 
+		WINDOWPLACEMENT PrevPlacement;
+
 		static bool ClassRegistered;
 
 		static constexpr const wchar_t* ClassName = L"HermesWindowClass";

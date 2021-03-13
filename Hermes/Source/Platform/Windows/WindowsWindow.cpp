@@ -75,7 +75,28 @@ namespace Hermes
 
 	bool WindowsWindow::ToggleFullscreen(bool Enabled)
 	{
-		return false;
+		if (Enabled)
+		{
+			GetWindowPlacement(WindowHandle, &PrevPlacement);
+			SetWindowLongW(WindowHandle, GWL_STYLE, WS_POPUP);
+			SetWindowLongW(WindowHandle, GWL_EXSTYLE, WS_EX_TOPMOST);
+			int DisplayX = GetSystemMetrics(SM_CXSCREEN);
+			int DisplayY = GetSystemMetrics(SM_CYSCREEN);
+			SetWindowPos(WindowHandle, HWND_TOP, 0, 0, DisplayX, DisplayY, SWP_FRAMECHANGED);
+			ShowWindow(WindowHandle, SW_SHOWMAXIMIZED);
+		}
+		else
+		{
+			SetWindowLongW(WindowHandle, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+			SetWindowLongW(WindowHandle, GWL_EXSTYLE, 0);
+			int X = PrevPlacement.rcNormalPosition.left;
+			int Y = PrevPlacement.rcNormalPosition.top;
+			int W = PrevPlacement.rcNormalPosition.right - X;
+			int H = PrevPlacement.rcNormalPosition.bottom - Y;
+			SetWindowPos(WindowHandle, HWND_TOP, X, Y, W, H, SWP_FRAMECHANGED);
+			ShowWindow(WindowHandle, SW_SHOWDEFAULT);
+		}
+		return true;
 	}
 
 	bool WindowsWindow::UpdateVisibility(bool Visible)
@@ -126,6 +147,24 @@ namespace Hermes
 		case WM_DESTROY:
 			MessagePump->PushEvent(WindowCloseEvent(GetName()));
 			break;
+		// WM_KEYDOWN and WM_PAINT handling is temporary to check whether fullscreen works properly
+		// TODO : remove this debug stuff when it's no longer needed
+		case WM_KEYDOWN:
+			if (WParam == VK_LEFT)
+				ToggleFullscreen(true);
+			if (WParam == VK_RIGHT)
+				ToggleFullscreen(false);
+			break;
+		case WM_PAINT:
+			HERMES_LOG_INFO(L"Got WM_PAINT message.");
+			PAINTSTRUCT Paint;
+			RECT ClientRect;
+			HDC DeviceContext = BeginPaint(Window, &Paint);
+			GetClientRect(Window, &ClientRect);
+			HBRUSH TempBrush = CreateSolidBrush(RGB(255, 255, 255));
+			FillRect(DeviceContext, &ClientRect, TempBrush);
+			DeleteObject(TempBrush);
+			EndPaint(Window, &Paint);
 		}
 		return DefWindowProcW(Window, Message, WParam, LParam);
 	}

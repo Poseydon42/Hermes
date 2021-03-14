@@ -26,28 +26,62 @@ namespace Hermes
 	private:
 		String WindowName;
 	};
-	
+
+	/**
+	 * Interface to platform windowing API
+	 */
 	class HERMES_API IPlatformWindow : public INonCopyable
 	{
 	public:
 		virtual ~IPlatformWindow() = default;
 
+		/**
+		 * Sets new name for a window
+		 */
 		virtual void UpdateName(const String& NewName) = 0;
 
+		/**
+		 * Returns current window name
+		 */
 		virtual const String& GetName() const = 0;
 
+		/**
+		 * Enables or disables fullscreen mode
+		 * @return True if mode has been changed successfully
+		 */
 		virtual bool ToggleFullscreen(bool Enabled) = 0;
 
+		/**
+		 * Updates visibility of a window
+		 * @param Visible True if window should be shown
+		 * @return True if operation succeeded
+		 */
 		virtual bool UpdateVisibility(bool Visible) = 0;
 
+		/**
+		 * Sets new size of client area of a window
+		 * @return True if operation succeeded
+		 */
 		virtual bool Resize(Vec2i NewSize) = 0;
 
+		/**
+		 * Returns current size of a window
+		 */
 		virtual Vec2i GetSize() const = 0;
 
+		/**
+		 * True if underlying platform handle is valid and can be used
+		 */
 		virtual bool IsValid() const = 0;
 
+		/**
+		 * Processes window messages and message queue
+		 */
 		virtual void Run() const = 0;
 
+		/**
+		 * Single queue for all window messages that game loop should handle
+		 */
 		virtual std::weak_ptr<EventQueue> WindowQueue() = 0;
 
 		static std::shared_ptr<IPlatformWindow> CreatePlatformWindow(const String& Name, Vec2i Size);

@@ -12,15 +12,15 @@ namespace Hermes
 		{
 			struct
 			{
-				float X;
-				float Y;
+				InternalType X;
+				InternalType Y;
 			};
-			float E[2];
+			InternalType E[2];
 		};
 
-		Vector2(float V = 0.0f);
+		Vector2(InternalType V = 0.0f);
 
-		Vector2(float NX, float NY);
+		Vector2(InternalType NX, InternalType NY);
 
 		/**
 		 * Bitwise operators
@@ -29,18 +29,18 @@ namespace Hermes
 		Vector2 operator-(const Vector2& V) const;
 		Vector2 operator*(const Vector2& V) const;
 		Vector2 operator/(const Vector2& V) const;
-		Vector2 operator+(float B) const;
-		Vector2 operator-(float B) const;
-		Vector2 operator*(float B) const;
-		Vector2 operator/(float B) const;
+		Vector2 operator+(InternalType B) const;
+		Vector2 operator-(InternalType B) const;
+		Vector2 operator*(InternalType B) const;
+		Vector2 operator/(InternalType B) const;
 		Vector2& operator+=(const Vector2& V);
 		Vector2& operator-=(const Vector2& V);
 		Vector2& operator*=(const Vector2& V);
 		Vector2& operator/=(const Vector2& V);
-		Vector2& operator+=(float B);
-		Vector2& operator-=(float B);
-		Vector2& operator*=(float B);
-		Vector2& operator/=(float B);
+		Vector2& operator+=(InternalType B);
+		Vector2& operator-=(InternalType B);
+		Vector2& operator*=(InternalType B);
+		Vector2& operator/=(InternalType B);
 
 		bool operator==(const Vector2& V) const;
 		bool operator!=(const Vector2& V) const;
@@ -55,9 +55,9 @@ namespace Hermes
 		 */
 		Vector2 operator-() const;
 
-		float Length() const;
+		InternalType Length() const;
 
-		float LengthSq() const;
+		InternalType LengthSq() const;
 
 		/**
 		 * Normalizes a vector and returns reference to itself
@@ -74,10 +74,10 @@ namespace Hermes
 	using Vec2d = Vector2<double>;
 
 	template <typename InternalType>
-	Vector2<InternalType>::Vector2(float V) : X(V), Y(V) {}
+	Vector2<InternalType>::Vector2(InternalType V) : X(V), Y(V) {}
 
 	template <typename InternalType>
-	Vector2<InternalType>::Vector2(float NX, float NY) : X(NX), Y(NY) {}
+	Vector2<InternalType>::Vector2(InternalType NX, InternalType NY) : X(NX), Y(NY) {}
 
 	template <typename InternalType>
 	Vector2<InternalType> Vector2<InternalType>::operator+(const Vector2& V) const
@@ -104,25 +104,25 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	Vector2<InternalType> Vector2<InternalType>::operator+(float B) const
+	Vector2<InternalType> Vector2<InternalType>::operator+(InternalType B) const
 	{
 		return Vector2(X + B, Y + B);
 	}
 
 	template <typename InternalType>
-	Vector2<InternalType> Vector2<InternalType>::operator-(float B) const
+	Vector2<InternalType> Vector2<InternalType>::operator-(InternalType B) const
 	{
 		return *this + (-B);
 	}
 
 	template <typename InternalType>
-	Vector2<InternalType> Vector2<InternalType>::operator*(float B) const
+	Vector2<InternalType> Vector2<InternalType>::operator*(InternalType B) const
 	{
 		return Vector2(X * B, Y * B);
 	}
 
 	template <typename InternalType>
-	Vector2<InternalType> Vector2<InternalType>::operator/(float B) const
+	Vector2<InternalType> Vector2<InternalType>::operator/(InternalType B) const
 	{
 		return *this * (1 / B);
 	}
@@ -156,28 +156,28 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	Vector2<InternalType>& Vector2<InternalType>::operator+=(float B)
+	Vector2<InternalType>& Vector2<InternalType>::operator+=(InternalType B)
 	{
 		*this = *this + B;
 		return *this;
 	}
 
 	template <typename InternalType>
-	Vector2<InternalType>& Vector2<InternalType>::operator-=(float B)
+	Vector2<InternalType>& Vector2<InternalType>::operator-=(InternalType B)
 	{
 		*this = *this - B;
 		return *this;
 	}
 
 	template <typename InternalType>
-	Vector2<InternalType>& Vector2<InternalType>::operator*=(float B)
+	Vector2<InternalType>& Vector2<InternalType>::operator*=(InternalType B)
 	{
 		*this = *this * B;
 		return *this;
 	}
 
 	template <typename InternalType>
-	Vector2<InternalType>& Vector2<InternalType>::operator/=(float B)
+	Vector2<InternalType>& Vector2<InternalType>::operator/=(InternalType B)
 	{
 		*this = *this / B;
 		return *this;
@@ -208,13 +208,13 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	float Vector2<InternalType>::Length() const
+	InternalType Vector2<InternalType>::Length() const
 	{
 		return sqrt(LengthSq());
 	}
 
 	template <typename InternalType>
-	float Vector2<InternalType>::LengthSq() const
+	InternalType Vector2<InternalType>::LengthSq() const
 	{
 		return X * X + Y * Y;
 	}

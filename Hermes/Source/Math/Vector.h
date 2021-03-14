@@ -12,16 +12,16 @@ namespace Hermes
 		{
 			struct
 			{
-				float X;
-				float Y;
-				float Z;
+				InternalType X;
+				InternalType Y;
+				InternalType Z;
 			};
-			float E[3];
+			InternalType E[3];
 		};
 
-		Vector3(float V = 0.0f);
+		Vector3(InternalType V = 0.0f);
 
-		Vector3(float NX, float NY, float NZ);
+		Vector3(InternalType NX, InternalType NY, InternalType NZ);
 		
 		/**
 		 * Bitwise operators
@@ -30,18 +30,18 @@ namespace Hermes
 		Vector3 operator-(const Vector3& V) const;
 		Vector3 operator*(const Vector3& V) const;
 		Vector3 operator/(const Vector3& V) const;
-		Vector3 operator+(float B) const;
-		Vector3 operator-(float B) const;
-		Vector3 operator*(float B) const;
-		Vector3 operator/(float B) const;
+		Vector3 operator+(InternalType B) const;
+		Vector3 operator-(InternalType B) const;
+		Vector3 operator*(InternalType B) const;
+		Vector3 operator/(InternalType B) const;
 		Vector3& operator+=(const Vector3& V);
 		Vector3& operator-=(const Vector3& V);
 		Vector3& operator*=(const Vector3& V);
 		Vector3& operator/=(const Vector3& V);
-		Vector3& operator+=(float B);
-		Vector3& operator-=(float B);
-		Vector3& operator*=(float B);
-		Vector3& operator/=(float B);
+		Vector3& operator+=(InternalType B);
+		Vector3& operator-=(InternalType B);
+		Vector3& operator*=(InternalType B);
+		Vector3& operator/=(InternalType B);
 
 		bool operator==(const Vector3& V) const;
 		bool operator!=(const Vector3& V) const;
@@ -54,16 +54,16 @@ namespace Hermes
 		/**
 		 * Dot product
 		 */
-		float operator|(const Vector3& V) const;
+		InternalType operator|(const Vector3& V) const;
 
 		/**
 		 * Negate(flip) the vector
 		 */
 		Vector3 operator-() const;
 
-		float Length() const;
+		InternalType Length() const;
 
-		float LengthSq() const;
+		InternalType LengthSq() const;
 
 		/**
 		 * Normalizes a vector and returns reference to itself
@@ -74,16 +74,16 @@ namespace Hermes
 	/**
 	 * Aliases for vectors of basic types
 	 */
-	using Vec3 = Vector3<float>;
+	using Vec3 = Vector3<InternalType>;
 	using Vec3i = Vector3<int32>;
 	using Vec3l = Vector3<int64>;
 	using Vec3d = Vector3<double>;
 
 	template <typename InternalType>
-	Vector3<InternalType>::Vector3(float V) : X(V), Y(V), Z(V) {}
+	Vector3<InternalType>::Vector3(InternalType V) : X(V), Y(V), Z(V) {}
 
 	template <typename InternalType>
-	Vector3<InternalType>::Vector3(float NX, float NY, float NZ) : X(NX), Y(NY), Z(NZ) {}
+	Vector3<InternalType>::Vector3(InternalType NX, InternalType NY, InternalType NZ) : X(NX), Y(NY), Z(NZ) {}
 
 	template <typename InternalType>
 	Vector3<InternalType> Vector3<InternalType>::operator+(const Vector3& V) const
@@ -110,25 +110,25 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	Vector3<InternalType> Vector3<InternalType>::operator+(float B) const
+	Vector3<InternalType> Vector3<InternalType>::operator+(InternalType B) const
 	{
 		return Vector3(X + B, Y + B, Z + B);
 	}
 
 	template <typename InternalType>
-	Vector3<InternalType> Vector3<InternalType>::operator-(float B) const
+	Vector3<InternalType> Vector3<InternalType>::operator-(InternalType B) const
 	{
 		return *this + (-B);
 	}
 
 	template <typename InternalType>
-	Vector3<InternalType> Vector3<InternalType>::operator*(float B) const
+	Vector3<InternalType> Vector3<InternalType>::operator*(InternalType B) const
 	{
 		return Vector3(X * B, Y * B, Z * B);
 	}
 
 	template <typename InternalType>
-	Vector3<InternalType> Vector3<InternalType>::operator/(float B) const
+	Vector3<InternalType> Vector3<InternalType>::operator/(InternalType B) const
 	{
 		return *this * (1 / B);
 	}
@@ -162,28 +162,28 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	Vector3<InternalType>& Vector3<InternalType>::operator+=(float B)
+	Vector3<InternalType>& Vector3<InternalType>::operator+=(InternalType B)
 	{
 		*this = *this + B;
 		return *this;
 	}
 
 	template <typename InternalType>
-	Vector3<InternalType>& Vector3<InternalType>::operator-=(float B)
+	Vector3<InternalType>& Vector3<InternalType>::operator-=(InternalType B)
 	{
 		*this = *this - B;
 		return *this;
 	}
 
 	template <typename InternalType>
-	Vector3<InternalType>& Vector3<InternalType>::operator*=(float B)
+	Vector3<InternalType>& Vector3<InternalType>::operator*=(InternalType B)
 	{
 		*this = *this * B;
 		return *this;
 	}
 
 	template <typename InternalType>
-	Vector3<InternalType>& Vector3<InternalType>::operator/=(float B)
+	Vector3<InternalType>& Vector3<InternalType>::operator/=(InternalType B)
 	{
 		*this = *this / B;
 		return *this;
@@ -212,7 +212,7 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	float Vector3<InternalType>::operator|(const Vector3& V) const
+	InternalType Vector3<InternalType>::operator|(const Vector3& V) const
 	{
 		return X * V.X + Y * V.Y + Z * V.Z;
 	}
@@ -224,13 +224,13 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	float Vector3<InternalType>::Length() const
+	InternalType Vector3<InternalType>::Length() const
 	{
 		return sqrt(LengthSq());
 	}
 
 	template <typename InternalType>
-	float Vector3<InternalType>::LengthSq() const
+	InternalType Vector3<InternalType>::LengthSq() const
 	{
 		return X * X + Y * Y + Z * Z;
 	}

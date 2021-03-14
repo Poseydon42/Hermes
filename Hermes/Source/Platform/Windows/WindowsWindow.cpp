@@ -6,6 +6,22 @@ namespace Hermes
 {
 	bool WindowsWindow::ClassRegistered = false;
 
+	static Vec2i ClientRectToWindowSize(Vec2i ClientAreaSize, DWORD WindowStyle, DWORD ExStyle)
+	{
+		Vec2i Result = ClientAreaSize;
+		RECT WindowRect;
+		WindowRect.top = 0;
+		WindowRect.bottom = ClientAreaSize.Y;
+		WindowRect.left = 0;
+		WindowRect.right = ClientAreaSize.X;
+		if (AdjustWindowRectEx(&WindowRect, WindowStyle, false, ExStyle))
+		{
+			Result.X = WindowRect.right - WindowRect.left;
+			Result.Y = WindowRect.bottom - WindowRect.top;
+		}
+		return Result;
+	}
+	
 	WindowsWindow::WindowsWindow(const String& Name, Vec2i Size)
 	{
 		HINSTANCE AppInstance = GetModuleHandleW(NULL);
@@ -27,9 +43,11 @@ namespace Hermes
 		CurrentName = Name;
 		MessagePump = std::make_shared<EventQueue>();
 
+		
+		Vec2i WindowSize = ClientRectToWindowSize(Size, WindowStyle, ExStyle);
 		WindowHandle = CreateWindowExW(
-			0, ClassName, Name.c_str(), WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-			CW_USEDEFAULT, CW_USEDEFAULT, Size.X, Size.Y,
+			ExStyle, ClassName, Name.c_str(), WindowStyle,
+			CW_USEDEFAULT, CW_USEDEFAULT, WindowSize.X, WindowSize.Y,
 			0, 0, AppInstance, this);
 		if (WindowHandle)
 		{
@@ -106,7 +124,8 @@ namespace Hermes
 
 	bool WindowsWindow::Resize(Vec2i NewSize)
 	{
-		return SetWindowPos(WindowHandle, HWND_NOTOPMOST, 0, 0, NewSize.X, NewSize.Y, SWP_NOMOVE | SWP_NOZORDER);
+		Vec2i WindowSize = ClientRectToWindowSize(NewSize, WindowStyle, ExStyle);
+		return SetWindowPos(WindowHandle, HWND_NOTOPMOST, 0, 0, WindowSize.X, WindowSize.Y, SWP_NOMOVE | SWP_NOZORDER);
 	}
 
 	Vec2i WindowsWindow::GetSize() const

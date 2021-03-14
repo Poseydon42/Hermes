@@ -52,6 +52,10 @@ namespace Hermes
 
 		static constexpr const wchar_t* ClassName = L"HermesWindowClass";
 
+		static constexpr DWORD WindowStyle = WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+		
+		static constexpr DWORD ExStyle = 0;
+
 		LRESULT MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam);
 		
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

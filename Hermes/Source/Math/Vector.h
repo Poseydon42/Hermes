@@ -74,7 +74,7 @@ namespace Hermes
 	/**
 	 * Aliases for vectors of basic types
 	 */
-	using Vec3 = Vector3<InternalType>;
+	using Vec3 = Vector3<float>;
 	using Vec3i = Vector3<int32>;
 	using Vec3l = Vector3<int64>;
 	using Vec3d = Vector3<double>;

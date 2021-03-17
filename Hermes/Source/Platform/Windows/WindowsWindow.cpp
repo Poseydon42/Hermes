@@ -67,6 +67,7 @@ namespace Hermes
 
 	WindowsWindow::WindowsWindow(WindowsWindow&& Other)
 	{
+		std::swap(PrevPlacement, Other.PrevPlacement);
 		std::swap(MessagePump, Other.MessagePump);
 		std::swap(WindowHandle, Other.WindowHandle);
 		std::swap(CurrentName, Other.CurrentName);
@@ -74,6 +75,7 @@ namespace Hermes
 
 	WindowsWindow& WindowsWindow::operator=(WindowsWindow&& Other)
 	{
+		std::swap(PrevPlacement, Other.PrevPlacement);
 		std::swap(MessagePump, Other.MessagePump);
 		std::swap(WindowHandle, Other.WindowHandle);
 		std::swap(CurrentName, Other.CurrentName);

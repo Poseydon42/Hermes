@@ -39,7 +39,7 @@ namespace Hermes
 		LARGE_INTEGER NewPointer;
 		NewPointer.QuadPart = 0;
 		LARGE_INTEGER CurrentPointer;
-		bool Success = SetFilePointerEx(File, NewPointer, &CurrentPointer, FILE_CURRENT);
+		SetFilePointerEx(File, NewPointer, &CurrentPointer, FILE_CURRENT);
 
 		return CurrentPointer.QuadPart;
 	}

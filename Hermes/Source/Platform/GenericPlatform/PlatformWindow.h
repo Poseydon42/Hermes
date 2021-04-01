@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "Core/Core.h"
-#include "Core/Misc/NonCopyable.h"
+#include "Core/Misc/NonCopyableMovable.h"
 #include "Math/Vector2.h"
 #include "Core/Application/Event.h"
 
@@ -30,10 +30,18 @@ namespace Hermes
 	/**
 	 * Interface to platform windowing API
 	 */
-	class HERMES_API IPlatformWindow : public INonCopyable
+	class HERMES_API IPlatformWindow
 	{
+		MAKE_NON_COPYABLE(IPlatformWindow)
+		
 	public:
+		IPlatformWindow() = default;
+		
 		virtual ~IPlatformWindow() = default;
+
+		IPlatformWindow(IPlatformWindow&&) = default;
+
+		IPlatformWindow& operator=(IPlatformWindow&&) = default;
 
 		/**
 		 * Sets new name for a window

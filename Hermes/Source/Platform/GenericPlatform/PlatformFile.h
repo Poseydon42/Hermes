@@ -4,15 +4,17 @@
 
 #include "Core/Core.h"
 #include "Core/Misc/EnumClassOperators.h"
-#include "Core/Misc/NonCopyable.h"
+#include "Core/Misc/NonCopyableMovable.h"
 
 namespace Hermes
 {
 	/**
 	 * Platform-independent file handle
 	 */
-	class HERMES_API IPlatformFile : public INonCopyable
+	class HERMES_API IPlatformFile
 	{
+		MAKE_NON_COPYABLE(IPlatformFile)
+		
 	public:
 		enum class FileAccessMode
 		{

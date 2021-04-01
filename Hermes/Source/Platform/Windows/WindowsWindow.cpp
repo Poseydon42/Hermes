@@ -22,7 +22,7 @@ namespace Hermes
 		return Result;
 	}
 	
-	WindowsWindow::WindowsWindow(const String& Name, Vec2i Size)
+	WindowsWindow::WindowsWindow(const String& Name, Vec2i Size) : IPlatformWindow()
 	{
 		HINSTANCE AppInstance = GetModuleHandleW(NULL);
 		if (!ClassRegistered)
@@ -65,7 +65,7 @@ namespace Hermes
 			DestroyWindow(WindowHandle);
 	}
 
-	WindowsWindow::WindowsWindow(WindowsWindow&& Other)
+	WindowsWindow::WindowsWindow(WindowsWindow&& Other) : IPlatformWindow(std::move(Other))
 	{
 		std::swap(PrevPlacement, Other.PrevPlacement);
 		std::swap(MessagePump, Other.MessagePump);

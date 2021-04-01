@@ -4,15 +4,17 @@
 
 #include "Core/Core.h"
 #include "Core/Application/Application.h"
-#include "Core/Misc/NonCopyable.h"
+#include "Core/Misc/NonCopyableMovable.h"
 
 namespace Hermes
 {
 	class IEvent;
 	class IPlatformWindow;
 
-	class HERMES_API ApplicationLoop : public INonCopyable
+	class HERMES_API ApplicationLoop
 	{
+		MAKE_NON_COPYABLE(ApplicationLoop)
+		
 	public:
 		ApplicationLoop(IApplication* App);
 

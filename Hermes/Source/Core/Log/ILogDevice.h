@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "Core/Log/Logger.h"
+#include "Core/Misc/NonCopyableMovable.h"
 
 namespace Hermes
 {
@@ -10,8 +11,14 @@ namespace Hermes
 	 */
 	class HERMES_API ILogDevice
 	{
+		MAKE_NON_COPYABLE(ILogDevice)
+		
 	public:
-		virtual ~ILogDevice() {}
+		virtual ~ILogDevice() = default;
+
+		ILogDevice(ILogDevice&&) = default;
+
+		ILogDevice& operator=(ILogDevice&&) = default;
 		
 		virtual void Write(LogLevel Level, String Text) = 0;
 

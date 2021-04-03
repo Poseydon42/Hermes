@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Core/Misc/NonCopyableMovable.h"
 
 namespace Hermes
 {
@@ -10,8 +11,14 @@ namespace Hermes
 	 */
 	class HERMES_API IApplication
 	{
+		MAKE_NON_COPYABLE(IApplication)
+		
 	public:
-		virtual ~IApplication() {}
+		virtual ~IApplication() = default;
+
+		IApplication(IApplication&&) = default;
+
+		IApplication& operator=(IApplication&&) = default;
 		
 		/**
 		 * Called right after CreateApplicationInstance()

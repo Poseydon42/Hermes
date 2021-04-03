@@ -18,7 +18,9 @@ namespace Hermes
 	public:
 		ApplicationLoop(IApplication* App);
 
-		~ApplicationLoop();
+		~ApplicationLoop() = default;
+		ApplicationLoop(ApplicationLoop&&) = default;
+		ApplicationLoop& operator=(ApplicationLoop&&) = default;
 
 		void Run();
 		
@@ -27,7 +29,7 @@ namespace Hermes
 
 		bool RequestedExit;
 		
-		IApplication* Application;
+		std::unique_ptr<IApplication> Application;
 
 		std::shared_ptr<IPlatformWindow> ApplicationWindow;
 	};

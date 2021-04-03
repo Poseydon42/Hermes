@@ -18,7 +18,7 @@ namespace Hermes
 		
 		HERMES_LOG_INFO(L"Initializing game loop!");
 
-		Application = App;
+		Application = std::unique_ptr<IApplication>(App);
 		if (!Application->Init())
 			return;
 
@@ -29,11 +29,6 @@ namespace Hermes
 		}
 
 		RequestedExit = false;
-	}
-
-	ApplicationLoop::~ApplicationLoop()
-	{
-		delete Application;
 	}
 
 	void ApplicationLoop::Run()

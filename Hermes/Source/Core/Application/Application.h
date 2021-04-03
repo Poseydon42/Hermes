@@ -28,7 +28,7 @@ namespace Hermes
 
 		/**
 		 * Called before each frame
-		 * @param Delta Amout of time elapsed since previous call to Run(), in seconds
+		 * @param Delta Time elapsed since previous call to Run(), in seconds
 		 */
 		virtual void Run(float Delta) = 0;
 

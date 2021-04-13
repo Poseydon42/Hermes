@@ -14,6 +14,8 @@ namespace Hermes
 		MAKE_NON_COPYABLE(IApplication)
 		
 	public:
+		IApplication() = default;
+		
 		virtual ~IApplication() = default;
 
 		IApplication(IApplication&&) = default;

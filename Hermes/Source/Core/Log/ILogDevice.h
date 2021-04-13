@@ -16,6 +16,8 @@ namespace Hermes
 	public:
 		virtual ~ILogDevice() = default;
 
+		ILogDevice() = default;
+
 		ILogDevice(ILogDevice&&) = default;
 
 		ILogDevice& operator=(ILogDevice&&) = default;

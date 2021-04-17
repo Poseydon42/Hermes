@@ -5,6 +5,8 @@
 #include "Core/Application/Application.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
 #include "Platform/GenericPlatform/PlatformLibrary.h"
+#include "RenderInterface/GenericRenderInterface/Instance.h"
+#include "RenderInterface/Vulkan/VulkanInstance.h"
 
 void WindowEventHandler(const Hermes::IEvent& Event)
 {
@@ -16,9 +18,7 @@ class SandboxApp : public Hermes::IApplication
 public:
 	bool Init() override
 	{
-		std::shared_ptr<Hermes::IPlatformLibrary> Library = Hermes::IPlatformLibrary::Load(L"vulkan-1.dll");
-		void* FuncPtr = Library->GetSymbolAddress(L"vkGetInstanceProcAddr");
-		void* FuncPtr1 = Library->GetSymbolAddress(L"blablabla");
+		Hermes::RenderInterface::Instance* RenderInstance = new Hermes::Vulkan::VulkanInstance();
 
 		return true;
 	}

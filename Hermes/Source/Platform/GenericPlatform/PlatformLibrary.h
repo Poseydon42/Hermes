@@ -23,5 +23,7 @@ namespace Hermes
 		static std::shared_ptr<IPlatformLibrary> Load(const String& Path);
 
 		virtual void* GetSymbolAddress(const String& Name) = 0;
+
+		virtual bool IsValid() = 0;
 	};
 }

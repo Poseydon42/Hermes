@@ -26,6 +26,11 @@ namespace Hermes
 		return (void*)GetProcAddress(Library, ANSIName.c_str());
 	}
 
+	bool WindowsLibrary::IsValid()
+	{
+		return (Library != INVALID_HANDLE_VALUE);
+	}
+
 	WindowsLibrary::WindowsLibrary(const String& Path)
 	{
 		Library = LoadLibraryW(Path.c_str());

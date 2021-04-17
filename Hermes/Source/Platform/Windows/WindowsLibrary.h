@@ -24,7 +24,8 @@ namespace Hermes
 		WindowsLibrary& operator=(WindowsLibrary&& Other);
 		
 		void* GetSymbolAddress(const String& Name) override;
-	
+
+		bool IsValid() override;
 	private:
 
 		HMODULE Library;

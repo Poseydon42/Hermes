@@ -10,7 +10,7 @@ namespace Hermes
 	/**
 	 * A dynamically linked library interface
 	 */
-	class IPlatformLibrary
+	class HERMES_API IPlatformLibrary
 	{
 		MAKE_NON_COPYABLE(IPlatformLibrary)
 	public:

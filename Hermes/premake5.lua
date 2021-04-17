@@ -12,8 +12,9 @@ project "Hermes"
     objdir (intermediate_dir)
 
     files { "Source/**.h", "Source/**.cpp" }
-    includedirs { "Source/" }    
+    includedirs { "Source/", os.getenv("VULKAN_SDK").."/Include/" }    
     defines { "HERMES_BUILD_ENGINE", "HERMES_GAME_NAME=\"Sandbox\"" }
+    links { "vulkan-1" }
 
     filter "configurations:Debug"
         defines { "HERMES_DEBUG" }

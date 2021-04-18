@@ -7,6 +7,7 @@
 #include "Platform/GenericPlatform/PlatformLibrary.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"
 #include "RenderInterface/Vulkan/VulkanInstance.h"
+#include "Core/Misc/StringUtils.h"
 
 void WindowEventHandler(const Hermes::IEvent& Event)
 {
@@ -19,6 +20,14 @@ public:
 	bool Init() override
 	{
 		Hermes::RenderInterface::Instance* RenderInstance = new Hermes::Vulkan::VulkanInstance();
+
+		Hermes::String Str1 = L"123рст";
+		Hermes::ANSIString Str2 = Hermes::StringUtils::StringToANSI(Str1);
+		Hermes::String Str3 = Hermes::StringUtils::ANSIToString(Str2);
+		Hermes::ANSIString Str4 = Hermes::StringUtils::StringToANSI(Str3);
+		Hermes::String FinalStr = Hermes::StringUtils::ANSIToString(Str4);
+
+		HERMES_ASSERT(Str1 == FinalStr);
 
 		return true;
 	}

@@ -14,12 +14,12 @@ int WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	HMODULE GameModule = LoadLibrary(GameModuleName.c_str());
 	if (GameModule)
 	{
-		Hermes::CreateApplicationInstance CreateApplicationInstanceImpl = (Hermes::CreateApplicationInstance)GetProcAddress(GameModule, "CreateApplicationInstance");
+		auto* CreateApplicationInstanceImpl = (Hermes::CreateApplicationInstance)GetProcAddress(GameModule, "CreateApplicationInstance");
 		if (CreateApplicationInstanceImpl)
 		{
 			Hermes::IApplication* App = CreateApplicationInstanceImpl();
-			Hermes::ApplicationLoop AppLoop(App);
-			AppLoop.Run();
+			Hermes::GGameLoop = new Hermes::ApplicationLoop(App);
+			Hermes::GGameLoop->Run();
 		}
 		else
 		{

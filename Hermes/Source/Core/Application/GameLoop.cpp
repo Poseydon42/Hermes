@@ -9,6 +9,8 @@
 
 namespace Hermes
 {
+	ApplicationLoop* GGameLoop = 0;
+	
 	ApplicationLoop::ApplicationLoop(IApplication* App)
 	{
 		Logger::SetLogLevel(LogLevel::Debug);
@@ -39,6 +41,12 @@ namespace Hermes
 			Application->Run(0.0f);
 		}
 		Application->Shutdown();
+	}
+
+	void ApplicationLoop::RequestExit()
+	{
+		HERMES_LOG_INFO(L"Game loop received exit request");
+		RequestedExit = true;
 	}
 
 	void ApplicationLoop::WindowCloseEventHandler(const IEvent& Event)

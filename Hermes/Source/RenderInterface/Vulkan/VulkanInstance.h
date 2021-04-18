@@ -20,7 +20,10 @@ namespace Hermes
 			VulkanInstance& operator=(VulkanInstance&& Other);
 
 		private:
+			void CreateDebugMessenger();
+			
 			VkInstance Instance;
+			VkDebugUtilsMessengerEXT DebugMessenger = VK_NULL_HANDLE;
 		};
 	}
 }

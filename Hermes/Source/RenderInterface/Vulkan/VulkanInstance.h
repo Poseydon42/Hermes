@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"
+#include "RenderInterface/GenericRenderInterface/Device.h"
 #include "Vulkan.h"
 
 namespace Hermes
@@ -18,6 +19,8 @@ namespace Hermes
 
 			VulkanInstance(VulkanInstance&& Other);
 			VulkanInstance& operator=(VulkanInstance&& Other);
+
+			std::vector<RenderInterface::DeviceProperties> EnumerateAvailableDevices() override;
 
 		private:
 			void CreateDebugMessenger();

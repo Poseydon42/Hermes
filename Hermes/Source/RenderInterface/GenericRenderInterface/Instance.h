@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
+#include "RenderInterface/GenericRenderInterface/Device.h"
 
 namespace Hermes
 {
@@ -21,6 +22,8 @@ namespace Hermes
 			virtual ~Instance() = default;
 			Instance(Instance&& Other) = default;
 			Instance& operator=(Instance&& Other) = default;
+
+			virtual std::vector<DeviceProperties> EnumerateAvailableDevices() = 0;
 		};
 	}
 }

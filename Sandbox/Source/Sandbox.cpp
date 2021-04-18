@@ -21,13 +21,7 @@ public:
 	{
 		Hermes::RenderInterface::Instance* RenderInstance = new Hermes::Vulkan::VulkanInstance();
 
-		Hermes::String Str1 = L"123рст";
-		Hermes::ANSIString Str2 = Hermes::StringUtils::StringToANSI(Str1);
-		Hermes::String Str3 = Hermes::StringUtils::ANSIToString(Str2);
-		Hermes::ANSIString Str4 = Hermes::StringUtils::StringToANSI(Str3);
-		Hermes::String FinalStr = Hermes::StringUtils::ANSIToString(Str4);
-
-		HERMES_ASSERT(Str1 == FinalStr);
+		auto GPUs = RenderInstance->EnumerateAvailableDevices();
 
 		return true;
 	}

@@ -11,16 +11,16 @@ namespace Hermes
 	class IEvent;
 	class IPlatformWindow;
 
-	class HERMES_API ApplicationLoop
+	class HERMES_API GameLoop
 	{
-		MAKE_NON_COPYABLE(ApplicationLoop)
+		MAKE_NON_COPYABLE(GameLoop)
 		
 	public:
-		ApplicationLoop(IApplication* App);
+		GameLoop(IApplication* App);
 
-		~ApplicationLoop() = default;
-		ApplicationLoop(ApplicationLoop&&) = default;
-		ApplicationLoop& operator=(ApplicationLoop&&) = default;
+		~GameLoop() = default;
+		GameLoop(GameLoop&&) = default;
+		GameLoop& operator=(GameLoop&&) = default;
 
 		void Run();
 
@@ -36,5 +36,5 @@ namespace Hermes
 		std::shared_ptr<IPlatformWindow> ApplicationWindow;
 	};
 
-	extern ApplicationLoop* GGameLoop;
+	extern GameLoop* GGameLoop;
 }

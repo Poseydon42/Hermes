@@ -20,6 +20,7 @@ namespace Hermes
 	 * ANSI strings are supported only for accessing 3rd party code and API
 	 */
 	using String = std::wstring;
+	using ANSIString = std::string;
 
 	typedef uint8_t uint8;
 	typedef int8_t int8;

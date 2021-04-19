@@ -2,7 +2,7 @@
 
 #include "Core/Core.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
 #include "Vulkan.h"
 
 namespace Hermes
@@ -25,7 +25,7 @@ namespace Hermes
 		private:
 			void CreateDebugMessenger();
 			
-			VkInstance Instance;
+			VkInstance Instance = VK_NULL_HANDLE;
 			VkDebugUtilsMessengerEXT DebugMessenger = VK_NULL_HANDLE;
 		};
 	}

@@ -3,6 +3,7 @@
 #include <array>
 
 #include "Core/Misc/StringUtils.h"
+#include "RenderInterface/Vulkan/VulkanPhysicalDevice.h"
 
 namespace Hermes
 {
@@ -124,43 +125,50 @@ namespace Hermes
 
 		std::vector<RenderInterface::DeviceProperties> VulkanInstance::EnumerateAvailableDevices()
 		{
-			std::vector<RenderInterface::DeviceProperties> Result;
-			
-			std::vector<VkPhysicalDevice> AvailableDevices;
-			uint32_t DeviceCount = 0;
-			
-			VK_CHECK_RESULT(vkEnumeratePhysicalDevices(Instance, &DeviceCount, 0))
-			Result.resize(DeviceCount);
-			AvailableDevices.resize(DeviceCount);
-			VK_CHECK_RESULT(vkEnumeratePhysicalDevices(Instance, &DeviceCount, AvailableDevices.data()))
-
-			for (size_t i = 0; i < AvailableDevices.size(); i++)
+			if (AvailableDevices.empty()) // We should do this only one time
 			{
-				VkPhysicalDeviceProperties Properties;
-				std::vector<VkQueueFamilyProperties> QueueFamilies;
-				uint32_t QueueFamiliesCount = 0;
-				
-				vkGetPhysicalDeviceProperties(AvailableDevices[i], &Properties);
-				Result[i].Name = Properties.deviceName;
-				
-				vkGetPhysicalDeviceQueueFamilyProperties(AvailableDevices[i], &QueueFamiliesCount, 0);
-				QueueFamilies.resize(QueueFamiliesCount);
-				vkGetPhysicalDeviceQueueFamilyProperties(AvailableDevices[i], &QueueFamiliesCount, QueueFamilies.data());
-				
-				Result[i].QueueFamilies.reserve(QueueFamiliesCount);
-				for (auto& Family : QueueFamilies)
+				uint32_t DeviceCount = 0;
+
+				VK_CHECK_RESULT(vkEnumeratePhysicalDevices(Instance, &DeviceCount, 0));
+				AvailableDeviceProperties.resize(DeviceCount);
+				AvailableDevices.resize(DeviceCount);
+				VK_CHECK_RESULT(vkEnumeratePhysicalDevices(Instance, &DeviceCount, AvailableDevices.data()));
+
+				for (size_t i = 0; i < AvailableDevices.size(); i++)
 				{
-					RenderInterface::QueueFamilyProperties QueueFamilyProps = {};
-					QueueFamilyProps.Count = Family.queueCount;
-					if (Family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-						QueueFamilyProps.Type |= RenderInterface::QueueFamilyType::Graphics;
-					if (Family.queueFlags & VK_QUEUE_TRANSFER_BIT)
-						QueueFamilyProps.Type |= RenderInterface::QueueFamilyType::Transfer;
-					Result[i].QueueFamilies.push_back(QueueFamilyProps);
+					VkPhysicalDeviceProperties Properties;
+					std::vector<VkQueueFamilyProperties> QueueFamilies;
+					uint32_t QueueFamiliesCount = 0;
+
+					AvailableDeviceProperties[i].InternalIndex = (RenderInterface::DeviceIndex)i;
+
+					vkGetPhysicalDeviceProperties(AvailableDevices[i], &Properties);
+					AvailableDeviceProperties[i].Name = Properties.deviceName;
+
+					vkGetPhysicalDeviceQueueFamilyProperties(AvailableDevices[i], &QueueFamiliesCount, 0);
+					QueueFamilies.resize(QueueFamiliesCount);
+					vkGetPhysicalDeviceQueueFamilyProperties(AvailableDevices[i], &QueueFamiliesCount, QueueFamilies.data());
+
+					AvailableDeviceProperties[i].QueueFamilies.reserve(QueueFamiliesCount);
+					for (auto& Family : QueueFamilies)
+					{
+						RenderInterface::QueueFamilyProperties QueueFamilyProps = {};
+						QueueFamilyProps.Count = Family.queueCount;
+						if (Family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+							QueueFamilyProps.Type |= RenderInterface::QueueFamilyType::Graphics;
+						if (Family.queueFlags & VK_QUEUE_TRANSFER_BIT)
+							QueueFamilyProps.Type |= RenderInterface::QueueFamilyType::Transfer;
+						AvailableDeviceProperties[i].QueueFamilies.push_back(QueueFamilyProps);
+					}
 				}
 			}
 
-			return Result;
+			return AvailableDeviceProperties;
+		}
+
+		std::shared_ptr<RenderInterface::PhysicalDevice> VulkanInstance::GetPhysicalDevice(RenderInterface::DeviceIndex Index)
+		{
+			return std::make_shared<VulkanPhysicalDevice>(std::move(VulkanPhysicalDevice(AvailableDevices[Index])));
 		}
 
 		void VulkanInstance::CreateDebugMessenger()

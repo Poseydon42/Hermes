@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
@@ -24,6 +26,7 @@ namespace Hermes
 			Instance& operator=(Instance&& Other) = default;
 
 			virtual std::vector<DeviceProperties> EnumerateAvailableDevices() = 0;
+			virtual std::shared_ptr<PhysicalDevice> GetPhysicalDevice(DeviceIndex Index) = 0;
 		};
 	}
 }

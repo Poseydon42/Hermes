@@ -20,6 +20,8 @@ public:
 	bool Init() override
 	{
 		Hermes::RenderInterface::Instance* RenderInstance = new Hermes::Vulkan::VulkanInstance();
+		auto Devices = RenderInstance->EnumerateAvailableDevices();
+		std::shared_ptr<Hermes::RenderInterface::PhysicalDevice> PhysicalDevice = RenderInstance->GetPhysicalDevice(Devices[0].InternalIndex);
 
 		auto GPUs = RenderInstance->EnumerateAvailableDevices();
 

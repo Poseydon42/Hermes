@@ -136,30 +136,8 @@ namespace Hermes
 
 				for (size_t i = 0; i < AvailableDevices.size(); i++)
 				{
-					VkPhysicalDeviceProperties Properties;
-					std::vector<VkQueueFamilyProperties> QueueFamilies;
-					uint32_t QueueFamiliesCount = 0;
-
+					AvailableDeviceProperties[i] = GetPhysicalDeviceProperties(AvailableDevices[i]);
 					AvailableDeviceProperties[i].InternalIndex = (RenderInterface::DeviceIndex)i;
-
-					vkGetPhysicalDeviceProperties(AvailableDevices[i], &Properties);
-					AvailableDeviceProperties[i].Name = Properties.deviceName;
-
-					vkGetPhysicalDeviceQueueFamilyProperties(AvailableDevices[i], &QueueFamiliesCount, 0);
-					QueueFamilies.resize(QueueFamiliesCount);
-					vkGetPhysicalDeviceQueueFamilyProperties(AvailableDevices[i], &QueueFamiliesCount, QueueFamilies.data());
-
-					AvailableDeviceProperties[i].QueueFamilies.reserve(QueueFamiliesCount);
-					for (auto& Family : QueueFamilies)
-					{
-						RenderInterface::QueueFamilyProperties QueueFamilyProps = {};
-						QueueFamilyProps.Count = Family.queueCount;
-						if (Family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-							QueueFamilyProps.Type |= RenderInterface::QueueFamilyType::Graphics;
-						if (Family.queueFlags & VK_QUEUE_TRANSFER_BIT)
-							QueueFamilyProps.Type |= RenderInterface::QueueFamilyType::Transfer;
-						AvailableDeviceProperties[i].QueueFamilies.push_back(QueueFamilyProps);
-					}
 				}
 			}
 

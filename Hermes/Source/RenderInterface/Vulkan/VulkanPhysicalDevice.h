@@ -10,6 +10,12 @@ namespace Hermes
 	namespace Vulkan
 	{
 		class VulkanInstance;
+
+		/**
+		 * Fills DeviceProperties struct with actual properties of given device
+		 * NOTE : InternalIndex field remains uninitialized
+		 */
+		RenderInterface::DeviceProperties GetPhysicalDeviceProperties(VkPhysicalDevice Device);
 		
 		class HERMES_API VulkanPhysicalDevice final : public RenderInterface::PhysicalDevice
 		{
@@ -18,10 +24,15 @@ namespace Hermes
 			~VulkanPhysicalDevice() override;
 			VulkanPhysicalDevice(VulkanPhysicalDevice&&);
 			VulkanPhysicalDevice& operator=(VulkanPhysicalDevice&&);
+
+			const RenderInterface::DeviceProperties& GetProperties() const override;
+
 		private:
 			VulkanPhysicalDevice(VkPhysicalDevice InDevice);
 			
 			VkPhysicalDevice Device = VK_NULL_HANDLE;
+
+			RenderInterface::DeviceProperties Properties;
 
 			friend class VulkanInstance;
 		};

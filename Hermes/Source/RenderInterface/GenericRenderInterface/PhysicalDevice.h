@@ -41,6 +41,8 @@ namespace Hermes
 			virtual ~PhysicalDevice() = default;
 			PhysicalDevice(PhysicalDevice&&) = default;
 			PhysicalDevice& operator=(PhysicalDevice&&) = default;
+
+			virtual const DeviceProperties& GetProperties() const = 0;
 		};
 	}
 }

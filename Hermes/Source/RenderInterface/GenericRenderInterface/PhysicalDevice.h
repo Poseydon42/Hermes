@@ -29,6 +29,10 @@ namespace Hermes
 			DeviceIndex InternalIndex = 0;
 		};
 
+		/**
+		 * A wrapper around handle to GPU
+		 * Does not do anything but create an actual 'logical' device that is a single access point to all GPU features
+		 */
 		class HERMES_API PhysicalDevice
 		{
 			MAKE_NON_COPYABLE(PhysicalDevice)

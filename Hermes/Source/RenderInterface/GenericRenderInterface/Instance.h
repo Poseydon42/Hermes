@@ -25,7 +25,15 @@ namespace Hermes
 			Instance(Instance&& Other) = default;
 			Instance& operator=(Instance&& Other) = default;
 
+			/**
+			 * Retrieves a list of all available GPUs in systems, potentially including virtual and CPU-emulated
+			 */
 			virtual std::vector<DeviceProperties> EnumerateAvailableDevices() = 0;
+
+			/**
+			 * Retrieves a handle to a physical device selected from those that were returned by EnumerateAvailableDevices()
+			 * @param Index Index of device that you need. This should be retrieved from DeviceProperties struct of required device
+			 */
 			virtual std::shared_ptr<PhysicalDevice> GetPhysicalDevice(DeviceIndex Index) = 0;
 		};
 	}

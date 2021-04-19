@@ -6,6 +6,7 @@ project "Hermes"
     language "C++"
     cppdialect "C++17"
     architecture "x86_64"
+    exceptionhandling "Off"
 
     targetname "Hermes"
     targetdir(build_dir)

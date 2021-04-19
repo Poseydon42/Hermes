@@ -6,6 +6,7 @@ project "Sandbox"
     language "C++"
     cppdialect "C++17"
     architecture "x86_64"
+    exceptionhandling "Off"
 
     targetname "Sandbox"
     targetdir(build_dir)

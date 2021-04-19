@@ -10,4 +10,4 @@ namespace Hermes::Vulkan
 	extern VkAllocationCallbacks* GVulkanAllocator;
 }
 
-#define VK_CHECK_RESULT(Call) { VkResult Result = Call; if (Result != VK_SUCCESS) { HERMES_LOG_ERROR(L"Vulkan function call failed. Return value is: %u", (unsigned int)Result); } }
+#define VK_CHECK_RESULT(Call) { VkResult VkCheckedResult = Call; if (VkCheckedResult != VK_SUCCESS) { HERMES_LOG_ERROR(L"Vulkan function call failed. Return value is: %u", (unsigned int)VkCheckedResult); } }

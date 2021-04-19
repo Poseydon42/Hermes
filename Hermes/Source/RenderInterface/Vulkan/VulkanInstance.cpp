@@ -77,7 +77,7 @@ namespace Hermes
 			
 			VkInstanceCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-			CreateInfo.enabledExtensionCount = RequiredExtensions.size();
+			CreateInfo.enabledExtensionCount = (uint32)RequiredExtensions.size();
 			CreateInfo.ppEnabledExtensionNames = RequiredExtensions.data();
 			if (ValidationLayersEnabled)
 			{

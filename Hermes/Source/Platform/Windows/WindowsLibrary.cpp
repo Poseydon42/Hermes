@@ -2,6 +2,8 @@
 
 #ifdef HERMES_PLATFORM_WINDOWS
 
+#include "Core/Misc/StringUtils.h"
+
 namespace Hermes
 {
 	WindowsLibrary::~WindowsLibrary()
@@ -22,7 +24,7 @@ namespace Hermes
 
 	void* WindowsLibrary::GetSymbolAddress(const String& Name)
 	{
-		std::string ANSIName(Name.begin(), Name.end());
+		std::string ANSIName = StringUtils::StringToANSI(Name);
 		return (void*)GetProcAddress(Library, ANSIName.c_str());
 	}
 

@@ -2,7 +2,7 @@
 
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
 
 namespace Hermes
 {

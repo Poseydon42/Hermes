@@ -1,5 +1,7 @@
 #include "VulkanPhysicalDevice.h"
 
+#include "RenderInterface/Vulkan/VulkanDevice.h"
+
 namespace Hermes
 {
 	namespace Vulkan
@@ -10,7 +12,7 @@ namespace Hermes
 			
 			VkPhysicalDeviceProperties Properties;
 			std::vector<VkQueueFamilyProperties> QueueFamilies;
-			uint32_t QueueFamiliesCount = 0;
+			uint32 QueueFamiliesCount = 0;
 
 			vkGetPhysicalDeviceProperties(Device, &Properties);
 			Result.Name = Properties.deviceName;
@@ -20,15 +22,18 @@ namespace Hermes
 			vkGetPhysicalDeviceQueueFamilyProperties(Device, &QueueFamiliesCount, QueueFamilies.data());
 
 			Result.QueueFamilies.reserve(QueueFamiliesCount);
+			uint32 CurrentIndex = 0;
 			for (auto& Family : QueueFamilies)
 			{
 				RenderInterface::QueueFamilyProperties QueueFamilyProps = {};
 				QueueFamilyProps.Count = Family.queueCount;
+				QueueFamilyProps.Index = CurrentIndex;
 				if (Family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 					QueueFamilyProps.Type |= RenderInterface::QueueFamilyType::Graphics;
 				if (Family.queueFlags & VK_QUEUE_TRANSFER_BIT)
 					QueueFamilyProps.Type |= RenderInterface::QueueFamilyType::Transfer;
 				Result.QueueFamilies.push_back(QueueFamilyProps);
+				CurrentIndex++;
 			}
 
 			return Result;
@@ -54,6 +59,11 @@ namespace Hermes
 		const RenderInterface::DeviceProperties& VulkanPhysicalDevice::GetProperties() const
 		{
 			return Properties;
+		}
+
+		std::shared_ptr<RenderInterface::Device> VulkanPhysicalDevice::CreateDevice(const std::vector<RenderInterface::QueueFamilyProperties>& RequiredQueues)
+		{
+			return std::make_shared<VulkanDevice>(Device, RequiredQueues);
 		}
 
 		VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice InDevice) : Device(InDevice), Properties(GetPhysicalDeviceProperties(InDevice))

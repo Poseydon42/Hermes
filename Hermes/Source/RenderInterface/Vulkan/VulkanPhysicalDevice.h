@@ -26,12 +26,12 @@ namespace Hermes
 			VulkanPhysicalDevice& operator=(VulkanPhysicalDevice&&);
 
 			const RenderInterface::DeviceProperties& GetProperties() const override;
-
+			std::shared_ptr<RenderInterface::Device> CreateDevice(const std::vector<RenderInterface::QueueFamilyProperties>& RequiredQueues) override;
+			
 		private:
 			VulkanPhysicalDevice(VkPhysicalDevice InDevice);
 			
 			VkPhysicalDevice Device = VK_NULL_HANDLE;
-
 			RenderInterface::DeviceProperties Properties;
 
 			friend class VulkanInstance;

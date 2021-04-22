@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Core/Core.h"
 #include "Core/Misc/EnumClassOperators.h"
 
@@ -17,7 +19,8 @@ namespace Hermes
 		struct QueueFamilyProperties
 		{
 			QueueFamilyType Type;
-			uint32_t Count;
+			uint32 Count;
+			uint32 Index;
 		};
 
 		using DeviceIndex = size_t;
@@ -28,6 +31,8 @@ namespace Hermes
 			std::vector<QueueFamilyProperties> QueueFamilies;
 			DeviceIndex InternalIndex = 0;
 		};
+
+		class Device;
 
 		/**
 		 * A wrapper around handle to GPU
@@ -43,6 +48,13 @@ namespace Hermes
 			PhysicalDevice& operator=(PhysicalDevice&&) = default;
 
 			virtual const DeviceProperties& GetProperties() const = 0;
+
+			/**
+			 * Creates a logical device from given physical device
+			 * @param  RequiredQueues Array of queue descriptors that application needs. QueueFamilyProperties::Count here
+			 * represents the number of queues of given type that application needs, not total number that GPU supports
+			 */
+			virtual std::shared_ptr<Device> CreateDevice(const std::vector<RenderInterface::QueueFamilyProperties>& RequiredQueues) = 0;
 		};
 	}
 }

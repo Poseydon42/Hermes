@@ -58,7 +58,7 @@ namespace Hermes
 			bool ValidationLayersEnabled = false;
 			const char* ValidationLayerName = "VK_LAYER_KHRONOS_validation";
 #ifdef HERMES_ENABLE_VK_VALIDATION
-			uint32_t LayersCount;
+			uint32 LayersCount;
 			std::vector<VkLayerProperties> AvailableLayers;
 			vkEnumerateInstanceLayerProperties(&LayersCount, NULL);
 			AvailableLayers.resize(LayersCount);
@@ -127,7 +127,7 @@ namespace Hermes
 		{
 			if (AvailableDevices.empty()) // We should do this only one time
 			{
-				uint32_t DeviceCount = 0;
+				uint32 DeviceCount = 0;
 
 				VK_CHECK_RESULT(vkEnumeratePhysicalDevices(Instance, &DeviceCount, 0));
 				AvailableDeviceProperties.resize(DeviceCount);

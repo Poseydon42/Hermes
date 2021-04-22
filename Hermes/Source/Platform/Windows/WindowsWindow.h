@@ -38,6 +38,8 @@ namespace Hermes
 		std::weak_ptr<EventQueue> WindowQueue() override;
 
 		void Run() const override;
+		
+		void* GetNativeHandle() const override;
 	
 	private:
 		HWND WindowHandle;

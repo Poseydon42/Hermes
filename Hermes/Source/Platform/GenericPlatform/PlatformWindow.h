@@ -92,6 +92,11 @@ namespace Hermes
 		 */
 		virtual std::weak_ptr<EventQueue> WindowQueue() = 0;
 
+		/**
+		 * Returns underlying platform-specific handle
+		 */
+		virtual void* GetNativeHandle() const = 0;
+
 		static std::shared_ptr<IPlatformWindow> CreatePlatformWindow(const String& Name, Vec2i Size);
 	};
 }

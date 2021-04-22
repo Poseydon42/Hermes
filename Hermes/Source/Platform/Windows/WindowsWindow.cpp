@@ -161,6 +161,11 @@ namespace Hermes
 		MessagePump->Run();
 	}
 
+	void* WindowsWindow::GetNativeHandle() const
+	{
+		return (void*)WindowHandle;
+	}
+
 	LRESULT WindowsWindow::MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 	{
 		switch (Message)

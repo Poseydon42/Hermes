@@ -19,7 +19,10 @@ int WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 		{
 			Hermes::IApplication* App = CreateApplicationInstanceImpl();
 			Hermes::GGameLoop = new Hermes::GameLoop(App);
-			Hermes::GGameLoop->Run();
+			if (Hermes::GGameLoop->Init())
+			{
+				Hermes::GGameLoop->Run();
+			}
 		}
 		else
 		{

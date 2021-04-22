@@ -22,10 +22,13 @@ namespace Hermes
 		GameLoop(GameLoop&&) = default;
 		GameLoop& operator=(GameLoop&&) = default;
 
+		bool Init();
+		
 		void Run();
 
 		void RequestExit();
 		
+		std::shared_ptr<const IPlatformWindow> GetWindow() const;
 	private:
 		void WindowCloseEventHandler(const IEvent& Event);
 
@@ -36,5 +39,5 @@ namespace Hermes
 		std::shared_ptr<IPlatformWindow> ApplicationWindow;
 	};
 
-	extern GameLoop* GGameLoop;
+	HERMES_API extern GameLoop* GGameLoop;
 }

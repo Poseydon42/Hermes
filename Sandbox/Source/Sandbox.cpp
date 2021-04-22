@@ -7,7 +7,7 @@
 #include "Platform/GenericPlatform/PlatformLibrary.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"
 #include "RenderInterface/Vulkan/VulkanInstance.h"
-#include "Core/Misc/StringUtils.h"
+#include "Core/Application/GameLoop.h"
 
 void WindowEventHandler(const Hermes::IEvent& Event)
 {
@@ -19,7 +19,7 @@ class SandboxApp : public Hermes::IApplication
 public:
 	bool Init() override
 	{
-		Hermes::RenderInterface::Instance* RenderInstance = new Hermes::Vulkan::VulkanInstance();
+		Hermes::RenderInterface::Instance* RenderInstance = new Hermes::Vulkan::VulkanInstance(*Hermes::GGameLoop->GetWindow());
 		auto Devices = RenderInstance->EnumerateAvailableDevices();
 		std::shared_ptr<Hermes::RenderInterface::PhysicalDevice> PhysicalDevice = RenderInstance->GetPhysicalDevice(Devices[0].InternalIndex);
 

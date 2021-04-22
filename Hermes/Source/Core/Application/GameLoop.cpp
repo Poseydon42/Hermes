@@ -11,7 +11,7 @@ namespace Hermes
 {
 	GameLoop* GGameLoop = 0;
 	
-	GameLoop::GameLoop(IApplication* App)
+	GameLoop::GameLoop(IApplication* App) : RequestedExit(false)
 	{
 		Logger::SetLogLevel(LogLevel::Debug);
 		Logger::SetLogFormat(L"[%Y-%M-%d %h:%m:%s:%u][%f:%#][%l] %v");
@@ -21,16 +21,28 @@ namespace Hermes
 		HERMES_LOG_INFO(L"Initializing game loop!");
 
 		Application = std::unique_ptr<IApplication>(App);
-		if (!Application->Init())
-			return;
+	}
 
+	bool GameLoop::Init()
+	{
 		ApplicationWindow = IPlatformWindow::CreatePlatformWindow(L"Hermes Engine", { 1280, 720 });
+		if (!ApplicationWindow->IsValid())
+			return false;
 		if (auto WindowMessageQueue = ApplicationWindow->WindowQueue().lock())
 		{
 			WindowMessageQueue->Subscribe<GameLoop, &GameLoop::WindowCloseEventHandler>(WindowCloseEvent::GetStaticType(), this);
 		}
+		else
+		{
+			return false;
+		}
+		if (!Application->Init())
+		{
+			HERMES_LOG_FATAL(L"Application::Init() returned false. Exiting");
+			return false;
+		}
 
-		RequestedExit = false;
+		return true;
 	}
 
 	void GameLoop::Run()
@@ -47,6 +59,11 @@ namespace Hermes
 	{
 		HERMES_LOG_INFO(L"Game loop received exit request");
 		RequestedExit = true;
+	}
+
+	std::shared_ptr<const IPlatformWindow> GameLoop::GetWindow() const
+	{
+		return ApplicationWindow;
 	}
 
 	void GameLoop::WindowCloseEventHandler(const IEvent& Event)

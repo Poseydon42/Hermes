@@ -9,7 +9,19 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-
+		VkSurfaceKHR CreateSurface(VkInstance Instance, const IPlatformWindow& Window)
+		{
+			VkSurfaceKHR Result = VK_NULL_HANDLE;
+#ifdef HERMES_PLATFORM_WINDOWS
+			VkWin32SurfaceCreateInfoKHR CreateInfo = {};
+			CreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+			CreateInfo.hinstance = GetModuleHandleW(0);
+			CreateInfo.hwnd = (HWND)Window.GetNativeHandle(); // On Windows this should only be HWND as we are not going to use anything other than WinAPI
+			VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(Instance, &CreateInfo, GVulkanAllocator, &Result))
+#endif
+			return Result;
+		}
+		
 // TODO : add command line argument instead of predefining it
 #if defined(HERMES_DEBUG) || defined(HERMES_DEVELOPMENT)
 #define HERMES_ENABLE_VK_VALIDATION
@@ -45,7 +57,7 @@ namespace Hermes
 			return VK_FALSE;
 		}
 
-		VulkanInstance::VulkanInstance()
+		VulkanInstance::VulkanInstance(const IPlatformWindow& Window)
 		{
 			VkApplicationInfo AppInfo = {};
 			AppInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -98,6 +110,8 @@ namespace Hermes
 			{
 				CreateDebugMessenger();
 			}
+
+			Surface = CreateSurface(Instance, Window);
 		}
 
 		VulkanInstance::~VulkanInstance()

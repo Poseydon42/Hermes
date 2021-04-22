@@ -3,6 +3,7 @@
 #include "Core/Core.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"
 #include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
+#include "Platform/GenericPlatform/PlatformWindow.h"
 #include "Vulkan.h"
 
 namespace Hermes
@@ -13,7 +14,7 @@ namespace Hermes
 		{
 			MAKE_NON_COPYABLE(VulkanInstance)
 		public:
-			VulkanInstance();
+			VulkanInstance(const IPlatformWindow& Window);
 			
 			~VulkanInstance() override;
 
@@ -28,6 +29,7 @@ namespace Hermes
 			
 			VkInstance Instance = VK_NULL_HANDLE;
 			VkDebugUtilsMessengerEXT DebugMessenger = VK_NULL_HANDLE;
+			VkSurfaceKHR Surface = VK_NULL_HANDLE;
 
 			std::vector<VkPhysicalDevice> AvailableDevices;
 			std::vector<RenderInterface::DeviceProperties> AvailableDeviceProperties;

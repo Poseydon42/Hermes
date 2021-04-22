@@ -1,7 +1,10 @@
 #pragma once
 
+#include <memory>
+
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
+#include "Core/Misc/DefaultConstructors.h"
 
 namespace Hermes
 {
@@ -13,11 +16,9 @@ namespace Hermes
 		class HERMES_API Device
 		{
 			MAKE_NON_COPYABLE(Device)
-		public:
-			Device() = default;
-			virtual ~Device() = default;
-			Device(Device&&) = default;
-			Device& operator=(Device&&) = default;
+			ADD_DEFAULT_MOVE_CONSTRUCTOR(Device)
+			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(Device)
+			ADD_DEFAULT_CONSTRUCTOR(Device)
 		};
 	}
 }

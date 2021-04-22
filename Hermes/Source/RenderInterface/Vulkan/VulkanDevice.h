@@ -15,10 +15,10 @@ namespace Hermes
 		public:
 			VulkanDevice(VkPhysicalDevice PhysicalDevice, const std::vector<RenderInterface::QueueFamilyProperties>& Queues);
 			
-			~VulkanDevice();
+			~VulkanDevice() override;
 			VulkanDevice(VulkanDevice&& Other);
 			VulkanDevice& operator=(VulkanDevice&& Other);
-
+		
 		private:
 			VkDevice Device = VK_NULL_HANDLE;
 		};

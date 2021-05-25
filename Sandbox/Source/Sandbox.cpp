@@ -1,4 +1,5 @@
 #include "Core/Application/EventQueue.h"
+#include "RenderInterface/GenericRenderInterface/Device.h"
 #ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
@@ -7,6 +8,7 @@
 #include "Platform/GenericPlatform/PlatformLibrary.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"
 #include "RenderInterface/Vulkan/VulkanInstance.h"
+#include "RenderInterface/Vulkan/VulkanSwapchain.h"
 #include "Core/Application/GameLoop.h"
 
 void WindowEventHandler(const Hermes::IEvent& Event)
@@ -31,6 +33,8 @@ public:
 		Queue.Type = Families[0].Type;
 		std::vector<Hermes::RenderInterface::QueueFamilyProperties> RequiredQueues(1, Queue);
 		auto Device = PhysicalDevice->CreateDevice(RequiredQueues);
+
+		auto Swapchain = Device->CreateSwapchain({ 1280, 720 }, 3);
 
 		return true;
 	}

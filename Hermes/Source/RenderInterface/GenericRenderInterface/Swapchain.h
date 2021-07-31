@@ -8,7 +8,7 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
-		class Swapchain
+		class HERMES_API Swapchain
 		{
 			MAKE_NON_COPYABLE(Swapchain)
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(Swapchain)

@@ -7,6 +7,8 @@
 #include "Core/Misc/DefaultConstructors.h"
 #include "Math/Vector2.h"
 
+#include "RenderInterface/GenericRenderInterface/Queue.h"
+
 namespace Hermes
 {
 	namespace RenderInterface
@@ -25,6 +27,8 @@ namespace Hermes
 
 		public:
 			virtual std::shared_ptr<Swapchain> CreateSwapchain(Vec2i Size, uint32 NumFrames) = 0;
+
+			virtual std::shared_ptr<Queue> GetQueue(QueueType Type) = 0;
 		};
 	}
 }

@@ -2,6 +2,7 @@
 
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"
 #include "Core/Application/GameLoop.h"
+#include "RenderInterface/Vulkan/VulkanQueue.h"
 
 namespace Hermes
 {
@@ -14,7 +15,7 @@ namespace Hermes
 			Surface(InSurface),
 			RenderQueue(VK_NULL_HANDLE),
 			TransferQueue(VK_NULL_HANDLE),
-			PresentQueue(VK_NULL_HANDLE)
+			PresentationQueue(VK_NULL_HANDLE)
 		{
 			std::vector<VkDeviceQueueCreateInfo> QueueCreateInfos;
 			int32 RenderQueueIndex = -1, TransferQueueIndex = -1;
@@ -74,8 +75,8 @@ namespace Hermes
 				GGameLoop->RequestExit();
 				return;
 			}
-			vkGetDeviceQueue(Device, RenderQueueIndex, 0, &RenderQueue);
-			vkGetDeviceQueue(Device, TransferQueueIndex, 0, &TransferQueue);
+			RenderQueue = std::make_shared<VulkanQueue>(Device, RenderQueueIndex);
+			TransferQueue = std::make_shared<VulkanQueue>(Device, TransferQueueIndex);
 
 			VkBool32 IsPresentationSupported = false;
 			vkGetPhysicalDeviceSurfaceSupportKHR(PhysicalDevice, RenderQueueIndex, Surface, &IsPresentationSupported);
@@ -85,7 +86,7 @@ namespace Hermes
 				GGameLoop->RequestExit();
 				return;
 			}
-			PresentQueue = RenderQueue;
+			PresentationQueue = RenderQueue;
 		}
 
 		VulkanDevice::~VulkanDevice()
@@ -99,7 +100,7 @@ namespace Hermes
 			std::swap(PhysicalDevice, Other.PhysicalDevice);
 			std::swap(Instance, Other.Instance);
 			std::swap(Surface, Other.Surface);
-			std::swap(PresentQueue, Other.PresentQueue);
+			std::swap(PresentationQueue, Other.PresentationQueue);
 		}
 
 		VulkanDevice& VulkanDevice::operator=(VulkanDevice&& Other)
@@ -108,13 +109,32 @@ namespace Hermes
 			std::swap(PhysicalDevice, Other.PhysicalDevice);
 			std::swap(Instance, Other.Instance);
 			std::swap(Surface, Other.Surface);
-			std::swap(PresentQueue, Other.PresentQueue);
+			std::swap(PresentationQueue, Other.PresentationQueue);
 			return *this;
 		}
 
 		std::shared_ptr<RenderInterface::Swapchain> VulkanDevice::CreateSwapchain(Vec2i Size, uint32 NumFrames)
 		{
 			return std::make_shared<VulkanSwapchain>(PhysicalDevice, Device, Surface, Size, NumFrames);
+		}
+
+		std::shared_ptr<RenderInterface::Queue> VulkanDevice::GetQueue(RenderInterface::QueueType Type)
+		{
+			switch (Type)
+			{
+			case RenderInterface::QueueType::Render:
+				return RenderQueue;
+				break;
+			case RenderInterface::QueueType::Transfer:
+				return TransferQueue;
+				break;
+			case RenderInterface::QueueType::Presentation:
+				return PresentationQueue;
+				break;
+			default:
+				HERMES_LOG_FATAL(L"Someone is trying to get unknown queue type from logical device.");
+				GGameLoop->RequestExit();
+			}
 		}
 	}
 }

@@ -14,7 +14,7 @@ namespace Hermes
 	{
 		class VulkanDevice;
 
-		class VulkanSwapchain : public RenderInterface::Swapchain
+		class HERMES_API VulkanSwapchain : public RenderInterface::Swapchain
 		{
 			MAKE_NON_COPYABLE(VulkanSwapchain)
 		public:

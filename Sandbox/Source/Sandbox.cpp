@@ -26,13 +26,7 @@ public:
 		std::shared_ptr<Hermes::RenderInterface::PhysicalDevice> PhysicalDevice = RenderInstance->GetPhysicalDevice(Devices[0].InternalIndex);
 
 		auto GPUs = RenderInstance->EnumerateAvailableDevices();
-		std::vector<Hermes::RenderInterface::QueueFamilyProperties> Families = PhysicalDevice->GetProperties().QueueFamilies;
-		Hermes::RenderInterface::QueueFamilyProperties Queue = {};
-		Queue.Index = 0;
-		Queue.Count = 1;
-		Queue.Type = Families[0].Type;
-		std::vector<Hermes::RenderInterface::QueueFamilyProperties> RequiredQueues(1, Queue);
-		auto Device = PhysicalDevice->CreateDevice(RequiredQueues);
+		auto Device = PhysicalDevice->CreateDevice();
 
 		auto Swapchain = Device->CreateSwapchain({ 1280, 720 }, 3);
 

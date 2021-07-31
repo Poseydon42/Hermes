@@ -13,7 +13,7 @@ namespace Hermes
 		{
 			MAKE_NON_COPYABLE(VulkanDevice)
 		public:
-			VulkanDevice(VkPhysicalDevice InPhysicalDevice, VkInstance InInstance, VkSurfaceKHR InSurface, const std::vector<RenderInterface::QueueFamilyProperties>& Queues);
+			VulkanDevice(VkPhysicalDevice InPhysicalDevice, VkInstance InInstance, VkSurfaceKHR InSurface);
 			
 			~VulkanDevice() override;
 			VulkanDevice(VulkanDevice&& Other);
@@ -26,7 +26,9 @@ namespace Hermes
 			VkInstance Instance;
 			VkSurfaceKHR Surface;
 
-			VkQueue PresentationQueue;
+			VkQueue RenderQueue;
+			VkQueue TransferQueue;
+			VkQueue PresentQueue;
 		};
 	}
 }

@@ -1,73 +1,61 @@
 ﻿#include "VulkanDevice.h"
 
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"
+#include "Core/Application/GameLoop.h"
 
 namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, VkInstance InInstance, VkSurfaceKHR InSurface, const std::vector<RenderInterface::QueueFamilyProperties>& Queues) :
-			Device(VK_NULL_HANDLE), PhysicalDevice(InPhysicalDevice), Instance(InInstance), Surface(InSurface), PresentationQueue(VK_NULL_HANDLE)
+		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, VkInstance InInstance, VkSurfaceKHR InSurface) :
+			Device(VK_NULL_HANDLE),
+			PhysicalDevice(InPhysicalDevice),
+			Instance(InInstance),
+			Surface(InSurface),
+			RenderQueue(VK_NULL_HANDLE),
+			TransferQueue(VK_NULL_HANDLE),
+			PresentQueue(VK_NULL_HANDLE)
 		{
-			std::vector<VkDeviceQueueCreateInfo> QueueCreateInfo;
-			QueueCreateInfo.reserve(Queues.size());
-			uint32 MaxCount = 0;
-			for (const auto& Queue : Queues)
-				MaxCount = (Queue.Count > MaxCount ? Queue.Count : MaxCount);
-			std::vector<float> Priorities(MaxCount, 1.0f);
-			bool PresentationQueueFound = false;
-			uint32 PresentationFamilyIndex = (uint32)-1;
-			// We check whether there is at least one queue family that supports presentation
-			// among those that were requested by user
-			for (const auto& Queue : Queues)
+			std::vector<VkDeviceQueueCreateInfo> QueueCreateInfos;
+			int32 RenderQueueIndex = -1, TransferQueueIndex = -1;
+
+			uint32 QueueCount = 0;
+			std::vector<VkQueueFamilyProperties> QueueFamilies;
+			vkGetPhysicalDeviceQueueFamilyProperties(InPhysicalDevice, &QueueCount, 0);
+			QueueFamilies.resize(QueueCount);
+			vkGetPhysicalDeviceQueueFamilyProperties(InPhysicalDevice, &QueueCount, QueueFamilies.data());
+			float QueuePriority = 1.0f;
+
+			for (size_t i = 0; i < QueueFamilies.size(); i++)
 			{
-				VkDeviceQueueCreateInfo Info = {};
-				Info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-				Info.pQueuePriorities = Priorities.data();
-				Info.queueCount = Queue.Count;
-				Info.queueFamilyIndex = Queue.Index;
-				QueueCreateInfo.push_back(Info);
-				VkBool32 PresentationSupported = false;
-				VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceSupportKHR(PhysicalDevice, Queue.Index, Surface, &PresentationSupported));
-				if (PresentationSupported)
+				const auto& QueueFamily = QueueFamilies[i];
+				bool QueueUsed = false;
+				if (RenderQueueIndex == -1 && (QueueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT && !QueueUsed)
 				{
-					PresentationQueueFound = true;
-					PresentationFamilyIndex = Queue.Index;
+					RenderQueueIndex = (uint32)i;
+					QueueUsed = true;
 				}
-			}
-			// If we haven't found such queue family among those that were requested
-			// then we loop through all available ones and select first suitable
-			if (!PresentationQueueFound)
-			{
-				uint32 QueueFamilyCount;
-				std::vector<VkQueueFamilyProperties> QueueFamilies;
-				vkGetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, &QueueFamilyCount, VK_NULL_HANDLE);
-				HERMES_ASSERT(QueueFamilyCount);
-				QueueFamilies.resize(QueueFamilyCount);
-				vkGetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, &QueueFamilyCount, QueueFamilies.data());
-				for (uint32 Index = 0; Index < QueueFamilyCount; Index++)
+				if (TransferQueueIndex == -1 && (QueueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT && !QueueUsed)
 				{
-					VkBool32 PresentationSupported = false;
-					VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceSupportKHR(PhysicalDevice, Index, Surface, &PresentationSupported));
-					if (PresentationSupported)
-					{
-						VkDeviceQueueCreateInfo PresentationQueueCreateInfo = {};
-						PresentationQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-						PresentationQueueCreateInfo.pQueuePriorities = Priorities.data();
-						PresentationQueueCreateInfo.queueCount = 1;
-						PresentationQueueCreateInfo.queueFamilyIndex = Index;
-						QueueCreateInfo.push_back(PresentationQueueCreateInfo);
-						PresentationQueueFound = true;
-						PresentationFamilyIndex = Index;
-					}
+					TransferQueueIndex = (uint32)i;
+					QueueUsed = true;
 				}
+
+				if (!QueueUsed)
+					continue;
+
+				VkDeviceQueueCreateInfo CreateInfo = {};
+				CreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+				CreateInfo.queueCount = 1;
+				CreateInfo.queueFamilyIndex = (uint32)i;
+				CreateInfo.pQueuePriorities = &QueuePriority;
+				QueueCreateInfos.push_back(CreateInfo);
 			}
-			HERMES_ASSERT_LOG(PresentationQueueFound, L"Failed to find family queue that supports presentaion operations.");
-			
+
 			VkDeviceCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-			CreateInfo.queueCreateInfoCount = (uint32)QueueCreateInfo.size();
-			CreateInfo.pQueueCreateInfos = QueueCreateInfo.data();
+			CreateInfo.queueCreateInfoCount = (uint32)QueueCreateInfos.size();
+			CreateInfo.pQueueCreateInfos = QueueCreateInfos.data();
 			const auto* SwapchainExtensionName = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
 			CreateInfo.enabledExtensionCount = 1;
 			CreateInfo.ppEnabledExtensionNames = &SwapchainExtensionName;
@@ -75,7 +63,29 @@ namespace Hermes
 			CreateInfo.pEnabledFeatures = &RequiredFeatures;
 			VK_CHECK_RESULT(vkCreateDevice(PhysicalDevice, &CreateInfo, GVulkanAllocator, &Device));
 
-			vkGetDeviceQueue(Device, PresentationFamilyIndex, 0, &PresentationQueue);
+			if (TransferQueueIndex == -1)
+			{
+				// We have to use render queue to perform transfer operations then
+				TransferQueueIndex = RenderQueueIndex;
+			}
+			if (RenderQueueIndex == -1)
+			{
+				HERMES_LOG_FATAL(L"Failed to find any suitable Vulkan render queue.");
+				GGameLoop->RequestExit();
+				return;
+			}
+			vkGetDeviceQueue(Device, RenderQueueIndex, 0, &RenderQueue);
+			vkGetDeviceQueue(Device, TransferQueueIndex, 0, &TransferQueue);
+
+			VkBool32 IsPresentationSupported = false;
+			vkGetPhysicalDeviceSurfaceSupportKHR(PhysicalDevice, RenderQueueIndex, Surface, &IsPresentationSupported);
+			if (!IsPresentationSupported)
+			{
+				HERMES_LOG_FATAL(L"Selected render queue does not support presentation.");
+				GGameLoop->RequestExit();
+				return;
+			}
+			PresentQueue = RenderQueue;
 		}
 
 		VulkanDevice::~VulkanDevice()
@@ -89,7 +99,7 @@ namespace Hermes
 			std::swap(PhysicalDevice, Other.PhysicalDevice);
 			std::swap(Instance, Other.Instance);
 			std::swap(Surface, Other.Surface);
-			std::swap(PresentationQueue, Other.PresentationQueue);
+			std::swap(PresentQueue, Other.PresentQueue);
 		}
 
 		VulkanDevice& VulkanDevice::operator=(VulkanDevice&& Other)
@@ -98,7 +108,7 @@ namespace Hermes
 			std::swap(PhysicalDevice, Other.PhysicalDevice);
 			std::swap(Instance, Other.Instance);
 			std::swap(Surface, Other.Surface);
-			std::swap(PresentationQueue, Other.PresentationQueue);
+			std::swap(PresentQueue, Other.PresentQueue);
 			return *this;
 		}
 

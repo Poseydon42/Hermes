@@ -26,7 +26,7 @@ namespace Hermes
 			VulkanPhysicalDevice& operator=(VulkanPhysicalDevice&&);
 
 			const RenderInterface::DeviceProperties& GetProperties() const override;
-			std::shared_ptr<RenderInterface::Device> CreateDevice(const std::vector<RenderInterface::QueueFamilyProperties>& RequiredQueues) override;
+			std::shared_ptr<RenderInterface::Device> CreateDevice() override;
 
 			VkInstance GetInstance();
 			

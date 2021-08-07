@@ -30,7 +30,7 @@ namespace Hermes
 		/**
 		 * Represents a resource that occupies some memory, has its format and can be read and written
 		 */
-		class Resource
+		class HERMES_API Resource
 		{
 		public:
 			ADD_DEFAULT_CONSTRUCTOR(Resource);
@@ -59,7 +59,7 @@ namespace Hermes
 		/**
 		 * Class that implements some Resource's boilerplate code similar for all graphic APIs
 		 */
-		class ResourceBase : public Resource
+		class HERMES_API ResourceBase : public Resource
 		{
 		public:
 			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(ResourceBase);

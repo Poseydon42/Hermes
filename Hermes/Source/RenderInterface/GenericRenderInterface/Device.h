@@ -8,12 +8,14 @@
 #include "Math/Vector2.h"
 
 #include "RenderInterface/GenericRenderInterface/Queue.h"
+#include "RenderInterface/GenericRenderInterface/Resource.h"
 
 namespace Hermes
 {
 	namespace RenderInterface
 	{
 		class Swapchain;
+		class Resource;
 		
 		/**
 		 * Represents a 'logical device', basically an interface to all GPU functionality
@@ -29,6 +31,8 @@ namespace Hermes
 			virtual std::shared_ptr<Swapchain> CreateSwapchain(Vec2i Size, uint32 NumFrames) = 0;
 
 			virtual std::shared_ptr<Queue> GetQueue(QueueType Type) = 0;
+
+			virtual std::shared_ptr<Resource> CreateBuffer(size_t Size, ResourceUsageType Usage) = 0;
 		};
 	}
 }

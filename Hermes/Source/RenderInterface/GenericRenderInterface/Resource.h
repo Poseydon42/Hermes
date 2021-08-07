@@ -3,6 +3,7 @@
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
+#include "Core/Misc/EnumClassOperators.h"
 
 namespace Hermes
 {
@@ -14,6 +15,17 @@ namespace Hermes
 			Buffer
 			// TODO : expand(texture, sampler etc.)
 		};
+
+		enum class ResourceUsageType
+		{
+			VertexBuffer,
+			IndexBuffer,
+			UniformBuffer,
+			CopySource,
+			CopyDestination
+		};
+
+		ENUM_CLASS_OPERATORS(ResourceUsageType)
 
 		/**
 		 * Represents a resource that occupies some memory, has its format and can be read and written

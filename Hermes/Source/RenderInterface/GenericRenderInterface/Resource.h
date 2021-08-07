@@ -18,11 +18,12 @@ namespace Hermes
 
 		enum class ResourceUsageType
 		{
-			VertexBuffer,
-			IndexBuffer,
-			UniformBuffer,
-			CopySource,
-			CopyDestination
+			VertexBuffer = 1 << 0,
+			IndexBuffer = 1 << 1,
+			UniformBuffer = 1 << 2,
+			CopySource = 1 << 3,
+			CopyDestination = 1 << 4,
+			CPUAccessible = 1 << 5
 		};
 
 		ENUM_CLASS_OPERATORS(ResourceUsageType)

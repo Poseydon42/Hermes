@@ -61,7 +61,7 @@ namespace Hermes
 		{
 			VkApplicationInfo AppInfo = {};
 			AppInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-			AppInfo.apiVersion = VK_API_VERSION_1_0;
+			AppInfo.apiVersion = GVulkanVersion;
 			AppInfo.applicationVersion = VK_MAKE_VERSION(0, 1, 0);
 			AppInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
 			AppInfo.pApplicationName = "Game"; // TODO : set actual app name

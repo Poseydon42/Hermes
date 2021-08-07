@@ -3,6 +3,7 @@
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"
 #include "Core/Application/GameLoop.h"
 #include "RenderInterface/Vulkan/VulkanQueue.h"
+#include "RenderInterface/Vulkan/VulkanResource.h"
 #include "Platform/GenericPlatform/PlatformMisc.h"
 
 namespace Hermes
@@ -174,6 +175,11 @@ namespace Hermes
 				HERMES_LOG_FATAL(L"Someone is trying to get unknown queue type from logical device.");
 				GGameLoop->RequestExit();
 			}
+		}
+
+		std::shared_ptr<RenderInterface::Resource> VulkanDevice::CreateBuffer(size_t Size, RenderInterface::ResourceUsageType Usage)
+		{
+			return std::make_shared<VulkanResource>(shared_from_this(), Size, Usage);
 		}
 	}
 }

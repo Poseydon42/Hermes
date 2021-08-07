@@ -11,7 +11,7 @@ namespace Hermes
 	{
 		class VulkanQueue;
 		
-		class HERMES_API VulkanDevice : public RenderInterface::Device
+		class HERMES_API VulkanDevice : public RenderInterface::Device, public std::enable_shared_from_this<VulkanDevice>
 		{
 			MAKE_NON_COPYABLE(VulkanDevice)
 		public:
@@ -24,6 +24,11 @@ namespace Hermes
 			std::shared_ptr<RenderInterface::Swapchain> CreateSwapchain(Vec2i Size, uint32 NumFrames) override;
 
 			std::shared_ptr<RenderInterface::Queue> GetQueue(RenderInterface::QueueType Type) override;
+			
+			std::shared_ptr<RenderInterface::Resource> CreateBuffer(size_t Size, RenderInterface::ResourceUsageType Usage) override;
+
+			// Don't make const - device 'state' includes allocations, thus it can be changed through VmaAllocator instance
+			VmaAllocator GetAllocator() { return Allocator; }
 		private:
 			VkDevice Device;
 			VkPhysicalDevice PhysicalDevice;

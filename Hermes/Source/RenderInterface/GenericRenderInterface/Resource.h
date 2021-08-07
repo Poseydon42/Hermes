@@ -67,7 +67,7 @@ namespace Hermes
 			MAKE_NON_COPYABLE(ResourceBase);
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(ResourceBase);
 
-			ResourceBase() : Type(ResourceType::Unknown), Size(0) { }
+			ResourceBase(ResourceType InType = ResourceType::Unknown, size_t InSize = 0)  : Type(InType), Size(InSize) { }
 			
 			size_t GetSize() const override { return Size; }
 			ResourceType GetResourceType() const override { return Type; }

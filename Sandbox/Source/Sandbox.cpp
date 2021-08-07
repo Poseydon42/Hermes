@@ -6,6 +6,7 @@
 #include "Core/Application/Application.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
 #include "Platform/GenericPlatform/PlatformLibrary.h"
+#include "RenderInterface/GenericRenderInterface/Resource.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"
 #include "RenderInterface/Vulkan/VulkanInstance.h"
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"
@@ -29,6 +30,13 @@ public:
 		auto Device = PhysicalDevice->CreateDevice();
 
 		auto Swapchain = Device->CreateSwapchain({ 1280, 720 }, 3);
+
+		auto Buffer = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::VertexBuffer | Hermes::RenderInterface::ResourceUsageType::CPUAccessible);
+		void* BufferMemory = Buffer->Map();
+		HERMES_ASSERT(BufferMemory);
+		HERMES_ASSERT(Buffer->GetSize() == 1024);
+		HERMES_ASSERT(Buffer->GetResourceType() == Hermes::RenderInterface::ResourceType::Buffer);
+		Buffer->Unmap();
 
 		return true;
 	}

@@ -3,8 +3,9 @@
 #ifdef HERMES_PLATFORM_WINDOWS
 #define VK_USE_PLATFORM_WIN32_KHR
 #endif
-#include <vulkan/vulkan.h>
+// !!!!! DON'T EXCHANGE THOSE TWO INCLUDES. vk_mem_alloc.h causes lot's of build error if it is included after Vulkan headers !!!!!
 #include <vk_mem_alloc.h>
+#include <vulkan/vulkan.h>
 
 #include "Core/Core.h"
 

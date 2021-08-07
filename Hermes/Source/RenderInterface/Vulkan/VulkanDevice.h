@@ -29,6 +29,7 @@ namespace Hermes
 			VkPhysicalDevice PhysicalDevice;
 			VkInstance Instance;
 			VkSurfaceKHR Surface;
+			VmaAllocator Allocator;
 
 			std::shared_ptr<RenderInterface::Queue> RenderQueue;
 			std::shared_ptr<RenderInterface::Queue> TransferQueue;

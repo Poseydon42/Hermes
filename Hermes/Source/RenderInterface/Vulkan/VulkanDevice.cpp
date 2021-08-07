@@ -3,6 +3,7 @@
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"
 #include "Core/Application/GameLoop.h"
 #include "RenderInterface/Vulkan/VulkanQueue.h"
+#include "Platform/GenericPlatform/PlatformMisc.h"
 
 namespace Hermes
 {
@@ -53,13 +54,41 @@ namespace Hermes
 				QueueCreateInfos.push_back(CreateInfo);
 			}
 
+			std::vector<const char*> EnabledExtensions;
+			std::vector<VkExtensionProperties> AvailableExtensions;
+			uint32 AvailableExtensionsCount;
+			vkEnumerateDeviceExtensionProperties(PhysicalDevice, nullptr, &AvailableExtensionsCount, nullptr);
+			AvailableExtensions.resize(AvailableExtensionsCount);
+			vkEnumerateDeviceExtensionProperties(PhysicalDevice, nullptr, &AvailableExtensionsCount, AvailableExtensions.data());
+
+			bool SwapchainExtensionSupported = false;
+			bool MemoryBudgetExtensionSupported = false;
+			for (const auto& Extension : AvailableExtensions)
+			{
+				if (strcmp(Extension.extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
+				{
+					SwapchainExtensionSupported = true;
+					EnabledExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+				}
+				if (strcmp(Extension.extensionName, VK_EXT_MEMORY_BUDGET_EXTENSION_NAME) == 0)
+				{
+					MemoryBudgetExtensionSupported = true;
+					EnabledExtensions.push_back(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
+				}
+			}
+
+			if (!SwapchainExtensionSupported)
+			{
+				PlatformMisc::ExitWithMessageBox(-1, L"Vulkan error", L"Selected Vulkan device does not support VK_KHR_swapchain extension. Update your GPU driver and try again.");
+			}
+			HERMES_LOG_INFO(L"VK_EXT_memory_budget extension support: %s", MemoryBudgetExtensionSupported ? L"true" : L"false");
+			
 			VkDeviceCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 			CreateInfo.queueCreateInfoCount = (uint32)QueueCreateInfos.size();
 			CreateInfo.pQueueCreateInfos = QueueCreateInfos.data();
-			const auto* SwapchainExtensionName = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-			CreateInfo.enabledExtensionCount = 1;
-			CreateInfo.ppEnabledExtensionNames = &SwapchainExtensionName;
+			CreateInfo.ppEnabledExtensionNames = EnabledExtensions.data();
+			CreateInfo.enabledExtensionCount = (uint32)EnabledExtensions.size();
 			VkPhysicalDeviceFeatures RequiredFeatures = {};
 			CreateInfo.pEnabledFeatures = &RequiredFeatures;
 			VK_CHECK_RESULT(vkCreateDevice(PhysicalDevice, &CreateInfo, GVulkanAllocator, &Device));
@@ -87,6 +116,16 @@ namespace Hermes
 				return;
 			}
 			PresentationQueue = RenderQueue;
+
+			VmaAllocatorCreateInfo AllocatorCreateInfo = {};
+			if (MemoryBudgetExtensionSupported)
+				AllocatorCreateInfo.flags |= VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
+			AllocatorCreateInfo.physicalDevice = PhysicalDevice;
+			AllocatorCreateInfo.device = Device;
+			AllocatorCreateInfo.pAllocationCallbacks = GVulkanAllocator;
+			AllocatorCreateInfo.instance = Instance;
+			AllocatorCreateInfo.vulkanApiVersion = GVulkanVersion;
+			VK_CHECK_RESULT(vmaCreateAllocator(&AllocatorCreateInfo, &Allocator));
 		}
 
 		VulkanDevice::~VulkanDevice()

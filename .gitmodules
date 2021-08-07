@@ -1,0 +1,3 @@
+[submodule "Hermes/ThirdParty/VulkanMemoryAllocator"]
+	path = Hermes/ThirdParty/VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git

@@ -15,7 +15,7 @@ project "Sandbox"
     dependson { "Hermes" }
     libdirs { build_dir }
     files { "Source/**.h", "Source/**.cpp" }
-    includedirs { "Source/", "../Hermes/Source", os.getenv("VULKAN_SDK").."/Include/" }
+    includedirs { "Source/", "../Hermes/Source", os.getenv("VULKAN_SDK").."/Include/", "../Hermes/ThirdParty/VulkanMemoryAllocator/include" }
     defines { "HERMES_BUILD_APPLICATION", "HERMES_GAME_NAME=\"Sandbox\"" }
 
     filter "configurations:Debug"

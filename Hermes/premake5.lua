@@ -13,7 +13,7 @@ project "Hermes"
     objdir (intermediate_dir)
 
     files { "Source/**.h", "Source/**.cpp" }
-    includedirs { "Source/", os.getenv("VULKAN_SDK").."/Include/" }
+    includedirs { "Source/", os.getenv("VULKAN_SDK").."/Include/", "ThirdParty/VulkanMemoryAllocator/include" }
     libdirs { os.getenv("VULKAN_SDK").."/Lib/" } -- 32 bit builds are not supported --
     defines { "HERMES_BUILD_ENGINE", "HERMES_GAME_NAME=\"Sandbox\"" }
     links { "vulkan-1" }

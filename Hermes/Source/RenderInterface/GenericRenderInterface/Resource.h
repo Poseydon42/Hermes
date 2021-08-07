@@ -10,6 +10,7 @@ namespace Hermes
 	{
 		enum class ResourceType
 		{
+			Unknown,
 			Buffer
 			// TODO : expand(texture, sampler etc.)
 		};
@@ -41,6 +42,26 @@ namespace Hermes
 			 * Unmaps resource memory from application virtual memory space
 			 */
 			virtual void Unmap() = 0;
+		};
+
+		/**
+		 * Class that implements some Resource's boilerplate code similar for all graphic APIs
+		 */
+		class ResourceBase : public Resource
+		{
+		public:
+			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(ResourceBase);
+			MAKE_NON_COPYABLE(ResourceBase);
+			ADD_DEFAULT_MOVE_CONSTRUCTOR(ResourceBase);
+
+			ResourceBase() : Type(ResourceType::Unknown), Size(0) { }
+			
+			size_t GetSize() const override { return Size; }
+			ResourceType GetResourceType() const override { return Type; }
+		
+		private:
+			ResourceType Type;
+			size_t Size;
 		};
 	}
 }

@@ -9,6 +9,8 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		class CommandBuffer;
+
 		enum class QueueType
 		{
 			Render,
@@ -25,6 +27,11 @@ namespace Hermes
 			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(Queue)
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(Queue)
 			MAKE_NON_COPYABLE(Queue)
+
+			/**
+			 * Creates a command buffer that can be executed on this queue later
+			 */
+			virtual std::shared_ptr<CommandBuffer> CreateCommandBuffer() = 0;
 		private:
 		};
 	}

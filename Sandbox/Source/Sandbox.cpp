@@ -1,4 +1,5 @@
 #include "Core/Application/EventQueue.h"
+#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #ifdef HERMES_PLATFORM_WINDOWS
 
@@ -31,12 +32,25 @@ public:
 
 		auto Swapchain = Device->CreateSwapchain({ 1280, 720 }, 3);
 
-		auto Buffer = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::VertexBuffer | Hermes::RenderInterface::ResourceUsageType::CPUAccessible);
-		void* BufferMemory = Buffer->Map();
-		HERMES_ASSERT(BufferMemory);
-		HERMES_ASSERT(Buffer->GetSize() == 1024);
-		HERMES_ASSERT(Buffer->GetResourceType() == Hermes::RenderInterface::ResourceType::Buffer);
-		Buffer->Unmap();
+		static constexpr size_t TestBufferSize = 1024;
+		auto CPUBuffer = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::CPUAccessible | Hermes::RenderInterface::ResourceUsageType::CopySource);
+		auto* Data = (Hermes::uint8*)CPUBuffer->Map();
+		for (size_t Offset = 0; Offset < TestBufferSize; Offset++)
+			Data[Offset] = (Hermes::uint8)Offset;
+		CPUBuffer->Unmap();
+
+		auto GPUBuffer = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::CopyDestination);
+
+		auto CommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->CreateCommandBuffer(true);
+		CommandBuffer->BeginRecording();
+		std::vector<Hermes::RenderInterface::BufferCopyRegion> CopyRegions;
+		Hermes::RenderInterface::BufferCopyRegion CopyRegion = {};
+		CopyRegion.SourceOffset = 0;
+		CopyRegion.DestinationOffset = 0;
+		CopyRegion.NumBytes = TestBufferSize;
+		CopyRegions.push_back(CopyRegion);
+		CommandBuffer->CopyBuffer(CPUBuffer, GPUBuffer, CopyRegions);
+		CommandBuffer->EndRecording();
 
 		return true;
 	}

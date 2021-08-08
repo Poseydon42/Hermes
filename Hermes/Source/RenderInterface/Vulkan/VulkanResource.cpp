@@ -76,5 +76,13 @@ namespace Hermes
 			VmaAllocator Allocator = Device->GetAllocator();
 			vmaUnmapMemory(Allocator, Allocation);
 		}
+
+		VkBuffer VulkanResource::GetAsBuffer() const
+		{
+			if (GetResourceType() == RenderInterface::ResourceType::Buffer)
+				return As.Buffer.Handle;
+			else
+				return VK_NULL_HANDLE;
+		}
 	}
 }

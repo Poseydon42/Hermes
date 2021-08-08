@@ -31,6 +31,8 @@ namespace Hermes
 			
 			void Unmap() override;
 
+			VkBuffer GetAsBuffer() const;
+
 		private:
 			union As
 			{

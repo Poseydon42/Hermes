@@ -30,8 +30,10 @@ namespace Hermes
 
 			/**
 			 * Creates a command buffer that can be executed on this queue later
+			 * @param IsPrimaryBuffer If true then this command buffer can be submitted to queue, but can not be called from other command buffers \n
+			 * If false then this command buffer can be called from other command buffers, but can not be submitted to queue directly
 			 */
-			virtual std::shared_ptr<CommandBuffer> CreateCommandBuffer() = 0;
+			virtual std::shared_ptr<CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) = 0;
 		private:
 		};
 	}

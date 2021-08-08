@@ -29,12 +29,15 @@ namespace Hermes
 
 			// Don't make const - device 'state' includes allocations, thus it can be changed through VmaAllocator instance
 			VmaAllocator GetAllocator() { return Allocator; }
+			VkDevice GetDevice() { return Device; }
 		private:
 			VkDevice Device;
 			VkPhysicalDevice PhysicalDevice;
 			VkInstance Instance;
 			VkSurfaceKHR Surface;
 			VmaAllocator Allocator;
+
+			int32 RenderQueueIndex = -1, TransferQueueIndex = -1;
 
 			std::shared_ptr<RenderInterface::Queue> RenderQueue;
 			std::shared_ptr<RenderInterface::Queue> TransferQueue;

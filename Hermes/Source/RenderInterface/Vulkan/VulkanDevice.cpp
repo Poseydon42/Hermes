@@ -20,7 +20,6 @@ namespace Hermes
 			PresentationQueue(VK_NULL_HANDLE)
 		{
 			std::vector<VkDeviceQueueCreateInfo> QueueCreateInfos;
-			int32 RenderQueueIndex = -1, TransferQueueIndex = -1;
 
 			uint32 QueueCount = 0;
 			std::vector<VkQueueFamilyProperties> QueueFamilies;
@@ -105,9 +104,7 @@ namespace Hermes
 				GGameLoop->RequestExit();
 				return;
 			}
-			RenderQueue = std::make_shared<VulkanQueue>(Device, RenderQueueIndex);
-			TransferQueue = std::make_shared<VulkanQueue>(Device, TransferQueueIndex);
-
+			
 			VkBool32 IsPresentationSupported = false;
 			vkGetPhysicalDeviceSurfaceSupportKHR(PhysicalDevice, RenderQueueIndex, Surface, &IsPresentationSupported);
 			if (!IsPresentationSupported)
@@ -116,7 +113,6 @@ namespace Hermes
 				GGameLoop->RequestExit();
 				return;
 			}
-			PresentationQueue = RenderQueue;
 
 			VmaAllocatorCreateInfo AllocatorCreateInfo = {};
 			if (MemoryBudgetExtensionSupported)
@@ -163,20 +159,28 @@ namespace Hermes
 
 		std::shared_ptr<RenderInterface::Queue> VulkanDevice::GetQueue(RenderInterface::QueueType Type)
 		{
+			// NOTE : we need to 'lazily construct' those because we can't use shared_from_this() in constructor
 			switch (Type)
 			{
 			case RenderInterface::QueueType::Render:
+				if (RenderQueue == nullptr)
+					RenderQueue = std::make_shared<VulkanQueue>(shared_from_this(), RenderQueueIndex);
 				return RenderQueue;
 				break;
 			case RenderInterface::QueueType::Transfer:
+				if (TransferQueue == nullptr)
+					TransferQueue = std::make_shared<VulkanQueue>(shared_from_this(), TransferQueueIndex);
 				return TransferQueue;
 				break;
 			case RenderInterface::QueueType::Presentation:
+				if (PresentationQueue == nullptr)
+					PresentationQueue = RenderQueue;
 				return PresentationQueue;
 				break;
 			default:
 				HERMES_LOG_FATAL(L"Someone is trying to get unknown queue type from logical device.");
 				GGameLoop->RequestExit();
+				return {};
 			}
 		}
 

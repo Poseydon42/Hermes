@@ -27,6 +27,16 @@ namespace Hermes
 			MAKE_NON_COPYABLE(CommandBuffer)
 
 		public:
+			/*
+			 * Resets all previously recorded commands and enabled recording again
+			 */
+			virtual void BeginRecording() = 0;
+
+			/**
+			 * Ends recording of buffer
+			 */
+			virtual void EndRecording() = 0;
+			
 			/**
 			 * Transfer queue commands
 			 */

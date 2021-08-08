@@ -131,6 +131,7 @@ namespace Hermes
 
 		VulkanDevice::~VulkanDevice()
 		{
+			vmaDestroyAllocator(Allocator);
 			vkDestroyDevice(Device, GVulkanAllocator);
 		}
 

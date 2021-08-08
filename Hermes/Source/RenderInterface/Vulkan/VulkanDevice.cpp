@@ -142,6 +142,7 @@ namespace Hermes
 			std::swap(Instance, Other.Instance);
 			std::swap(Surface, Other.Surface);
 			std::swap(PresentationQueue, Other.PresentationQueue);
+			std::swap(Allocator, Other.Allocator);
 		}
 
 		VulkanDevice& VulkanDevice::operator=(VulkanDevice&& Other)
@@ -151,6 +152,7 @@ namespace Hermes
 			std::swap(Instance, Other.Instance);
 			std::swap(Surface, Other.Surface);
 			std::swap(PresentationQueue, Other.PresentationQueue);
+			std::swap(Allocator, Other.Allocator);
 			return *this;
 		}
 

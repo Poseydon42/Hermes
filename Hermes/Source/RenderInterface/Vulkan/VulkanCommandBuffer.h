@@ -30,7 +30,7 @@ namespace Hermes
 				const std::shared_ptr<RenderInterface::Resource>& Destination,
 				std::vector<RenderInterface::BufferCopyRegion> CopyRegions) override;
 
-			
+			VkCommandBuffer GetBuffer() { return Buffer; }
 		private:
 			VkCommandBuffer Buffer;
 			VkCommandPool Pool;

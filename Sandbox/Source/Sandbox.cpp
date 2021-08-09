@@ -39,7 +39,7 @@ public:
 			Data[Offset] = (Hermes::uint8)Offset;
 		CPUBuffer->Unmap();
 
-		auto GPUBuffer = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::CopyDestination);
+		auto GPUBuffer = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::CopySource);
 
 		auto CommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->CreateCommandBuffer(true);
 		CommandBuffer->BeginRecording();
@@ -51,6 +51,17 @@ public:
 		CopyRegions.push_back(CopyRegion);
 		CommandBuffer->CopyBuffer(CPUBuffer, GPUBuffer, CopyRegions);
 		CommandBuffer->EndRecording();
+		Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->SubmitCommandBuffer(CommandBuffer);
+		Device->WaitForIdle();
+
+		auto CPUBuffer2 = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::CPUAccessible);
+		CommandBuffer->BeginRecording();
+		CommandBuffer->CopyBuffer(GPUBuffer, CPUBuffer2, CopyRegions);
+		CommandBuffer->EndRecording();
+		Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->SubmitCommandBuffer(CommandBuffer);
+		Device->WaitForIdle();
+		auto* Data2 = (Hermes::uint8*)CPUBuffer2->Map();
+		HERMES_ASSERT(Data2[0] == 0x00 && Data2[1] == 0x01 && Data2[2] == 0x02); // etc.(better check in debug mode)
 
 		return true;
 	}

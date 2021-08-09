@@ -8,7 +8,7 @@ namespace Hermes
 	namespace Vulkan
 	{
 		VulkanQueue::VulkanQueue(std::shared_ptr<VulkanDevice> InDevice, uint32 InQueueFamilyIndex)
-			: Device(InDevice)
+			: Device(std::move(InDevice))
 			, QueueFamilyIndex(InQueueFamilyIndex)
 		{
 			vkGetDeviceQueue(Device->GetDevice(), QueueFamilyIndex, 0, &Queue);
@@ -16,6 +16,7 @@ namespace Hermes
 			VkCommandPoolCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 			CreateInfo.queueFamilyIndex = QueueFamilyIndex;
+			CreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 			VK_CHECK_RESULT(vkCreateCommandPool(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &CommandPool));
 		}
 
@@ -41,6 +42,17 @@ namespace Hermes
 		std::shared_ptr<RenderInterface::CommandBuffer> VulkanQueue::CreateCommandBuffer(bool IsPrimaryBuffer)
 		{
 			return std::make_shared<VulkanCommandBuffer>(Device, CommandPool, IsPrimaryBuffer);
+		}
+
+		void VulkanQueue::SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer)
+		{
+			auto* VulkanBuffer = (VulkanCommandBuffer*)Buffer.get();
+			VkSubmitInfo SubmitInfo = {};
+			SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+			SubmitInfo.commandBufferCount = 1;
+			VkCommandBuffer TmpBufferCopy = VulkanBuffer->GetBuffer();
+			SubmitInfo.pCommandBuffers = &TmpBufferCopy;
+			VK_CHECK_RESULT(vkQueueSubmit(Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
 		}
 	}
 }

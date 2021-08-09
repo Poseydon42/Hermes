@@ -34,7 +34,12 @@ namespace Hermes
 			 * If false then this command buffer can be called from other command buffers, but can not be submitted to queue directly
 			 */
 			virtual std::shared_ptr<CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) = 0;
-		private:
+
+			/**
+			 * Pushes given command buffer into queue's internal 'execution list'
+			 * TODO : add synchronization primitives when we will have them implemented
+			 */
+			virtual void SubmitCommandBuffer(std::shared_ptr<CommandBuffer> Buffer) = 0;
 		};
 	}
 }

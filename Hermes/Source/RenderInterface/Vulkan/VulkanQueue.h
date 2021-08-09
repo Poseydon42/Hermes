@@ -24,6 +24,8 @@ namespace Hermes
 			VulkanQueue& operator=(VulkanQueue&& Other);
 
 			std::shared_ptr<RenderInterface::CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) override;
+			
+			void SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer) override;
 		private:
 			std::shared_ptr<VulkanDevice> Device;
 			VkQueue Queue;

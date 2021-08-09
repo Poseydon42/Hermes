@@ -27,7 +27,7 @@ namespace Hermes
 
 			/**
 			 * Waits for given fence to become signaled for @param Timeout seconds
-			 * @param Timeout Maximum time(in seconds) to wait for fence(UINT64_MAX for unlimited time)
+			 * @param Timeout Maximum time(in nanoseconds) to wait for fence(UINT64_MAX for unlimited time)
 			 */
 			virtual void Wait(uint64 Timeout) const = 0;
 

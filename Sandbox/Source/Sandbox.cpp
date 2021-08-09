@@ -1,6 +1,7 @@
 #include "Core/Application/EventQueue.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/Fence.h"
 #ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
@@ -62,6 +63,12 @@ public:
 		Device->WaitForIdle();
 		auto* Data2 = (Hermes::uint8*)CPUBuffer2->Map();
 		HERMES_ASSERT(Data2[0] == 0x00 && Data2[1] == 0x01 && Data2[2] == 0x02); // etc.(better check in debug mode)
+
+		auto Fence = Device->CreateFence(true);
+		HERMES_ASSERT(Fence->IsSignaled());
+		Fence->Reset();
+		Fence->Wait(2*1000*1000); // 2 secs delay
+		HERMES_ASSERT(!Fence->IsSignaled());
 
 		return true;
 	}

@@ -26,6 +26,8 @@ namespace Hermes
 			std::shared_ptr<RenderInterface::Queue> GetQueue(RenderInterface::QueueType Type) override;
 			
 			std::shared_ptr<RenderInterface::Resource> CreateBuffer(size_t Size, RenderInterface::ResourceUsageType Usage) override;
+
+			std::shared_ptr<RenderInterface::Fence> CreateFence(bool InitialState) override;
 			
 			void WaitForIdle() override;
 

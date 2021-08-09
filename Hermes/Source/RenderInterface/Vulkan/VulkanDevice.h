@@ -26,6 +26,8 @@ namespace Hermes
 			std::shared_ptr<RenderInterface::Queue> GetQueue(RenderInterface::QueueType Type) override;
 			
 			std::shared_ptr<RenderInterface::Resource> CreateBuffer(size_t Size, RenderInterface::ResourceUsageType Usage) override;
+			
+			void WaitForIdle() override;
 
 			// Don't make const - device 'state' includes allocations, thus it can be changed through VmaAllocator instance
 			VmaAllocator GetAllocator() { return Allocator; }

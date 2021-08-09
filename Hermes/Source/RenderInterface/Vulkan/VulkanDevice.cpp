@@ -188,5 +188,10 @@ namespace Hermes
 		{
 			return std::make_shared<VulkanResource>(shared_from_this(), Size, Usage);
 		}
+
+		void VulkanDevice::WaitForIdle()
+		{
+			vkDeviceWaitIdle(Device);
+		}
 	}
 }

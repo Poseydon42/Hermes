@@ -52,23 +52,19 @@ public:
 		CopyRegions.push_back(CopyRegion);
 		CommandBuffer->CopyBuffer(CPUBuffer, GPUBuffer, CopyRegions);
 		CommandBuffer->EndRecording();
-		Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->SubmitCommandBuffer(CommandBuffer);
+		Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->SubmitCommandBuffer(CommandBuffer, std::nullopt);
 		Device->WaitForIdle();
 
+		auto Fence = Device->CreateFence();
+		
 		auto CPUBuffer2 = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::CPUAccessible);
 		CommandBuffer->BeginRecording();
 		CommandBuffer->CopyBuffer(GPUBuffer, CPUBuffer2, CopyRegions);
 		CommandBuffer->EndRecording();
-		Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->SubmitCommandBuffer(CommandBuffer);
-		Device->WaitForIdle();
+		Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->SubmitCommandBuffer(CommandBuffer, Fence);
+		Fence->Wait(UINT64_MAX);
 		auto* Data2 = (Hermes::uint8*)CPUBuffer2->Map();
 		HERMES_ASSERT(Data2[0] == 0x00 && Data2[1] == 0x01 && Data2[2] == 0x02); // etc.(better check in debug mode)
-
-		auto Fence = Device->CreateFence(true);
-		HERMES_ASSERT(Fence->IsSignaled());
-		Fence->Reset();
-		Fence->Wait(2*1000*1000); // 2 secs delay
-		HERMES_ASSERT(!Fence->IsSignaled());
 
 		return true;
 	}

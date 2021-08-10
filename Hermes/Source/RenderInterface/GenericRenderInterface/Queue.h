@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
@@ -9,6 +11,7 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		class Fence;
 		class CommandBuffer;
 
 		enum class QueueType
@@ -37,9 +40,10 @@ namespace Hermes
 
 			/**
 			 * Pushes given command buffer into queue's internal 'execution list'
-			 * TODO : add synchronization primitives when we will have them implemented
+			 * @param Buffer A command buffer to be executed
+			 * @param Fence An optional fence object that needs to be signaled when GPU finishes execution of given command buffer
 			 */
-			virtual void SubmitCommandBuffer(std::shared_ptr<CommandBuffer> Buffer) = 0;
+			virtual void SubmitCommandBuffer(std::shared_ptr<CommandBuffer> Buffer, std::optional<std::shared_ptr<Fence>> Fence) = 0;
 		};
 	}
 }

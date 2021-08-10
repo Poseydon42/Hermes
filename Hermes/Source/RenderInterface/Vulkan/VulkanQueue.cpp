@@ -1,7 +1,8 @@
 #include "VulkanQueue.h"
 
-#include "VulkanCommandBuffer.h"
-#include "VulkanDevice.h"
+#include "RenderInterface/Vulkan/VulkanCommandBuffer.h"
+#include "RenderInterface/Vulkan/VulkanDevice.h"
+#include "RenderInterface/Vulkan/VulkanFence.h"
 
 namespace Hermes
 {
@@ -44,7 +45,7 @@ namespace Hermes
 			return std::make_shared<VulkanCommandBuffer>(Device, CommandPool, IsPrimaryBuffer);
 		}
 
-		void VulkanQueue::SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer)
+		void VulkanQueue::SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer, std::optional<std::shared_ptr<RenderInterface::Fence>> Fence)
 		{
 			auto* VulkanBuffer = (VulkanCommandBuffer*)Buffer.get();
 			VkSubmitInfo SubmitInfo = {};
@@ -52,7 +53,13 @@ namespace Hermes
 			SubmitInfo.commandBufferCount = 1;
 			VkCommandBuffer TmpBufferCopy = VulkanBuffer->GetBuffer();
 			SubmitInfo.pCommandBuffers = &TmpBufferCopy;
-			VK_CHECK_RESULT(vkQueueSubmit(Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
+			VkFence VkFenceObject = VK_NULL_HANDLE;
+			if (Fence.has_value())
+			{
+				auto* VulkanFenceObject = (VulkanFence*)Fence->get();
+				VkFenceObject = VulkanFenceObject->GetFence();
+			}
+			VK_CHECK_RESULT(vkQueueSubmit(Queue, 1, &SubmitInfo, VkFenceObject));
 		}
 	}
 }

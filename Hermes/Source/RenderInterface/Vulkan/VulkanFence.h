@@ -30,6 +30,8 @@ namespace Hermes
 			
 			void Reset() override;
 
+			VkFence GetFence() const { return Fence; }
+
 		private:
 			std::shared_ptr<VulkanDevice> Device;
 			VkFence Fence;

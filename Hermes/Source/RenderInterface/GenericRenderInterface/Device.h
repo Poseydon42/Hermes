@@ -6,9 +6,10 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Math/Vector2.h"
-
 #include "RenderInterface/GenericRenderInterface/Queue.h"
 #include "RenderInterface/GenericRenderInterface/Resource.h"
+#include "RenderInterface/GenericRenderInterface/Shader.h"
+
 
 namespace Hermes
 {
@@ -36,6 +37,8 @@ namespace Hermes
 			virtual std::shared_ptr<Resource> CreateBuffer(size_t Size, ResourceUsageType Usage) = 0;
 
 			virtual std::shared_ptr<Fence> CreateFence(bool InitialState = false) = 0;
+
+			virtual std::shared_ptr<Shader> CreateShader(const String& Path, ShaderType Type) = 0;
 
 			/**
 			 * Waits until device finishes all its current and pending work and becomes idle

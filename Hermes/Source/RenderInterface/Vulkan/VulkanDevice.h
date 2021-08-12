@@ -29,6 +29,8 @@ namespace Hermes
 
 			std::shared_ptr<RenderInterface::Fence> CreateFence(bool InitialState) override;
 			
+			std::shared_ptr<RenderInterface::Shader> CreateShader(const String& Path, RenderInterface::ShaderType Type) override;
+			
 			void WaitForIdle() override;
 
 			// Don't make const - device 'state' includes allocations, thus it can be changed through VmaAllocator instance

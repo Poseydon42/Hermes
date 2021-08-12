@@ -28,12 +28,13 @@ namespace Hermes
 
 		class HERMES_API ShaderBase : public Shader
 		{
-			explicit ShaderBase(ShaderType InType) : Type(InType) { }
 			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(ShaderBase)
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(ShaderBase)
 			MAKE_NON_COPYABLE(ShaderBase)
 			
 		public:
+			explicit ShaderBase(ShaderType InType) : Type(InType) { }
+
 			virtual ShaderType GetType() const override { return Type; };
 
 		private:

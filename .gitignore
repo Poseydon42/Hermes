@@ -6,4 +6,5 @@ Build/
 *.filters
 *.sln
 
-Sandbox/Files
+Sandbox/Files/*.log
+**.spv

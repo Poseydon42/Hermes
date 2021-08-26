@@ -214,6 +214,10 @@ namespace Hermes
 				{
 					NewSubpass.pDepthStencilAttachment = nullptr;
 				}
+
+				NewSubpass.pPreserveAttachments = Subpass.PreservedAttachmentsIndices.data();
+				NewSubpass.preserveAttachmentCount = Subpass.PreservedAttachmentsIndices.size();
+				
 				VulkanSubpasses.push_back(NewSubpass);
 			}
 

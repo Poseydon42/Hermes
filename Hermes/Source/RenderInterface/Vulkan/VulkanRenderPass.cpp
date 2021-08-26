@@ -251,5 +251,17 @@ namespace Hermes
 		{
 			vkDestroyRenderPass(Device->GetDevice(), RenderPass, GVulkanAllocator);
 		}
+
+		VulkanRenderPass::VulkanRenderPass(VulkanRenderPass&& Other)
+		{
+			*this = std::move(Other);
+		}
+
+		VulkanRenderPass& VulkanRenderPass::operator=(VulkanRenderPass&& Other)
+		{
+			std::swap(Device, Other.Device);
+			std::swap(RenderPass, Other.RenderPass);
+			return *this;
+		}
 	}
 }

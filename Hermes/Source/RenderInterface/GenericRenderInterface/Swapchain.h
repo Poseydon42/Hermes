@@ -3,6 +3,7 @@
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
+#include "RenderInterface/GenericRenderInterface/Image.h"
 
 namespace Hermes
 {
@@ -14,6 +15,9 @@ namespace Hermes
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(Swapchain)
 			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(Swapchain)
 			ADD_DEFAULT_CONSTRUCTOR(Swapchain)
+
+		public:
+			virtual ImageFormat GetImageFormat() const = 0;
 		};
 	}
 }

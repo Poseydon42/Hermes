@@ -93,6 +93,7 @@ namespace Hermes
 			CreateInfo.oldSwapchain = VK_NULL_HANDLE;
 
 			VK_CHECK_RESULT(vkCreateSwapchainKHR(Device, &CreateInfo, GVulkanAllocator, &Swapchain));
+			SwapchainFormat = CreateInfo.imageFormat;
 		}
 
 		VulkanSwapchain::~VulkanSwapchain()

@@ -1,5 +1,6 @@
 ﻿#include "VulkanDevice.h"
 
+#include "VulkanRenderPass.h"
 #include "RenderInterface/Vulkan/VulkanShader.h"
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"
 #include "Core/Application/GameLoop.h"
@@ -199,6 +200,11 @@ namespace Hermes
 		std::shared_ptr<RenderInterface::Shader> VulkanDevice::CreateShader(const String& Path, RenderInterface::ShaderType Type)
 		{
 			return std::make_shared<VulkanShader>(shared_from_this(), Path, Type);
+		}
+
+		std::shared_ptr<RenderInterface::RenderPass> VulkanDevice::CreateRenderPass(const RenderInterface::RenderPassDescription& Description)
+		{
+			return std::make_shared<VulkanRenderPass>(shared_from_this(), Description);
 		}
 
 		void VulkanDevice::WaitForIdle()

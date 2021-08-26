@@ -31,11 +31,14 @@ namespace Hermes
 			
 			std::shared_ptr<RenderInterface::Shader> CreateShader(const String& Path, RenderInterface::ShaderType Type) override;
 			
+			std::shared_ptr<RenderInterface::RenderPass> CreateRenderPass(const RenderInterface::RenderPassDescription& Description) override;
+			
 			void WaitForIdle() override;
 
 			// Don't make const - device 'state' includes allocations, thus it can be changed through VmaAllocator instance
 			VmaAllocator GetAllocator() { return Allocator; }
 			VkDevice GetDevice() { return Device; }
+			
 		private:
 			VkDevice Device;
 			VkPhysicalDevice PhysicalDevice;

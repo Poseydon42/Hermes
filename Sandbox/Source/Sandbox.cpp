@@ -2,6 +2,7 @@
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #include "RenderInterface/GenericRenderInterface/Fence.h"
+#include "RenderInterface/GenericRenderInterface/RenderPass.h"
 #ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
@@ -68,6 +69,24 @@ public:
 
 		auto VertexShader = Device->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", Hermes::RenderInterface::ShaderType::VertexShader);
 		auto FragmentShader = Device->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", Hermes::RenderInterface::ShaderType::FragmentShader);
+
+		Hermes::RenderInterface::RenderPassDescription Description = {};
+		Description.Attachments.push_back({});
+		Description.Attachments[0].LayoutBeforeBegin = Hermes::RenderInterface::ImageLayout::Undefined;
+		Description.Attachments[0].LayoutAtEnd = Hermes::RenderInterface::ImageLayout::ReadyForPresentation;
+		Description.Attachments[0].Format = Swapchain->GetImageFormat();
+		Description.Attachments[0].LoadOp = Hermes::RenderInterface::AttachmentLoadOp::Clear;
+		Description.Attachments[0].StoreOp = Hermes::RenderInterface::AttachmentStoreOp::Store;
+		Description.Attachments[0].StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
+		Description.Attachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
+
+		Description.Subpasses.push_back({});
+		Description.Subpasses[0].IsDepthStencilAttachmentUsed = false;
+		Description.Subpasses[0].ColorAttachments.push_back({});
+		Description.Subpasses[0].ColorAttachments[0].Index = 0;
+		Description.Subpasses[0].ColorAttachments[0].Layout = Hermes::RenderInterface::ImageLayout::ColorAttachmentOptimal;
+
+		auto RenderPass = Device->CreateRenderPass(Description);
 
 		return true;
 	}

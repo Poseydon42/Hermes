@@ -15,6 +15,8 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		struct RenderPassDescription;
+		class RenderPass;
 		class Fence;
 		class Swapchain;
 		class Resource;
@@ -39,6 +41,8 @@ namespace Hermes
 			virtual std::shared_ptr<Fence> CreateFence(bool InitialState = false) = 0;
 
 			virtual std::shared_ptr<Shader> CreateShader(const String& Path, ShaderType Type) = 0;
+
+			virtual std::shared_ptr<RenderPass> CreateRenderPass(const RenderInterface::RenderPassDescription& Description) = 0;
 
 			/**
 			 * Waits until device finishes all its current and pending work and becomes idle

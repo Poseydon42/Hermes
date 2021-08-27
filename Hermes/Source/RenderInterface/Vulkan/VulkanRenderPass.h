@@ -23,8 +23,11 @@ namespace Hermes
 			VulkanRenderPass(VulkanRenderPass&& Other);
 			VulkanRenderPass& operator=(VulkanRenderPass&& Other);
 
+			uint32 SubpassCount() const override { return SubpassNumber; }
+		
 		private:
 			std::shared_ptr<VulkanDevice> Device;
+			uint32 SubpassNumber;
 			VkRenderPass RenderPass;
 		};
 	}

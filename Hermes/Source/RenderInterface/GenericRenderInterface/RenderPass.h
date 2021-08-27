@@ -122,6 +122,9 @@ namespace Hermes
 			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(RenderPass)
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(RenderPass)
 			MAKE_NON_COPYABLE(RenderPass)
+
+		public:
+			virtual uint32 SubpassCount() const = 0;
 		};
 	}
 }

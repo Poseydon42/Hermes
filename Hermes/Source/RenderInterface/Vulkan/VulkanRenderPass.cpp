@@ -150,6 +150,7 @@ namespace Hermes
 
 		VulkanRenderPass::VulkanRenderPass(std::shared_ptr<VulkanDevice> InDevice, const RenderInterface::RenderPassDescription& Description)
 			: Device(std::move(InDevice))
+			, SubpassNumber((uint32)Description.Subpasses.size())
 			, RenderPass(VK_NULL_HANDLE)
 		{
 			std::vector<VkAttachmentDescription> VulkanAttachments;

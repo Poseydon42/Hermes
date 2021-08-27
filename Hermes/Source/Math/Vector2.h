@@ -70,6 +70,7 @@ namespace Hermes
 	 */
 	using Vec2 = Vector2<float>;
 	using Vec2i = Vector2<int32>;
+	using Vec2ui = Vector2<uint32>;
 	using Vec2l = Vector2<int64>;
 	using Vec2d = Vector2<double>;
 

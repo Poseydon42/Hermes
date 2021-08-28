@@ -46,10 +46,10 @@ namespace Hermes
 			}
 		}
 		
-		VulkanSwapchain::VulkanSwapchain(VkPhysicalDevice PhysicalDevice, VkDevice InDevice, VkSurfaceKHR Surface, Vec2i Size, uint32 Frames) : Device(InDevice)
+		VulkanSwapchain::VulkanSwapchain(VkPhysicalDevice PhysicalDevice, VkDevice InDevice, VkSurfaceKHR Surface, Vec2i InSize, uint32 Frames) : Device(InDevice)
 		{
-			HERMES_ASSERT(Size.X > 0);
-			HERMES_ASSERT(Size.Y > 0);
+			HERMES_ASSERT(InSize.X > 0);
+			HERMES_ASSERT(InSize.Y > 0);
 			HERMES_ASSERT(Frames > 0);
 			
 			VkSurfaceCapabilitiesKHR Capabilities = {};
@@ -76,7 +76,7 @@ namespace Hermes
 			CreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 			CreateInfo.surface = Surface;
 			CreateInfo.presentMode = SelectPresentMode(PresentModes);
-			CreateInfo.imageExtent = SelectExtent(Capabilities, Size.X, Size.Y);
+			CreateInfo.imageExtent = SelectExtent(Capabilities, InSize.X, InSize.Y);
 			if (Capabilities.maxImageCount == 0)
 				CreateInfo.minImageCount = Math::Min(Capabilities.minImageCount, Frames);
 			else
@@ -94,6 +94,7 @@ namespace Hermes
 
 			VK_CHECK_RESULT(vkCreateSwapchainKHR(Device, &CreateInfo, GVulkanAllocator, &Swapchain));
 			SwapchainFormat = CreateInfo.imageFormat;
+			Size = { CreateInfo.imageExtent.width, CreateInfo.imageExtent.height };
 		}
 
 		VulkanSwapchain::~VulkanSwapchain()
@@ -101,14 +102,17 @@ namespace Hermes
 			vkDestroySwapchainKHR(Device, Swapchain, GVulkanAllocator);
 		}
 
-		VulkanSwapchain::VulkanSwapchain(VulkanSwapchain&& Other) : Swapchain(Other.Swapchain), Device(Other.Device)
+		VulkanSwapchain::VulkanSwapchain(VulkanSwapchain&& Other)
 		{
+			*this = std::move(Other);
 		}
 
 		VulkanSwapchain& VulkanSwapchain::operator=(VulkanSwapchain&& Other)
 		{
 			std::swap(Other.Swapchain, Swapchain);
 			std::swap(Other.Device, Device);
+			std::swap(Other.Size, Size);
+			std::swap(Other.SwapchainFormat, SwapchainFormat);
 
 			return *this;
 		}

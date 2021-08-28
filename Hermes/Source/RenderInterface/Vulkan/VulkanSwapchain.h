@@ -25,10 +25,12 @@ namespace Hermes
 			VulkanSwapchain& operator=(VulkanSwapchain&& Other);
 
 			RenderInterface::ImageFormat GetImageFormat() const override { return (RenderInterface::ImageFormat)SwapchainFormat; }
+			Vec2ui GetSize() const override { return Size; }
 		private:
 			VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
 			VkFormat SwapchainFormat = VK_FORMAT_UNDEFINED;
 			VkDevice Device;
+			Vec2ui Size;
 		};
 	}
 }

@@ -4,6 +4,7 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "RenderInterface/GenericRenderInterface/Image.h"
+#include "Math/Vector2.h"
 
 namespace Hermes
 {
@@ -18,6 +19,8 @@ namespace Hermes
 
 		public:
 			virtual ImageFormat GetImageFormat() const = 0;
+
+			virtual Vec2ui GetSize() const = 0;
 		};
 	}
 }

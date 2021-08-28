@@ -1,5 +1,6 @@
 #include "VulkanPhysicalDevice.h"
 
+#include "VulkanInstance.h"
 #include "RenderInterface/Vulkan/VulkanDevice.h"
 
 namespace Hermes
@@ -18,16 +19,9 @@ namespace Hermes
 			return Result;
 		}
 
-		VulkanPhysicalDevice::~VulkanPhysicalDevice()
-		{
-		}
-
 		VulkanPhysicalDevice::VulkanPhysicalDevice(VulkanPhysicalDevice&& Other)
 		{
-			std::swap(Device, Other.Device);
-			std::swap(Instance, Other.Instance);
-			std::swap(Surface, Other.Surface);
-			std::swap(Properties, Other.Properties);
+			*this = std::move(Other);
 		}
 
 		VulkanPhysicalDevice& VulkanPhysicalDevice::operator=(VulkanPhysicalDevice&& Other)
@@ -49,12 +43,16 @@ namespace Hermes
 			return std::make_shared<VulkanDevice>(Device, Instance, Surface);
 		}
 
-		VkInstance VulkanPhysicalDevice::GetInstance()
+		VkInstance VulkanPhysicalDevice::GetInstance() const
 		{
-			return Instance;
+			return Instance->GetInstance();
 		}
 
-		VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice InDevice, VkInstance InInstance, VkSurfaceKHR InSurface) : Device(InDevice), Instance(InInstance), Properties(GetPhysicalDeviceProperties(InDevice)), Surface(InSurface)
+		VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice InDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface)
+			: Device(InDevice)
+			, Instance(std::move(InInstance))
+			, Surface(InSurface)
+			, Properties(GetPhysicalDeviceProperties(Device))
 		{
 		}
 	}

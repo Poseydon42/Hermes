@@ -21,21 +21,20 @@ namespace Hermes
 		{
 			MAKE_NON_COPYABLE(VulkanPhysicalDevice)
 		public:
-			VulkanPhysicalDevice(VkPhysicalDevice InDevice, VkInstance InInstance, VkSurfaceKHR InSurface);
+			VulkanPhysicalDevice(VkPhysicalDevice InDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface);
 			
-			~VulkanPhysicalDevice() override;
+			~VulkanPhysicalDevice() override = default;
 			VulkanPhysicalDevice(VulkanPhysicalDevice&&);
 			VulkanPhysicalDevice& operator=(VulkanPhysicalDevice&&);
 
 			const RenderInterface::DeviceProperties& GetProperties() const override;
 			std::shared_ptr<RenderInterface::Device> CreateDevice() override;
 
-			VkInstance GetInstance();
+			VkInstance GetInstance() const;
 			
 		private:
-			
 			VkPhysicalDevice Device;
-			VkInstance Instance;
+			std::shared_ptr<VulkanInstance> Instance;
 			VkSurfaceKHR Surface;
 			RenderInterface::DeviceProperties Properties;
 		};

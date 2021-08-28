@@ -1,5 +1,6 @@
 ﻿#include "VulkanDevice.h"
 
+#include "VulkanInstance.h"
 #include "Core/Application/GameLoop.h"
 #include "RenderInterface/Vulkan/VulkanPipeline.h"
 #include "RenderInterface/Vulkan/VulkanRenderPass.h"
@@ -14,10 +15,10 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, VkInstance InInstance, VkSurfaceKHR InSurface)
+		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface)
 			: Device(VK_NULL_HANDLE)
 			, PhysicalDevice(InPhysicalDevice)
-			, Instance(InInstance)
+			, Instance(std::move(InInstance))
 			, Surface(InSurface)
 			, Allocator(VK_NULL_HANDLE)
 			, RenderQueue(VK_NULL_HANDLE)
@@ -125,7 +126,7 @@ namespace Hermes
 			AllocatorCreateInfo.physicalDevice = PhysicalDevice;
 			AllocatorCreateInfo.device = Device;
 			AllocatorCreateInfo.pAllocationCallbacks = GVulkanAllocator;
-			AllocatorCreateInfo.instance = Instance;
+			AllocatorCreateInfo.instance = Instance->GetInstance();
 			AllocatorCreateInfo.vulkanApiVersion = GVulkanVersion;
 			VK_CHECK_RESULT(vmaCreateAllocator(&AllocatorCreateInfo, &Allocator));
 		}

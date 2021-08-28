@@ -9,13 +9,14 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
+		class VulkanInstance;
 		class VulkanQueue;
 		
 		class HERMES_API VulkanDevice : public RenderInterface::Device, public std::enable_shared_from_this<VulkanDevice>
 		{
 			MAKE_NON_COPYABLE(VulkanDevice)
 		public:
-			VulkanDevice(VkPhysicalDevice InPhysicalDevice, VkInstance InInstance, VkSurfaceKHR InSurface);
+			VulkanDevice(VkPhysicalDevice InPhysicalDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface);
 			
 			~VulkanDevice() override;
 			VulkanDevice(VulkanDevice&& Other);
@@ -43,7 +44,7 @@ namespace Hermes
 		private:
 			VkDevice Device;
 			VkPhysicalDevice PhysicalDevice;
-			VkInstance Instance;
+			std::shared_ptr<VulkanInstance> Instance;
 			VkSurfaceKHR Surface;
 			VmaAllocator Allocator;
 

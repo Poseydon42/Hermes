@@ -160,7 +160,7 @@ namespace Hermes
 
 		std::shared_ptr<RenderInterface::PhysicalDevice> VulkanInstance::GetPhysicalDevice(RenderInterface::DeviceIndex Index)
 		{
-			return std::make_shared<VulkanPhysicalDevice>(AvailableDevices[Index], Instance, Surface);
+			return std::make_shared<VulkanPhysicalDevice>(AvailableDevices[Index], shared_from_this(), Surface);
 		}
 
 		void VulkanInstance::CreateDebugMessenger()

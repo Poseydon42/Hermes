@@ -21,6 +21,8 @@ namespace Hermes
 		{
 			MAKE_NON_COPYABLE(VulkanPhysicalDevice)
 		public:
+			VulkanPhysicalDevice(VkPhysicalDevice InDevice, VkInstance InInstance, VkSurfaceKHR InSurface);
+			
 			~VulkanPhysicalDevice() override;
 			VulkanPhysicalDevice(VulkanPhysicalDevice&&);
 			VulkanPhysicalDevice& operator=(VulkanPhysicalDevice&&);
@@ -31,14 +33,11 @@ namespace Hermes
 			VkInstance GetInstance();
 			
 		private:
-			VulkanPhysicalDevice(VkPhysicalDevice InDevice, VkInstance InInstance, VkSurfaceKHR InSurface);
 			
 			VkPhysicalDevice Device;
 			VkInstance Instance;
 			VkSurfaceKHR Surface;
 			RenderInterface::DeviceProperties Properties;
-
-			friend class VulkanInstance;
 		};
 	}
 }

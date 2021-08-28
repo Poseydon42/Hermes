@@ -198,13 +198,13 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	InternalType& Vector2<InternalType>::operator[](size_t Index)
+	InternalType& Vector3<InternalType>::operator[](size_t Index)
 	{
 		return (&X)[Index];
 	}
 
 	template <typename InternalType>
-	InternalType Vector2<InternalType>::operator[](size_t Index) const
+	InternalType Vector3<InternalType>::operator[](size_t Index) const
 	{
 		return (&X)[Index];
 	}

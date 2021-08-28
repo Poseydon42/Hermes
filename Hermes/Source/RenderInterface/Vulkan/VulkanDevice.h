@@ -33,7 +33,7 @@ namespace Hermes
 			
 			std::shared_ptr<RenderInterface::RenderPass> CreateRenderPass(const RenderInterface::RenderPassDescription& Description) override;
 
-			std::shared_ptr<RenderInterface::Pipeline> CreatePipeline(std::shared_ptr<RenderInterface::RenderPass>& RenderPass, const RenderInterface::PipelineDescription& Description) override;
+			std::shared_ptr<RenderInterface::Pipeline> CreatePipeline(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const RenderInterface::PipelineDescription& Description) override;
 			
 			void WaitForIdle() override;
 

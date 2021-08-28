@@ -8,15 +8,8 @@ namespace Hermes
 	template<typename InternalType>
 	struct Vector2
 	{
-		union
-		{
-			struct
-			{
-				InternalType X;
-				InternalType Y;
-			};
-			InternalType E[2];
-		};
+		InternalType X;
+		InternalType Y;
 
 		Vector2(InternalType V = 0.0f);
 
@@ -44,6 +37,9 @@ namespace Hermes
 
 		bool operator==(const Vector2& V) const;
 		bool operator!=(const Vector2& V) const;
+
+		InternalType& operator[](size_t Index);
+		InternalType operator[](size_t Index) const;
 		
 		/**
 		 * Dot product
@@ -194,6 +190,18 @@ namespace Hermes
 	bool Vector2<InternalType>::operator!=(const Vector2& V) const
 	{
 		return !(*this == V);
+	}
+
+	template <typename InternalType>
+	InternalType& Vector2<InternalType>::operator[](size_t Index)
+	{
+		return (&X)[Index];
+	}
+
+	template <typename InternalType>
+	InternalType Vector2<InternalType>::operator[](size_t Index) const
+	{
+		return (&X)[Index];
 	}
 
 	template <typename InternalType>

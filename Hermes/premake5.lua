@@ -17,7 +17,9 @@ project "Hermes"
     libdirs { os.getenv("VULKAN_SDK").."/Lib/" } -- 32 bit builds are not supported --
     defines { "HERMES_BUILD_ENGINE", "HERMES_GAME_NAME=\"Sandbox\"" }
     links { "vulkan-1" }
-
+    flags { "FatalWarnings" }
+    warnings "Extra"
+ 
     filter "configurations:Debug"
         defines { "HERMES_DEBUG" }
         warnings "Extra"

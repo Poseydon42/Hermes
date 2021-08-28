@@ -17,6 +17,8 @@ project "Sandbox"
     files { "Source/**.h", "Source/**.cpp" }
     includedirs { "Source/", "../Hermes/Source", os.getenv("VULKAN_SDK").."/Include/", "../Hermes/ThirdParty/VulkanMemoryAllocator/include" }
     defines { "HERMES_BUILD_APPLICATION", "HERMES_GAME_NAME=\"Sandbox\"" }
+    flags { "FatalWarnings" }
+    warnings "Extra"
 
     filter "configurations:Debug"
         defines { "HERMES_DEBUG" }

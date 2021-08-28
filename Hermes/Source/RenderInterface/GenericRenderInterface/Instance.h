@@ -6,8 +6,11 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
 
+
 namespace Hermes
 {
+	class IPlatformWindow;
+	
 	namespace RenderInterface
 	{
 		/**
@@ -35,6 +38,8 @@ namespace Hermes
 			 * @param Index Index of device that you need. This should be retrieved from DeviceProperties struct of required device
 			 */
 			virtual std::shared_ptr<PhysicalDevice> GetPhysicalDevice(DeviceIndex Index) = 0;
+
+			static std::shared_ptr<Instance> CreateRenderInterfaceInstance(const IPlatformWindow& Window);
 		};
 	}
 }

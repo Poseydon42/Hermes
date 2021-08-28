@@ -26,7 +26,7 @@ class SandboxApp : public Hermes::IApplication
 public:
 	bool Init() override
 	{
-		Hermes::RenderInterface::Instance* RenderInstance = new Hermes::Vulkan::VulkanInstance(*Hermes::GGameLoop->GetWindow());
+		auto RenderInstance = Hermes::RenderInterface::Instance::CreateRenderInterfaceInstance(*Hermes::GGameLoop->GetWindow());
 		auto Devices = RenderInstance->EnumerateAvailableDevices();
 		std::shared_ptr<Hermes::RenderInterface::PhysicalDevice> PhysicalDevice = RenderInstance->GetPhysicalDevice(Devices[0].InternalIndex);
 

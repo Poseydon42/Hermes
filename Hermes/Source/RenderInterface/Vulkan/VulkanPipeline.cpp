@@ -388,8 +388,8 @@ namespace Hermes
 			}
 		}
 		
-		VulkanPipeline::VulkanPipeline(std::shared_ptr<VulkanDevice>& InDevice, std::shared_ptr<RenderInterface::RenderPass> InRenderPass, const RenderInterface::PipelineDescription& Description)
-			: Device(InDevice)
+		VulkanPipeline::VulkanPipeline(std::shared_ptr<VulkanDevice> InDevice, std::shared_ptr<RenderInterface::RenderPass> InRenderPass, const RenderInterface::PipelineDescription& Description)
+			: Device(std::move(InDevice))
 			, RenderPass(std::reinterpret_pointer_cast<VulkanRenderPass>(InRenderPass)) // TODO : seems like a very dirty hack, maybe there's something better for this?
 			, Pipelines(RenderPass->SubpassCount(), VK_NULL_HANDLE)
 			, Layout(VK_NULL_HANDLE)

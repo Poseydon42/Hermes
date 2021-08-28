@@ -211,7 +211,7 @@ namespace Hermes
 
 		std::shared_ptr<RenderInterface::Pipeline> VulkanDevice::CreatePipeline(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const RenderInterface::PipelineDescription& Description)
 		{
-			return std::make_shared<VulkanPipeline>(shared_from_this(), RenderPass, Description);
+			return std::make_shared<VulkanPipeline>(shared_from_this(), std::move(RenderPass), Description);
 		}
 
 		void VulkanDevice::WaitForIdle()

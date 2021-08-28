@@ -19,7 +19,7 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanPipeline)
 
 		public:
-			VulkanPipeline(std::shared_ptr<VulkanDevice>& InDevice, std::shared_ptr<RenderInterface::RenderPass> InRenderPass, const RenderInterface::PipelineDescription& Description);
+			VulkanPipeline(std::shared_ptr<VulkanDevice> InDevice, std::shared_ptr<RenderInterface::RenderPass> InRenderPass, const RenderInterface::PipelineDescription& Description);
 			
 			~VulkanPipeline();
 			VulkanPipeline(VulkanPipeline&& Other);

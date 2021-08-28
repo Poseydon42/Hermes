@@ -42,6 +42,7 @@ namespace Hermes
 			if (Result == VK_NOT_READY)
 				return false;
 			HERMES_ASSERT(false); // TODO : crash here?
+			return false;
 		}
 
 		void VulkanFence::Wait(uint64 Timeout) const

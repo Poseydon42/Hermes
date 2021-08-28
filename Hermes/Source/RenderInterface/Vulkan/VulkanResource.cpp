@@ -12,6 +12,7 @@ namespace Hermes
 			, As {}
 			, Device(std::move(InDevice))
 			, Allocation(VK_NULL_HANDLE)
+			, Mapped(false)
 		{
 			VmaAllocator Allocator = Device->GetAllocator();
 			VkBufferCreateInfo CreateInfo = {};
@@ -52,6 +53,8 @@ namespace Hermes
 		VulkanResource::~VulkanResource()
 		{
 			VmaAllocator Allocator = Device->GetAllocator();
+			if (Mapped)
+				Unmap();
 			switch (ResourceBase::GetResourceType())
 			{
 			case RenderInterface::ResourceType::Buffer:
@@ -68,6 +71,7 @@ namespace Hermes
 			void* Result;
 			VmaAllocator Allocator = Device->GetAllocator();
 			VK_CHECK_RESULT(vmaMapMemory(Allocator, Allocation, &Result));
+			Mapped = true;
 			return Result;
 		}
 
@@ -75,6 +79,7 @@ namespace Hermes
 		{
 			VmaAllocator Allocator = Device->GetAllocator();
 			vmaUnmapMemory(Allocator, Allocation);
+			Mapped = false;
 		}
 
 		VkBuffer VulkanResource::GetAsBuffer() const

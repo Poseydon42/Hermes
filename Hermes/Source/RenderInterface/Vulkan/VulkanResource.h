@@ -44,6 +44,7 @@ namespace Hermes
 
 			VmaAllocation Allocation;
 			std::shared_ptr<VulkanDevice> Device;
+			bool Mapped;
 		};
 	}
 }

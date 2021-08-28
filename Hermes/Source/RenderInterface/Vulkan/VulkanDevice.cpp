@@ -14,14 +14,15 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, VkInstance InInstance, VkSurfaceKHR InSurface) :
-			Device(VK_NULL_HANDLE),
-			PhysicalDevice(InPhysicalDevice),
-			Instance(InInstance),
-			Surface(InSurface),
-			RenderQueue(VK_NULL_HANDLE),
-			TransferQueue(VK_NULL_HANDLE),
-			PresentationQueue(VK_NULL_HANDLE)
+		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, VkInstance InInstance, VkSurfaceKHR InSurface)
+			: Device(VK_NULL_HANDLE)
+			, PhysicalDevice(InPhysicalDevice)
+			, Instance(InInstance)
+			, Surface(InSurface)
+			, Allocator(VK_NULL_HANDLE)
+			, RenderQueue(VK_NULL_HANDLE)
+			, TransferQueue(VK_NULL_HANDLE)
+			, PresentationQueue(VK_NULL_HANDLE)
 		{
 			std::vector<VkDeviceQueueCreateInfo> QueueCreateInfos;
 

@@ -46,7 +46,8 @@ namespace Hermes
 			}
 		}
 		
-		VulkanSwapchain::VulkanSwapchain(VkPhysicalDevice PhysicalDevice, VkDevice InDevice, VkSurfaceKHR Surface, Vec2i InSize, uint32 Frames) : Device(InDevice)
+		VulkanSwapchain::VulkanSwapchain(std::shared_ptr<VulkanDevice> InDevice, VkPhysicalDevice PhysicalDevice, VkSurfaceKHR Surface, Vec2i InSize, uint32 Frames)
+			: Device(std::move(InDevice))
 		{
 			HERMES_ASSERT(InSize.X > 0);
 			HERMES_ASSERT(InSize.Y > 0);
@@ -92,14 +93,14 @@ namespace Hermes
 			CreateInfo.clipped = VK_TRUE;
 			CreateInfo.oldSwapchain = VK_NULL_HANDLE;
 
-			VK_CHECK_RESULT(vkCreateSwapchainKHR(Device, &CreateInfo, GVulkanAllocator, &Swapchain));
+			VK_CHECK_RESULT(vkCreateSwapchainKHR(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Swapchain));
 			SwapchainFormat = CreateInfo.imageFormat;
 			Size = { CreateInfo.imageExtent.width, CreateInfo.imageExtent.height };
 		}
 
 		VulkanSwapchain::~VulkanSwapchain()
 		{
-			vkDestroySwapchainKHR(Device, Swapchain, GVulkanAllocator);
+			vkDestroySwapchainKHR(Device->GetDevice(), Swapchain, GVulkanAllocator);
 		}
 
 		VulkanSwapchain::VulkanSwapchain(VulkanSwapchain&& Other)

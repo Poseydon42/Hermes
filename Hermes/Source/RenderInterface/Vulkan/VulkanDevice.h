@@ -37,9 +37,8 @@ namespace Hermes
 			
 			void WaitForIdle() override;
 
-			// Don't make const - device 'state' includes allocations, thus it can be changed through VmaAllocator instance
-			VmaAllocator GetAllocator() { return Allocator; }
-			VkDevice GetDevice() { return Device; }
+			VmaAllocator GetAllocator() const { return Allocator; }
+			VkDevice GetDevice() const { return Device; }
 			
 		private:
 			VkDevice Device;

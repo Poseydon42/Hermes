@@ -159,7 +159,7 @@ namespace Hermes
 
 		std::shared_ptr<RenderInterface::Swapchain> VulkanDevice::CreateSwapchain(Vec2i Size, uint32 NumFrames)
 		{
-			return std::make_shared<VulkanSwapchain>(PhysicalDevice, Device, Surface, Size, NumFrames);
+			return std::make_shared<VulkanSwapchain>(shared_from_this(), PhysicalDevice, Surface, Size, NumFrames);
 		}
 
 		std::shared_ptr<RenderInterface::Queue> VulkanDevice::GetQueue(RenderInterface::QueueType Type)

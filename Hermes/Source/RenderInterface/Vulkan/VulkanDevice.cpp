@@ -83,7 +83,7 @@ namespace Hermes
 
 			if (!SwapchainExtensionSupported)
 			{
-				PlatformMisc::ExitWithMessageBox(-1, L"Vulkan error", L"Selected Vulkan device does not support VK_KHR_swapchain extension. Update your GPU driver and try again.");
+				PlatformMisc::ExitWithMessageBox((uint32)-1, L"Vulkan error", L"Selected Vulkan device does not support VK_KHR_swapchain extension. Update your GPU driver and try again.");
 			}
 			HERMES_LOG_INFO(L"VK_EXT_memory_budget extension support: %s", MemoryBudgetExtensionSupported ? L"true" : L"false");
 			

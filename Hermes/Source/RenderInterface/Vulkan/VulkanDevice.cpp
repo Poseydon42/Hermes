@@ -1,9 +1,10 @@
 ﻿#include "VulkanDevice.h"
 
-#include "VulkanRenderPass.h"
+#include "Core/Application/GameLoop.h"
+#include "RenderInterface/Vulkan/VulkanPipeline.h"
+#include "RenderInterface/Vulkan/VulkanRenderPass.h"
 #include "RenderInterface/Vulkan/VulkanShader.h"
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"
-#include "Core/Application/GameLoop.h"
 #include "RenderInterface/Vulkan/VulkanQueue.h"
 #include "RenderInterface/Vulkan/VulkanResource.h"
 #include "RenderInterface/Vulkan/VulkanFence.h"
@@ -205,6 +206,11 @@ namespace Hermes
 		std::shared_ptr<RenderInterface::RenderPass> VulkanDevice::CreateRenderPass(const RenderInterface::RenderPassDescription& Description)
 		{
 			return std::make_shared<VulkanRenderPass>(shared_from_this(), Description);
+		}
+
+		std::shared_ptr<RenderInterface::Pipeline> VulkanDevice::CreatePipeline(std::shared_ptr<RenderInterface::RenderPass>& RenderPass, const RenderInterface::PipelineDescription& Description)
+		{
+			return std::make_shared<VulkanPipeline>(shared_from_this(), RenderPass, Description);
 		}
 
 		void VulkanDevice::WaitForIdle()

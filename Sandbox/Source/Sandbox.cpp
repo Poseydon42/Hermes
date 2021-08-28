@@ -1,8 +1,3 @@
-#include "Core/Application/EventQueue.h"
-#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
-#include "RenderInterface/GenericRenderInterface/Fence.h"
-#include "RenderInterface/GenericRenderInterface/RenderPass.h"
 #ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
@@ -13,6 +8,12 @@
 #include "RenderInterface/GenericRenderInterface/Instance.h"
 #include "RenderInterface/Vulkan/VulkanInstance.h"
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"
+#include "Core/Application/EventQueue.h"
+#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
+#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/Fence.h"
+#include "RenderInterface/GenericRenderInterface/RenderPass.h"
+#include "RenderInterface/GenericRenderInterface/Pipeline.h"
 #include "Core/Application/GameLoop.h"
 
 void WindowEventHandler(const Hermes::IEvent& Event)
@@ -87,6 +88,25 @@ public:
 		Description.Subpasses[0].ColorAttachments[0].Layout = Hermes::RenderInterface::ImageLayout::ColorAttachmentOptimal;
 
 		auto RenderPass = Device->CreateRenderPass(Description);
+
+		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
+		PipelineDesc.ShaderStages =
+			{
+				VertexShader,
+				FragmentShader
+			};
+		PipelineDesc.VertexInput.VertexBindings.clear();
+		PipelineDesc.VertexInput.VertexAttributes.clear();
+		PipelineDesc.InputAssembler.Topology = Hermes::RenderInterface::TopologyType::TriangleList;
+		PipelineDesc.Viewport.Origin = { 0, 0 };
+		PipelineDesc.Viewport.Dimensions = Swapchain->GetSize();
+		PipelineDesc.Rasterizer.Fill = Hermes::RenderInterface::FillMode::Fill;
+		PipelineDesc.Rasterizer.Direction = Hermes::RenderInterface::FaceDirection::Clockwise;
+		PipelineDesc.Rasterizer.Cull = Hermes::RenderInterface::CullMode::Back;
+		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = false;
+		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = false;
+
+		auto Pipeline = Device->CreatePipeline(RenderPass, PipelineDesc);
 
 		return true;
 	}

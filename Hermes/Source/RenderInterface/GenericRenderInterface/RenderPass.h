@@ -125,6 +125,8 @@ namespace Hermes
 
 		public:
 			virtual uint32 SubpassCount() const = 0;
+
+			virtual uint32 ColorAttachmentCount(uint32 SubpassIndex) const = 0;
 		};
 	}
 }

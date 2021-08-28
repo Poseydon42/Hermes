@@ -151,6 +151,7 @@ namespace Hermes
 		VulkanRenderPass::VulkanRenderPass(std::shared_ptr<VulkanDevice> InDevice, const RenderInterface::RenderPassDescription& Description)
 			: Device(std::move(InDevice))
 			, SubpassNumber((uint32)Description.Subpasses.size())
+			, ColorAttachmentNumbers((uint32)Description.Subpasses.size(), 0)
 			, RenderPass(VK_NULL_HANDLE)
 		{
 			std::vector<VkAttachmentDescription> VulkanAttachments;
@@ -246,6 +247,9 @@ namespace Hermes
 			CreateInfo.pDependencies = VulkanSubpassDependencies.data();
 
 			VK_CHECK_RESULT(vkCreateRenderPass(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &RenderPass));
+
+			for (size_t Index = 0; Index < Description.Subpasses.size(); Index++)
+				ColorAttachmentNumbers[Index] = (uint32)Description.Subpasses[Index].ColorAttachments.size();
 		}
 
 		VulkanRenderPass::~VulkanRenderPass()

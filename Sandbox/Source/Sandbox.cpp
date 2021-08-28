@@ -18,7 +18,7 @@
 
 void WindowEventHandler(const Hermes::IEvent& Event)
 {
-	HERMES_LOG_INFO(L"Received window event: %s", Event.ToString());
+	HERMES_LOG_INFO(L"Received window event: %s", Event.ToString().c_str());
 }
 
 class SandboxApp : public Hermes::IApplication
@@ -111,7 +111,7 @@ public:
 		return true;
 	}
 
-	void Run(float Delta) override
+	void Run(float) override
 	{
 	}
 

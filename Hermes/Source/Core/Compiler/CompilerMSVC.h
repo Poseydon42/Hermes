@@ -10,4 +10,10 @@
 
 #define DEBUG_BREAK() __debugbreak();
 
+#define SUPPRESS_ALL_WARNINGS_BEGIN \
+	__pragma(warning(push, 0))
+
+#define SUPPRESS_ALL_WARNINGS_END \
+	__pragma(warning(pop))
+
 #endif

@@ -10,8 +10,8 @@ namespace Hermes
 		VulkanResource::VulkanResource(std::shared_ptr<VulkanDevice> InDevice, size_t BufferSize, RenderInterface::ResourceUsageType Usage)
 			: ResourceBase(RenderInterface::ResourceType::Buffer, BufferSize)
 			, As {}
-			, Device(std::move(InDevice))
 			, Allocation(VK_NULL_HANDLE)
+			, Device(std::move(InDevice))
 			, Mapped(false)
 		{
 			VmaAllocator Allocator = Device->GetAllocator();
@@ -47,6 +47,8 @@ namespace Hermes
 		{
 			std::swap(Allocation, Other.Allocation);
 			std::swap(As, Other.As);
+			std::swap(Device, Other.Device);
+			std::swap(Mapped, Other.Mapped);
 			return *this;
 		}
 

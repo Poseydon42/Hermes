@@ -12,7 +12,8 @@ namespace Hermes
 		enum class ResourceType
 		{
 			Unknown,
-			Buffer
+			Buffer,
+			Image
 			// TODO : expand(texture, sampler etc.)
 		};
 

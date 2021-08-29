@@ -4,7 +4,7 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/EnumClassOperators.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
+#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 
 #include <vector>
 

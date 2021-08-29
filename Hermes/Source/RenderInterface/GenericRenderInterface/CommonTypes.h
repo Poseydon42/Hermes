@@ -140,5 +140,25 @@ namespace Hermes
 			D24UnsignedNormalizedS8UnsignedInteger,
 			D32SignedFloatS8UnsignedInteger
 		};
+
+		enum class ImageLayout
+		{
+			Undefined,
+			General,
+			ColorAttachmentOptimal,
+			DepthAttachmentOptimal,
+			DepthReadOnlyOptimal,
+			StencilAttachmentOptimal,
+			StencilReadOnlyOptimal,
+			DepthStencilAttachmentOptimal,
+			DepthStencilReadOnlyOptimal,
+			DepthReadOnlyStencilAttachmentOptimal,
+			DepthAttachmentStencilReadOnlyOptimal,
+			ShaderReadOnlyOptimal,
+			TransferSourceOptimal,
+			TransferDestinationOptimal,
+			Preinitialized,
+			ReadyForPresentation
+		};
 	}
 }

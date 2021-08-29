@@ -551,6 +551,48 @@ namespace Hermes
 					return (RenderInterface::DataFormat)0;
 			}
 		}
+
+		inline VkImageLayout ImageLayoutToVkImageLayout(RenderInterface::ImageLayout Layout)
+		{
+			switch (Layout)
+			{
+			case RenderInterface::ImageLayout::Undefined:
+				return VK_IMAGE_LAYOUT_UNDEFINED;
+			case RenderInterface::ImageLayout::General:
+				return VK_IMAGE_LAYOUT_GENERAL;
+			case RenderInterface::ImageLayout::Preinitialized:
+				return VK_IMAGE_LAYOUT_PREINITIALIZED;
+			case RenderInterface::ImageLayout::ReadyForPresentation:
+				return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			case RenderInterface::ImageLayout::ColorAttachmentOptimal:
+				return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			case RenderInterface::ImageLayout::DepthAttachmentOptimal:
+				return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+			case RenderInterface::ImageLayout::DepthReadOnlyOptimal:
+				return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
+			case RenderInterface::ImageLayout::StencilAttachmentOptimal:
+				return VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
+			case RenderInterface::ImageLayout::StencilReadOnlyOptimal:
+				return VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL;
+			case RenderInterface::ImageLayout::DepthStencilAttachmentOptimal:
+				return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			case RenderInterface::ImageLayout::DepthStencilReadOnlyOptimal:
+				return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			case RenderInterface::ImageLayout::DepthAttachmentStencilReadOnlyOptimal:
+				return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
+			case RenderInterface::ImageLayout::DepthReadOnlyStencilAttachmentOptimal:
+				return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
+			case RenderInterface::ImageLayout::ShaderReadOnlyOptimal:
+				return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			case RenderInterface::ImageLayout::TransferDestinationOptimal:
+				return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			case RenderInterface::ImageLayout::TransferSourceOptimal:
+				return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			default:
+				HERMES_ASSERT(false);
+				return (VkImageLayout)0;
+			}
+		}
 	}
 }
 

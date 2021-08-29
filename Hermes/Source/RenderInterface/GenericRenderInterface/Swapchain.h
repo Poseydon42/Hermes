@@ -3,7 +3,7 @@
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
+#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 #include "Math/Vector2.h"
 
 namespace Hermes

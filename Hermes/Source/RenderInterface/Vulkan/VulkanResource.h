@@ -5,6 +5,7 @@
 #include "Core/Core.h"
 #include "RenderInterface/GenericRenderInterface/Resource.h"
 #include "Vulkan.h"
+#include "Math/Vector2.h"
 
 namespace Hermes
 {
@@ -21,6 +22,11 @@ namespace Hermes
 			 * Buffer constructor
 			 */
 			VulkanResource(std::shared_ptr<VulkanDevice> InDevice, size_t BufferSize, RenderInterface::ResourceUsageType Usage);
+
+			/**
+			 * Non-owned image constructor
+			 */
+			VulkanResource(std::shared_ptr<VulkanDevice> InDevice, VkImage Image, Vec2ui Size);
 			
 			~VulkanResource() override;
 
@@ -31,20 +37,26 @@ namespace Hermes
 			
 			void Unmap() override;
 
-			VkBuffer GetAsBuffer() const;
+			Vec2ui GetImageSize() const override;
 
+			VkBuffer GetAsBuffer() const;
+			VkImage GetAsImage() const;
 		private:
-			union As
+			struct Buffer
 			{
-				struct Buffer
-				{
-					VkBuffer Handle;
-				} Buffer;
-			} As;
+				VkBuffer Handle = VK_NULL_HANDLE;
+			} AsBuffer;
+			
+			struct Image
+			{
+				VkImage Handle = VK_NULL_HANDLE;
+				Vec2ui Size = {};
+			} AsImage;
 
 			VmaAllocation Allocation;
 			std::shared_ptr<VulkanDevice> Device;
-			bool Mapped;
+			bool IsMapped;
+			bool IsOwned;
 		};
 	}
 }

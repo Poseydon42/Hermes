@@ -4,6 +4,7 @@
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/EnumClassOperators.h"
+#include "Math/Vector2.h"
 
 namespace Hermes
 {
@@ -46,6 +47,11 @@ namespace Hermes
 			virtual size_t GetSize() const = 0;
 			
 			virtual ResourceType GetResourceType() const = 0;
+			
+			/********************************************
+			 *           Image-specific section         *
+			 ********************************************/
+			virtual Vec2ui GetImageSize() const = 0;
 
 			/**
 			 * Maps resource memory into application virtual memory space
@@ -72,7 +78,6 @@ namespace Hermes
 			
 			size_t GetSize() const override { return Size; }
 			ResourceType GetResourceType() const override { return Type; }
-		
 		private:
 			ResourceType Type;
 			size_t Size;

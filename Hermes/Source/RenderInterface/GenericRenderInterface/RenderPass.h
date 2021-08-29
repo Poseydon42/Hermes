@@ -31,7 +31,7 @@ namespace Hermes
 			AttachmentStoreOp StoreOp;
 			AttachmentLoadOp StencilLoadOp;
 			AttachmentStoreOp StencilStoreOp;
-			ImageFormat Format;
+			DataFormat Format;
 			ImageLayout LayoutBeforeBegin;
 			ImageLayout LayoutAtEnd;
 			// TODO : sample count, flags

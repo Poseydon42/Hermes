@@ -6,6 +6,7 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
 #include "Math/Vector2.h"
+#include "RenderInterface/Vulkan/VulkanCommonTypes.h"
 #include "Vulkan.h"
 
 namespace Hermes
@@ -24,7 +25,7 @@ namespace Hermes
 			VulkanSwapchain(VulkanSwapchain&& Other);
 			VulkanSwapchain& operator=(VulkanSwapchain&& Other);
 
-			RenderInterface::ImageFormat GetImageFormat() const override { return (RenderInterface::ImageFormat)SwapchainFormat; }
+			RenderInterface::DataFormat GetImageFormat() const override { return VkFormatToDataFormat(SwapchainFormat); }
 			Vec2ui GetSize() const override { return Size; }
 		private:
 			VkSwapchainKHR Swapchain = VK_NULL_HANDLE;

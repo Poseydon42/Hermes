@@ -18,7 +18,7 @@ namespace Hermes
 			ADD_DEFAULT_CONSTRUCTOR(Swapchain)
 
 		public:
-			virtual ImageFormat GetImageFormat() const = 0;
+			virtual DataFormat GetImageFormat() const = 0;
 
 			virtual Vec2ui GetSize() const = 0;
 		};

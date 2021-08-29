@@ -34,6 +34,7 @@ public:
 		auto Device = PhysicalDevice->CreateDevice();
 
 		auto Swapchain = Device->CreateSwapchain({ 1280, 720 }, 3);
+		HERMES_ASSERT(Swapchain->GetImageCount() >= 3);
 
 		static constexpr size_t TestBufferSize = 1024;
 		auto CPUBuffer = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::CPUAccessible | Hermes::RenderInterface::ResourceUsageType::CopySource);

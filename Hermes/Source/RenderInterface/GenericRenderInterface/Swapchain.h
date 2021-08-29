@@ -10,6 +10,8 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		class Resource;
+		
 		class HERMES_API Swapchain
 		{
 			MAKE_NON_COPYABLE(Swapchain)
@@ -21,6 +23,10 @@ namespace Hermes
 			virtual DataFormat GetImageFormat() const = 0;
 
 			virtual Vec2ui GetSize() const = 0;
+
+			virtual std::shared_ptr<Resource> GetImage(uint32 Index) const = 0;
+
+			virtual uint32 GetImageCount() const = 0;
 		};
 	}
 }

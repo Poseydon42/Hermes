@@ -96,6 +96,15 @@ namespace Hermes
 			VK_CHECK_RESULT(vkCreateSwapchainKHR(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Swapchain));
 			SwapchainFormat = CreateInfo.imageFormat;
 			Size = { CreateInfo.imageExtent.width, CreateInfo.imageExtent.height };
+			uint32 ImageCount;
+			vkGetSwapchainImagesKHR(Device->GetDevice(), Swapchain, &ImageCount, nullptr);
+			std::vector<VkImage> ImageHandles(ImageCount, VK_NULL_HANDLE);
+			vkGetSwapchainImagesKHR(Device->GetDevice(), Swapchain, &ImageCount, ImageHandles.data());
+			Images.reserve(ImageCount);
+			for (uint32 Index = 0; Index < ImageCount; Index++)
+			{
+				Images.push_back(std::move(std::make_shared<VulkanResource>(Device, ImageHandles[Index], Size)));
+			}
 		}
 
 		VulkanSwapchain::~VulkanSwapchain()

@@ -31,12 +31,21 @@ namespace Hermes
 
 			VkImage GetImage() const;
 
+			/**
+			 * \brief Returns 'default'(e.g. all mips, all layers, initial format) image view of this image
+			 * \return VkImageView that covers whole image with its initial format
+			 */
+			VkImageView GetDefaultView() const;
+
 		private:
 			std::shared_ptr<VulkanDevice> Device;
 			VkImage Handle;
 			Vec2ui Size;
 			VkFormat Format;
+			VkImageView DefaultView;
 			bool IsOwned;
+
+			void CreateDefaultView();
 		};
 	}
 }

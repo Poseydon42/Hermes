@@ -12,8 +12,10 @@ namespace Hermes
 			, Handle(InImage)
 			, Size(InSize)
 			, Format(InFormat)
+			, DefaultView(VK_NULL_HANDLE)
 			, IsOwned(false)
 		{
+			CreateDefaultView();
 		}
 
 		VulkanImage::~VulkanImage()
@@ -34,6 +36,7 @@ namespace Hermes
 			std::swap(Size, Other.Size);
 			std::swap(Format, Other.Format);
 			std::swap(IsOwned, Other.IsOwned);
+			std::swap(DefaultView, Other.DefaultView);
 			
 			return *this;
 		}
@@ -51,6 +54,31 @@ namespace Hermes
 		VkImage VulkanImage::GetImage() const
 		{
 			return Handle;
+		}
+
+		VkImageView VulkanImage::GetDefaultView() const
+		{
+			return DefaultView;
+		}
+
+		void VulkanImage::CreateDefaultView()
+		{
+			VkImageViewCreateInfo CreateInfo = {};
+			CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			CreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+			CreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+			CreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+			CreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+			CreateInfo.format = Format;
+			CreateInfo.image = Handle;
+			CreateInfo.subresourceRange.aspectMask = VkAspectFlagsFromVkFormat(Format);
+			CreateInfo.subresourceRange.baseArrayLayer = 0;
+			CreateInfo.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+			CreateInfo.subresourceRange.baseMipLevel = 0;
+			CreateInfo.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
+			CreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+			VK_CHECK_RESULT(vkCreateImageView(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &DefaultView))
 		}
 	}
 }

@@ -21,7 +21,7 @@ namespace Hermes
 		public:
 			VulkanImage(std::shared_ptr<VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat, Vec2ui InSize);
 
-			~VulkanImage();
+			~VulkanImage() override;
 			VulkanImage(VulkanImage&& Other);
 			VulkanImage& operator=(VulkanImage&& Other);
 

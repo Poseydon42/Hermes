@@ -22,6 +22,22 @@ namespace Hermes
 				vkDestroyImage(Device->GetDevice(), Handle, GVulkanAllocator);
 		}
 
+		VulkanImage::VulkanImage(VulkanImage&& Other)
+		{
+			*this = std::move(Other);
+		}
+
+		VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
+		{
+			std::swap(Device, Other.Device);
+			std::swap(Handle, Other.Handle);
+			std::swap(Size, Other.Size);
+			std::swap(Format, Other.Format);
+			std::swap(IsOwned, Other.IsOwned);
+			
+			return *this;
+		}
+
 		Vec2ui VulkanImage::GetSize() const
 		{
 			return Size;

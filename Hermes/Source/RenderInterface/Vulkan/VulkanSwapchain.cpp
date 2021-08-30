@@ -103,7 +103,7 @@ namespace Hermes
 			Images.reserve(ImageCount);
 			for (uint32 Index = 0; Index < ImageCount; Index++)
 			{
-				Images.push_back(std::move(std::make_shared<VulkanResource>(Device, ImageHandles[Index], Size)));
+				Images.push_back(std::move(std::make_shared<VulkanBuffer>(Device, ImageHandles[Index], Size)));
 			}
 		}
 

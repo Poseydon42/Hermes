@@ -7,7 +7,7 @@
 #include "RenderInterface/Vulkan/VulkanShader.h"
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"
 #include "RenderInterface/Vulkan/VulkanQueue.h"
-#include "RenderInterface/Vulkan/VulkanResource.h"
+#include "RenderInterface/Vulkan/VulkanBuffer.h"
 #include "RenderInterface/Vulkan/VulkanFence.h"
 #include "Platform/GenericPlatform/PlatformMisc.h"
 
@@ -190,9 +190,9 @@ namespace Hermes
 			}
 		}
 
-		std::shared_ptr<RenderInterface::Resource> VulkanDevice::CreateBuffer(size_t Size, RenderInterface::ResourceUsageType Usage)
+		std::shared_ptr<RenderInterface::Buffer> VulkanDevice::CreateBuffer(size_t Size, RenderInterface::ResourceUsageType Usage)
 		{
-			return std::make_shared<VulkanResource>(shared_from_this(), Size, Usage);
+			return std::make_shared<VulkanBuffer>(shared_from_this(), Size, Usage);
 		}
 
 		std::shared_ptr<RenderInterface::Fence> VulkanDevice::CreateFence(bool InitialState)

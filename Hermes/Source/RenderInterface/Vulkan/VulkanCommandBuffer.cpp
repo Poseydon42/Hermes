@@ -1,7 +1,7 @@
 ﻿#include "VulkanCommandBuffer.h"
 
 #include "VulkanDevice.h"
-#include "RenderInterface/Vulkan/VulkanResource.h"
+#include "RenderInterface/Vulkan/VulkanBuffer.h"
 
 namespace Hermes
 {
@@ -52,12 +52,12 @@ namespace Hermes
 			VK_CHECK_RESULT(vkEndCommandBuffer(Buffer));
 		}
 
-		void VulkanCommandBuffer::CopyBuffer(const std::shared_ptr<RenderInterface::Resource>& Source,
-		                                     const std::shared_ptr<RenderInterface::Resource>& Destination,
+		void VulkanCommandBuffer::CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,
+		                                     const std::shared_ptr<RenderInterface::Buffer>& Destination,
 		                                     std::vector<RenderInterface::BufferCopyRegion> CopyRegions)
 		{
-			const auto* VulkanSourceBuffer = static_cast<VulkanResource*>(Source.get());
-			const auto* VulkanDestinationBuffer = static_cast<VulkanResource*>(Destination.get());
+			const auto* VulkanSourceBuffer = static_cast<VulkanBuffer*>(Source.get());
+			const auto* VulkanDestinationBuffer = static_cast<VulkanBuffer*>(Destination.get());
 			std::vector<VkBufferCopy> VulkanCopyRegions(CopyRegions.size());
 			auto It = VulkanCopyRegions.begin();
 			for (const auto& CopyRegion : CopyRegions)

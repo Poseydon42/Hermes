@@ -7,7 +7,7 @@
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
 #include "Math/Vector2.h"
 #include "RenderInterface/Vulkan/VulkanCommonTypes.h"
-#include "RenderInterface/Vulkan/VulkanResource.h"
+#include "RenderInterface/Vulkan/VulkanBuffer.h"
 #include "Vulkan.h"
 
 namespace Hermes
@@ -30,14 +30,14 @@ namespace Hermes
 			
 			Vec2ui GetSize() const override { return Size; }
 			
-			std::shared_ptr<RenderInterface::Resource> GetImage(uint32 Index) const override { return Images[Index]; }
+			std::shared_ptr<RenderInterface::Buffer> GetImage(uint32 Index) const override { return Images[Index]; }
 
 			uint32 GetImageCount() const override { return (uint32)Images.size(); }
 		private:
 			VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
 			VkFormat SwapchainFormat = VK_FORMAT_UNDEFINED;
 			std::shared_ptr<VulkanDevice> Device;
-			std::vector<std::shared_ptr<VulkanResource>> Images;
+			std::vector<std::shared_ptr<VulkanBuffer>> Images;
 			Vec2ui Size;
 		};
 	}

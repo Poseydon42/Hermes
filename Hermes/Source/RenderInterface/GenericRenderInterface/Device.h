@@ -7,7 +7,7 @@
 #include "Core/Misc/DefaultConstructors.h"
 #include "Math/Vector2.h"
 #include "RenderInterface/GenericRenderInterface/Queue.h"
-#include "RenderInterface/GenericRenderInterface/Resource.h"
+#include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/Shader.h"
 
 
@@ -21,7 +21,7 @@ namespace Hermes
 		class RenderPass;
 		class Fence;
 		class Swapchain;
-		class Resource;
+		class Buffer;
 		
 		/**
 		 * Represents a 'logical device', basically an interface to all GPU functionality
@@ -38,7 +38,7 @@ namespace Hermes
 
 			virtual std::shared_ptr<Queue> GetQueue(QueueType Type) = 0;
 
-			virtual std::shared_ptr<Resource> CreateBuffer(size_t Size, ResourceUsageType Usage) = 0;
+			virtual std::shared_ptr<Buffer> CreateBuffer(size_t Size, ResourceUsageType Usage) = 0;
 
 			virtual std::shared_ptr<Fence> CreateFence(bool InitialState = false) = 0;
 

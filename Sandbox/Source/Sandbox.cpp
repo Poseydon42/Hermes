@@ -4,7 +4,7 @@
 #include "Core/Application/Application.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
 #include "Platform/GenericPlatform/PlatformLibrary.h"
-#include "RenderInterface/GenericRenderInterface/Resource.h"
+#include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"
 #include "RenderInterface/Vulkan/VulkanInstance.h"
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"

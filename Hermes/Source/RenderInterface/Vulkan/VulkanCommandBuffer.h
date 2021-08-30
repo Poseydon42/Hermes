@@ -26,8 +26,8 @@ namespace Hermes
 			
 			void EndRecording() override;
 			
-			void CopyBuffer(const std::shared_ptr<RenderInterface::Resource>& Source,
-				const std::shared_ptr<RenderInterface::Resource>& Destination,
+			void CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,
+				const std::shared_ptr<RenderInterface::Buffer>& Destination,
 				std::vector<RenderInterface::BufferCopyRegion> CopyRegions) override;
 
 			VkCommandBuffer GetBuffer() const { return Buffer; }

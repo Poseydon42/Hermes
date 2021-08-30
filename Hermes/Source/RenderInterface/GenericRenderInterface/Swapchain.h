@@ -10,7 +10,7 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
-		class Resource;
+		class Buffer;
 		
 		class HERMES_API Swapchain
 		{
@@ -24,7 +24,7 @@ namespace Hermes
 
 			virtual Vec2ui GetSize() const = 0;
 
-			virtual std::shared_ptr<Resource> GetImage(uint32 Index) const = 0;
+			virtual std::shared_ptr<Buffer> GetImage(uint32 Index) const = 0;
 
 			virtual uint32 GetImageCount() const = 0;
 		};

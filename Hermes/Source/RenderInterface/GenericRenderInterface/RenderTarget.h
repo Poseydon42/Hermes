@@ -14,6 +14,12 @@ namespace Hermes
 			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(RenderTarget);
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(RenderTarget);
 			MAKE_NON_COPYABLE(RenderTarget);
+
+		public:
+
+			virtual Vec2ui GetSize() const = 0;
+
+			virtual uint32 GetImageCount() const = 0;
 		};
 	}
 }

@@ -9,6 +9,8 @@
 #include "Math/Vector2.h"
 #include "RenderInterface/GenericRenderInterface/Image.h"
 #include "RenderInterface/GenericRenderInterface/RenderTarget.h"
+#include "RenderInterface/GenericRenderInterface/RenderPass.h"
+
 
 namespace Hermes
 {
@@ -29,8 +31,12 @@ namespace Hermes
 			VulkanRenderTarget(VulkanRenderTarget&& Other);
 			VulkanRenderTarget& operator=(VulkanRenderTarget&& Other);
 
-			VkFramebuffer GetFramebuffer() const;
+			Vec2ui GetSize() const override;
 			
+			uint32 GetImageCount() const override;
+
+			VkFramebuffer GetFramebuffer() const;
+
 		private:
 			std::shared_ptr<VulkanDevice> Device;
 			std::shared_ptr<VulkanRenderPass> RenderPass;

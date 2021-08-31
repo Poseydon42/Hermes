@@ -59,6 +59,16 @@ namespace Hermes
 			return *this;
 		}
 
+		Vec2ui VulkanRenderTarget::GetSize() const
+		{
+			return Size;
+		}
+
+		uint32 VulkanRenderTarget::GetImageCount() const
+		{
+			return (uint32)Attachments.size();
+		}
+
 		VkFramebuffer VulkanRenderTarget::GetFramebuffer() const
 		{
 			return Framebuffer;

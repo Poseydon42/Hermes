@@ -26,6 +26,10 @@ namespace Hermes
 			
 			void EndRecording() override;
 			
+			void BeginRenderPass(const std::shared_ptr<RenderInterface::RenderPass>& RenderPass, const std::shared_ptr<RenderInterface::RenderTarget>& RenderTarget, const std::vector<RenderInterface::ClearColor>& ClearColors) override;
+			
+			void EndRenderPass() override;
+			
 			void CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,
 				const std::shared_ptr<RenderInterface::Buffer>& Destination,
 				std::vector<RenderInterface::BufferCopyRegion> CopyRegions) override;

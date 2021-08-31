@@ -111,6 +111,15 @@ public:
 
 		auto RenderTarget = Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(0)}, Swapchain->GetSize());
 
+		auto GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
+		auto GraphicsFence = Device->CreateFence(false);
+		GraphicsCommandBuffer->BeginRecording();
+		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTarget, { {1.0f, 1.0f, 0.0f, 1.0f } });
+		GraphicsCommandBuffer->EndRenderPass();
+		GraphicsCommandBuffer->EndRecording();
+		Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->SubmitCommandBuffer(GraphicsCommandBuffer, GraphicsFence);
+		GraphicsFence->Wait(UINT64_MAX);
+		
 		return true;
 	}
 

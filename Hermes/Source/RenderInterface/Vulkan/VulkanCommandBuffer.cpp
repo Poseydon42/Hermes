@@ -1,6 +1,8 @@
 ﻿#include "VulkanCommandBuffer.h"
 
-#include "VulkanDevice.h"
+#include "RenderInterface/Vulkan/VulkanDevice.h"
+#include "RenderInterface/Vulkan/VulkanRenderPass.h"
+#include "RenderInterface/Vulkan/VulkanRenderTarget.h"
 #include "RenderInterface/Vulkan/VulkanBuffer.h"
 
 namespace Hermes
@@ -50,6 +52,27 @@ namespace Hermes
 		void VulkanCommandBuffer::EndRecording()
 		{
 			VK_CHECK_RESULT(vkEndCommandBuffer(Buffer));
+		}
+
+		void VulkanCommandBuffer::BeginRenderPass(const std::shared_ptr<RenderInterface::RenderPass>& RenderPass, const std::shared_ptr<RenderInterface::RenderTarget>& RenderTarget, const std::vector<RenderInterface::ClearColor>& ClearColors)
+		{
+			VkRenderPassBeginInfo BeginInfo = {};
+			BeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			BeginInfo.renderPass  = std::reinterpret_pointer_cast<VulkanRenderPass>(RenderPass)->GetRenderPass();
+			BeginInfo.framebuffer = std::reinterpret_pointer_cast<VulkanRenderTarget>(RenderTarget)->GetFramebuffer();
+			BeginInfo.renderArea.offset = { 0, 0};
+			BeginInfo.renderArea.extent =  { RenderTarget->GetSize().X, RenderTarget->GetSize().Y };
+			BeginInfo.clearValueCount = (uint32)ClearColors.size();
+			// TODO : this is a dirty hack that assumes that VkClearColor data layout exactly matches ClearColor
+			//        data layout. We should fix it one day to be 100% sure in its compatibility
+			BeginInfo.pClearValues = (const VkClearValue*)ClearColors.data();
+			
+			vkCmdBeginRenderPass(Buffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		}
+
+		void VulkanCommandBuffer::EndRenderPass()
+		{
+			vkCmdEndRenderPass(Buffer);
 		}
 
 		void VulkanCommandBuffer::CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,

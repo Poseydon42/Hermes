@@ -109,6 +109,8 @@ public:
 
 		auto Pipeline = Device->CreatePipeline(RenderPass, PipelineDesc);
 
+		auto RenderTarget = Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(0)}, Swapchain->GetSize());
+
 		return true;
 	}
 

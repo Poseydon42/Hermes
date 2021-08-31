@@ -15,6 +15,8 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		class RenderTarget;
+		class Image;
 		struct PipelineDescription;
 		class Pipeline;
 		struct RenderPassDescription;
@@ -47,6 +49,8 @@ namespace Hermes
 			virtual std::shared_ptr<RenderPass> CreateRenderPass(const RenderPassDescription& Description) = 0;
 
 			virtual std::shared_ptr<Pipeline> CreatePipeline(std::shared_ptr<RenderPass> RenderPass, const PipelineDescription& Description) = 0;
+
+			virtual std::shared_ptr<RenderTarget> CreateRenderTarget(std::shared_ptr<RenderPass> RenderPass, const std::vector<std::shared_ptr<Image>>& Attachments, Vec2ui Size) = 0;
 
 			/**
 			 * Waits until device finishes all its current and pending work and becomes idle

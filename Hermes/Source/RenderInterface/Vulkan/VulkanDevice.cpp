@@ -1,9 +1,10 @@
 ﻿#include "VulkanDevice.h"
 
-#include "VulkanInstance.h"
 #include "Core/Application/GameLoop.h"
+#include "RenderInterface/Vulkan/VulkanInstance.h"
 #include "RenderInterface/Vulkan/VulkanPipeline.h"
 #include "RenderInterface/Vulkan/VulkanRenderPass.h"
+#include "RenderInterface/Vulkan/VulkanRenderTarget.h"
 #include "RenderInterface/Vulkan/VulkanShader.h"
 #include "RenderInterface/Vulkan/VulkanSwapchain.h"
 #include "RenderInterface/Vulkan/VulkanQueue.h"
@@ -15,6 +16,7 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
+
 		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface)
 			: Device(VK_NULL_HANDLE)
 			, PhysicalDevice(InPhysicalDevice)
@@ -213,6 +215,11 @@ namespace Hermes
 		std::shared_ptr<RenderInterface::Pipeline> VulkanDevice::CreatePipeline(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const RenderInterface::PipelineDescription& Description)
 		{
 			return std::make_shared<VulkanPipeline>(shared_from_this(), std::move(RenderPass), Description);
+		}
+
+		std::shared_ptr<RenderInterface::RenderTarget> VulkanDevice::CreateRenderTarget(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size)
+		{
+			return std::make_shared<VulkanRenderTarget>(shared_from_this(), RenderPass, Attachments, Size);
 		}
 
 		void VulkanDevice::WaitForIdle()

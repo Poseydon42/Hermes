@@ -35,12 +35,13 @@ namespace Hermes
 			std::shared_ptr<RenderInterface::RenderPass> CreateRenderPass(const RenderInterface::RenderPassDescription& Description) override;
 
 			std::shared_ptr<RenderInterface::Pipeline> CreatePipeline(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const RenderInterface::PipelineDescription& Description) override;
+
+			std::shared_ptr<RenderInterface::RenderTarget> CreateRenderTarget(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size) override;
 			
 			void WaitForIdle() override;
 
 			VmaAllocator GetAllocator() const { return Allocator; }
 			VkDevice GetDevice() const { return Device; }
-			
 		private:
 			VkDevice Device;
 			VkPhysicalDevice PhysicalDevice;

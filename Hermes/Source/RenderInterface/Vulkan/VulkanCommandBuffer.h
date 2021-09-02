@@ -29,12 +29,15 @@ namespace Hermes
 			void BeginRenderPass(const std::shared_ptr<RenderInterface::RenderPass>& RenderPass, const std::shared_ptr<RenderInterface::RenderTarget>& RenderTarget, const std::vector<RenderInterface::ClearColor>& ClearColors) override;
 			
 			void EndRenderPass() override;
+
+			void BindPipeline(const std::shared_ptr<RenderInterface::Pipeline>& Pipeline) override;
 			
 			void CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,
 				const std::shared_ptr<RenderInterface::Buffer>& Destination,
 				std::vector<RenderInterface::BufferCopyRegion> CopyRegions) override;
 
 			VkCommandBuffer GetBuffer() const { return Buffer; }
+			
 		private:
 			VkCommandBuffer Buffer;
 			VkCommandPool Pool;

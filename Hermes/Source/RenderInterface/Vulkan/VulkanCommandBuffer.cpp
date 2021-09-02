@@ -1,5 +1,6 @@
 ﻿#include "VulkanCommandBuffer.h"
 
+#include "RenderInterface/Vulkan/VulkanPipeline.h"
 #include "RenderInterface/Vulkan/VulkanDevice.h"
 #include "RenderInterface/Vulkan/VulkanRenderPass.h"
 #include "RenderInterface/Vulkan/VulkanRenderTarget.h"
@@ -10,8 +11,9 @@ namespace Hermes
 	namespace Vulkan
 	{
 		VulkanCommandBuffer::VulkanCommandBuffer(std::shared_ptr<VulkanDevice> InDevice, VkCommandPool InPool, bool IsPrimaryBuffer)
-			: Device(InDevice)
+			: Buffer(VK_NULL_HANDLE)
 			, Pool(InPool)
+			, Device(std::move(InDevice))
 		{
 			VkCommandBufferAllocateInfo AllocateInfo = {};
 			AllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -73,6 +75,12 @@ namespace Hermes
 		void VulkanCommandBuffer::EndRenderPass()
 		{
 			vkCmdEndRenderPass(Buffer);
+		}
+
+		void VulkanCommandBuffer::BindPipeline(const std::shared_ptr<RenderInterface::Pipeline>& Pipeline)
+		{
+			// TODO : compute pipelines
+			vkCmdBindPipeline(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, std::reinterpret_pointer_cast<VulkanPipeline>(Pipeline)->GetPipeline());
 		}
 
 		void VulkanCommandBuffer::CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,

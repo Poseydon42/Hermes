@@ -10,6 +10,7 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		class Pipeline;
 		class RenderTarget;
 		class RenderPass;
 		class Buffer;
@@ -61,6 +62,8 @@ namespace Hermes
 			 * Ends currently active render pass
 			 */
 			virtual void EndRenderPass() = 0;
+
+			virtual void BindPipeline(const std::shared_ptr<Pipeline>& Pipeline) = 0;
 			
 			/*************************************
 			 *      Transfer queue commands      *

@@ -109,6 +109,7 @@ public:
 		auto GraphicsFence = Device->CreateFence(false);
 		GraphicsCommandBuffer->BeginRecording();
 		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTarget, { {1.0f, 1.0f, 0.0f, 1.0f } });
+		GraphicsCommandBuffer->BindPipeline(Pipeline);
 		GraphicsCommandBuffer->EndRenderPass();
 		GraphicsCommandBuffer->EndRecording();
 		Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->SubmitCommandBuffer(GraphicsCommandBuffer, GraphicsFence);

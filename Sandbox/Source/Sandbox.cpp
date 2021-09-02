@@ -73,20 +73,14 @@ public:
 		auto FragmentShader = Device->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", Hermes::RenderInterface::ShaderType::FragmentShader);
 
 		Hermes::RenderInterface::RenderPassDescription Description = {};
-		Description.Attachments.push_back({});
-		Description.Attachments[0].LayoutBeforeBegin = Hermes::RenderInterface::ImageLayout::Undefined;
-		Description.Attachments[0].LayoutAtEnd = Hermes::RenderInterface::ImageLayout::ReadyForPresentation;
-		Description.Attachments[0].Format = Swapchain->GetImageFormat();
-		Description.Attachments[0].LoadOp = Hermes::RenderInterface::AttachmentLoadOp::Clear;
-		Description.Attachments[0].StoreOp = Hermes::RenderInterface::AttachmentStoreOp::Store;
-		Description.Attachments[0].StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
-		Description.Attachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
-
-		Description.Subpasses.push_back({});
-		Description.Subpasses[0].IsDepthStencilAttachmentUsed = false;
-		Description.Subpasses[0].ColorAttachments.push_back({});
-		Description.Subpasses[0].ColorAttachments[0].Index = 0;
-		Description.Subpasses[0].ColorAttachments[0].Layout = Hermes::RenderInterface::ImageLayout::ColorAttachmentOptimal;
+		Description.ColorAttachments.push_back({});
+		Description.ColorAttachments[0].LayoutAtStart = Hermes::RenderInterface::ImageLayout::ColorAttachmentOptimal;
+		Description.ColorAttachments[0].LayoutAtEnd = Hermes::RenderInterface::ImageLayout::ReadyForPresentation;
+		Description.ColorAttachments[0].Format = Swapchain->GetImageFormat();
+		Description.ColorAttachments[0].LoadOp = Hermes::RenderInterface::AttachmentLoadOp::Clear;
+		Description.ColorAttachments[0].StoreOp = Hermes::RenderInterface::AttachmentStoreOp::Store;
+		Description.ColorAttachments[0].StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
+		Description.ColorAttachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
 
 		auto RenderPass = Device->CreateRenderPass(Description);
 

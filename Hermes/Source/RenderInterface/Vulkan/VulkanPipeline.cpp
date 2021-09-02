@@ -120,7 +120,7 @@ namespace Hermes
 		VulkanPipeline::VulkanPipeline(std::shared_ptr<VulkanDevice> InDevice, std::shared_ptr<RenderInterface::RenderPass> InRenderPass, const RenderInterface::PipelineDescription& Description)
 			: Device(std::move(InDevice))
 			, RenderPass(std::reinterpret_pointer_cast<VulkanRenderPass>(InRenderPass)) // TODO : seems like a very dirty hack, maybe there's something better for this?
-			, Pipelines(RenderPass->SubpassCount(), VK_NULL_HANDLE)
+			, Pipeline(VK_NULL_HANDLE)
 			, Layout(VK_NULL_HANDLE)
 		{
 			VkPipelineLayoutCreateInfo LayoutCreateInfo = {};
@@ -207,65 +207,46 @@ namespace Hermes
 			DepthStencilCreateInfo.depthBoundsTestEnable = false;
 			DepthStencilCreateInfo.stencilTestEnable = false; // TODO : implement
 
-			std::vector<VkPipelineColorBlendStateCreateInfo> ColorBlendCreateInfos;
+			VkPipelineColorBlendStateCreateInfo ColorBlendCreateInfo = {};
 			std::vector<VkPipelineColorBlendAttachmentState> AttachmentBlendStates;
-			uint32 AttachmentCount = 0;
-			for (uint32 SubpassIndex = 0; SubpassIndex < RenderPass->SubpassCount(); SubpassIndex++)
-				AttachmentCount += RenderPass->ColorAttachmentCount(SubpassIndex);
-			size_t AttachmentBlendStatesIndexOffset = 0;
-			ColorBlendCreateInfos.reserve(RenderPass->SubpassCount());
-			// We do this to ensure that vector won't reallocate anymore, and we can get direct pointers to its elements instead
-			// of calculating them after whole vector is filled
-			AttachmentBlendStates.reserve(AttachmentCount);
-			for (uint32 SubpassIndex = 0; SubpassIndex < RenderPass->SubpassCount(); SubpassIndex++)
+			AttachmentBlendStates.reserve(RenderPass->GetColorAttachmentCount());
+			for (uint32 AttachmentIndex = 0; AttachmentIndex < RenderPass->GetColorAttachmentCount(); AttachmentIndex++)
 			{
-				VkPipelineColorBlendStateCreateInfo ColorBlendCreateInfo = {};
-				ColorBlendCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-				ColorBlendCreateInfo.logicOpEnable = false; // TODO : implement :)
-				ColorBlendCreateInfo.attachmentCount = RenderPass->ColorAttachmentCount(SubpassIndex);
-				ColorBlendCreateInfo.pAttachments = AttachmentBlendStates.data() + AttachmentBlendStatesIndexOffset;
-				for (uint32 AttachmentIndex = 0; AttachmentIndex < RenderPass->ColorAttachmentCount(SubpassIndex); AttachmentIndex++)
-				{
-					VkPipelineColorBlendAttachmentState NewAttachmentBlendState = {};
-					NewAttachmentBlendState.blendEnable = false;
-					NewAttachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-					AttachmentBlendStates.push_back(NewAttachmentBlendState);
-					AttachmentBlendStatesIndexOffset++;
-				}
-				ColorBlendCreateInfos.push_back(ColorBlendCreateInfo);
+				VkPipelineColorBlendAttachmentState NewAttachmentBlendState = {};
+				NewAttachmentBlendState.blendEnable = false;
+				NewAttachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+				AttachmentBlendStates.push_back(NewAttachmentBlendState);
 			}
+			ColorBlendCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+			ColorBlendCreateInfo.attachmentCount = (uint32)AttachmentBlendStates.size();
+			ColorBlendCreateInfo.pAttachments = AttachmentBlendStates.data();
 			
-			std::vector<VkGraphicsPipelineCreateInfo> PipelineCreateInfos(RenderPass->SubpassCount());
-			for (uint32 i = 0; i < RenderPass->SubpassCount(); i++)
-			{
-				auto& CreateInfo = PipelineCreateInfos[i];
-				CreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-				CreateInfo.stageCount = (uint32)ShaderCreateInfos.size();
-				CreateInfo.pStages = ShaderCreateInfos.data();
-				CreateInfo.pVertexInputState = &VertexInputCreateInfo;
-				CreateInfo.pInputAssemblyState = &InputAssemblyCreateInfo;
-				CreateInfo.pTessellationState = nullptr;
-				CreateInfo.pViewportState = &ViewportCreateInfo;
-				CreateInfo.pRasterizationState = &RasterizationCreateInfo;
-				CreateInfo.pMultisampleState = &MultisampleCreateInfo;
-				CreateInfo.pDepthStencilState = &DepthStencilCreateInfo;
-				CreateInfo.pColorBlendState = &ColorBlendCreateInfos[i];
-				CreateInfo.pDynamicState = nullptr; // TODO : implement
-				CreateInfo.layout = Layout;
-				CreateInfo.renderPass = RenderPass->GetRenderPass();
-				CreateInfo.subpass = i;
-				CreateInfo.basePipelineHandle = VK_NULL_HANDLE;
-				CreateInfo.basePipelineIndex = -1;
-			}
+			VkGraphicsPipelineCreateInfo CreateInfo = {};
+			CreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+			CreateInfo.stageCount = (uint32)ShaderCreateInfos.size();
+			CreateInfo.pStages = ShaderCreateInfos.data();
+			CreateInfo.pVertexInputState = &VertexInputCreateInfo;
+			CreateInfo.pInputAssemblyState = &InputAssemblyCreateInfo;
+			CreateInfo.pTessellationState = nullptr;
+			CreateInfo.pViewportState = &ViewportCreateInfo;
+			CreateInfo.pRasterizationState = &RasterizationCreateInfo;
+			CreateInfo.pMultisampleState = &MultisampleCreateInfo;
+			CreateInfo.pDepthStencilState = &DepthStencilCreateInfo;
+			CreateInfo.pColorBlendState = &ColorBlendCreateInfo;
+			CreateInfo.pDynamicState = nullptr; // TODO : implement
+			CreateInfo.layout = Layout;
+			CreateInfo.renderPass = RenderPass->GetRenderPass();
+			CreateInfo.subpass = 0;
+			CreateInfo.basePipelineHandle = VK_NULL_HANDLE;
+			CreateInfo.basePipelineIndex = -1;
 
-			vkCreateGraphicsPipelines(Device->GetDevice(), VK_NULL_HANDLE, (uint32)PipelineCreateInfos.size(), PipelineCreateInfos.data(), GVulkanAllocator, Pipelines.data());
+			vkCreateGraphicsPipelines(Device->GetDevice(), VK_NULL_HANDLE, 1, &CreateInfo, GVulkanAllocator, &Pipeline);
 		}
 
 		VulkanPipeline::~VulkanPipeline()
 		{
 			vkDestroyPipelineLayout(Device->GetDevice(), Layout, GVulkanAllocator);
-			for (const auto& Pipeline : Pipelines)
-				vkDestroyPipeline(Device->GetDevice(), Pipeline, GVulkanAllocator);
+			vkDestroyPipeline(Device->GetDevice(), Pipeline, GVulkanAllocator);
 		}
 
 		VulkanPipeline::VulkanPipeline(VulkanPipeline&& Other)
@@ -275,11 +256,16 @@ namespace Hermes
 
 		VulkanPipeline& VulkanPipeline::operator=(VulkanPipeline&& Other)
 		{
-			std::swap(Pipelines, Other.Pipelines);
+			std::swap(Pipeline, Other.Pipeline);
 			std::swap(RenderPass, Other.RenderPass);
 			std::swap(Layout, Other.Layout);
 			std::swap(Device, Other.Device);
 			return *this;
+		}
+
+		VkPipeline VulkanPipeline::GetPipeline() const
+		{
+			return Pipeline;
 		}
 	}
 }

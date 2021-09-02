@@ -112,7 +112,6 @@ namespace Hermes
 
 		struct PipelineDescription
 		{
-			// TODO : all these things should be separate for each subpass
 			std::vector<std::shared_ptr<Shader>> ShaderStages;
 			VertexInputDescription VertexInput;
 			InputAssemblerDescription InputAssembler;

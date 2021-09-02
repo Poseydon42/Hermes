@@ -25,10 +25,12 @@ namespace Hermes
 			VulkanPipeline(VulkanPipeline&& Other);
 			VulkanPipeline& operator=(VulkanPipeline&& Other);
 
+			VkPipeline GetPipeline() const;
+
 		private:
 			std::shared_ptr<VulkanDevice> Device;
 			std::shared_ptr<VulkanRenderPass> RenderPass;
-			std::vector<VkPipeline> Pipelines; // We need to store multiple pipelines, because Vulkan requires us to have one VkPipeline object per one render subpass
+			VkPipeline Pipeline;
 			VkPipelineLayout Layout;
 		};
 	}

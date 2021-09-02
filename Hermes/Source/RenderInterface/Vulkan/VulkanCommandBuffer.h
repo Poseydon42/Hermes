@@ -31,13 +31,21 @@ namespace Hermes
 			void EndRenderPass() override;
 
 			void BindPipeline(const std::shared_ptr<RenderInterface::Pipeline>& Pipeline) override;
+
+			void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 VertexOffset, uint32 InstanceOffset) override;
+			
+			void DrawIndexed(uint32 IndexCount, uint32 InstanceCount, uint32 IndexOffset, uint32 VertexOffset, uint32 InstanceOffset) override;
+			
+			void BindVertexBuffer(const RenderInterface::Buffer& Buffer) override;
+			
+			void BindIndexBuffer(const RenderInterface::Buffer& Buffer, RenderInterface::IndexSize Size) override;
 			
 			void CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,
 				const std::shared_ptr<RenderInterface::Buffer>& Destination,
 				std::vector<RenderInterface::BufferCopyRegion> CopyRegions) override;
 
 			VkCommandBuffer GetBuffer() const { return Buffer; }
-			
+		
 		private:
 			VkCommandBuffer Buffer;
 			VkCommandPool Pool;

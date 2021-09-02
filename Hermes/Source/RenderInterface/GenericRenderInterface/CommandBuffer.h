@@ -29,6 +29,12 @@ namespace Hermes
 			float B;
 			float A;
 		};
+
+		enum class IndexSize
+		{
+			Uint16,
+			Uint32
+		};
 		
 		class HERMES_API CommandBuffer
 		{
@@ -64,6 +70,33 @@ namespace Hermes
 			virtual void EndRenderPass() = 0;
 
 			virtual void BindPipeline(const std::shared_ptr<Pipeline>& Pipeline) = 0;
+
+			/*
+			 * Makes a non-indexed draw call
+			 * @param VertexOffset Index of first vertex in vertex buffer to draw
+			 * @param InstanceOffset ID of first drawn instance
+			 */
+			virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 VertexOffset, uint32 InstanceOffset) = 0;
+
+			/*
+			 * Makes an indexed draw call
+			 * @param IndexOffset Index of first index in index buffer to draw
+			 * @param VertexOffset A value added to index value before indexing into vertex buffer
+			 * @param InstanceOffset ID of first drawn instance
+			 */
+			virtual void DrawIndexed(uint32 IndexCount, uint32 InstanceCount, uint32 IndexOffset, uint32 VertexOffset, uint32 InstanceOffset) = 0;
+
+			// TODO : multi-buffer version
+			// TODO : offsets
+			/*
+			 * Binds a vertex buffer for further drawing commands
+			 */
+			virtual void BindVertexBuffer(const Buffer& Buffer) = 0;
+			
+			/*
+			 * Binds an index buffer for further drawing commands
+			 */
+			virtual void BindIndexBuffer(const Buffer& Buffer, IndexSize Size) = 0;
 			
 			/*************************************
 			 *      Transfer queue commands      *

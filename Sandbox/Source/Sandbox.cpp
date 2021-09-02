@@ -1,3 +1,5 @@
+#include "Math/Common.h"
+#include "Math/Vector.h"
 #ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
@@ -28,46 +30,60 @@ public:
 	{
 		auto RenderInstance = Hermes::RenderInterface::Instance::CreateRenderInterfaceInstance(*Hermes::GGameLoop->GetWindow());
 		auto Devices = RenderInstance->EnumerateAvailableDevices();
-		std::shared_ptr<Hermes::RenderInterface::PhysicalDevice> PhysicalDevice = RenderInstance->GetPhysicalDevice(Devices[0].InternalIndex);
-
-		auto GPUs = RenderInstance->EnumerateAvailableDevices();
+		auto PhysicalDevice = RenderInstance->GetPhysicalDevice(Devices[0].InternalIndex);
 		auto Device = PhysicalDevice->CreateDevice();
-
 		auto Swapchain = Device->CreateSwapchain({ 1280, 720 }, 3);
-		HERMES_ASSERT(Swapchain->GetImageCount() >= 3);
 
-		static constexpr size_t TestBufferSize = 1024;
-		auto CPUBuffer = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::CPUAccessible | Hermes::RenderInterface::ResourceUsageType::CopySource);
-		auto* Data = (Hermes::uint8*)CPUBuffer->Map();
-		for (size_t Offset = 0; Offset < TestBufferSize; Offset++)
-			Data[Offset] = (Hermes::uint8)Offset;
-		CPUBuffer->Unmap();
+		Hermes::Vec3 VertexData[] =
+		{
+			{ -0.5f, -0.5f, 0.0f },
+			{  0.5f, -0.5f, 0.0f },
+			{  0.5f,  0.5f, 0.0f },
+			{  0.0f,  0.8f, 0.0f},
+			{ -0.5f,  0.5f, 0.0f },
+		};
 
-		auto GPUBuffer = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::CopySource);
+		// Square is drawn indexed, triangle - only with vertex buffer(vertices 2, 3, 4)
+		Hermes::uint32 IndexData[] =
+		{
+			0, 1, 2,
+			2, 4, 0
+		};
 
-		auto CommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->CreateCommandBuffer(true);
-		CommandBuffer->BeginRecording();
-		std::vector<Hermes::RenderInterface::BufferCopyRegion> CopyRegions;
-		Hermes::RenderInterface::BufferCopyRegion CopyRegion = {};
-		CopyRegion.SourceOffset = 0;
-		CopyRegion.DestinationOffset = 0;
-		CopyRegion.NumBytes = TestBufferSize;
-		CopyRegions.push_back(CopyRegion);
-		CommandBuffer->CopyBuffer(CPUBuffer, GPUBuffer, CopyRegions);
-		CommandBuffer->EndRecording();
-		Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->SubmitCommandBuffer(CommandBuffer, std::nullopt);
+		Hermes::uint32 StagingBufferSize = Hermes::Math::Max((Hermes::uint32)sizeof(VertexData), (Hermes::uint32)sizeof(IndexData));
+		auto StagingBuffer = Device->CreateBuffer(StagingBufferSize, Hermes::RenderInterface::ResourceUsageType::CPUAccessible | Hermes::RenderInterface::ResourceUsageType::CopySource);
+		auto VertexBuffer = Device->CreateBuffer(sizeof(VertexData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::VertexBuffer);
+		auto IndexBuffer = Device->CreateBuffer(sizeof(IndexData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::IndexBuffer);
+		auto TransferQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer);
+		auto TransferCommandBuffer = TransferQueue->CreateCommandBuffer(true);
+
+		// Vertex data copy
+		void* Dst = StagingBuffer->Map();
+		memcpy(Dst, VertexData, sizeof(VertexData));
+		StagingBuffer->Unmap();
+		TransferCommandBuffer->BeginRecording();
+		Hermes::RenderInterface::BufferCopyRegion Region = {};
+		Region.SourceOffset = 0;
+		Region.DestinationOffset = 0;
+		Region.NumBytes = sizeof(VertexData);
+		TransferCommandBuffer->CopyBuffer(StagingBuffer, VertexBuffer, { Region });
+		TransferCommandBuffer->EndRecording();
+		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
+		Device->WaitForIdle(); // TODO : add Queue::WaitForIdle()
+
+		// Index data copy
+		Dst = StagingBuffer->Map();
+		memcpy(Dst, IndexData, sizeof(IndexData));
+		StagingBuffer->Unmap();
+		TransferCommandBuffer->BeginRecording();
+		Region = {};
+		Region.SourceOffset = 0;
+		Region.DestinationOffset = 0;
+		Region.NumBytes = sizeof(IndexData);
+		TransferCommandBuffer->CopyBuffer(StagingBuffer, IndexBuffer, { Region });
+		TransferCommandBuffer->EndRecording();
+		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle();
-
-		auto Fence = Device->CreateFence();
-		
-		auto CPUBuffer2 = Device->CreateBuffer(1024, Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::CPUAccessible);
-		CommandBuffer->BeginRecording();
-		CommandBuffer->CopyBuffer(GPUBuffer, CPUBuffer2, CopyRegions);
-		CommandBuffer->EndRecording();
-		Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer)->SubmitCommandBuffer(CommandBuffer, Fence);
-		Fence->Wait(UINT64_MAX);
-		auto* Data2 = (Hermes::uint8*)CPUBuffer2->Map();
-		HERMES_ASSERT(Data2[0] == 0x00 && Data2[1] == 0x01 && Data2[2] == 0x02); // etc.(better check in debug mode)
 
 		auto VertexShader = Device->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", Hermes::RenderInterface::ShaderType::VertexShader);
 		auto FragmentShader = Device->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", Hermes::RenderInterface::ShaderType::FragmentShader);
@@ -81,7 +97,6 @@ public:
 		Description.ColorAttachments[0].StoreOp = Hermes::RenderInterface::AttachmentStoreOp::Store;
 		Description.ColorAttachments[0].StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
 		Description.ColorAttachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
-
 		auto RenderPass = Device->CreateRenderPass(Description);
 
 		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
@@ -110,6 +125,10 @@ public:
 		GraphicsCommandBuffer->BeginRecording();
 		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTarget, { {1.0f, 1.0f, 0.0f, 1.0f } });
 		GraphicsCommandBuffer->BindPipeline(Pipeline);
+		GraphicsCommandBuffer->BindVertexBuffer(*VertexBuffer);
+		GraphicsCommandBuffer->BindIndexBuffer(*IndexBuffer, Hermes::RenderInterface::IndexSize::Uint32);
+		GraphicsCommandBuffer->DrawIndexed(6, 1, 0, 0, 0);
+		GraphicsCommandBuffer->Draw(3, 1, 2, 0);
 		GraphicsCommandBuffer->EndRenderPass();
 		GraphicsCommandBuffer->EndRecording();
 		Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->SubmitCommandBuffer(GraphicsCommandBuffer, GraphicsFence);

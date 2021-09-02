@@ -10,6 +10,20 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
+		inline VkIndexType IndexSizeToVkIndexType(RenderInterface::IndexSize Size)
+		{
+			switch (Size)
+			{
+			case RenderInterface::IndexSize::Uint16:
+				return VK_INDEX_TYPE_UINT16;
+			case RenderInterface::IndexSize::Uint32:
+				return VK_INDEX_TYPE_UINT32;
+			default:
+				HERMES_ASSERT(false);
+				return (VkIndexType)0;
+			}
+		}
+		
 		VulkanCommandBuffer::VulkanCommandBuffer(std::shared_ptr<VulkanDevice> InDevice, VkCommandPool InPool, bool IsPrimaryBuffer)
 			: Buffer(VK_NULL_HANDLE)
 			, Pool(InPool)
@@ -83,6 +97,30 @@ namespace Hermes
 			vkCmdBindPipeline(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, std::reinterpret_pointer_cast<VulkanPipeline>(Pipeline)->GetPipeline());
 		}
 
+		void VulkanCommandBuffer::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 VertexOffset, uint32 InstanceOffset)
+		{
+			vkCmdDraw(Buffer, VertexCount, InstanceCount, VertexOffset, InstanceOffset);
+		}
+
+		void VulkanCommandBuffer::DrawIndexed(uint32 IndexCount, uint32 InstanceCount, uint32 IndexOffset, uint32 VertexOffset, uint32 InstanceOffset)
+		{
+			vkCmdDrawIndexed(Buffer, IndexCount, InstanceCount, IndexOffset, VertexOffset, InstanceOffset);
+		}
+
+		void VulkanCommandBuffer::BindVertexBuffer(const RenderInterface::Buffer& InBuffer)
+		{
+			VkBuffer TmpBuffer = reinterpret_cast<const VulkanBuffer&>(InBuffer).GetBuffer();
+			VkDeviceSize Offset = 0;
+			vkCmdBindVertexBuffers(Buffer, 0, 1, &TmpBuffer, &Offset);
+		}
+
+		void VulkanCommandBuffer::BindIndexBuffer(const RenderInterface::Buffer& InBuffer, RenderInterface::IndexSize Size)
+		{
+			VkBuffer TmpBuffer = reinterpret_cast<const VulkanBuffer&>(InBuffer).GetBuffer();
+			VkDeviceSize Offset = 0;
+			vkCmdBindIndexBuffer(Buffer, TmpBuffer, Offset, IndexSizeToVkIndexType(Size));
+		}
+
 		void VulkanCommandBuffer::CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,
 		                                     const std::shared_ptr<RenderInterface::Buffer>& Destination,
 		                                     std::vector<RenderInterface::BufferCopyRegion> CopyRegions)
@@ -99,7 +137,7 @@ namespace Hermes
 				VulkanCopyRegion.size = CopyRegion.NumBytes;
 				++It;
 			}
-			vkCmdCopyBuffer(Buffer, VulkanSourceBuffer->GetAsBuffer(), VulkanDestinationBuffer->GetAsBuffer(), (uint32)VulkanCopyRegions.size(), VulkanCopyRegions.data());
+			vkCmdCopyBuffer(Buffer, VulkanSourceBuffer->GetBuffer(), VulkanDestinationBuffer->GetBuffer(), (uint32)VulkanCopyRegions.size(), VulkanCopyRegions.data());
 		}
 	}
 }

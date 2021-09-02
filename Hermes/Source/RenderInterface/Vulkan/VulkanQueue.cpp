@@ -61,5 +61,10 @@ namespace Hermes
 			}
 			VK_CHECK_RESULT(vkQueueSubmit(Queue, 1, &SubmitInfo, VkFenceObject));
 		}
+
+		VkQueue VulkanQueue::GetQueue() const
+		{
+			return Queue;
+		}
 	}
 }

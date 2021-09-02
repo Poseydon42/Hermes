@@ -26,6 +26,8 @@ namespace Hermes
 			std::shared_ptr<RenderInterface::CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) override;
 			
 			void SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer, std::optional<std::shared_ptr<RenderInterface::Fence>> Fence) override;
+
+			VkQueue GetQueue() const;
 		private:
 			std::shared_ptr<VulkanDevice> Device;
 			VkQueue Queue;

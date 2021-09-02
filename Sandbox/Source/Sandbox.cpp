@@ -28,11 +28,13 @@ class SandboxApp : public Hermes::IApplication
 public:
 	bool Init() override
 	{
-		auto RenderInstance = Hermes::RenderInterface::Instance::CreateRenderInterfaceInstance(*Hermes::GGameLoop->GetWindow());
+		ApplicationWindow = Hermes::GGameLoop->GetWindow();
+		
+		auto RenderInstance = Hermes::RenderInterface::Instance::CreateRenderInterfaceInstance(*ApplicationWindow);
 		auto Devices = RenderInstance->EnumerateAvailableDevices();
 		auto PhysicalDevice = RenderInstance->GetPhysicalDevice(Devices[0].InternalIndex);
-		auto Device = PhysicalDevice->CreateDevice();
-		auto Swapchain = Device->CreateSwapchain({ 1280, 720 }, 3);
+		Device = PhysicalDevice->CreateDevice();
+		Swapchain = Device->CreateSwapchain({ 1280, 720 }, 3);
 
 		Hermes::Vec3 VertexData[] =
 		{
@@ -52,8 +54,8 @@ public:
 
 		Hermes::uint32 StagingBufferSize = Hermes::Math::Max((Hermes::uint32)sizeof(VertexData), (Hermes::uint32)sizeof(IndexData));
 		auto StagingBuffer = Device->CreateBuffer(StagingBufferSize, Hermes::RenderInterface::ResourceUsageType::CPUAccessible | Hermes::RenderInterface::ResourceUsageType::CopySource);
-		auto VertexBuffer = Device->CreateBuffer(sizeof(VertexData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::VertexBuffer);
-		auto IndexBuffer = Device->CreateBuffer(sizeof(IndexData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::IndexBuffer);
+		VertexBuffer = Device->CreateBuffer(sizeof(VertexData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::VertexBuffer);
+		IndexBuffer = Device->CreateBuffer(sizeof(IndexData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::IndexBuffer);
 		auto TransferQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer);
 		auto TransferCommandBuffer = TransferQueue->CreateCommandBuffer(true);
 
@@ -97,7 +99,7 @@ public:
 		Description.ColorAttachments[0].StoreOp = Hermes::RenderInterface::AttachmentStoreOp::Store;
 		Description.ColorAttachments[0].StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
 		Description.ColorAttachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
-		auto RenderPass = Device->CreateRenderPass(Description);
+		RenderPass = Device->CreateRenderPass(Description);
 
 		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
 		PipelineDesc.ShaderStages =
@@ -105,8 +107,15 @@ public:
 				VertexShader,
 				FragmentShader
 			};
-		PipelineDesc.VertexInput.VertexBindings.clear();
-		PipelineDesc.VertexInput.VertexAttributes.clear();
+		PipelineDesc.VertexInput.VertexBindings.push_back({});
+		PipelineDesc.VertexInput.VertexBindings[0].Index = 0;
+		PipelineDesc.VertexInput.VertexBindings[0].Stride = sizeof(Hermes::Vec3);
+		PipelineDesc.VertexInput.VertexBindings[0].IsPerInstance = false;
+		PipelineDesc.VertexInput.VertexAttributes.push_back({});
+		PipelineDesc.VertexInput.VertexAttributes[0].BindingIndex = 0;
+		PipelineDesc.VertexInput.VertexAttributes[0].Format = Hermes::RenderInterface::DataFormat::R32G32B32SignedFloat;
+		PipelineDesc.VertexInput.VertexAttributes[0].Offset = 0;
+		PipelineDesc.VertexInput.VertexAttributes[0].Location = 0;
 		PipelineDesc.InputAssembler.Topology = Hermes::RenderInterface::TopologyType::TriangleList;
 		PipelineDesc.Viewport.Origin = { 0, 0 };
 		PipelineDesc.Viewport.Dimensions = Swapchain->GetSize();
@@ -116,14 +125,29 @@ public:
 		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = false;
 		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = false;
 
-		auto Pipeline = Device->CreatePipeline(RenderPass, PipelineDesc);
+		Pipeline = Device->CreatePipeline(RenderPass, PipelineDesc);
 
-		auto RenderTarget = Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(0)}, Swapchain->GetSize());
+		RenderTargets.reserve(Swapchain->GetImageCount());
+		for (Hermes::uint32 Index = 0; Index < Swapchain->GetImageCount(); Index++)
+			RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index)}, Swapchain->GetSize()));
 
-		auto GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
-		auto GraphicsFence = Device->CreateFence(false);
+		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
+		GraphicsFence = Device->CreateFence(false);
+		PresentationFence = Device->CreateFence(false);
+		
+		
+		return true;
+	}
+
+	void Run(float) override
+	{
+		auto NewIndex = Swapchain->AcquireImage(UINT64_MAX, *PresentationFence);
+		PresentationFence->Wait(UINT64_MAX);
+		HERMES_ASSERT(NewIndex.has_value());
+		Hermes::uint32 ImageIndex = NewIndex.value();
+		
 		GraphicsCommandBuffer->BeginRecording();
-		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTarget, { {1.0f, 1.0f, 0.0f, 1.0f } });
+		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTargets[ImageIndex], { {1.0f, 1.0f, 0.0f, 1.0f } });
 		GraphicsCommandBuffer->BindPipeline(Pipeline);
 		GraphicsCommandBuffer->BindVertexBuffer(*VertexBuffer);
 		GraphicsCommandBuffer->BindIndexBuffer(*IndexBuffer, Hermes::RenderInterface::IndexSize::Uint32);
@@ -133,12 +157,11 @@ public:
 		GraphicsCommandBuffer->EndRecording();
 		Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->SubmitCommandBuffer(GraphicsCommandBuffer, GraphicsFence);
 		GraphicsFence->Wait(UINT64_MAX);
-		
-		return true;
-	}
 
-	void Run(float) override
-	{
+		GraphicsFence->Reset();
+		Swapchain->Present(ImageIndex);
+		Device->WaitForIdle(); // TODO : fix it!
+		PresentationFence->Reset();
 	}
 
 	void Shutdown() override
@@ -147,9 +170,18 @@ public:
 	}
 
 private:
-	std::shared_ptr<Hermes::IPlatformWindow> ApplicationWindow;
+	std::shared_ptr<const Hermes::IPlatformWindow> ApplicationWindow;
 
 	std::weak_ptr<Hermes::EventQueue> WindowMessageQueue;
+	
+	std::shared_ptr<Hermes::RenderInterface::Device> Device;
+	std::shared_ptr<Hermes::RenderInterface::Swapchain> Swapchain;
+	std::shared_ptr<Hermes::RenderInterface::RenderPass> RenderPass;
+	std::shared_ptr<Hermes::RenderInterface::Pipeline> Pipeline;
+	std::shared_ptr<Hermes::RenderInterface::Buffer> VertexBuffer, IndexBuffer;
+	std::vector<std::shared_ptr<Hermes::RenderInterface::RenderTarget>> RenderTargets;
+	std::shared_ptr<Hermes::RenderInterface::CommandBuffer> GraphicsCommandBuffer;
+	std::shared_ptr<Hermes::RenderInterface::Fence> GraphicsFence, PresentationFence;
 };
 
 extern "C" _declspec(dllexport) Hermes::IApplication* CreateApplicationInstance()

@@ -178,7 +178,7 @@ namespace Hermes
 			Viewport.x        = (float)Description.Viewport.Origin.X;
 			Viewport.y        = (float)Description.Viewport.Origin.Y;
 			Viewport.width    = (float)Description.Viewport.Dimensions.X;
-			Viewport.height   = (float)Description.Viewport.Dimensions.X;
+			Viewport.height   = (float)Description.Viewport.Dimensions.Y;
 			Viewport.minDepth = 0.0f;
 			Viewport.maxDepth = 1.0f;
 			ViewportCreateInfo.pViewports = &Viewport;

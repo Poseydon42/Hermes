@@ -81,7 +81,7 @@ namespace Hermes
 			return Size;
 		}
 
-		VkBuffer VulkanBuffer::GetAsBuffer() const
+		VkBuffer VulkanBuffer::GetBuffer() const
 		{
 			return Buffer;
 		}

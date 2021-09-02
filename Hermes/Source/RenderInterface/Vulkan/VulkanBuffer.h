@@ -30,7 +30,7 @@ namespace Hermes
 
 			size_t GetSize() const override;
 
-			VkBuffer GetAsBuffer() const;
+			VkBuffer GetBuffer() const;
 			
 		private:
 			VkBuffer Buffer;

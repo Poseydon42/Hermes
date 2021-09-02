@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <memory>
+#include <optional>
 
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
@@ -9,6 +10,12 @@
 #include "RenderInterface/Vulkan/VulkanCommonTypes.h"
 #include "RenderInterface/Vulkan/VulkanImage.h"
 #include "Vulkan.h"
+
+namespace Hermes {
+	namespace RenderInterface {
+		class Fence;
+	}
+}
 
 namespace Hermes
 {
@@ -32,7 +39,12 @@ namespace Hermes
 			
 			std::shared_ptr<RenderInterface::Image> GetImage(uint32 Index) const override { return Images[Index]; }
 
+			std::optional<uint32> AcquireImage(uint64 Timeout, const RenderInterface::Fence& Fence) override;
+			
+			void Present(uint32 ImageIndex) override;
+
 			uint32 GetImageCount() const override { return (uint32)Images.size(); }
+			
 		private:
 			VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
 			VkFormat SwapchainFormat = VK_FORMAT_UNDEFINED;

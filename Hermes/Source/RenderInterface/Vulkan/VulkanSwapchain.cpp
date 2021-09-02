@@ -6,6 +6,8 @@
 
 #include "RenderInterface/Vulkan/VulkanDevice.h"
 #include "RenderInterface/Vulkan/VulkanImage.h"
+#include "RenderInterface/Vulkan/VulkanFence.h"
+#include "RenderInterface/Vulkan/VulkanQueue.h"
 #include "Math/Math.h"
 
 namespace Hermes
@@ -124,6 +126,32 @@ namespace Hermes
 			std::swap(Other.SwapchainFormat, SwapchainFormat);
 
 			return *this;
+		}
+
+		std::optional<uint32> VulkanSwapchain::AcquireImage(uint64 Timeout, const RenderInterface::Fence& Fence)
+		{
+			uint32 Result;
+			VkFence TargetFence = reinterpret_cast<const VulkanFence&>(Fence).GetFence();
+			VkResult Error = vkAcquireNextImageKHR(Device->GetDevice(), Swapchain, Timeout, VK_NULL_HANDLE, TargetFence, &Result);
+			if (Error == VK_SUCCESS || Error == VK_SUBOPTIMAL_KHR) // TODO : recreate swapchain when it is suboptional
+				return Result;
+			if (Error == VK_TIMEOUT || Error == VK_NOT_READY)
+				return {};
+			VK_CHECK_RESULT(Error); // This will trigger assert
+			return {};
+		}
+
+		void VulkanSwapchain::Present(uint32 ImageIndex)
+		{
+			VkPresentInfoKHR Info = {};
+			VkResult Result;
+			Info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+			Info.pResults = &Result;
+			Info.pImageIndices = &ImageIndex;
+			Info.pSwapchains = &Swapchain;
+			Info.swapchainCount = 1;
+			Info.waitSemaphoreCount = 0;
+			vkQueuePresentKHR(std::reinterpret_pointer_cast<VulkanQueue>(Device->GetQueue(RenderInterface::QueueType::Presentation))->GetQueue(), &Info);
 		}
 	}
 }

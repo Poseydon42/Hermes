@@ -68,7 +68,7 @@ namespace Hermes
 
 	void GameLoop::WindowCloseEventHandler(const IEvent& Event)
 	{
-		HERMES_LOG_INFO(L"Window %S requested exit.", Event.ToString().c_str());
+		HERMES_LOG_INFO(L"Window \"%s\" requested exit.", Event.ToString().c_str());
 
 		RequestedExit = true;
 	}

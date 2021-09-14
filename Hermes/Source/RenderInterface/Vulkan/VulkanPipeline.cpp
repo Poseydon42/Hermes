@@ -9,20 +9,6 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		static VkShaderStageFlagBits ShaderTypeToVkShaderStage(RenderInterface::ShaderType Type)
-		{
-			switch (Type)
-			{
-			case RenderInterface::ShaderType::VertexShader:
-				return VK_SHADER_STAGE_VERTEX_BIT;
-			case RenderInterface::ShaderType::FragmentShader:
-				return VK_SHADER_STAGE_FRAGMENT_BIT;
-			default:
-				HERMES_ASSERT(false);
-				return (VkShaderStageFlagBits)0;
-			}
-		}
-
 		static VkPrimitiveTopology TopologyTypeToVkPrimitiveTopology(RenderInterface::TopologyType Type)
 		{
 			switch (Type)

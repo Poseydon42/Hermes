@@ -2,12 +2,27 @@
 
 #include "Core/Core.h"
 #include "RenderInterface/GenericRenderInterface/CommonTypes.h"
+#include "RenderInterface/GenericRenderInterface/Shader.h"
 #include "Vulkan.h"
 
 namespace Hermes
 {
 	namespace Vulkan
-	{
+	{	
+		inline VkShaderStageFlagBits ShaderTypeToVkShaderStage(RenderInterface::ShaderType Type)
+		{
+			switch (Type)
+			{
+			case RenderInterface::ShaderType::VertexShader:
+				return VK_SHADER_STAGE_VERTEX_BIT;
+			case RenderInterface::ShaderType::FragmentShader:
+				return VK_SHADER_STAGE_FRAGMENT_BIT;
+			default:
+				HERMES_ASSERT(false);
+				return (VkShaderStageFlagBits)0;
+			}
+		}
+
 		inline VkFormat DataFormatToVkFormat(RenderInterface::DataFormat Format)
 		{
 			switch(Format)

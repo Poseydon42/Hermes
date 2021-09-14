@@ -11,6 +11,7 @@
 #include "RenderInterface/Vulkan/VulkanBuffer.h"
 #include "RenderInterface/Vulkan/VulkanFence.h"
 #include "Platform/GenericPlatform/PlatformMisc.h"
+#include "RenderInterface/Vulkan/VulkanDescriptor.h"
 
 namespace Hermes
 {
@@ -220,6 +221,11 @@ namespace Hermes
 		std::shared_ptr<RenderInterface::RenderTarget> VulkanDevice::CreateRenderTarget(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size)
 		{
 			return std::make_shared<VulkanRenderTarget>(shared_from_this(), RenderPass, Attachments, Size);
+		}
+
+		std::shared_ptr<RenderInterface::DescriptorSetLayout> VulkanDevice::CreateDescriptorSetLayout(const std::vector<RenderInterface::DescriptorBinding>& Bindings)
+		{
+			return std::make_shared<VulkanDescriptorSetLayout>(shared_from_this(), Bindings);
 		}
 
 		void VulkanDevice::WaitForIdle()

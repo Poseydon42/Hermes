@@ -1,5 +1,6 @@
 #include "Math/Common.h"
 #include "Math/Vector.h"
+#include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
@@ -134,7 +135,12 @@ public:
 		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
 		GraphicsFence = Device->CreateFence(false);
 		PresentationFence = Device->CreateFence(false);
-		
+
+		Hermes::RenderInterface::DescriptorBinding Binding = {};
+		Binding.Index = 0;
+		Binding.DescriptorCount = 1;
+		Binding.Shader = Hermes::RenderInterface::ShaderType::VertexShader;
+		auto DescriptorSetLayout = Device->CreateDescriptorSetLayout({ Binding });
 		
 		return true;
 	}

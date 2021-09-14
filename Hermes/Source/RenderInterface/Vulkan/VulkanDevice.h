@@ -37,6 +37,8 @@ namespace Hermes
 			std::shared_ptr<RenderInterface::Pipeline> CreatePipeline(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const RenderInterface::PipelineDescription& Description) override;
 
 			std::shared_ptr<RenderInterface::RenderTarget> CreateRenderTarget(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size) override;
+
+			std::shared_ptr<RenderInterface::DescriptorSetLayout> CreateDescriptorSetLayout(const std::vector<RenderInterface::DescriptorBinding>& Bindings) override;
 			
 			void WaitForIdle() override;
 

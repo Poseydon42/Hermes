@@ -4,6 +4,7 @@
 #include "RenderInterface/Vulkan/VulkanRenderPass.h"
 #include "RenderInterface/Vulkan/VulkanShader.h"
 #include "RenderInterface/Vulkan/VulkanCommonTypes.h"
+#include "RenderInterface/Vulkan/VulkanDescriptor.h"
 
 namespace Hermes
 {
@@ -111,6 +112,14 @@ namespace Hermes
 		{
 			VkPipelineLayoutCreateInfo LayoutCreateInfo = {};
 			LayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+			std::vector<VkDescriptorSetLayout> Layouts;
+			Layouts.reserve(Description.DescriptorLayouts.size());
+			for (const auto& CurrentLayout : Description.DescriptorLayouts)
+			{
+				Layouts.push_back(std::reinterpret_pointer_cast<VulkanDescriptorSetLayout>(CurrentLayout)->GetDescriptorSetLayout());
+			}
+			LayoutCreateInfo.setLayoutCount = static_cast<uint32>(Layouts.size());
+			LayoutCreateInfo.pSetLayouts = Layouts.data();
 			// TODO : other fields
 			VK_CHECK_RESULT(vkCreatePipelineLayout(Device->GetDevice(), &LayoutCreateInfo, GVulkanAllocator, &Layout));
 

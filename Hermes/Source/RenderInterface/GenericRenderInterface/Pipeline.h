@@ -10,6 +10,7 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		class DescriptorSetLayout;
 		class Shader;
 		
 		struct VertexAttribute
@@ -113,6 +114,7 @@ namespace Hermes
 		struct PipelineDescription
 		{
 			std::vector<std::shared_ptr<Shader>> ShaderStages;
+			std::vector<std::shared_ptr<DescriptorSetLayout>> DescriptorLayouts;
 			VertexInputDescription VertexInput;
 			InputAssemblerDescription InputAssembler;
 			// TODO : tessellation stage

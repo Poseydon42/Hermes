@@ -102,11 +102,21 @@ public:
 		Description.ColorAttachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
 		RenderPass = Device->CreateRenderPass(Description);
 
+		Hermes::RenderInterface::DescriptorBinding Binding = {};
+		Binding.Index = 0;
+		Binding.DescriptorCount = 1;
+		Binding.Shader = Hermes::RenderInterface::ShaderType::VertexShader;
+		auto DescriptorSetLayout = Device->CreateDescriptorSetLayout({ Binding });
+
 		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
 		PipelineDesc.ShaderStages =
 			{
 				VertexShader,
 				FragmentShader
+			};
+		PipelineDesc.DescriptorLayouts =
+			{
+				DescriptorSetLayout
 			};
 		PipelineDesc.VertexInput.VertexBindings.push_back({});
 		PipelineDesc.VertexInput.VertexBindings[0].Index = 0;
@@ -135,12 +145,6 @@ public:
 		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
 		GraphicsFence = Device->CreateFence(false);
 		PresentationFence = Device->CreateFence(false);
-
-		Hermes::RenderInterface::DescriptorBinding Binding = {};
-		Binding.Index = 0;
-		Binding.DescriptorCount = 1;
-		Binding.Shader = Hermes::RenderInterface::ShaderType::VertexShader;
-		auto DescriptorSetLayout = Device->CreateDescriptorSetLayout({ Binding });
 		
 		return true;
 	}

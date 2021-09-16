@@ -23,14 +23,14 @@ namespace Hermes
 			return;
 
 		vswprintf(MessageBuffer, BufferSize + 1, Text, Args);
-		ApplyFormating(Level, Filename, Line, FinalBuffer, BufferSize + 1, MessageBuffer);
+		ApplyFormatting(Level, Filename, Line, FinalBuffer, BufferSize + 1, MessageBuffer);
 		for (auto Device : LogDevices)
 		{
 			Device->WriteLine(Level, FinalBuffer);
 		}
 	}
 
-	void Logger::ApplyFormating(LogLevel Level, const wchar_t* Filename, int32 Line, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message)
+	void Logger::ApplyFormatting(LogLevel Level, const wchar_t* Filename, int32 Line, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message)
 	{
 		memset(Buffer, 0, BufferCount * sizeof(Buffer[0]));
 		const wchar_t* s = CurrentFormat.c_str();

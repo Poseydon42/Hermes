@@ -90,7 +90,7 @@ namespace Hermes
 	private:
 		static void LogImpl(LogLevel CurrentLevel, const wchar_t* Filename, int32 Line, const wchar_t* Text, va_list Args);
 
-		static void ApplyFormating(LogLevel Level, const wchar_t* Filename, int32 Line, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message);
+		static void ApplyFormatting(LogLevel Level, const wchar_t* Filename, int32 Line, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message);
 
 		static std::vector<ILogDevice*> LogDevices;
 

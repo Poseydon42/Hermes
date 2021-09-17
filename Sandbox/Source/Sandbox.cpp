@@ -125,7 +125,7 @@ public:
 		Hermes::RenderInterface::DescriptorBinding Binding = {};
 		Binding.Index = 0;
 		Binding.DescriptorCount = 1;
-		Binding.Shader = Hermes::RenderInterface::ShaderType::VertexShader;
+		Binding.Shader = Hermes::RenderInterface::ShaderType::FragmentShader;
 		auto DescriptorSetLayout = Device->CreateDescriptorSetLayout({ Binding });
 		auto DescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
 		auto DescriptorSet = DescriptorSetPool->CreateDescriptorSet(DescriptorSetLayout);

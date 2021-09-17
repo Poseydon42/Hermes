@@ -107,6 +107,7 @@ public:
 		Binding.DescriptorCount = 1;
 		Binding.Shader = Hermes::RenderInterface::ShaderType::VertexShader;
 		auto DescriptorSetLayout = Device->CreateDescriptorSetLayout({ Binding });
+		auto DescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
 
 		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
 		PipelineDesc.ShaderStages =

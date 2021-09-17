@@ -25,5 +25,16 @@ namespace Hermes
 			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(DescriptorSetLayout)
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(DescriptorSetLayout)
 		};
+
+		class HERMES_API DescriptorSetPool
+		{
+			MAKE_NON_COPYABLE(DescriptorSetPool)
+			ADD_DEFAULT_CONSTRUCTOR(DescriptorSetPool)
+			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(DescriptorSetPool)
+			ADD_DEFAULT_MOVE_CONSTRUCTOR(DescriptorSetPool)
+
+		public:
+			virtual uint32 GetSize() const = 0;
+		};
 	}
 }

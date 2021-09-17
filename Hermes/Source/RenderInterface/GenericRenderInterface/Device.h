@@ -15,6 +15,7 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		class DescriptorSetPool;
 		struct DescriptorBinding;
 		class DescriptorSetLayout;
 		class RenderTarget;
@@ -55,6 +56,8 @@ namespace Hermes
 			virtual std::shared_ptr<RenderTarget> CreateRenderTarget(std::shared_ptr<RenderPass> RenderPass, const std::vector<std::shared_ptr<Image>>& Attachments, Vec2ui Size) = 0;
 
 			virtual std::shared_ptr<DescriptorSetLayout> CreateDescriptorSetLayout(const std::vector<DescriptorBinding>& Bindings) = 0;
+
+			virtual std::shared_ptr<DescriptorSetPool> CreateDescriptorSetPool(uint32 Size) = 0;
 
 			/**
 			 * Waits until device finishes all its current and pending work and becomes idle

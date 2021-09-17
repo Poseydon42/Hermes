@@ -27,6 +27,8 @@ namespace Hermes
 
 			VkPipeline GetPipeline() const;
 
+			VkPipelineLayout GetPipelineLayout() const;
+
 		private:
 			std::shared_ptr<VulkanDevice> Device;
 			std::shared_ptr<VulkanRenderPass> RenderPass;

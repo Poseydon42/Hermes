@@ -262,5 +262,10 @@ namespace Hermes
 		{
 			return Pipeline;
 		}
+
+		VkPipelineLayout VulkanPipeline::GetPipelineLayout() const
+		{
+			return Layout;
+		}
 	}
 }

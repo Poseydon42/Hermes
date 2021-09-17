@@ -39,13 +39,16 @@ namespace Hermes
 			void BindVertexBuffer(const RenderInterface::Buffer& Buffer) override;
 			
 			void BindIndexBuffer(const RenderInterface::Buffer& Buffer, RenderInterface::IndexSize Size) override;
+
+			void BindDescriptorSet(const RenderInterface::DescriptorSet& Set, const RenderInterface::Pipeline& Pipeline, uint32 BindingIndex) override;
 			
 			void CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,
 				const std::shared_ptr<RenderInterface::Buffer>& Destination,
 				std::vector<RenderInterface::BufferCopyRegion> CopyRegions) override;
 
 			VkCommandBuffer GetBuffer() const { return Buffer; }
-		
+			
+
 		private:
 			VkCommandBuffer Buffer;
 			VkCommandPool Pool;

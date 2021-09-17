@@ -5,6 +5,7 @@
 #include "RenderInterface/Vulkan/VulkanRenderPass.h"
 #include "RenderInterface/Vulkan/VulkanRenderTarget.h"
 #include "RenderInterface/Vulkan/VulkanBuffer.h"
+#include "RenderInterface/Vulkan/VulkanDescriptor.h"
 
 namespace Hermes
 {
@@ -119,6 +120,12 @@ namespace Hermes
 			VkBuffer TmpBuffer = reinterpret_cast<const VulkanBuffer&>(InBuffer).GetBuffer();
 			VkDeviceSize Offset = 0;
 			vkCmdBindIndexBuffer(Buffer, TmpBuffer, Offset, IndexSizeToVkIndexType(Size));
+		}
+
+		void VulkanCommandBuffer::BindDescriptorSet(const RenderInterface::DescriptorSet& Set, const RenderInterface::Pipeline& Pipeline, uint32 BindingIndex)
+		{
+			const VkDescriptorSet DescriptorSet = reinterpret_cast<const VulkanDescriptorSet&>(Set).GetDescriptorSet();
+			vkCmdBindDescriptorSets(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline&>(Pipeline).GetPipelineLayout(), BindingIndex, 1, &DescriptorSet, 0, nullptr);
 		}
 
 		void VulkanCommandBuffer::CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,

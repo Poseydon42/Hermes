@@ -10,6 +10,7 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		class DescriptorSet;
 		class Pipeline;
 		class RenderTarget;
 		class RenderPass;
@@ -97,6 +98,12 @@ namespace Hermes
 			 * Binds an index buffer for further drawing commands
 			 */
 			virtual void BindIndexBuffer(const Buffer& Buffer, IndexSize Size) = 0;
+
+			// TODO : multi-set version
+			/*
+			 * Binds a descriptor set for further drawing commands
+			 */
+			virtual void BindDescriptorSet(const DescriptorSet& Set, const Pipeline& Pipeline, uint32 BindingIndex) = 0;
 			
 			/*************************************
 			 *      Transfer queue commands      *

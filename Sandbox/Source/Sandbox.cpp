@@ -128,9 +128,7 @@ public:
 		Binding.Shader = Hermes::RenderInterface::ShaderType::FragmentShader;
 		auto DescriptorSetLayout = Device->CreateDescriptorSetLayout({ Binding });
 		auto DescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
-		auto DescriptorSet = DescriptorSetPool->CreateDescriptorSet(DescriptorSetLayout);
-		DescriptorSet->Update(0, 0, *UniformBuffer, 0, (Hermes::uint32)UniformBuffer->GetSize());
-
+		
 		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
 		PipelineDesc.ShaderStages =
 			{
@@ -162,8 +160,13 @@ public:
 		Pipeline = Device->CreatePipeline(RenderPass, PipelineDesc);
 
 		RenderTargets.reserve(Swapchain->GetImageCount());
+		DescriptorSets.reserve(Swapchain->GetImageCount());
 		for (Hermes::uint32 Index = 0; Index < Swapchain->GetImageCount(); Index++)
+		{
 			RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index)}, Swapchain->GetSize()));
+			DescriptorSets.push_back(DescriptorSetPool->CreateDescriptorSet(DescriptorSetLayout));
+			DescriptorSets[Index]->Update(0, 0, *UniformBuffer, 0, (Hermes::uint32)UniformBuffer->GetSize());
+		}
 
 		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
 		GraphicsFence = Device->CreateFence(false);
@@ -184,6 +187,7 @@ public:
 		GraphicsCommandBuffer->BindPipeline(Pipeline);
 		GraphicsCommandBuffer->BindVertexBuffer(*VertexBuffer);
 		GraphicsCommandBuffer->BindIndexBuffer(*IndexBuffer, Hermes::RenderInterface::IndexSize::Uint32);
+		GraphicsCommandBuffer->BindDescriptorSet(*DescriptorSets[ImageIndex], *Pipeline, 0);
 		GraphicsCommandBuffer->DrawIndexed(6, 1, 0, 0, 0);
 		GraphicsCommandBuffer->Draw(3, 1, 2, 0);
 		GraphicsCommandBuffer->EndRenderPass();
@@ -213,6 +217,7 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::Pipeline> Pipeline;
 	std::shared_ptr<Hermes::RenderInterface::Buffer> VertexBuffer, IndexBuffer, UniformBuffer;
 	std::vector<std::shared_ptr<Hermes::RenderInterface::RenderTarget>> RenderTargets;
+	std::vector<std::shared_ptr<Hermes::RenderInterface::DescriptorSet>> DescriptorSets;
 	std::shared_ptr<Hermes::RenderInterface::CommandBuffer> GraphicsCommandBuffer;
 	std::shared_ptr<Hermes::RenderInterface::Fence> GraphicsFence, PresentationFence;
 };

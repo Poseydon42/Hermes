@@ -63,6 +63,7 @@ namespace Hermes
 			PoolSize.descriptorCount = Size;
 			CreateInfo.pPoolSizes = &PoolSize;
 			CreateInfo.poolSizeCount = 1;
+			CreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT; // TODO : do we really need it?
 
 			VK_CHECK_RESULT(vkCreateDescriptorPool(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Pool))
 		}

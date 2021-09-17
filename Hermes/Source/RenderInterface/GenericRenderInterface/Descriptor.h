@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
@@ -9,6 +11,18 @@ namespace Hermes
 	namespace RenderInterface
 	{
 		enum class ShaderType;
+		class Buffer;
+
+		class HERMES_API DescriptorSet
+		{
+			MAKE_NON_COPYABLE(DescriptorSet)
+			ADD_DEFAULT_CONSTRUCTOR(DescriptorSet)
+			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(DescriptorSet)
+			ADD_DEFAULT_MOVE_CONSTRUCTOR(DescriptorSet)
+
+		public:
+			virtual void Update(uint32 BindingIndex, uint32 ArrayIndex, const Buffer& Buffer, uint32 Offset, uint32 Size) = 0;
+		};
 
 		struct DescriptorBinding
 		{
@@ -34,6 +48,8 @@ namespace Hermes
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(DescriptorSetPool)
 
 		public:
+			virtual std::shared_ptr<DescriptorSet> CreateDescriptorSet(std::shared_ptr<DescriptorSetLayout> Layout) = 0;
+
 			virtual uint32 GetSize() const = 0;
 		};
 	}

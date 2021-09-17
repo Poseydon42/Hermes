@@ -53,10 +53,16 @@ public:
 			2, 4, 0
 		};
 
-		Hermes::uint32 StagingBufferSize = Hermes::Math::Max((Hermes::uint32)sizeof(VertexData), (Hermes::uint32)sizeof(IndexData));
+		struct UniformBufferData
+		{
+			Hermes::Vec3 Color = { 1.0f, 0.5f, 0.0f };
+		} UniformData;
+
+		Hermes::uint32 StagingBufferSize = Hermes::Math::Max(Hermes::Math::Max((Hermes::uint32)sizeof(VertexData), (Hermes::uint32)sizeof(IndexData)), (Hermes::uint32)sizeof(UniformData));
 		auto StagingBuffer = Device->CreateBuffer(StagingBufferSize, Hermes::RenderInterface::ResourceUsageType::CPUAccessible | Hermes::RenderInterface::ResourceUsageType::CopySource);
 		VertexBuffer = Device->CreateBuffer(sizeof(VertexData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::VertexBuffer);
 		IndexBuffer = Device->CreateBuffer(sizeof(IndexData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::IndexBuffer);
+		UniformBuffer = Device->CreateBuffer(sizeof(UniformData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::UniformBuffer);
 		auto TransferQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer);
 		auto TransferCommandBuffer = TransferQueue->CreateCommandBuffer(true);
 
@@ -88,6 +94,20 @@ public:
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle();
 
+		// Uniform data copy
+		Dst = StagingBuffer->Map();
+		memcpy(Dst, &UniformData, sizeof(UniformData));
+		StagingBuffer->Unmap();
+		TransferCommandBuffer->BeginRecording();
+		Region = {};
+		Region.SourceOffset = 0;
+		Region.DestinationOffset = 0;
+		Region.NumBytes = sizeof(UniformData);
+		TransferCommandBuffer->CopyBuffer(StagingBuffer, UniformBuffer, { Region });
+		TransferCommandBuffer->EndRecording();
+		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
+		Device->WaitForIdle();
+
 		auto VertexShader = Device->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", Hermes::RenderInterface::ShaderType::VertexShader);
 		auto FragmentShader = Device->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", Hermes::RenderInterface::ShaderType::FragmentShader);
 
@@ -108,6 +128,8 @@ public:
 		Binding.Shader = Hermes::RenderInterface::ShaderType::VertexShader;
 		auto DescriptorSetLayout = Device->CreateDescriptorSetLayout({ Binding });
 		auto DescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
+		auto DescriptorSet = DescriptorSetPool->CreateDescriptorSet(DescriptorSetLayout);
+		DescriptorSet->Update(0, 0, *UniformBuffer, 0, (Hermes::uint32)UniformBuffer->GetSize());
 
 		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
 		PipelineDesc.ShaderStages =
@@ -189,7 +211,7 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::Swapchain> Swapchain;
 	std::shared_ptr<Hermes::RenderInterface::RenderPass> RenderPass;
 	std::shared_ptr<Hermes::RenderInterface::Pipeline> Pipeline;
-	std::shared_ptr<Hermes::RenderInterface::Buffer> VertexBuffer, IndexBuffer;
+	std::shared_ptr<Hermes::RenderInterface::Buffer> VertexBuffer, IndexBuffer, UniformBuffer;
 	std::vector<std::shared_ptr<Hermes::RenderInterface::RenderTarget>> RenderTargets;
 	std::shared_ptr<Hermes::RenderInterface::CommandBuffer> GraphicsCommandBuffer;
 	std::shared_ptr<Hermes::RenderInterface::Fence> GraphicsFence, PresentationFence;

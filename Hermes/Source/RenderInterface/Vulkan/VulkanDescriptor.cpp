@@ -1,5 +1,6 @@
 #include "VulkanDescriptor.h"
 
+#include "RenderInterface/Vulkan/VulkanBuffer.h"
 #include "RenderInterface/Vulkan/VulkanCommonTypes.h"
 #include "RenderInterface/Vulkan/VulkanDevice.h"
 
@@ -83,6 +84,65 @@ namespace Hermes
 			std::swap(Pool, Other.Pool);
 
 			return *this;
+		}
+
+		std::shared_ptr<RenderInterface::DescriptorSet> VulkanDescriptorSetPool::CreateDescriptorSet(std::shared_ptr<RenderInterface::DescriptorSetLayout> Layout)
+		{
+			return std::make_shared<VulkanDescriptorSet>(Device, shared_from_this(), std::reinterpret_pointer_cast<VulkanDescriptorSetLayout>(Layout));
+		}
+
+		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout)
+			: Device(std::move(InDevice))
+			, Pool(std::move(InPool))
+			, Layout(std::move(InLayout))
+			, Set(VK_NULL_HANDLE)
+		{
+			VkDescriptorSetAllocateInfo AllocateInfo = {};
+			AllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			AllocateInfo.descriptorPool = Pool->GetDescriptorPool();
+			AllocateInfo.descriptorSetCount = 1; // TODO : multi-set multi-layout constructor of some kind
+			const VkDescriptorSetLayout DescriptorLayout = Layout->GetDescriptorSetLayout();
+			AllocateInfo.pSetLayouts = &DescriptorLayout;
+
+			VK_CHECK_RESULT(vkAllocateDescriptorSets(Device->GetDevice(), &AllocateInfo, &Set));
+		}
+
+		VulkanDescriptorSet::~VulkanDescriptorSet()
+		{
+			vkFreeDescriptorSets(Device->GetDevice(), Pool->GetDescriptorPool(), 1, &Set);
+		}
+
+		VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSet&& Other)
+		{
+			*this = std::move(Other);
+		}
+
+		VulkanDescriptorSet& VulkanDescriptorSet::operator=(VulkanDescriptorSet&& Other)
+		{
+			std::swap(Device, Other.Device);
+			std::swap(Pool, Other.Pool);
+			std::swap(Layout, Other.Layout);
+			std::swap(Set, Other.Set);
+
+			return *this;
+		}
+
+		void VulkanDescriptorSet::Update(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size)
+		{
+			VkWriteDescriptorSet Write = {};
+			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			Write.descriptorCount = 1;
+			Write.dstSet = Set;
+			Write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // TODO
+			Write.dstBinding = BindingIndex;
+			Write.dstArrayElement = ArrayIndex;
+			VkDescriptorBufferInfo BufferInfo = {};
+			BufferInfo.buffer = reinterpret_cast<const VulkanBuffer&>(Buffer).GetBuffer();
+			BufferInfo.offset = Offset;
+			BufferInfo.range = Size;
+			Write.pBufferInfo = &BufferInfo;
+
+			vkUpdateDescriptorSets(Device->GetDevice(), 1, &Write, 0, nullptr);
 		}
 	}
 }

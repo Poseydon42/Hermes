@@ -193,7 +193,7 @@ namespace Hermes
 			}
 		}
 
-		std::shared_ptr<RenderInterface::Buffer> VulkanDevice::CreateBuffer(size_t Size, RenderInterface::ResourceUsageType Usage)
+		std::shared_ptr<RenderInterface::Buffer> VulkanDevice::CreateBuffer(size_t Size, RenderInterface::BufferUsageType Usage)
 		{
 			return std::make_shared<VulkanBuffer>(shared_from_this(), Size, Usage);
 		}

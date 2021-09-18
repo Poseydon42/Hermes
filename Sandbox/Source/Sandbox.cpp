@@ -60,10 +60,10 @@ public:
 		} UniformData;
 
 		Hermes::uint32 StagingBufferSize = Hermes::Math::Max(Hermes::Math::Max((Hermes::uint32)sizeof(VertexData), (Hermes::uint32)sizeof(IndexData)), (Hermes::uint32)sizeof(UniformData));
-		auto StagingBuffer = Device->CreateBuffer(StagingBufferSize, Hermes::RenderInterface::ResourceUsageType::CPUAccessible | Hermes::RenderInterface::ResourceUsageType::CopySource);
-		VertexBuffer = Device->CreateBuffer(sizeof(VertexData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::VertexBuffer);
-		IndexBuffer = Device->CreateBuffer(sizeof(IndexData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::IndexBuffer);
-		UniformBuffer = Device->CreateBuffer(sizeof(UniformData), Hermes::RenderInterface::ResourceUsageType::CopyDestination | Hermes::RenderInterface::ResourceUsageType::UniformBuffer);
+		auto StagingBuffer = Device->CreateBuffer(StagingBufferSize, Hermes::RenderInterface::BufferUsageType::CPUAccessible | Hermes::RenderInterface::BufferUsageType::CopySource);
+		VertexBuffer = Device->CreateBuffer(sizeof(VertexData), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::VertexBuffer);
+		IndexBuffer = Device->CreateBuffer(sizeof(IndexData), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::IndexBuffer);
+		UniformBuffer = Device->CreateBuffer(sizeof(UniformData), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::UniformBuffer);
 		auto TransferQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer);
 		auto TransferCommandBuffer = TransferQueue->CreateCommandBuffer(true);
 

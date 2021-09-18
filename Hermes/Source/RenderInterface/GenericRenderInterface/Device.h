@@ -43,7 +43,7 @@ namespace Hermes
 
 			virtual std::shared_ptr<Queue> GetQueue(QueueType Type) = 0;
 
-			virtual std::shared_ptr<Buffer> CreateBuffer(size_t Size, ResourceUsageType Usage) = 0;
+			virtual std::shared_ptr<Buffer> CreateBuffer(size_t Size, BufferUsageType Usage) = 0;
 
 			virtual std::shared_ptr<Fence> CreateFence(bool InitialState = false) = 0;
 

@@ -9,7 +9,7 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
-		enum class ResourceUsageType
+		enum class BufferUsageType
 		{
 			VertexBuffer = 1 << 0,
 			IndexBuffer = 1 << 1,
@@ -19,7 +19,7 @@ namespace Hermes
 			CPUAccessible = 1 << 5
 		};
 
-		ENUM_CLASS_OPERATORS(ResourceUsageType)
+		ENUM_CLASS_OPERATORS(BufferUsageType)
 
 		/**
 		 * Represents a resource that occupies some memory, has its format and can be read and written

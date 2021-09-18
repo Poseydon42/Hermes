@@ -26,7 +26,7 @@ namespace Hermes
 
 			std::shared_ptr<RenderInterface::Queue> GetQueue(RenderInterface::QueueType Type) override;
 			
-			std::shared_ptr<RenderInterface::Buffer> CreateBuffer(size_t Size, RenderInterface::ResourceUsageType Usage) override;
+			std::shared_ptr<RenderInterface::Buffer> CreateBuffer(size_t Size, RenderInterface::BufferUsageType Usage) override;
 
 			std::shared_ptr<RenderInterface::Fence> CreateFence(bool InitialState) override;
 			

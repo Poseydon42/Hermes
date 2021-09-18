@@ -6,7 +6,7 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanBuffer::VulkanBuffer(std::shared_ptr<VulkanDevice> InDevice, size_t BufferSize, RenderInterface::ResourceUsageType Usage)
+		VulkanBuffer::VulkanBuffer(std::shared_ptr<VulkanDevice> InDevice, size_t BufferSize, RenderInterface::BufferUsageType Usage)
 			: Buffer(VK_NULL_HANDLE)
 			, Allocation(VK_NULL_HANDLE)
 			, Device(std::move(InDevice))
@@ -17,20 +17,20 @@ namespace Hermes
 			VkBufferCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 			CreateInfo.size = BufferSize;
-			if ((bool)(Usage & RenderInterface::ResourceUsageType::VertexBuffer))
+			if ((bool)(Usage & RenderInterface::BufferUsageType::VertexBuffer))
 				CreateInfo.usage |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-			if ((bool)(Usage & RenderInterface::ResourceUsageType::IndexBuffer))
+			if ((bool)(Usage & RenderInterface::BufferUsageType::IndexBuffer))
 				CreateInfo.usage |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-			if ((bool)(Usage & RenderInterface::ResourceUsageType::UniformBuffer))
+			if ((bool)(Usage & RenderInterface::BufferUsageType::UniformBuffer))
 				CreateInfo.usage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-			if ((bool)(Usage & RenderInterface::ResourceUsageType::CopySource))
+			if ((bool)(Usage & RenderInterface::BufferUsageType::CopySource))
 				CreateInfo.usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			if ((bool)(Usage & RenderInterface::ResourceUsageType::CopyDestination))
+			if ((bool)(Usage & RenderInterface::BufferUsageType::CopyDestination))
 				CreateInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 			CreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 			VmaAllocationCreateInfo AllocationInfo = {};
-			if ((bool)(Usage & RenderInterface::ResourceUsageType::CPUAccessible))
+			if ((bool)(Usage & RenderInterface::BufferUsageType::CPUAccessible))
 				AllocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 			else
 				AllocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;

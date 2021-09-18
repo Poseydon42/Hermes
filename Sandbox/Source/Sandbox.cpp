@@ -1,5 +1,6 @@
 #include "Math/Common.h"
 #include "Math/Vector.h"
+#include "Platform/GenericPlatform/PlatformFile.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #ifdef HERMES_PLATFORM_WINDOWS
 
@@ -171,6 +172,10 @@ public:
 		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
 		GraphicsFence = Device->CreateFence(false);
 		PresentationFence = Device->CreateFence(false);
+
+		Hermes::Vec2ui ImageSize;
+		auto CheckerImage = LoadTGA(L"checker.tga", ImageSize);
+		free(CheckerImage);
 		
 		return true;
 	}
@@ -204,6 +209,95 @@ public:
 	void Shutdown() override
 	{
 		
+	}
+
+	// NOTE : test-only function, will be removed soon
+	// NOTE : call free() after you're done with image
+	static void* LoadTGA(const Hermes::String& Path, Hermes::Vec2ui& Dimensions)
+	{
+		auto File = Hermes::PlatformFilesystem::OpenFile(Path, Hermes::IPlatformFile::FileAccessMode::Read, Hermes::IPlatformFile::FileOpenMode::OpenExisting);
+		if (!File)
+			return nullptr;
+
+		bool IsNewFormat;
+		if (File->Size() < 26)
+		{
+			IsNewFormat = false;
+		}
+		else
+		{
+#pragma pack(push, 1)
+			struct TGAFooter
+			{
+				Hermes::uint32 ExtensionAreaOffset;
+				Hermes::uint32 DeveloperDirectoryOffset;
+				Hermes::uint8 Signature[18];
+			} Footer = {};
+#pragma pack(pop)
+			File->Seek(File->Size() - sizeof(Footer));
+			if (!File->Read(reinterpret_cast<Hermes::uint8*>(&Footer), sizeof(Footer)))
+			{
+				return nullptr;
+			}
+			if (strncmp(reinterpret_cast<const char*>(Footer.Signature), "TRUEVISION-XFILE.", sizeof(Footer.Signature)) == 0)
+				IsNewFormat = true;
+			else
+				IsNewFormat = false;
+		}
+
+#pragma pack(push, 1)
+		struct TGAHeader
+		{
+			Hermes::uint8 IDLength;
+			Hermes::uint8 ColorMapType;
+			Hermes::uint8 ImageType;
+			Hermes::uint8 ColorMapSpecificationSkipped[5]; // We're not loading images with color map, so we'll just skip this field and add 5 padding bytes instead
+			struct ImageSpecification
+			{
+				Hermes::uint16 XOrigin;
+				Hermes::uint16 YOrigin;
+				Hermes::uint16 Width;
+				Hermes::uint16 Height;
+				Hermes::uint8  PixelDepth;
+				Hermes::uint8  ImageDescriptor;
+			} Specification;
+		} Header = {};
+#pragma pack(pop)
+		File->Seek(0);
+		if (!File->Read(reinterpret_cast<Hermes::uint8*>(&Header), sizeof(Header)))
+		{
+			return nullptr;
+		}
+
+		if (Header.Specification.PixelDepth != 32) // We're loading only 32 bit-per-pixel(RGBA) images for now
+			return nullptr;
+		if (Header.Specification.XOrigin != 0 || Header.Specification.YOrigin != 0)
+			return nullptr;
+		if (Header.ColorMapType != 0) // We don't want to load images that use color map
+			return nullptr;
+		if (Header.ImageType != 2) // Only uncompressed true-color images are loaded
+			return nullptr;
+		if ((Header.Specification.ImageDescriptor & 0x0F) != 8) // If not 8 bits per channel
+			return nullptr;
+		if ((Header.Specification.ImageDescriptor & 0x30) >> 4 != 0) // If not left-to-right top-to-bottom
+			return nullptr;
+		if ((Header.Specification.ImageDescriptor & 0xC0) != 0) // These fields are reserved and must be zero
+			return nullptr;
+
+		size_t ImageSize = static_cast<size_t>(Header.Specification.Width) * Header.Specification.Height;
+		size_t BytesUsed = ImageSize * Header.Specification.PixelDepth / 8;
+		void* Result = malloc(BytesUsed);
+		if (!Result)
+			return Result;
+
+		if (!File->Read(static_cast<Hermes::uint8*>(Result), BytesUsed))
+		{
+			free(Result);
+			return nullptr;
+		}
+		Dimensions.X = Header.Specification.Width;
+		Dimensions.Y = Header.Specification.Height;
+		return Result;
 	}
 
 private:

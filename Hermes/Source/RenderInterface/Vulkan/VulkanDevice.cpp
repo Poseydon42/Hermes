@@ -233,6 +233,11 @@ namespace Hermes
 			return std::make_shared<VulkanDescriptorSetPool>(shared_from_this(), Size);
 		}
 
+		std::shared_ptr<RenderInterface::Image> VulkanDevice::CreateImage(Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, uint32 MipLevels, RenderInterface::ImageLayout InitialLayout)
+		{
+			return std::make_shared<VulkanImage>(shared_from_this(), Size, Usage, Format, MipLevels, InitialLayout);
+		}
+
 		void VulkanDevice::WaitForIdle()
 		{
 			vkDeviceWaitIdle(Device);

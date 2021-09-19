@@ -19,7 +19,15 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanImage);
 
 		public:
+			/*
+			 * Non-owning constructor
+			 */
 			VulkanImage(std::shared_ptr<VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat, Vec2ui InSize);
+
+			/*
+			 * Owning constructor
+			 */
+			VulkanImage(std::shared_ptr<VulkanDevice> InDevice, Vec2ui InSize, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat InFormat, uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout);
 
 			~VulkanImage() override;
 			VulkanImage(VulkanImage&& Other);
@@ -43,6 +51,7 @@ namespace Hermes
 			Vec2ui Size;
 			VkFormat Format;
 			VkImageView DefaultView;
+			VmaAllocation Allocation;
 			bool IsOwned;
 
 			void CreateDefaultView();

@@ -15,6 +15,9 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		enum class ImageLayout;
+		enum class DataFormat;
+		enum class ImageUsageType;
 		class DescriptorSetPool;
 		struct DescriptorBinding;
 		class DescriptorSetLayout;
@@ -44,6 +47,8 @@ namespace Hermes
 			virtual std::shared_ptr<Queue> GetQueue(QueueType Type) = 0;
 
 			virtual std::shared_ptr<Buffer> CreateBuffer(size_t Size, BufferUsageType Usage) = 0;
+
+			virtual std::shared_ptr<Image> CreateImage(Vec2ui Size, ImageUsageType Usage, DataFormat Format, uint32 MipLevels, ImageLayout InitialLayout) = 0;
 
 			virtual std::shared_ptr<Fence> CreateFence(bool InitialState = false) = 0;
 

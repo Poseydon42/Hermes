@@ -41,11 +41,14 @@ namespace Hermes
 			std::shared_ptr<RenderInterface::DescriptorSetLayout> CreateDescriptorSetLayout(const std::vector<RenderInterface::DescriptorBinding>& Bindings) override;
 
 			std::shared_ptr<RenderInterface::DescriptorSetPool> CreateDescriptorSetPool(uint32 Size) override;
+
+			std::shared_ptr<RenderInterface::Image> CreateImage(Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, uint32 MipLevels, RenderInterface::ImageLayout InitialLayout) override;
 			
 			void WaitForIdle() override;
 
 			VmaAllocator GetAllocator() const { return Allocator; }
 			VkDevice GetDevice() const { return Device; }
+			
 		private:
 			VkDevice Device;
 			VkPhysicalDevice PhysicalDevice;

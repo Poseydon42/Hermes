@@ -175,6 +175,9 @@ public:
 
 		Hermes::Vec2ui ImageSize;
 		auto CheckerImage = LoadTGA(L"checker.tga", ImageSize);
+		auto Image = Device->CreateImage(
+			ImageSize, Hermes::RenderInterface::ImageUsageType::CopyDestination | Hermes::RenderInterface::ImageUsageType::Sampled,
+			Hermes::RenderInterface::DataFormat::R8G8B8A8SRGB, 1, Hermes::RenderInterface::ImageLayout::Undefined);
 		free(CheckerImage);
 		
 		return true;

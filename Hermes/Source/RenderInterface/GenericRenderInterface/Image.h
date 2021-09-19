@@ -3,6 +3,7 @@
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
+#include "Core/Misc/EnumClassOperators.h"
 #include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 #include "Math/Vector2.h"
 
@@ -10,6 +11,19 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		enum class ImageUsageType
+		{
+			Sampled = 1 << 0,
+			ColorAttachment = 1 << 1,
+			DepthStencilAttachment = 1 << 2,
+			InputAttachment = 1 << 3,
+			CopySource = 1 << 4,
+			CopyDestination = 1 << 5,
+			CPUAccessible = 1 << 6,
+		};
+
+		ENUM_CLASS_OPERATORS(ImageUsageType)
+
 		class HERMES_API Image
 		{
 			ADD_DEFAULT_CONSTRUCTOR(Image);

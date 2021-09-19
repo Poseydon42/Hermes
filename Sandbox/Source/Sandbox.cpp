@@ -76,7 +76,7 @@ public:
 		Region.SourceOffset = 0;
 		Region.DestinationOffset = 0;
 		Region.NumBytes = sizeof(VertexData);
-		TransferCommandBuffer->CopyBuffer(StagingBuffer, VertexBuffer, { Region });
+		TransferCommandBuffer->CopyBuffer(*StagingBuffer, *VertexBuffer, { Region });
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle(); // TODO : add Queue::WaitForIdle()
@@ -90,7 +90,7 @@ public:
 		Region.SourceOffset = 0;
 		Region.DestinationOffset = 0;
 		Region.NumBytes = sizeof(IndexData);
-		TransferCommandBuffer->CopyBuffer(StagingBuffer, IndexBuffer, { Region });
+		TransferCommandBuffer->CopyBuffer(*StagingBuffer, *IndexBuffer, { Region });
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle();
@@ -104,7 +104,7 @@ public:
 		Region.SourceOffset = 0;
 		Region.DestinationOffset = 0;
 		Region.NumBytes = sizeof(UniformData);
-		TransferCommandBuffer->CopyBuffer(StagingBuffer, UniformBuffer, { Region });
+		TransferCommandBuffer->CopyBuffer(*StagingBuffer, *UniformBuffer, { Region });
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle();

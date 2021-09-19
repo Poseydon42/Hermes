@@ -128,12 +128,10 @@ namespace Hermes
 			vkCmdBindDescriptorSets(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline&>(Pipeline).GetPipelineLayout(), BindingIndex, 1, &DescriptorSet, 0, nullptr);
 		}
 
-		void VulkanCommandBuffer::CopyBuffer(const std::shared_ptr<RenderInterface::Buffer>& Source,
-		                                     const std::shared_ptr<RenderInterface::Buffer>& Destination,
-		                                     std::vector<RenderInterface::BufferCopyRegion> CopyRegions)
+		void VulkanCommandBuffer::CopyBuffer(const RenderInterface::Buffer& Source, const RenderInterface::Buffer& Destination, std::vector<RenderInterface::BufferCopyRegion> CopyRegions)
 		{
-			const auto* VulkanSourceBuffer = static_cast<VulkanBuffer*>(Source.get());
-			const auto* VulkanDestinationBuffer = static_cast<VulkanBuffer*>(Destination.get());
+			const auto& VulkanSourceBuffer = static_cast<const VulkanBuffer&>(Source);
+			const auto& VulkanDestinationBuffer = static_cast<const VulkanBuffer&>(Destination);
 			std::vector<VkBufferCopy> VulkanCopyRegions(CopyRegions.size());
 			auto It = VulkanCopyRegions.begin();
 			for (const auto& CopyRegion : CopyRegions)
@@ -144,7 +142,7 @@ namespace Hermes
 				VulkanCopyRegion.size = CopyRegion.NumBytes;
 				++It;
 			}
-			vkCmdCopyBuffer(Buffer, VulkanSourceBuffer->GetBuffer(), VulkanDestinationBuffer->GetBuffer(), (uint32)VulkanCopyRegions.size(), VulkanCopyRegions.data());
+			vkCmdCopyBuffer(Buffer, VulkanSourceBuffer.GetBuffer(), VulkanDestinationBuffer.GetBuffer(), static_cast<uint32>(VulkanCopyRegions.size()), VulkanCopyRegions.data());
 		}
 	}
 }

@@ -108,7 +108,7 @@ namespace Hermes
 			/*************************************
 			 *      Transfer queue commands      *
 			 *************************************/
-			virtual void CopyBuffer(const std::shared_ptr<Buffer>& Source, const std::shared_ptr<Buffer>& Destination, std::vector<BufferCopyRegion> CopyRegions) = 0;
+			virtual void CopyBuffer(const Buffer& Source, const Buffer& Destination, std::vector<BufferCopyRegion> CopyRegions) = 0;
 		};
 	}
 }

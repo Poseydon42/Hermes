@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Core/Misc/EnumClassOperators.h"
 
 namespace Hermes
 {
@@ -160,5 +161,28 @@ namespace Hermes
 			Preinitialized,
 			ReadyForPresentation
 		};
+
+		enum class AccessType
+		{
+			IndirectCommandRead = 1 << 0,
+			IndexRead = 1 << 1,
+			VertexAttributeRead = 1 << 2,
+			UniformRead = 1 << 3,
+			InputAttachmentRead = 1 << 4,
+			ShaderRead = 1 << 5,
+			ShaderWrite = 1 << 6,
+			ColorAttachmentRead = 1 << 7,
+			ColorAttachmentWrite = 1 << 8,
+			DepthStencilRead = 1 << 9,
+			DepthStencilWrite = 1 << 10,
+			TransferRead = 1 << 1,
+			TransferWrite = 1 << 12,
+			HostRead = 1 << 13,
+			HostWrite = 1 << 14,
+			MemoryRead = 1 << 15,
+			MemoryWrite = 1 << 16
+		};
+
+		ENUM_CLASS_OPERATORS(AccessType)
 	}
 }

@@ -879,6 +879,31 @@ namespace Hermes
 					return (VkImageAspectFlags)0;
 			}
 		}
+
+		inline VkAccessFlags AccessTypeToVkAccessFlags(RenderInterface::AccessType Type)
+		{
+			VkAccessFlags Result = 0;
+#define CORRESPONDING_BIT(Bit, VkBit) if (static_cast<bool>(Type & (Bit))) Result |= (VkBit);
+			CORRESPONDING_BIT(RenderInterface::AccessType::IndirectCommandRead, VK_ACCESS_INDIRECT_COMMAND_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::IndexRead, VK_ACCESS_INDEX_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::VertexAttributeRead, VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::UniformRead, VK_ACCESS_UNIFORM_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::InputAttachmentRead, VK_ACCESS_INPUT_ATTACHMENT_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::ShaderRead, VK_ACCESS_SHADER_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::ShaderWrite, VK_ACCESS_SHADER_WRITE_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::ColorAttachmentRead, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::ColorAttachmentWrite, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::DepthStencilRead, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::DepthStencilWrite, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::TransferRead, VK_ACCESS_TRANSFER_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::TransferWrite, VK_ACCESS_TRANSFER_WRITE_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::HostRead, VK_ACCESS_HOST_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::HostWrite, VK_ACCESS_HOST_WRITE_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::MemoryRead, VK_ACCESS_MEMORY_READ_BIT);
+			CORRESPONDING_BIT(RenderInterface::AccessType::MemoryWrite, VK_ACCESS_MEMORY_WRITE_BIT);
+#undef CORRESPONDING_BIT
+			return Result;
+		}
 	}
 }
 

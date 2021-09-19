@@ -35,6 +35,8 @@ namespace Hermes
 			virtual Vec2ui GetSize() const = 0;
 
 			virtual DataFormat GetDataFormat() const = 0;
+
+			virtual uint32 GetMipLevelsCount() const = 0;
 		};
 	}
 }

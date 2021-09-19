@@ -16,6 +16,7 @@ namespace Hermes
 			, DefaultView(VK_NULL_HANDLE)
 			, Allocation(VK_NULL_HANDLE)
 			, IsOwned(false)
+			, MipLevelCount(1)
 		{
 			CreateDefaultView();
 		}
@@ -28,6 +29,7 @@ namespace Hermes
 			, DefaultView(VK_NULL_HANDLE)
 			, Allocation(VK_NULL_HANDLE)
 			, IsOwned(false)
+			, MipLevelCount(InMipLevels)
 		{
 			VkImageCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -90,6 +92,7 @@ namespace Hermes
 			std::swap(IsOwned, Other.IsOwned);
 			std::swap(DefaultView, Other.DefaultView);
 			std::swap(Allocation, Other.Allocation);
+			std::swap(MipLevelCount, Other.MipLevelCount);
 			
 			return *this;
 		}
@@ -102,6 +105,11 @@ namespace Hermes
 		RenderInterface::DataFormat VulkanImage::GetDataFormat() const
 		{
 			return VkFormatToDataFormat(Format);
+		}
+
+		uint32 VulkanImage::GetMipLevelsCount() const
+		{
+			return MipLevelCount;
 		}
 
 		VkImage VulkanImage::GetImage() const

@@ -37,6 +37,8 @@ namespace Hermes
 			
 			RenderInterface::DataFormat GetDataFormat() const override;
 
+			uint32 GetMipLevelsCount() const override;
+
 			VkImage GetImage() const;
 
 			/**
@@ -53,6 +55,7 @@ namespace Hermes
 			VkImageView DefaultView;
 			VmaAllocation Allocation;
 			bool IsOwned;
+			uint32 MipLevelCount;
 
 			void CreateDefaultView();
 		};

@@ -882,6 +882,8 @@ namespace Hermes
 
 		inline VkAccessFlags AccessTypeToVkAccessFlags(RenderInterface::AccessType Type)
 		{
+			if (Type == RenderInterface::AccessType::None)
+				return static_cast<VkAccessFlags>(0);
 			VkAccessFlags Result = 0;
 #define CORRESPONDING_BIT(Bit, VkBit) if (static_cast<bool>(Type & (Bit))) Result |= (VkBit);
 			CORRESPONDING_BIT(RenderInterface::AccessType::IndirectCommandRead, VK_ACCESS_INDIRECT_COMMAND_READ_BIT);

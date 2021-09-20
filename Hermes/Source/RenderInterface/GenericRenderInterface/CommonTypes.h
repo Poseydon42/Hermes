@@ -164,6 +164,7 @@ namespace Hermes
 
 		enum class AccessType
 		{
+			None = 0,
 			IndirectCommandRead = 1 << 0,
 			IndexRead = 1 << 1,
 			VertexAttributeRead = 1 << 2,

@@ -66,5 +66,10 @@ namespace Hermes
 		{
 			return Queue;
 		}
+
+		uint32 VulkanQueue::GetQueueFamilyIndex() const
+		{
+			return QueueFamilyIndex;
+		}
 	}
 }

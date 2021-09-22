@@ -7,19 +7,16 @@ namespace Hermes
 		Target = PlatformFilesystem::OpenFile(Path, IPlatformFile::FileAccessMode::Write, IPlatformFile::FileOpenMode::Create);
 	}
 
-	void FileLogDevice::Write(LogLevel Level, String Text)
+	void FileLogDevice::Write(LogLevel Level, const String& Text)
 	{
-		if (Level >= CurrentLevel)
-			Target->Write((const uint8*)Text.c_str(), Text.length() * sizeof(Text[0]));
+		if (Level >= CurrentLevel && Target->IsValid())
+			Target->Write(reinterpret_cast<const uint8*>(Text.c_str()), Text.length() * sizeof(Text[0]));
 	}
 
-	void FileLogDevice::WriteLine(LogLevel Level, String Text)
+	void FileLogDevice::WriteLine(LogLevel Level, const String& Text)
 	{
-		if (Level >= CurrentLevel)
-		{
-			Text[Text.length() - 1] = L'\n'; // Overwrite null-terminator with line ending
-			Write(Level, Text);
-		}
+		Write(Level, Text);
+		Write(Level, L"\n");
 	}
 
 	LogLevel FileLogDevice::GetCurrentLogLevel()

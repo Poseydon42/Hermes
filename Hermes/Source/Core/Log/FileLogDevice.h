@@ -12,9 +12,9 @@ namespace Hermes
 	public:
 		FileLogDevice(const String& Path, LogLevel InitialLevel);
 		
-		void Write(LogLevel Level, String Text) override;
+		void Write(LogLevel Level, const String& Text) override;
 		
-		void WriteLine(LogLevel Level, String Text) override;
+		void WriteLine(LogLevel Level, const String& Text) override;
 		
 		LogLevel GetCurrentLogLevel() override;
 		

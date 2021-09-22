@@ -11,13 +11,13 @@ namespace Hermes
 	public:
 		inline DebugLogDevice(LogLevel InitialLogLevel = LogLevel::Trace) : CurrentLogLevel(InitialLogLevel) {}
 
-		inline void Write(LogLevel Level, String Text) override
+		inline void Write(LogLevel Level, const String& Text) override
 		{
 			if (Level >= CurrentLogLevel)
 				PlatformDebug::PrintString(Text);
 		}
 
-		inline void WriteLine(LogLevel Level, String Text) override
+		inline void WriteLine(LogLevel Level, const String& Text) override
 		{
 			if (Level >= CurrentLogLevel)
 				PlatformDebug::PrintString(Text + L"\n");

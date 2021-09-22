@@ -120,9 +120,7 @@ namespace Hermes
 
 	std::shared_ptr<IPlatformFile> PlatformFilesystem::OpenFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode)
 	{
-		WindowsFile Result = WindowsFile(Path, Access, OpenMode);
-		if (!Result.IsValid()) return std::shared_ptr<IPlatformFile>(nullptr);
-		return std::make_shared<WindowsFile>(std::move(Result));
+		return std::make_shared<WindowsFile>(Path, Access, OpenMode);
 	}
 	
 	bool PlatformFilesystem::RemoveFile(const String& Path)

@@ -22,9 +22,9 @@ namespace Hermes
 
 		ILogDevice& operator=(ILogDevice&&) = default;
 		
-		virtual void Write(LogLevel Level, String Text) = 0;
+		virtual void Write(LogLevel Level, const String& Text) = 0;
 
-		virtual void WriteLine(LogLevel Level, String Text) = 0;
+		virtual void WriteLine(LogLevel Level, const String& Text) = 0;
 
 		virtual LogLevel GetCurrentLogLevel() = 0;
 

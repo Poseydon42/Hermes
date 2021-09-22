@@ -5,7 +5,10 @@
 #include "RenderInterface/Vulkan/VulkanRenderPass.h"
 #include "RenderInterface/Vulkan/VulkanRenderTarget.h"
 #include "RenderInterface/Vulkan/VulkanBuffer.h"
+#include "RenderInterface/Vulkan/VulkanCommonTypes.h"
 #include "RenderInterface/Vulkan/VulkanDescriptor.h"
+#include "RenderInterface/Vulkan/VulkanImage.h"
+#include "RenderInterface/Vulkan/VulkanQueue.h"
 
 namespace Hermes
 {
@@ -128,6 +131,33 @@ namespace Hermes
 			vkCmdBindDescriptorSets(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline&>(Pipeline).GetPipelineLayout(), BindingIndex, 1, &DescriptorSet, 0, nullptr);
 		}
 
+		void VulkanCommandBuffer::InsertImageMemoryBarrier(const RenderInterface::Image& Image, const RenderInterface::ImageMemoryBarrier& Barrier, RenderInterface::PipelineStage SourceStage, RenderInterface::PipelineStage DestinationStage)
+		{
+			VkImageMemoryBarrier NewBarrier = {};
+			NewBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			NewBarrier.oldLayout = ImageLayoutToVkImageLayout(Barrier.OldLayout);
+			NewBarrier.newLayout = ImageLayoutToVkImageLayout(Barrier.NewLayout);
+			if (Barrier.OldOwnerQueue.has_value())
+				NewBarrier.srcQueueFamilyIndex = static_cast<const VulkanQueue*>(Barrier.OldOwnerQueue.value())->GetQueueFamilyIndex();
+			else
+				NewBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			if (Barrier.NewOwnerQueue.has_value())
+				NewBarrier.dstQueueFamilyIndex = static_cast<const VulkanQueue*>(Barrier.NewOwnerQueue.value())->GetQueueFamilyIndex();
+			else
+				NewBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			NewBarrier.srcAccessMask = AccessTypeToVkAccessFlags(Barrier.OperationsThatHaveToEndBefore);
+			NewBarrier.dstAccessMask = AccessTypeToVkAccessFlags(Barrier.OperationsThatCanStartAfter);
+			NewBarrier.image = static_cast<const VulkanImage&>(Image).GetImage();
+			NewBarrier.subresourceRange.baseMipLevel = 0;
+			NewBarrier.subresourceRange.levelCount = Image.GetMipLevelsCount();
+			NewBarrier.subresourceRange.baseArrayLayer = 0;
+			NewBarrier.subresourceRange.layerCount = 1;
+			NewBarrier.subresourceRange.aspectMask = VkAspectFlagsFromVkFormat(DataFormatToVkFormat(Image.GetDataFormat()));
+
+
+			vkCmdPipelineBarrier(Buffer, PipelineStageToVkPipelineStageFlags(SourceStage), PipelineStageToVkPipelineStageFlags(DestinationStage), 0, 0, nullptr, 0, nullptr, 1, &NewBarrier);
+		}
+
 		void VulkanCommandBuffer::CopyBuffer(const RenderInterface::Buffer& Source, const RenderInterface::Buffer& Destination, std::vector<RenderInterface::BufferCopyRegion> CopyRegions)
 		{
 			const auto& VulkanSourceBuffer = static_cast<const VulkanBuffer&>(Source);
@@ -143,6 +173,35 @@ namespace Hermes
 				++It;
 			}
 			vkCmdCopyBuffer(Buffer, VulkanSourceBuffer.GetBuffer(), VulkanDestinationBuffer.GetBuffer(), static_cast<uint32>(VulkanCopyRegions.size()), VulkanCopyRegions.data());
+		}
+
+		void VulkanCommandBuffer::CopyBufferToImage(const RenderInterface::Buffer& Source, const RenderInterface::Image& Destination, RenderInterface::ImageLayout DestinationImageLayout, std::vector<RenderInterface::BufferToImageCopyRegion> CopyRegions)
+		{
+			const auto& SourceBuffer = static_cast<const VulkanBuffer&>(Source);
+			const auto& DestinationImage = static_cast<const VulkanImage&>(Destination);
+			VkImageLayout Layout = ImageLayoutToVkImageLayout(DestinationImageLayout);
+
+			std::vector<VkBufferImageCopy> VulkanCopyRegions(CopyRegions.size());
+			auto It = VulkanCopyRegions.begin();
+			for (const auto& CopyRegion : CopyRegions)
+			{
+				auto& VulkanCopyRegion = *It;
+				VulkanCopyRegion.bufferOffset = CopyRegion.BufferOffset;
+				VulkanCopyRegion.bufferRowLength = 0; // TODO : user should be able to specify these
+				VulkanCopyRegion.bufferImageHeight = 0;
+				VulkanCopyRegion.imageExtent.width = DestinationImage.GetSize().X;
+				VulkanCopyRegion.imageExtent.height = DestinationImage.GetSize().Y;
+				VulkanCopyRegion.imageExtent.depth = 1;
+				VulkanCopyRegion.imageOffset.x = 0;
+				VulkanCopyRegion.imageOffset.y = 0;
+				VulkanCopyRegion.imageOffset.z = 0;
+				VulkanCopyRegion.imageSubresource.aspectMask = VkAspectFlagsFromVkFormat(DataFormatToVkFormat(DestinationImage.GetDataFormat()));
+				VulkanCopyRegion.imageSubresource.baseArrayLayer = 0;
+				VulkanCopyRegion.imageSubresource.layerCount = 1;
+				VulkanCopyRegion.imageSubresource.mipLevel = 0;
+				++It;
+			}
+			vkCmdCopyBufferToImage(Buffer, SourceBuffer.GetBuffer(), DestinationImage.GetImage(), Layout, static_cast<uint32>(VulkanCopyRegions.size()), VulkanCopyRegions.data());
 		}
 	}
 }

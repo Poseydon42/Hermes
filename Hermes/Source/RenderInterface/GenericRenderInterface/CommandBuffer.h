@@ -1,26 +1,46 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
+#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 
 namespace Hermes
 {
 	namespace RenderInterface
 	{
+		class Queue;
+		enum class ImageLayout;
+		class Image;
 		class DescriptorSet;
 		class Pipeline;
 		class RenderTarget;
 		class RenderPass;
 		class Buffer;
 
+		struct ImageMemoryBarrier
+		{
+			ImageLayout OldLayout { ImageLayout::Undefined };
+			ImageLayout NewLayout { ImageLayout::Undefined };
+			std::optional<const Queue*> OldOwnerQueue {};
+			std::optional<const Queue*> NewOwnerQueue {};
+			AccessType OperationsThatHaveToEndBefore { AccessType::None };
+			AccessType OperationsThatCanStartAfter { AccessType::None };
+		};
+
 		struct BufferCopyRegion
 		{
 			size_t SourceOffset;
 			size_t DestinationOffset;
 			size_t NumBytes;
+		};
+
+		struct BufferToImageCopyRegion
+		{
+			uint32 BufferOffset;
 		};
 
 		struct ClearColor
@@ -104,11 +124,19 @@ namespace Hermes
 			 * Binds a descriptor set for further drawing commands
 			 */
 			virtual void BindDescriptorSet(const DescriptorSet& Set, const Pipeline& Pipeline, uint32 BindingIndex) = 0;
+
+			// TODO : generic, multi-barrier version
+			/*
+			 * Inserts an image memory barrier
+			 */
+			virtual void InsertImageMemoryBarrier(const Image& Image, const ImageMemoryBarrier& Barrier, PipelineStage SourceStage, PipelineStage DestinationStage) = 0;
 			
 			/*************************************
 			 *      Transfer queue commands      *
 			 *************************************/
 			virtual void CopyBuffer(const Buffer& Source, const Buffer& Destination, std::vector<BufferCopyRegion> CopyRegions) = 0;
+
+			virtual void CopyBufferToImage(const Buffer& Source, const Image& Destination, ImageLayout DestinationImageLayout, std::vector<BufferToImageCopyRegion> CopyRegions) = 0;
 		};
 	}
 }

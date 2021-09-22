@@ -59,7 +59,20 @@ public:
 			Hermes::Vec3 Color = { 1.0f, 0.5f, 0.0f };
 		} UniformData;
 
-		Hermes::uint32 StagingBufferSize = Hermes::Math::Max(Hermes::Math::Max((Hermes::uint32)sizeof(VertexData), (Hermes::uint32)sizeof(IndexData)), (Hermes::uint32)sizeof(UniformData));
+		Hermes::Vec2ui ImageSize;
+		auto CheckerImage = LoadTGA(L"checker.tga", ImageSize);
+		auto Image = Device->CreateImage(
+			ImageSize, Hermes::RenderInterface::ImageUsageType::CopyDestination | Hermes::RenderInterface::ImageUsageType::Sampled,
+			Hermes::RenderInterface::DataFormat::R8G8B8A8SRGB, 1, Hermes::RenderInterface::ImageLayout::Undefined);
+		Hermes::uint32 ImageSizeInBytes = ImageSize.X * ImageSize.Y * 4;
+
+		Hermes::uint32 StagingBufferSize = Hermes::Math::Max(
+			Hermes::Math::Max(
+				Hermes::Math::Max(
+					(Hermes::uint32)sizeof(VertexData),
+					(Hermes::uint32)sizeof(IndexData)),
+				(Hermes::uint32)sizeof(UniformData)),
+			ImageSizeInBytes);
 		auto StagingBuffer = Device->CreateBuffer(StagingBufferSize, Hermes::RenderInterface::BufferUsageType::CPUAccessible | Hermes::RenderInterface::BufferUsageType::CopySource);
 		VertexBuffer = Device->CreateBuffer(sizeof(VertexData), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::VertexBuffer);
 		IndexBuffer = Device->CreateBuffer(sizeof(IndexData), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::IndexBuffer);
@@ -108,6 +121,32 @@ public:
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle();
+
+		// Image copy
+		Dst = StagingBuffer->Map();
+		memcpy(Dst, CheckerImage, ImageSizeInBytes);
+		StagingBuffer->Unmap();
+		TransferCommandBuffer->BeginRecording();
+		Hermes::RenderInterface::ImageMemoryBarrier Barrier = {};
+		Barrier.OldLayout = Hermes::RenderInterface::ImageLayout::Undefined;
+		Barrier.NewLayout = Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal;
+		Barrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::TransferWrite;
+		Barrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::MemoryRead;
+		TransferCommandBuffer->InsertImageMemoryBarrier(*Image, Barrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::Transfer);
+		Hermes::RenderInterface::BufferToImageCopyRegion CopyRegion = {};
+		CopyRegion.BufferOffset = 0;
+		TransferCommandBuffer->CopyBufferToImage(*StagingBuffer, *Image, Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal, { CopyRegion });
+		Barrier.OldLayout = Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal;
+		Barrier.NewLayout = Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+		Barrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::TransferWrite;
+		Barrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::MemoryRead;
+		Barrier.OldOwnerQueue = TransferQueue.get();
+		Barrier.NewOwnerQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Render).get();
+		TransferCommandBuffer->InsertImageMemoryBarrier(*Image, Barrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::Transfer);
+		TransferCommandBuffer->EndRecording();
+		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
+		Device->WaitForIdle();
+		free(CheckerImage);
 
 		auto VertexShader = Device->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", Hermes::RenderInterface::ShaderType::VertexShader);
 		auto FragmentShader = Device->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", Hermes::RenderInterface::ShaderType::FragmentShader);
@@ -172,13 +211,6 @@ public:
 		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
 		GraphicsFence = Device->CreateFence(false);
 		PresentationFence = Device->CreateFence(false);
-
-		Hermes::Vec2ui ImageSize;
-		auto CheckerImage = LoadTGA(L"checker.tga", ImageSize);
-		auto Image = Device->CreateImage(
-			ImageSize, Hermes::RenderInterface::ImageUsageType::CopyDestination | Hermes::RenderInterface::ImageUsageType::Sampled,
-			Hermes::RenderInterface::DataFormat::R8G8B8A8SRGB, 1, Hermes::RenderInterface::ImageLayout::Undefined);
-		free(CheckerImage);
 		
 		return true;
 	}

@@ -884,7 +884,7 @@ namespace Hermes
 		{
 			if (Type == RenderInterface::AccessType::None)
 				return static_cast<VkAccessFlags>(0);
-			VkAccessFlags Result = 0;
+			auto Result = static_cast<VkAccessFlags>(0);
 #define CORRESPONDING_BIT(Bit, VkBit) if (static_cast<bool>(Type & (Bit))) Result |= (VkBit);
 			CORRESPONDING_BIT(RenderInterface::AccessType::IndirectCommandRead, VK_ACCESS_INDIRECT_COMMAND_READ_BIT);
 			CORRESPONDING_BIT(RenderInterface::AccessType::IndexRead, VK_ACCESS_INDEX_READ_BIT);
@@ -903,6 +903,27 @@ namespace Hermes
 			CORRESPONDING_BIT(RenderInterface::AccessType::HostWrite, VK_ACCESS_HOST_WRITE_BIT);
 			CORRESPONDING_BIT(RenderInterface::AccessType::MemoryRead, VK_ACCESS_MEMORY_READ_BIT);
 			CORRESPONDING_BIT(RenderInterface::AccessType::MemoryWrite, VK_ACCESS_MEMORY_WRITE_BIT);
+#undef CORRESPONDING_BIT
+			return Result;
+		}
+
+		inline VkPipelineStageFlags PipelineStageToVkPipelineStageFlags(RenderInterface::PipelineStage Stage)
+		{
+			if (Stage == RenderInterface::PipelineStage::None)
+				return static_cast<VkPipelineStageFlags>(0);
+			auto Result = static_cast<VkPipelineStageFlags>(0);
+#define CORRESPONDING_BIT(Bit, VkBit) if (static_cast<bool>(Stage & (Bit))) Result |= (VkBit);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::TopOfPipe, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::DrawIndirect, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::VertexInput, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::VertexShader, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::FragmentShader, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::EarlyFragmentTests, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::LateFragmentTests, VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::ColorAttachmentOutput, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::Transfer, VK_PIPELINE_STAGE_TRANSFER_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::BottomOfPipe, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::Host, VK_PIPELINE_STAGE_HOST_BIT);
 #undef CORRESPONDING_BIT
 			return Result;
 		}

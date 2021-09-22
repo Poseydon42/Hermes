@@ -185,5 +185,23 @@ namespace Hermes
 		};
 
 		ENUM_CLASS_OPERATORS(AccessType)
+
+		enum class PipelineStage
+		{
+			None = 0,
+			TopOfPipe = 1 << 0,
+			DrawIndirect = 1 << 1,
+			VertexInput = 1 << 2,
+			VertexShader = 1 << 3,
+			FragmentShader = 1 << 4,
+			EarlyFragmentTests = 1 << 5,
+			LateFragmentTests = 1 << 6,
+			ColorAttachmentOutput = 1 << 7,
+			Transfer = 1 << 8,
+			BottomOfPipe = 1 << 9,
+			Host = 1 << 10
+		};
+
+		ENUM_CLASS_OPERATORS(PipelineStage)
 	}
 }

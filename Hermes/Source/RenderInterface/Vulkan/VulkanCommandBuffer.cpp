@@ -131,6 +131,27 @@ namespace Hermes
 			vkCmdBindDescriptorSets(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline&>(Pipeline).GetPipelineLayout(), BindingIndex, 1, &DescriptorSet, 0, nullptr);
 		}
 
+		void VulkanCommandBuffer::InsertBufferMemoryBarrier(const RenderInterface::Buffer& InBuffer, const RenderInterface::BufferMemoryBarrier& Barrier, RenderInterface::PipelineStage SourceStage, RenderInterface::PipelineStage DestinationStage)
+		{
+			VkBufferMemoryBarrier NewBarrier = {};
+			NewBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+			if (Barrier.OldOwnerQueue.has_value())
+				NewBarrier.srcQueueFamilyIndex = static_cast<const VulkanQueue*>(Barrier.OldOwnerQueue.value())->GetQueueFamilyIndex();
+			else
+				NewBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			if (Barrier.NewOwnerQueue.has_value())
+				NewBarrier.dstQueueFamilyIndex = static_cast<const VulkanQueue*>(Barrier.NewOwnerQueue.value())->GetQueueFamilyIndex();
+			else
+				NewBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			NewBarrier.srcAccessMask = AccessTypeToVkAccessFlags(Barrier.OperationsThatHaveToEndBefore);
+			NewBarrier.dstAccessMask = AccessTypeToVkAccessFlags(Barrier.OperationsThatCanStartAfter);
+			NewBarrier.buffer = static_cast<const VulkanBuffer&>(InBuffer).GetBuffer();
+			NewBarrier.size = Barrier.NumBytes;
+			NewBarrier.offset = Barrier.Offset;
+
+			vkCmdPipelineBarrier(Buffer, PipelineStageToVkPipelineStageFlags(SourceStage), PipelineStageToVkPipelineStageFlags(DestinationStage), 0, 0, nullptr, 1, &NewBarrier, 0, nullptr);
+		}
+
 		void VulkanCommandBuffer::InsertImageMemoryBarrier(const RenderInterface::Image& Image, const RenderInterface::ImageMemoryBarrier& Barrier, RenderInterface::PipelineStage SourceStage, RenderInterface::PipelineStage DestinationStage)
 		{
 			VkImageMemoryBarrier NewBarrier = {};

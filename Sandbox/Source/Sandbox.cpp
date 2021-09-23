@@ -90,6 +90,14 @@ public:
 		Region.DestinationOffset = 0;
 		Region.NumBytes = sizeof(VertexData);
 		TransferCommandBuffer->CopyBuffer(*StagingBuffer, *VertexBuffer, { Region });
+		Hermes::RenderInterface::BufferMemoryBarrier BufferBarrier = {};
+		BufferBarrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::TransferWrite;
+		BufferBarrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::MemoryRead;
+		BufferBarrier.OldOwnerQueue = TransferQueue.get();
+		BufferBarrier.NewOwnerQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Render).get();
+		BufferBarrier.Offset = 0;
+		BufferBarrier.NumBytes = VertexBuffer->GetSize();
+		TransferCommandBuffer->InsertBufferMemoryBarrier(*VertexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::TopOfPipe);
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle(); // TODO : add Queue::WaitForIdle()
@@ -104,6 +112,8 @@ public:
 		Region.DestinationOffset = 0;
 		Region.NumBytes = sizeof(IndexData);
 		TransferCommandBuffer->CopyBuffer(*StagingBuffer, *IndexBuffer, { Region });
+		BufferBarrier.NumBytes = IndexBuffer->GetSize();
+		TransferCommandBuffer->InsertBufferMemoryBarrier(*IndexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::TopOfPipe);
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle();
@@ -118,6 +128,8 @@ public:
 		Region.DestinationOffset = 0;
 		Region.NumBytes = sizeof(UniformData);
 		TransferCommandBuffer->CopyBuffer(*StagingBuffer, *UniformBuffer, { Region });
+		BufferBarrier.NumBytes = UniformBuffer->GetSize();
+		TransferCommandBuffer->InsertBufferMemoryBarrier(*UniformBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::TopOfPipe);
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle();
@@ -127,26 +139,42 @@ public:
 		memcpy(Dst, CheckerImage, ImageSizeInBytes);
 		StagingBuffer->Unmap();
 		TransferCommandBuffer->BeginRecording();
-		Hermes::RenderInterface::ImageMemoryBarrier Barrier = {};
-		Barrier.OldLayout = Hermes::RenderInterface::ImageLayout::Undefined;
-		Barrier.NewLayout = Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal;
-		Barrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::TransferWrite;
-		Barrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::MemoryRead;
-		TransferCommandBuffer->InsertImageMemoryBarrier(*Image, Barrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::Transfer);
+		Hermes::RenderInterface::ImageMemoryBarrier ImageBarrier = {};
+		ImageBarrier.OldLayout = Hermes::RenderInterface::ImageLayout::Undefined;
+		ImageBarrier.NewLayout = Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal;
+		ImageBarrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::TransferWrite;
+		ImageBarrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::MemoryRead;
+		TransferCommandBuffer->InsertImageMemoryBarrier(*Image, ImageBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::Transfer);
 		Hermes::RenderInterface::BufferToImageCopyRegion CopyRegion = {};
 		CopyRegion.BufferOffset = 0;
 		TransferCommandBuffer->CopyBufferToImage(*StagingBuffer, *Image, Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal, { CopyRegion });
-		Barrier.OldLayout = Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal;
-		Barrier.NewLayout = Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
-		Barrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::TransferWrite;
-		Barrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::MemoryRead;
-		Barrier.OldOwnerQueue = TransferQueue.get();
-		Barrier.NewOwnerQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Render).get();
-		TransferCommandBuffer->InsertImageMemoryBarrier(*Image, Barrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::Transfer);
+		ImageBarrier.OldLayout = Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal;
+		ImageBarrier.NewLayout = Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+		ImageBarrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::TransferWrite;
+		ImageBarrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::MemoryRead;
+		ImageBarrier.OldOwnerQueue = TransferQueue.get();
+		ImageBarrier.NewOwnerQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Render).get();
+		TransferCommandBuffer->InsertImageMemoryBarrier(*Image, ImageBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::Transfer);
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle();
 		free(CheckerImage);
+
+		// We now have to acquire ownership of all resources on render queue
+		auto RenderQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Render);
+		auto RenderCommandBuffer = RenderQueue->CreateCommandBuffer(true);
+		RenderCommandBuffer->BeginRecording();
+		BufferBarrier.NumBytes = VertexBuffer->GetSize();
+		RenderCommandBuffer->InsertBufferMemoryBarrier(*VertexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::VertexInput);
+		BufferBarrier.NumBytes = IndexBuffer->GetSize();
+		RenderCommandBuffer->InsertBufferMemoryBarrier(*IndexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::VertexInput);
+		BufferBarrier.NumBytes = UniformBuffer->GetSize();
+		RenderCommandBuffer->InsertBufferMemoryBarrier(*UniformBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::VertexShader);
+		RenderCommandBuffer->InsertImageMemoryBarrier(*Image, ImageBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::FragmentShader);
+		RenderCommandBuffer->EndRecording();
+		RenderQueue->SubmitCommandBuffer(RenderCommandBuffer, {});
+		Device->WaitForIdle();
+		
 
 		auto VertexShader = Device->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", Hermes::RenderInterface::ShaderType::VertexShader);
 		auto FragmentShader = Device->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", Hermes::RenderInterface::ShaderType::FragmentShader);

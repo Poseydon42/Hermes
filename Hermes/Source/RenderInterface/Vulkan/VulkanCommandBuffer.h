@@ -42,6 +42,8 @@ namespace Hermes
 
 			void BindDescriptorSet(const RenderInterface::DescriptorSet& Set, const RenderInterface::Pipeline& Pipeline, uint32 BindingIndex) override;
 
+			void InsertBufferMemoryBarrier(const RenderInterface::Buffer& Buffer, const RenderInterface::BufferMemoryBarrier& Barrier, RenderInterface::PipelineStage SourceStage, RenderInterface::PipelineStage DestinationStage) override;
+
 			void InsertImageMemoryBarrier(const RenderInterface::Image& Image, const RenderInterface::ImageMemoryBarrier& Barrier, RenderInterface::PipelineStage SourceStage, RenderInterface::PipelineStage DestinationStage) override;
 			
 			void CopyBuffer(const RenderInterface::Buffer& Source, const RenderInterface::Buffer& Destination, std::vector<RenderInterface::BufferCopyRegion> CopyRegions) override;
@@ -50,6 +52,7 @@ namespace Hermes
 
 			VkCommandBuffer GetBuffer() const { return Buffer; }
 			
+
 
 		private:
 			VkCommandBuffer Buffer;

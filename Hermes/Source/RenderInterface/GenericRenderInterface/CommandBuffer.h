@@ -31,6 +31,16 @@ namespace Hermes
 			AccessType OperationsThatCanStartAfter { AccessType::None };
 		};
 
+		struct BufferMemoryBarrier
+		{
+			std::optional<const Queue*> OldOwnerQueue {};
+			std::optional<const Queue*> NewOwnerQueue {};
+			AccessType OperationsThatHaveToEndBefore { AccessType::None };
+			AccessType OperationsThatCanStartAfter { AccessType::None };
+			size_t Offset { 0 };
+			size_t NumBytes { 0 };
+		};
+
 		struct BufferCopyRegion
 		{
 			size_t SourceOffset;
@@ -126,6 +136,11 @@ namespace Hermes
 			virtual void BindDescriptorSet(const DescriptorSet& Set, const Pipeline& Pipeline, uint32 BindingIndex) = 0;
 
 			// TODO : generic, multi-barrier version
+			/*
+			 * Inserts a buffer memory barrier
+			 */
+			virtual void InsertBufferMemoryBarrier(const Buffer& Buffer, const BufferMemoryBarrier& Barrier, PipelineStage SourceStage, PipelineStage DestinationStage) = 0;
+
 			/*
 			 * Inserts an image memory barrier
 			 */

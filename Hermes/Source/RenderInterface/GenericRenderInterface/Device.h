@@ -15,6 +15,8 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		struct SamplerDescription;
+		class Sampler;
 		enum class ImageLayout;
 		enum class DataFormat;
 		enum class ImageUsageType;
@@ -63,6 +65,8 @@ namespace Hermes
 			virtual std::shared_ptr<DescriptorSetLayout> CreateDescriptorSetLayout(const std::vector<DescriptorBinding>& Bindings) = 0;
 
 			virtual std::shared_ptr<DescriptorSetPool> CreateDescriptorSetPool(uint32 Size) = 0;
+
+			virtual std::shared_ptr<Sampler> CreateSampler(const SamplerDescription& Description) = 0;
 
 			/**
 			 * Waits until device finishes all its current and pending work and becomes idle

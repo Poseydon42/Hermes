@@ -28,6 +28,8 @@ namespace Hermes
 			
 			std::shared_ptr<RenderInterface::Buffer> CreateBuffer(size_t Size, RenderInterface::BufferUsageType Usage) override;
 
+			std::shared_ptr<RenderInterface::Image> CreateImage(Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, uint32 MipLevels, RenderInterface::ImageLayout InitialLayout) override;
+
 			std::shared_ptr<RenderInterface::Fence> CreateFence(bool InitialState) override;
 			
 			std::shared_ptr<RenderInterface::Shader> CreateShader(const String& Path, RenderInterface::ShaderType Type) override;
@@ -42,7 +44,7 @@ namespace Hermes
 
 			std::shared_ptr<RenderInterface::DescriptorSetPool> CreateDescriptorSetPool(uint32 Size) override;
 
-			std::shared_ptr<RenderInterface::Image> CreateImage(Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, uint32 MipLevels, RenderInterface::ImageLayout InitialLayout) override;
+			std::shared_ptr<RenderInterface::Sampler> CreateSampler(const RenderInterface::SamplerDescription& Description) override;
 			
 			void WaitForIdle() override;
 

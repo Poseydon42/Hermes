@@ -12,6 +12,7 @@
 #include "RenderInterface/Vulkan/VulkanFence.h"
 #include "Platform/GenericPlatform/PlatformMisc.h"
 #include "RenderInterface/Vulkan/VulkanDescriptor.h"
+#include "RenderInterface/Vulkan/VulkanSampler.h"
 
 namespace Hermes
 {
@@ -231,6 +232,11 @@ namespace Hermes
 		std::shared_ptr<RenderInterface::DescriptorSetPool> VulkanDevice::CreateDescriptorSetPool(uint32 Size)
 		{
 			return std::make_shared<VulkanDescriptorSetPool>(shared_from_this(), Size);
+		}
+
+		std::shared_ptr<RenderInterface::Sampler> VulkanDevice::CreateSampler(const RenderInterface::SamplerDescription& Description)
+		{
+			return std::make_shared<VulkanSampler>(shared_from_this(), Description);
 		}
 
 		std::shared_ptr<RenderInterface::Image> VulkanDevice::CreateImage(Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, uint32 MipLevels, RenderInterface::ImageLayout InitialLayout)

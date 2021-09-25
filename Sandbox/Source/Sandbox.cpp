@@ -2,6 +2,7 @@
 #include "Math/Vector.h"
 #include "Platform/GenericPlatform/PlatformFile.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
+#include "RenderInterface/GenericRenderInterface/Sampler.h"
 #ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
@@ -239,6 +240,14 @@ public:
 		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
 		GraphicsFence = Device->CreateFence(false);
 		PresentationFence = Device->CreateFence(false);
+
+		Hermes::RenderInterface::SamplerDescription SamplerDesc = {};
+		SamplerDesc.CoordinateSystem = Hermes::RenderInterface::CoordinateSystem::Normalized;
+		SamplerDesc.AddressingModeU = Hermes::RenderInterface::AddressingMode::Repeat;
+		SamplerDesc.AddressingModeV = Hermes::RenderInterface::AddressingMode::Repeat;
+		SamplerDesc.MinificationFilteringMode = Hermes::RenderInterface::FilteringMode::Linear;
+		SamplerDesc.MagnificationFilteringMode = Hermes::RenderInterface::FilteringMode::Linear;
+		auto Sampler = Device->CreateSampler(SamplerDesc);
 		
 		return true;
 	}

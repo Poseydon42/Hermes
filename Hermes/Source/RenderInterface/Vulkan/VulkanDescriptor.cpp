@@ -8,6 +8,22 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
+		static VkDescriptorType DescriptorTypeToVkDescriptorType(RenderInterface::DescriptorType Type)
+		{
+			switch (Type)
+			{
+			case RenderInterface::DescriptorType::UniformBuffer:
+				return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			case RenderInterface::DescriptorType::Sampler:
+				return VK_DESCRIPTOR_TYPE_SAMPLER;
+			case RenderInterface::DescriptorType::SampledImage:
+				return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			default:
+				HERMES_ASSERT(false);
+				return static_cast<VkDescriptorType>(0);
+			}
+		}
+
 		VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::shared_ptr<VulkanDevice> InDevice, const std::vector<RenderInterface::DescriptorBinding>& Bindings)
 			: Device(std::move(InDevice))
 			, Layout(VK_NULL_HANDLE)
@@ -18,7 +34,7 @@ namespace Hermes
 			{
 				VulkanBinding->binding = Binding.Index;
 				VulkanBinding->descriptorCount = Binding.DescriptorCount; // TODO
-				VulkanBinding->descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				VulkanBinding->descriptorType = DescriptorTypeToVkDescriptorType(Binding.Type);
 				VulkanBinding->pImmutableSamplers = 0;
 				VulkanBinding->stageFlags = ShaderTypeToVkShaderStage(Binding.Shader);
 				++VulkanBinding;
@@ -102,7 +118,7 @@ namespace Hermes
 			AllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 			AllocateInfo.descriptorPool = Pool->GetDescriptorPool();
 			AllocateInfo.descriptorSetCount = 1; // TODO : multi-set multi-layout constructor of some kind
-			const VkDescriptorSetLayout DescriptorLayout = Layout->GetDescriptorSetLayout();
+			VkDescriptorSetLayout DescriptorLayout = Layout->GetDescriptorSetLayout();
 			AllocateInfo.pSetLayouts = &DescriptorLayout;
 
 			VK_CHECK_RESULT(vkAllocateDescriptorSets(Device->GetDevice(), &AllocateInfo, &Set));

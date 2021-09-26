@@ -27,12 +27,20 @@ namespace Hermes
 			virtual void UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex, const Buffer& Buffer, uint32 Offset, uint32 Size) = 0;
 		};
 
+		// TODO : other types
+		enum class DescriptorType
+		{
+			UniformBuffer,
+			Sampler,
+			SampledImage
+		};
+
 		struct DescriptorBinding
 		{
 			uint32 Index;
 			uint32 DescriptorCount;
 			ShaderType Shader;
-			// TODO : descriptor types(for now we assume that it is uniform buffer, but we'd need to add samplers/images in future)
+			DescriptorType Type;
 		};
 
 		class HERMES_API DescriptorSetLayout

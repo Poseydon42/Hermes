@@ -61,7 +61,7 @@ public:
 		} UniformData;
 
 		Hermes::Vec2ui ImageSize;
-		auto CheckerImage = LoadTGA(L"checker.tga", ImageSize);
+		auto CheckerImage = LoadTGA(L"checker_colored.tga", ImageSize);
 		Texture = Device->CreateImage(
 			ImageSize, Hermes::RenderInterface::ImageUsageType::CopyDestination | Hermes::RenderInterface::ImageUsageType::Sampled,
 			Hermes::RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized, 1, Hermes::RenderInterface::ImageLayout::Undefined);

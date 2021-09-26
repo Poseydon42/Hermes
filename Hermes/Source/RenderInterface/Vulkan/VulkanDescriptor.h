@@ -6,6 +6,7 @@
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "Vulkan.h"
+#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 
 namespace Hermes
 {
@@ -67,8 +68,12 @@ namespace Hermes
 
 			void UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size) override;
 
+			void UpdateWithSampler(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Sampler& Sampler) override;
+
+			void UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Image& Image, RenderInterface::ImageLayout LayoutAtTimeOfAccess) override;
+
 			VkDescriptorSet GetDescriptorSet() const { return Set; }
-			
+
 		private:
 			std::shared_ptr<VulkanDevice> Device;
 			std::shared_ptr<VulkanDescriptorSetPool> Pool;

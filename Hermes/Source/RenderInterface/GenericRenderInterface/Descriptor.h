@@ -11,7 +11,10 @@ namespace Hermes
 	namespace RenderInterface
 	{
 		enum class ShaderType;
+		enum class ImageLayout;
 		class Buffer;
+		class Sampler;
+		class Image;
 
 		class HERMES_API DescriptorSet
 		{
@@ -25,6 +28,17 @@ namespace Hermes
 			 * For DescriptorType::UniformBuffer
 			 */
 			virtual void UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex, const Buffer& Buffer, uint32 Offset, uint32 Size) = 0;
+
+			/*
+			 * For DescriptorType::Sampler
+			 */
+			virtual void UpdateWithSampler(uint32 BindingIndex, uint32 ArrayIndex, const Sampler& Sampler) = 0;
+
+			// TODO : this should take image view rather than plain image
+			/*
+			 * For DescriptorType::SampledImage
+			 */
+			virtual void UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex, const Image& Image, ImageLayout LayoutAtTimeOfAccess) = 0;
 		};
 
 		// TODO : other types

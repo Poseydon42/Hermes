@@ -39,13 +39,13 @@ public:
 		Device = PhysicalDevice->CreateDevice();
 		Swapchain = Device->CreateSwapchain({ 1280, 720 }, 3);
 
-		Hermes::Vec3 VertexData[] =
+		float VertexData[] =
 		{
-			{ -0.5f, -0.5f, 0.0f },
-			{  0.5f, -0.5f, 0.0f },
-			{  0.5f,  0.5f, 0.0f },
-			{  0.0f,  0.8f, 0.0f},
-			{ -0.5f,  0.5f, 0.0f },
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+			 0.0f,  0.8f, 0.0f, 0.5f, 0.8f,
+			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f
 		};
 
 		// Square is drawn indexed, triangle - only with vertex buffer(vertices 2, 3, 4)
@@ -62,9 +62,9 @@ public:
 
 		Hermes::Vec2ui ImageSize;
 		auto CheckerImage = LoadTGA(L"checker.tga", ImageSize);
-		auto Image = Device->CreateImage(
+		Texture = Device->CreateImage(
 			ImageSize, Hermes::RenderInterface::ImageUsageType::CopyDestination | Hermes::RenderInterface::ImageUsageType::Sampled,
-			Hermes::RenderInterface::DataFormat::R8G8B8A8SRGB, 1, Hermes::RenderInterface::ImageLayout::Undefined);
+			Hermes::RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized, 1, Hermes::RenderInterface::ImageLayout::Undefined);
 		Hermes::uint32 ImageSizeInBytes = ImageSize.X * ImageSize.Y * 4;
 
 		Hermes::uint32 StagingBufferSize = Hermes::Math::Max(
@@ -145,17 +145,17 @@ public:
 		ImageBarrier.NewLayout = Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal;
 		ImageBarrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::TransferWrite;
 		ImageBarrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::MemoryRead;
-		TransferCommandBuffer->InsertImageMemoryBarrier(*Image, ImageBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::Transfer);
+		TransferCommandBuffer->InsertImageMemoryBarrier(*Texture, ImageBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::Transfer);
 		Hermes::RenderInterface::BufferToImageCopyRegion CopyRegion = {};
 		CopyRegion.BufferOffset = 0;
-		TransferCommandBuffer->CopyBufferToImage(*StagingBuffer, *Image, Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal, { CopyRegion });
+		TransferCommandBuffer->CopyBufferToImage(*StagingBuffer, *Texture, Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal, { CopyRegion });
 		ImageBarrier.OldLayout = Hermes::RenderInterface::ImageLayout::TransferDestinationOptimal;
 		ImageBarrier.NewLayout = Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
 		ImageBarrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::TransferWrite;
 		ImageBarrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::MemoryRead;
 		ImageBarrier.OldOwnerQueue = TransferQueue.get();
 		ImageBarrier.NewOwnerQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Render).get();
-		TransferCommandBuffer->InsertImageMemoryBarrier(*Image, ImageBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::Transfer);
+		TransferCommandBuffer->InsertImageMemoryBarrier(*Texture, ImageBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::Transfer);
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle();
@@ -171,7 +171,7 @@ public:
 		RenderCommandBuffer->InsertBufferMemoryBarrier(*IndexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::VertexInput);
 		BufferBarrier.NumBytes = UniformBuffer->GetSize();
 		RenderCommandBuffer->InsertBufferMemoryBarrier(*UniformBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::VertexShader);
-		RenderCommandBuffer->InsertImageMemoryBarrier(*Image, ImageBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::FragmentShader);
+		RenderCommandBuffer->InsertImageMemoryBarrier(*Texture, ImageBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::FragmentShader);
 		RenderCommandBuffer->EndRecording();
 		RenderQueue->SubmitCommandBuffer(RenderCommandBuffer, {});
 		Device->WaitForIdle();
@@ -191,12 +191,26 @@ public:
 		Description.ColorAttachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
 		RenderPass = Device->CreateRenderPass(Description);
 
-		Hermes::RenderInterface::DescriptorBinding Binding = {};
-		Binding.Index = 0;
-		Binding.DescriptorCount = 1;
-		Binding.Shader = Hermes::RenderInterface::ShaderType::FragmentShader;
-		auto DescriptorSetLayout = Device->CreateDescriptorSetLayout({ Binding });
-		auto DescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
+		Hermes::RenderInterface::DescriptorBinding UBOBinding = {};
+		UBOBinding.Index = 0;
+		UBOBinding.DescriptorCount = 1;
+		UBOBinding.Shader = Hermes::RenderInterface::ShaderType::FragmentShader;
+		UBOBinding.Type = Hermes::RenderInterface::DescriptorType::UniformBuffer;
+		auto UBODescriptorSetLayout = Device->CreateDescriptorSetLayout({ UBOBinding });
+		auto UBODescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
+
+		Hermes::RenderInterface::DescriptorBinding SamplerBinding = {};
+		SamplerBinding.Index = 0;
+		SamplerBinding.DescriptorCount = 1;
+		SamplerBinding.Shader = Hermes::RenderInterface::ShaderType::FragmentShader;
+		SamplerBinding.Type = Hermes::RenderInterface::DescriptorType::Sampler;
+		Hermes::RenderInterface::DescriptorBinding TextureBinding = {};
+		TextureBinding.Index = 1;
+		TextureBinding.DescriptorCount = 1;
+		TextureBinding.Shader = Hermes::RenderInterface::ShaderType::FragmentShader;
+		TextureBinding.Type = Hermes::RenderInterface::DescriptorType::SampledImage;
+		auto TextureDescriptorSetLayout = Device->CreateDescriptorSetLayout({ SamplerBinding, TextureBinding });
+		auto TextureDescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
 		
 		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
 		PipelineDesc.ShaderStages =
@@ -206,17 +220,23 @@ public:
 			};
 		PipelineDesc.DescriptorLayouts =
 			{
-				DescriptorSetLayout
+				UBODescriptorSetLayout,
+				TextureDescriptorSetLayout
 			};
 		PipelineDesc.VertexInput.VertexBindings.push_back({});
 		PipelineDesc.VertexInput.VertexBindings[0].Index = 0;
-		PipelineDesc.VertexInput.VertexBindings[0].Stride = sizeof(Hermes::Vec3);
+		PipelineDesc.VertexInput.VertexBindings[0].Stride = sizeof(float) * 5;
 		PipelineDesc.VertexInput.VertexBindings[0].IsPerInstance = false;
 		PipelineDesc.VertexInput.VertexAttributes.push_back({});
 		PipelineDesc.VertexInput.VertexAttributes[0].BindingIndex = 0;
 		PipelineDesc.VertexInput.VertexAttributes[0].Format = Hermes::RenderInterface::DataFormat::R32G32B32SignedFloat;
 		PipelineDesc.VertexInput.VertexAttributes[0].Offset = 0;
 		PipelineDesc.VertexInput.VertexAttributes[0].Location = 0;
+		PipelineDesc.VertexInput.VertexAttributes.push_back({});
+		PipelineDesc.VertexInput.VertexAttributes[1].BindingIndex = 0;
+		PipelineDesc.VertexInput.VertexAttributes[1].Format = Hermes::RenderInterface::DataFormat::R32G32SignedFloat;
+		PipelineDesc.VertexInput.VertexAttributes[1].Offset = 3 * sizeof(float);
+		PipelineDesc.VertexInput.VertexAttributes[1].Location = 1;
 		PipelineDesc.InputAssembler.Topology = Hermes::RenderInterface::TopologyType::TriangleList;
 		PipelineDesc.Viewport.Origin = { 0, 0 };
 		PipelineDesc.Viewport.Dimensions = Swapchain->GetSize();
@@ -228,26 +248,30 @@ public:
 
 		Pipeline = Device->CreatePipeline(RenderPass, PipelineDesc);
 
-		RenderTargets.reserve(Swapchain->GetImageCount());
-		DescriptorSets.reserve(Swapchain->GetImageCount());
-		for (Hermes::uint32 Index = 0; Index < Swapchain->GetImageCount(); Index++)
-		{
-			RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index)}, Swapchain->GetSize()));
-			DescriptorSets.push_back(DescriptorSetPool->CreateDescriptorSet(DescriptorSetLayout));
-			UBODescriptorSets[Index]->UpdateWithBuffer(0, 0, *UniformBuffer, 0, (Hermes::uint32)UniformBuffer->GetSize());
-		}
-
-		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
-		GraphicsFence = Device->CreateFence(false);
-		PresentationFence = Device->CreateFence(false);
-
 		Hermes::RenderInterface::SamplerDescription SamplerDesc = {};
 		SamplerDesc.CoordinateSystem = Hermes::RenderInterface::CoordinateSystem::Normalized;
 		SamplerDesc.AddressingModeU = Hermes::RenderInterface::AddressingMode::Repeat;
 		SamplerDesc.AddressingModeV = Hermes::RenderInterface::AddressingMode::Repeat;
 		SamplerDesc.MinificationFilteringMode = Hermes::RenderInterface::FilteringMode::Linear;
 		SamplerDesc.MagnificationFilteringMode = Hermes::RenderInterface::FilteringMode::Linear;
-		auto Sampler = Device->CreateSampler(SamplerDesc);
+		TextureSampler = Device->CreateSampler(SamplerDesc);
+
+		RenderTargets.reserve(Swapchain->GetImageCount());
+		UBODescriptorSets.reserve(Swapchain->GetImageCount());
+		TextureDescriptorSets.reserve(Swapchain->GetImageCount());
+		for (Hermes::uint32 Index = 0; Index < Swapchain->GetImageCount(); Index++)
+		{
+			RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index)}, Swapchain->GetSize()));
+			UBODescriptorSets.push_back(UBODescriptorSetPool->CreateDescriptorSet(UBODescriptorSetLayout));
+			TextureDescriptorSets.push_back(TextureDescriptorSetPool->CreateDescriptorSet(TextureDescriptorSetLayout));
+			UBODescriptorSets[Index]->UpdateWithBuffer(0, 0, *UniformBuffer, 0, (Hermes::uint32)UniformBuffer->GetSize());
+			TextureDescriptorSets[Index]->UpdateWithSampler(0, 0, *TextureSampler);
+			TextureDescriptorSets[Index]->UpdateWithImage(1, 0, *Texture, Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		}
+
+		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
+		GraphicsFence = Device->CreateFence(false);
+		PresentationFence = Device->CreateFence(false);
 		
 		return true;
 	}
@@ -264,7 +288,8 @@ public:
 		GraphicsCommandBuffer->BindPipeline(Pipeline);
 		GraphicsCommandBuffer->BindVertexBuffer(*VertexBuffer);
 		GraphicsCommandBuffer->BindIndexBuffer(*IndexBuffer, Hermes::RenderInterface::IndexSize::Uint32);
-		GraphicsCommandBuffer->BindDescriptorSet(*DescriptorSets[ImageIndex], *Pipeline, 0);
+		GraphicsCommandBuffer->BindDescriptorSet(*UBODescriptorSets[ImageIndex], *Pipeline, 0);
+		GraphicsCommandBuffer->BindDescriptorSet(*TextureDescriptorSets[ImageIndex], *Pipeline, 1);
 		GraphicsCommandBuffer->DrawIndexed(6, 1, 0, 0, 0);
 		GraphicsCommandBuffer->Draw(3, 1, 2, 0);
 		GraphicsCommandBuffer->EndRenderPass();
@@ -383,9 +408,11 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::Pipeline> Pipeline;
 	std::shared_ptr<Hermes::RenderInterface::Buffer> VertexBuffer, IndexBuffer, UniformBuffer;
 	std::vector<std::shared_ptr<Hermes::RenderInterface::RenderTarget>> RenderTargets;
-	std::vector<std::shared_ptr<Hermes::RenderInterface::DescriptorSet>> DescriptorSets;
+	std::vector<std::shared_ptr<Hermes::RenderInterface::DescriptorSet>> UBODescriptorSets, TextureDescriptorSets;
 	std::shared_ptr<Hermes::RenderInterface::CommandBuffer> GraphicsCommandBuffer;
 	std::shared_ptr<Hermes::RenderInterface::Fence> GraphicsFence, PresentationFence;
+	std::shared_ptr<Hermes::RenderInterface::Sampler> TextureSampler;
+	std::shared_ptr<Hermes::RenderInterface::Image> Texture;
 };
 
 extern "C" _declspec(dllexport) Hermes::IApplication* CreateApplicationInstance()

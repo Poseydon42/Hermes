@@ -3,6 +3,8 @@
 #include "RenderInterface/Vulkan/VulkanBuffer.h"
 #include "RenderInterface/Vulkan/VulkanCommonTypes.h"
 #include "RenderInterface/Vulkan/VulkanDevice.h"
+#include "RenderInterface/Vulkan/VulkanImage.h"
+#include "RenderInterface/Vulkan/VulkanSampler.h"
 
 namespace Hermes
 {
@@ -143,14 +145,15 @@ namespace Hermes
 
 			return *this;
 		}
-
+		
 		void VulkanDescriptorSet::UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size)
 		{
 			VkWriteDescriptorSet Write = {};
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			Write.descriptorCount = 1;
 			Write.dstSet = Set;
-			Write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // TODO
+			// TODO : we currently assume it's uniform buffer because we don't implement other types, but sometime in future we will need to change this
+			Write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorBufferInfo BufferInfo = {};
@@ -158,6 +161,39 @@ namespace Hermes
 			BufferInfo.offset = Offset;
 			BufferInfo.range = Size;
 			Write.pBufferInfo = &BufferInfo;
+
+			vkUpdateDescriptorSets(Device->GetDevice(), 1, &Write, 0, nullptr);
+		}
+
+		void VulkanDescriptorSet::UpdateWithSampler(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Sampler& Sampler)
+		{
+			VkWriteDescriptorSet Write = {};
+			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			Write.descriptorCount = 1;
+			Write.dstSet = Set;
+			Write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER; // TODO : see above
+			Write.dstBinding = BindingIndex;
+			Write.dstArrayElement = ArrayIndex;
+			VkDescriptorImageInfo ImageInfo = {};
+			ImageInfo.sampler = static_cast<const VulkanSampler&>(Sampler).GetSampler();
+			Write.pImageInfo = &ImageInfo;
+
+			vkUpdateDescriptorSets(Device->GetDevice(), 1, &Write, 0, nullptr);
+		}
+
+		void VulkanDescriptorSet::UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Image& Image, RenderInterface::ImageLayout LayoutAtTimeOfAccess)
+		{
+			VkWriteDescriptorSet Write = {};
+			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			Write.descriptorCount = 1;
+			Write.dstSet = Set;
+			Write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE; // TODO : see above
+			Write.dstBinding = BindingIndex;
+			Write.dstArrayElement = ArrayIndex;
+			VkDescriptorImageInfo ImageInfo = {};
+			ImageInfo.imageView = static_cast<const VulkanImage&>(Image).GetDefaultView();
+			ImageInfo.imageLayout = ImageLayoutToVkImageLayout(LayoutAtTimeOfAccess);
+			Write.pImageInfo = &ImageInfo;
 
 			vkUpdateDescriptorSets(Device->GetDevice(), 1, &Write, 0, nullptr);
 		}

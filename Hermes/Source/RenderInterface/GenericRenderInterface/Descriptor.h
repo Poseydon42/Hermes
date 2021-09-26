@@ -21,7 +21,10 @@ namespace Hermes
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(DescriptorSet)
 
 		public:
-			virtual void Update(uint32 BindingIndex, uint32 ArrayIndex, const Buffer& Buffer, uint32 Offset, uint32 Size) = 0;
+			/**
+			 * For DescriptorType::UniformBuffer
+			 */
+			virtual void UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex, const Buffer& Buffer, uint32 Offset, uint32 Size) = 0;
 		};
 
 		struct DescriptorBinding

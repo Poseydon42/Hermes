@@ -128,7 +128,7 @@ namespace Hermes
 			return *this;
 		}
 
-		void VulkanDescriptorSet::Update(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size)
+		void VulkanDescriptorSet::UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size)
 		{
 			VkWriteDescriptorSet Write = {};
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

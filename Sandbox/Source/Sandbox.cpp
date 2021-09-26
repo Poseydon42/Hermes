@@ -234,7 +234,7 @@ public:
 		{
 			RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index)}, Swapchain->GetSize()));
 			DescriptorSets.push_back(DescriptorSetPool->CreateDescriptorSet(DescriptorSetLayout));
-			DescriptorSets[Index]->Update(0, 0, *UniformBuffer, 0, (Hermes::uint32)UniformBuffer->GetSize());
+			UBODescriptorSets[Index]->UpdateWithBuffer(0, 0, *UniformBuffer, 0, (Hermes::uint32)UniformBuffer->GetSize());
 		}
 
 		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);

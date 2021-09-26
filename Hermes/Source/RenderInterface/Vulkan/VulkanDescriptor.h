@@ -65,7 +65,7 @@ namespace Hermes
 			VulkanDescriptorSet(VulkanDescriptorSet&& Other);
 			VulkanDescriptorSet& operator=(VulkanDescriptorSet&& Other);
 
-			virtual void Update(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size) override;
+			void UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size) override;
 
 			VkDescriptorSet GetDescriptorSet() const { return Set; }
 			

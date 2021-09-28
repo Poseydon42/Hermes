@@ -33,11 +33,11 @@ public:
 	{
 		ApplicationWindow = Hermes::GGameLoop->GetWindow();
 		
-		auto RenderInstance = Hermes::RenderInterface::Instance::CreateRenderInterfaceInstance(*ApplicationWindow);
+		auto RenderInstance = Hermes::RenderInterface::Instance::CreateRenderInterfaceInstance(ApplicationWindow);
 		auto Devices = RenderInstance->EnumerateAvailableDevices();
 		auto PhysicalDevice = RenderInstance->GetPhysicalDevice(Devices[0].InternalIndex);
 		Device = PhysicalDevice->CreateDevice();
-		Swapchain = Device->CreateSwapchain({ 1280, 720 }, 3);
+		Swapchain = Device->CreateSwapchain(3);
 
 		float VertexData[] =
 		{
@@ -278,7 +278,8 @@ public:
 
 	void Run(float) override
 	{
-		auto NewIndex = Swapchain->AcquireImage(UINT64_MAX, *PresentationFence);
+		bool SwapchainRecreated = false;
+		auto NewIndex = Swapchain->AcquireImage(UINT64_MAX, *PresentationFence, SwapchainRecreated);
 		PresentationFence->Wait(UINT64_MAX);
 		HERMES_ASSERT(NewIndex.has_value());
 		Hermes::uint32 ImageIndex = NewIndex.value();
@@ -298,7 +299,7 @@ public:
 		GraphicsFence->Wait(UINT64_MAX);
 
 		GraphicsFence->Reset();
-		Swapchain->Present(ImageIndex);
+		Swapchain->Present(ImageIndex, SwapchainRecreated);
 		Device->WaitForIdle(); // TODO : fix it!
 		PresentationFence->Reset();
 	}

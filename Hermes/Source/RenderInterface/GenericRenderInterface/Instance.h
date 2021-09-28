@@ -39,7 +39,7 @@ namespace Hermes
 			 */
 			virtual std::shared_ptr<PhysicalDevice> GetPhysicalDevice(DeviceIndex Index) = 0;
 
-			static std::shared_ptr<Instance> CreateRenderInterfaceInstance(const IPlatformWindow& Window);
+			static std::shared_ptr<Instance> CreateRenderInterfaceInstance(std::weak_ptr<const IPlatformWindow> Window);
 		};
 	}
 }

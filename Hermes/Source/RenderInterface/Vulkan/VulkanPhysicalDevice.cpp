@@ -40,7 +40,7 @@ namespace Hermes
 
 		std::shared_ptr<RenderInterface::Device> VulkanPhysicalDevice::CreateDevice()
 		{
-			return std::make_shared<VulkanDevice>(Device, Instance, Surface);
+			return std::make_shared<VulkanDevice>(Device, Instance, Surface, Window);
 		}
 
 		VkInstance VulkanPhysicalDevice::GetInstance() const
@@ -48,11 +48,12 @@ namespace Hermes
 			return Instance->GetInstance();
 		}
 
-		VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice InDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface)
+		VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice InDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow)
 			: Device(InDevice)
 			, Instance(std::move(InInstance))
 			, Surface(InSurface)
 			, Properties(GetPhysicalDeviceProperties(Device))
+			, Window(std::move(InWindow))
 		{
 		}
 	}

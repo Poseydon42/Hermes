@@ -44,7 +44,7 @@ namespace Hermes
 			ADD_DEFAULT_CONSTRUCTOR(Device)
 
 		public:
-			virtual std::shared_ptr<Swapchain> CreateSwapchain(Vec2i Size, uint32 NumFrames) = 0;
+			virtual std::shared_ptr<Swapchain> CreateSwapchain(uint32 NumFrames) = 0;
 
 			virtual std::shared_ptr<Queue> GetQueue(QueueType Type) = 0;
 

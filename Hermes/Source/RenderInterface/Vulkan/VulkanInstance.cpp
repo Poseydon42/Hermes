@@ -57,7 +57,8 @@ namespace Hermes
 			return VK_FALSE;
 		}
 
-		VulkanInstance::VulkanInstance(const IPlatformWindow& Window)
+		VulkanInstance::VulkanInstance(std::weak_ptr<const IPlatformWindow> InWindow)
+			: Window(InWindow)
 		{
 			VkApplicationInfo AppInfo = {};
 			AppInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -111,7 +112,8 @@ namespace Hermes
 				CreateDebugMessenger();
 			}
 
-			Surface = CreateSurface(Instance, Window);
+			if (!Window.expired())
+				Surface = CreateSurface(Instance, *Window.lock());
 		}
 
 		VulkanInstance::~VulkanInstance()
@@ -160,7 +162,7 @@ namespace Hermes
 
 		std::shared_ptr<RenderInterface::PhysicalDevice> VulkanInstance::GetPhysicalDevice(RenderInterface::DeviceIndex Index)
 		{
-			return std::make_shared<VulkanPhysicalDevice>(AvailableDevices[Index], shared_from_this(), Surface);
+			return std::make_shared<VulkanPhysicalDevice>(AvailableDevices[Index], shared_from_this(), Surface, Window);
 		}
 
 		void VulkanInstance::CreateDebugMessenger()

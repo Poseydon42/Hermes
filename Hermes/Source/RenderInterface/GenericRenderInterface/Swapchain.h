@@ -35,10 +35,11 @@ namespace Hermes
 			 * Returns index of next available image, if exists
 			 * @param Timeout Maximal time in nanoseconds that function would wait for image
 			 * @param Fence Fence to signal when image could be used by user side
+			 * @param SwapchainWasRecreated Will be set to true if swapchain was recreated due to its mismatch with window format and/or size
 			 */
-			virtual std::optional<uint32> AcquireImage(uint64 Timeout, const Fence& Fence) = 0;
+			virtual std::optional<uint32> AcquireImage(uint64 Timeout, const Fence& Fence, bool& SwapchainWasRecreated) = 0;
 
-			virtual void Present(uint32 ImageIndex) = 0;
+			virtual void Present(uint32 ImageIndex, bool& SwapchainWasRecreated) = 0;
 		};
 	}
 }

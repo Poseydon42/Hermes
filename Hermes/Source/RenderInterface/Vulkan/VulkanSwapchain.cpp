@@ -9,6 +9,7 @@
 #include "RenderInterface/Vulkan/VulkanFence.h"
 #include "RenderInterface/Vulkan/VulkanQueue.h"
 #include "Math/Math.h"
+#include "Platform/GenericPlatform/PlatformWindow.h"
 
 namespace Hermes
 {
@@ -47,11 +48,14 @@ namespace Hermes
 			}
 		}
 		
-		VulkanSwapchain::VulkanSwapchain(std::shared_ptr<VulkanDevice> InDevice, VkPhysicalDevice PhysicalDevice, VkSurfaceKHR Surface, Vec2i InSize, uint32 Frames)
+		VulkanSwapchain::VulkanSwapchain(std::shared_ptr<VulkanDevice> InDevice, VkPhysicalDevice PhysicalDevice, VkSurfaceKHR Surface, std::weak_ptr<const IPlatformWindow> InWindow, uint32 Frames)
 			: Device(std::move(InDevice))
+			, Window(std::move(InWindow))
 		{
-			HERMES_ASSERT(InSize.X > 0);
-			HERMES_ASSERT(InSize.Y > 0);
+			if (Window.expired())
+				return;
+			auto LockedWindow = Window.lock();
+			Size = LockedWindow->GetSize();
 			HERMES_ASSERT(Frames > 0);
 			
 			VkSurfaceCapabilitiesKHR Capabilities = {};
@@ -78,7 +82,7 @@ namespace Hermes
 			CreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 			CreateInfo.surface = Surface;
 			CreateInfo.presentMode = SelectPresentMode(PresentModes);
-			CreateInfo.imageExtent = SelectExtent(Capabilities, InSize.X, InSize.Y);
+			CreateInfo.imageExtent = SelectExtent(Capabilities, Size.X, Size.Y);
 			if (Capabilities.maxImageCount == 0)
 				CreateInfo.minImageCount = Math::Min(Capabilities.minImageCount, Frames);
 			else
@@ -128,20 +132,25 @@ namespace Hermes
 			return *this;
 		}
 
-		std::optional<uint32> VulkanSwapchain::AcquireImage(uint64 Timeout, const RenderInterface::Fence& Fence)
+		std::optional<uint32> VulkanSwapchain::AcquireImage(uint64 Timeout, const RenderInterface::Fence& Fence, bool& SwapchainWasRecreated)
 		{
 			uint32 Result;
 			VkFence TargetFence = reinterpret_cast<const VulkanFence&>(Fence).GetFence();
 			VkResult Error = vkAcquireNextImageKHR(Device->GetDevice(), Swapchain, Timeout, VK_NULL_HANDLE, TargetFence, &Result);
-			if (Error == VK_SUCCESS || Error == VK_SUBOPTIMAL_KHR) // TODO : recreate swapchain when it is suboptional
+			if (Error == VK_SUCCESS)
 				return Result;
+			if (Error == VK_SUBOPTIMAL_KHR || Error == VK_ERROR_OUT_OF_DATE_KHR)
+			{
+				RecreateSwapchain();
+				SwapchainWasRecreated = true;
+			}
 			if (Error == VK_TIMEOUT || Error == VK_NOT_READY)
 				return {};
 			VK_CHECK_RESULT(Error); // This will trigger assert
 			return {};
 		}
 
-		void VulkanSwapchain::Present(uint32 ImageIndex)
+		void VulkanSwapchain::Present(uint32 ImageIndex, bool& SwapchainWasRecreated)
 		{
 			VkPresentInfoKHR Info = {};
 			VkResult Result;
@@ -152,6 +161,16 @@ namespace Hermes
 			Info.swapchainCount = 1;
 			Info.waitSemaphoreCount = 0;
 			vkQueuePresentKHR(std::reinterpret_pointer_cast<VulkanQueue>(Device->GetQueue(RenderInterface::QueueType::Presentation))->GetQueue(), &Info);
+			if (Info.pResults[0] == VK_SUBOPTIMAL_KHR || Info.pResults[0] == VK_ERROR_OUT_OF_DATE_KHR)
+			{
+				RecreateSwapchain();
+				SwapchainWasRecreated = true;
+			}
+		}
+
+		void VulkanSwapchain::RecreateSwapchain()
+		{
+
 		}
 	}
 }

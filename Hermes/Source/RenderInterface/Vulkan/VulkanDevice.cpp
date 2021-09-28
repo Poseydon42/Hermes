@@ -19,12 +19,13 @@ namespace Hermes
 	namespace Vulkan
 	{
 
-		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface)
+		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow)
 			: Device(VK_NULL_HANDLE)
 			, PhysicalDevice(InPhysicalDevice)
 			, Instance(std::move(InInstance))
 			, Surface(InSurface)
 			, Allocator(VK_NULL_HANDLE)
+			, Window(std::move(InWindow))
 			, RenderQueue(VK_NULL_HANDLE)
 			, TransferQueue(VK_NULL_HANDLE)
 			, PresentationQueue(VK_NULL_HANDLE)
@@ -143,28 +144,30 @@ namespace Hermes
 
 		VulkanDevice::VulkanDevice(VulkanDevice&& Other)
 		{
-			std::swap(Device, Other.Device);
-			std::swap(PhysicalDevice, Other.PhysicalDevice);
-			std::swap(Instance, Other.Instance);
-			std::swap(Surface, Other.Surface);
-			std::swap(PresentationQueue, Other.PresentationQueue);
-			std::swap(Allocator, Other.Allocator);
+			*this = std::move(Other);
 		}
 
 		VulkanDevice& VulkanDevice::operator=(VulkanDevice&& Other)
 		{
+			
 			std::swap(Device, Other.Device);
 			std::swap(PhysicalDevice, Other.PhysicalDevice);
 			std::swap(Instance, Other.Instance);
 			std::swap(Surface, Other.Surface);
+			std::swap(RenderQueue, Other.RenderQueue);
+			std::swap(TransferQueue, Other.TransferQueue);
 			std::swap(PresentationQueue, Other.PresentationQueue);
 			std::swap(Allocator, Other.Allocator);
+			std::swap(Window, Other.Window);
+			std::swap(RenderQueueIndex, Other.RenderQueueIndex);
+			std::swap(TransferQueueIndex, Other.TransferQueueIndex);
+
 			return *this;
 		}
 
-		std::shared_ptr<RenderInterface::Swapchain> VulkanDevice::CreateSwapchain(Vec2i Size, uint32 NumFrames)
+		std::shared_ptr<RenderInterface::Swapchain> VulkanDevice::CreateSwapchain(uint32 NumFrames)
 		{
-			return std::make_shared<VulkanSwapchain>(shared_from_this(), PhysicalDevice, Surface, Size, NumFrames);
+			return std::make_shared<VulkanSwapchain>(shared_from_this(), PhysicalDevice, Surface, Window, NumFrames);
 		}
 
 		std::shared_ptr<RenderInterface::Queue> VulkanDevice::GetQueue(RenderInterface::QueueType Type)

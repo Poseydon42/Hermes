@@ -7,6 +7,11 @@
 
 namespace Hermes
 {
+	class IPlatformWindow;
+}
+
+namespace Hermes
+{
 	namespace Vulkan
 	{
 		class VulkanInstance;
@@ -16,13 +21,13 @@ namespace Hermes
 		{
 			MAKE_NON_COPYABLE(VulkanDevice)
 		public:
-			VulkanDevice(VkPhysicalDevice InPhysicalDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface);
+			VulkanDevice(VkPhysicalDevice InPhysicalDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow);
 			
 			~VulkanDevice() override;
 			VulkanDevice(VulkanDevice&& Other);
 			VulkanDevice& operator=(VulkanDevice&& Other);
 
-			std::shared_ptr<RenderInterface::Swapchain> CreateSwapchain(Vec2i Size, uint32 NumFrames) override;
+			std::shared_ptr<RenderInterface::Swapchain> CreateSwapchain(uint32 NumFrames) override;
 
 			std::shared_ptr<RenderInterface::Queue> GetQueue(RenderInterface::QueueType Type) override;
 			
@@ -57,6 +62,7 @@ namespace Hermes
 			std::shared_ptr<VulkanInstance> Instance;
 			VkSurfaceKHR Surface;
 			VmaAllocator Allocator;
+			std::weak_ptr<const IPlatformWindow> Window;
 
 			int32 RenderQueueIndex = -1, TransferQueueIndex = -1;
 

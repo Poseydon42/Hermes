@@ -6,14 +6,14 @@ namespace Hermes
 {
 	bool WindowsWindow::ClassRegistered = false;
 
-	static Vec2i ClientRectToWindowSize(Vec2i ClientAreaSize, DWORD WindowStyle, DWORD ExStyle)
+	static Vec2ui ClientRectToWindowSize(Vec2ui ClientAreaSize, DWORD WindowStyle, DWORD ExStyle)
 	{
-		Vec2i Result = ClientAreaSize;
+		Vec2ui Result = ClientAreaSize;
 		RECT WindowRect;
 		WindowRect.top = 0;
-		WindowRect.bottom = ClientAreaSize.Y;
+		WindowRect.bottom = static_cast<LONG>(ClientAreaSize.Y);
 		WindowRect.left = 0;
-		WindowRect.right = ClientAreaSize.X;
+		WindowRect.right = static_cast<LONG>(ClientAreaSize.X);
 		if (AdjustWindowRectEx(&WindowRect, WindowStyle, false, ExStyle))
 		{
 			Result.X = WindowRect.right - WindowRect.left;
@@ -22,7 +22,7 @@ namespace Hermes
 		return Result;
 	}
 	
-	WindowsWindow::WindowsWindow(const String& Name, Vec2i Size) : IPlatformWindow()
+	WindowsWindow::WindowsWindow(const String& Name, Vec2ui Size) : IPlatformWindow()
 	{
 		HINSTANCE AppInstance = GetModuleHandleW(NULL);
 		if (!ClassRegistered)
@@ -44,7 +44,7 @@ namespace Hermes
 		MessagePump = std::make_shared<EventQueue>();
 
 		
-		Vec2i WindowSize = ClientRectToWindowSize(Size, WindowStyle, ExStyle);
+		Vec2ui WindowSize = ClientRectToWindowSize(Size, WindowStyle, ExStyle);
 		WindowHandle = CreateWindowExW(
 			ExStyle, ClassName, Name.c_str(), WindowStyle,
 			CW_USEDEFAULT, CW_USEDEFAULT, WindowSize.X, WindowSize.Y,
@@ -124,18 +124,18 @@ namespace Hermes
 		return ShowWindow(WindowHandle, (Visible ? SW_SHOW : SW_HIDE));
 	}
 
-	bool WindowsWindow::Resize(Vec2i NewSize)
+	bool WindowsWindow::Resize(Vec2ui NewSize)
 	{
-		Vec2i WindowSize = ClientRectToWindowSize(NewSize, WindowStyle, ExStyle);
+		Vec2ui WindowSize = ClientRectToWindowSize(NewSize, WindowStyle, ExStyle);
 		return SetWindowPos(WindowHandle, HWND_NOTOPMOST, 0, 0, WindowSize.X, WindowSize.Y, SWP_NOMOVE | SWP_NOZORDER);
 	}
 
-	Vec2i WindowsWindow::GetSize() const
+	Vec2ui WindowsWindow::GetSize() const
 	{
-		Vec2i Result(0);
+		Vec2ui Result(0);
 		RECT WindowSize;
 		if (GetWindowRect(WindowHandle, &WindowSize))
-			Result = Vec2i(WindowSize.right - WindowSize.left, WindowSize.bottom - WindowSize.top);
+			Result = Vec2ui(WindowSize.right - WindowSize.left, WindowSize.bottom - WindowSize.top);
 		return Result;
 	}
 
@@ -207,7 +207,7 @@ namespace Hermes
 		return Instance->MessageHandler(hwnd, uMsg, wParam, lParam);
 	}
 
-	std::shared_ptr<IPlatformWindow> IPlatformWindow::CreatePlatformWindow(const String& Name, Vec2i Size)
+	std::shared_ptr<IPlatformWindow> IPlatformWindow::CreatePlatformWindow(const String& Name, Vec2ui Size)
 	{
 		return std::make_shared<WindowsWindow>(Name, Size);
 	}

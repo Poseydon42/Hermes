@@ -70,12 +70,12 @@ namespace Hermes
 		 * Sets new size of client area of a window
 		 * @return True if operation succeeded
 		 */
-		virtual bool Resize(Vec2i NewSize) = 0;
+		virtual bool Resize(Vec2ui NewSize) = 0;
 
 		/**
 		 * Returns current size of a window
 		 */
-		virtual Vec2i GetSize() const = 0;
+		virtual Vec2ui GetSize() const = 0;
 
 		/**
 		 * True if underlying platform handle is valid and can be used
@@ -97,6 +97,6 @@ namespace Hermes
 		 */
 		virtual void* GetNativeHandle() const = 0;
 
-		static std::shared_ptr<IPlatformWindow> CreatePlatformWindow(const String& Name, Vec2i Size);
+		static std::shared_ptr<IPlatformWindow> CreatePlatformWindow(const String& Name, Vec2ui Size);
 	};
 }

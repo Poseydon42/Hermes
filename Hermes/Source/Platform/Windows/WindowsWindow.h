@@ -12,10 +12,11 @@ namespace Hermes
 {
 	class HERMES_API WindowsWindow : public IPlatformWindow
 	{
+		MAKE_NON_COPYABLE(WindowsWindow)
 	public:
-		WindowsWindow(const String& Name, Vec2i Size);
+		WindowsWindow(const String& Name, Vec2ui Size);
 		
-		~WindowsWindow();
+		~WindowsWindow() override;
 		
 		WindowsWindow(WindowsWindow&& Other);
 		
@@ -29,9 +30,9 @@ namespace Hermes
 		
 		bool UpdateVisibility(bool Visible) override;
 		
-		bool Resize(Vec2i NewSize) override;
+		bool Resize(Vec2ui NewSize) override;
 		
-		Vec2i GetSize() const override;
+		Vec2ui GetSize() const override;
 		
 		bool IsValid() const override;
 

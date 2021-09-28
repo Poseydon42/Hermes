@@ -67,10 +67,7 @@ namespace Hermes
 
 	WindowsWindow::WindowsWindow(WindowsWindow&& Other) : IPlatformWindow(std::move(Other))
 	{
-		std::swap(PrevPlacement, Other.PrevPlacement);
-		std::swap(MessagePump, Other.MessagePump);
-		std::swap(WindowHandle, Other.WindowHandle);
-		std::swap(CurrentName, Other.CurrentName);
+		*this = std::move(Other);
 	}
 
 	WindowsWindow& WindowsWindow::operator=(WindowsWindow&& Other)
@@ -79,6 +76,7 @@ namespace Hermes
 		std::swap(MessagePump, Other.MessagePump);
 		std::swap(WindowHandle, Other.WindowHandle);
 		std::swap(CurrentName, Other.CurrentName);
+		std::swap(LastKnownSize, Other.LastKnownSize);
 		return *this;
 	}
 
@@ -132,11 +130,7 @@ namespace Hermes
 
 	Vec2ui WindowsWindow::GetSize() const
 	{
-		Vec2ui Result(0);
-		RECT WindowSize;
-		if (GetWindowRect(WindowHandle, &WindowSize))
-			Result = Vec2ui(WindowSize.right - WindowSize.left, WindowSize.bottom - WindowSize.top);
-		return Result;
+		return LastKnownSize;
 	}
 
 	bool WindowsWindow::IsValid() const
@@ -173,6 +167,15 @@ namespace Hermes
 		case WM_DESTROY:
 			MessagePump->PushEvent(WindowCloseEvent(GetName()));
 			break;
+		case WM_SIZE:
+		{
+			if (WParam != SIZE_RESTORED)
+				break;
+			WORD NewWidth = LParam & 0xFFFF;
+			WORD NewHeight = (LParam >> 16) & 0xFFFF;
+			LastKnownSize = { NewWidth, NewHeight };
+			break;
+		}
 		// WM_KEYDOWN and WM_PAINT handling is temporary to check whether fullscreen works properly
 		// TODO : remove this debug stuff when it's no longer needed
 		case WM_KEYDOWN:

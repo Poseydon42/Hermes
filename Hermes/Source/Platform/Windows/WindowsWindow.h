@@ -51,6 +51,8 @@ namespace Hermes
 
 		WINDOWPLACEMENT PrevPlacement;
 
+		Vec2ui LastKnownSize;
+
 		static bool ClassRegistered;
 
 		static constexpr const wchar_t* ClassName = L"HermesWindowClass";

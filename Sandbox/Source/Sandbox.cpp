@@ -177,8 +177,8 @@ public:
 		Device->WaitForIdle();
 		
 
-		auto VertexShader = Device->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", Hermes::RenderInterface::ShaderType::VertexShader);
-		auto FragmentShader = Device->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", Hermes::RenderInterface::ShaderType::FragmentShader);
+		VertexShader = Device->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", Hermes::RenderInterface::ShaderType::VertexShader);
+		FragmentShader = Device->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", Hermes::RenderInterface::ShaderType::FragmentShader);
 
 		Hermes::RenderInterface::RenderPassDescription Description = {};
 		Description.ColorAttachments.push_back({});
@@ -196,7 +196,7 @@ public:
 		UBOBinding.DescriptorCount = 1;
 		UBOBinding.Shader = Hermes::RenderInterface::ShaderType::FragmentShader;
 		UBOBinding.Type = Hermes::RenderInterface::DescriptorType::UniformBuffer;
-		auto UBODescriptorSetLayout = Device->CreateDescriptorSetLayout({ UBOBinding });
+		UBODescriptorSetLayout = Device->CreateDescriptorSetLayout({ UBOBinding });
 		auto UBODescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
 
 		Hermes::RenderInterface::DescriptorBinding SamplerBinding = {};
@@ -209,7 +209,7 @@ public:
 		TextureBinding.DescriptorCount = 1;
 		TextureBinding.Shader = Hermes::RenderInterface::ShaderType::FragmentShader;
 		TextureBinding.Type = Hermes::RenderInterface::DescriptorType::SampledImage;
-		auto TextureDescriptorSetLayout = Device->CreateDescriptorSetLayout({ SamplerBinding, TextureBinding });
+		TextureDescriptorSetLayout = Device->CreateDescriptorSetLayout({ SamplerBinding, TextureBinding });
 		auto TextureDescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
 		
 		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
@@ -278,8 +278,75 @@ public:
 
 	void Run(float) override
 	{
-		bool SwapchainRecreated = false;
+		if (SwapchainRecreated)
+		{
+			RenderTargets.clear();
+
+			Hermes::RenderInterface::RenderPassDescription Description = {};
+			Description.ColorAttachments.push_back({});
+			Description.ColorAttachments[0].LayoutAtStart = Hermes::RenderInterface::ImageLayout::ColorAttachmentOptimal;
+			Description.ColorAttachments[0].LayoutAtEnd = Hermes::RenderInterface::ImageLayout::ReadyForPresentation;
+			Description.ColorAttachments[0].Format = Swapchain->GetImageFormat();
+			Description.ColorAttachments[0].LoadOp = Hermes::RenderInterface::AttachmentLoadOp::Clear;
+			Description.ColorAttachments[0].StoreOp = Hermes::RenderInterface::AttachmentStoreOp::Store;
+			Description.ColorAttachments[0].StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
+			Description.ColorAttachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
+			RenderPass = Device->CreateRenderPass(Description);
+
+			Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
+			PipelineDesc.ShaderStages =
+				{
+					VertexShader,
+					FragmentShader
+				};
+			PipelineDesc.DescriptorLayouts =
+				{
+					UBODescriptorSetLayout,
+					TextureDescriptorSetLayout
+				};
+			PipelineDesc.VertexInput.VertexBindings.push_back({});
+			PipelineDesc.VertexInput.VertexBindings[0].Index = 0;
+			PipelineDesc.VertexInput.VertexBindings[0].Stride = sizeof(float) * 5;
+			PipelineDesc.VertexInput.VertexBindings[0].IsPerInstance = false;
+			PipelineDesc.VertexInput.VertexAttributes.push_back({});
+			PipelineDesc.VertexInput.VertexAttributes[0].BindingIndex = 0;
+			PipelineDesc.VertexInput.VertexAttributes[0].Format = Hermes::RenderInterface::DataFormat::R32G32B32SignedFloat;
+			PipelineDesc.VertexInput.VertexAttributes[0].Offset = 0;
+			PipelineDesc.VertexInput.VertexAttributes[0].Location = 0;
+			PipelineDesc.VertexInput.VertexAttributes.push_back({});
+			PipelineDesc.VertexInput.VertexAttributes[1].BindingIndex = 0;
+			PipelineDesc.VertexInput.VertexAttributes[1].Format = Hermes::RenderInterface::DataFormat::R32G32SignedFloat;
+			PipelineDesc.VertexInput.VertexAttributes[1].Offset = 3 * sizeof(float);
+			PipelineDesc.VertexInput.VertexAttributes[1].Location = 1;
+			PipelineDesc.InputAssembler.Topology = Hermes::RenderInterface::TopologyType::TriangleList;
+			PipelineDesc.Viewport.Origin = { 0, 0 };
+			PipelineDesc.Viewport.Dimensions = Swapchain->GetSize();
+			PipelineDesc.Rasterizer.Fill = Hermes::RenderInterface::FillMode::Fill;
+			PipelineDesc.Rasterizer.Direction = Hermes::RenderInterface::FaceDirection::Clockwise;
+			PipelineDesc.Rasterizer.Cull = Hermes::RenderInterface::CullMode::Back;
+			PipelineDesc.DepthStencilStage.IsDepthTestEnabled = false;
+			PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = false;
+
+			Pipeline = Device->CreatePipeline(RenderPass, PipelineDesc);
+
+			RenderTargets.reserve(Swapchain->GetImageCount());
+			UBODescriptorSets.reserve(Swapchain->GetImageCount());
+			TextureDescriptorSets.reserve(Swapchain->GetImageCount());
+			for (Hermes::uint32 Index = 0; Index < Swapchain->GetImageCount(); Index++)
+			{
+				RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index)}, Swapchain->GetSize()));
+				UBODescriptorSets[Index]->UpdateWithBuffer(0, 0, *UniformBuffer, 0, (Hermes::uint32)UniformBuffer->GetSize());
+				TextureDescriptorSets[Index]->UpdateWithSampler(0, 0, *TextureSampler);
+				TextureDescriptorSets[Index]->UpdateWithImage(1, 0, *Texture, Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+			}
+
+			Device->WaitForIdle();
+		}
+
+		SwapchainRecreated = false;
 		auto NewIndex = Swapchain->AcquireImage(UINT64_MAX, *PresentationFence, SwapchainRecreated);
+		if (SwapchainRecreated)
+			return; // No sense in rendering frame as it won't be able to be presented. Skip to next iteration
 		PresentationFence->Wait(UINT64_MAX);
 		HERMES_ASSERT(NewIndex.has_value());
 		Hermes::uint32 ImageIndex = NewIndex.value();
@@ -410,10 +477,14 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::Buffer> VertexBuffer, IndexBuffer, UniformBuffer;
 	std::vector<std::shared_ptr<Hermes::RenderInterface::RenderTarget>> RenderTargets;
 	std::vector<std::shared_ptr<Hermes::RenderInterface::DescriptorSet>> UBODescriptorSets, TextureDescriptorSets;
+	std::shared_ptr<Hermes::RenderInterface::DescriptorSetLayout> UBODescriptorSetLayout, TextureDescriptorSetLayout;
 	std::shared_ptr<Hermes::RenderInterface::CommandBuffer> GraphicsCommandBuffer;
 	std::shared_ptr<Hermes::RenderInterface::Fence> GraphicsFence, PresentationFence;
 	std::shared_ptr<Hermes::RenderInterface::Sampler> TextureSampler;
 	std::shared_ptr<Hermes::RenderInterface::Image> Texture;
+	std::shared_ptr<Hermes::RenderInterface::Shader> VertexShader, FragmentShader;
+
+	bool SwapchainRecreated;
 };
 
 extern "C" _declspec(dllexport) Hermes::IApplication* CreateApplicationInstance()

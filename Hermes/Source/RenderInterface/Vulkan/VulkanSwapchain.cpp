@@ -48,15 +48,90 @@ namespace Hermes
 			}
 		}
 		
-		VulkanSwapchain::VulkanSwapchain(std::shared_ptr<VulkanDevice> InDevice, VkPhysicalDevice PhysicalDevice, VkSurfaceKHR Surface, std::weak_ptr<const IPlatformWindow> InWindow, uint32 Frames)
-			: Device(std::move(InDevice))
+		VulkanSwapchain::VulkanSwapchain(std::shared_ptr<VulkanDevice> InDevice, VkPhysicalDevice InPhysicalDevice, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow, uint32 NumFrames)
+			: PhysicalDevice(InPhysicalDevice)
+			, Surface(InSurface)
+			, Swapchain(VK_NULL_HANDLE)
+			, SwapchainFormat(VK_FORMAT_UNDEFINED)
+			, Device(std::move(InDevice))
 			, Window(std::move(InWindow))
 		{
+			RecreateSwapchain(NumFrames);
+		}
+
+		VulkanSwapchain::~VulkanSwapchain()
+		{
+			vkDestroySwapchainKHR(Device->GetDevice(), Swapchain, GVulkanAllocator);
+		}
+
+		VulkanSwapchain::VulkanSwapchain(VulkanSwapchain&& Other)
+		{
+			*this = std::move(Other);
+		}
+
+		VulkanSwapchain& VulkanSwapchain::operator=(VulkanSwapchain&& Other)
+		{
+			std::swap(Other.Swapchain, Swapchain);
+			std::swap(Other.Device, Device);
+			std::swap(Other.Size, Size);
+			std::swap(Other.SwapchainFormat, SwapchainFormat);
+			std::swap(PhysicalDevice, Other.PhysicalDevice);
+			std::swap(Surface, Other.Surface);
+			std::swap(Window, Other.Window);
+			std::swap(Images, Other.Images);
+
+			return *this;
+		}
+
+		std::optional<uint32> VulkanSwapchain::AcquireImage(uint64 Timeout, const RenderInterface::Fence& Fence, bool& SwapchainWasRecreated)
+		{
+			uint32 Result;
+			VkFence TargetFence = reinterpret_cast<const VulkanFence&>(Fence).GetFence();
+			VkResult Error = vkAcquireNextImageKHR(Device->GetDevice(), Swapchain, Timeout, VK_NULL_HANDLE, TargetFence, &Result);
+			if (Error == VK_SUCCESS)
+				return Result;
+			if (Error == VK_SUBOPTIMAL_KHR || Error == VK_ERROR_OUT_OF_DATE_KHR)
+			{
+				RecreateSwapchain(static_cast<uint32>(Images.size()));
+				SwapchainWasRecreated = true;
+				return {};
+			}
+			if (Error == VK_TIMEOUT || Error == VK_NOT_READY)
+				return {};
+			VK_CHECK_RESULT(Error); // This will trigger assert
+			return {};
+		}
+
+		void VulkanSwapchain::Present(uint32 ImageIndex, bool& SwapchainWasRecreated)
+		{
+			VkPresentInfoKHR Info = {};
+			VkResult Result;
+			Info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+			Info.pResults = &Result;
+			Info.pImageIndices = &ImageIndex;
+			Info.pSwapchains = &Swapchain;
+			Info.swapchainCount = 1;
+			Info.waitSemaphoreCount = 0;
+			vkQueuePresentKHR(std::reinterpret_pointer_cast<VulkanQueue>(Device->GetQueue(RenderInterface::QueueType::Presentation))->GetQueue(), &Info);
+			if (Info.pResults[0] == VK_SUBOPTIMAL_KHR || Info.pResults[0] == VK_ERROR_OUT_OF_DATE_KHR)
+			{
+				RecreateSwapchain(static_cast<uint32>(Images.size()));
+				SwapchainWasRecreated = true;
+				return;
+			}
+			VK_CHECK_RESULT(Info.pResults[0]);
+		}
+
+		void VulkanSwapchain::RecreateSwapchain(uint32 NumFrames)
+		{
+			Images.clear();
+
 			if (Window.expired())
 				return;
 			auto LockedWindow = Window.lock();
-			Size = LockedWindow->GetSize();
-			HERMES_ASSERT(Frames > 0);
+			auto NewSize = LockedWindow->GetSize();
+			if (!(NewSize.X && NewSize.Y))
+				return;
 			
 			VkSurfaceCapabilitiesKHR Capabilities = {};
 			VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(PhysicalDevice, Surface, &Capabilities));
@@ -82,11 +157,11 @@ namespace Hermes
 			CreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 			CreateInfo.surface = Surface;
 			CreateInfo.presentMode = SelectPresentMode(PresentModes);
-			CreateInfo.imageExtent = SelectExtent(Capabilities, Size.X, Size.Y);
+			CreateInfo.imageExtent = SelectExtent(Capabilities, NewSize.X, NewSize.Y);
 			if (Capabilities.maxImageCount == 0)
-				CreateInfo.minImageCount = Math::Min(Capabilities.minImageCount, Frames);
+				CreateInfo.minImageCount = Math::Min(Capabilities.minImageCount, NumFrames);
 			else
-				CreateInfo.minImageCount = Math::Clamp(Capabilities.minImageCount, Capabilities.maxImageCount, Frames);
+				CreateInfo.minImageCount = Math::Clamp(Capabilities.minImageCount, Capabilities.maxImageCount, NumFrames);
 			auto SurfaceFormat = SelectSurfaceFormat(Formats);
 			CreateInfo.imageFormat = SurfaceFormat.format;
 			CreateInfo.imageColorSpace = SurfaceFormat.colorSpace;
@@ -96,7 +171,7 @@ namespace Hermes
 			CreateInfo.preTransform = Capabilities.currentTransform;
 			CreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 			CreateInfo.clipped = VK_TRUE;
-			CreateInfo.oldSwapchain = VK_NULL_HANDLE;
+			CreateInfo.oldSwapchain = Swapchain;
 
 			VK_CHECK_RESULT(vkCreateSwapchainKHR(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Swapchain));
 			SwapchainFormat = CreateInfo.imageFormat;
@@ -110,67 +185,6 @@ namespace Hermes
 			{
 				Images.push_back(std::make_shared<VulkanImage>(Device, ImageHandles[Index], SwapchainFormat, Size));
 			}
-		}
-
-		VulkanSwapchain::~VulkanSwapchain()
-		{
-			vkDestroySwapchainKHR(Device->GetDevice(), Swapchain, GVulkanAllocator);
-		}
-
-		VulkanSwapchain::VulkanSwapchain(VulkanSwapchain&& Other)
-		{
-			*this = std::move(Other);
-		}
-
-		VulkanSwapchain& VulkanSwapchain::operator=(VulkanSwapchain&& Other)
-		{
-			std::swap(Other.Swapchain, Swapchain);
-			std::swap(Other.Device, Device);
-			std::swap(Other.Size, Size);
-			std::swap(Other.SwapchainFormat, SwapchainFormat);
-
-			return *this;
-		}
-
-		std::optional<uint32> VulkanSwapchain::AcquireImage(uint64 Timeout, const RenderInterface::Fence& Fence, bool& SwapchainWasRecreated)
-		{
-			uint32 Result;
-			VkFence TargetFence = reinterpret_cast<const VulkanFence&>(Fence).GetFence();
-			VkResult Error = vkAcquireNextImageKHR(Device->GetDevice(), Swapchain, Timeout, VK_NULL_HANDLE, TargetFence, &Result);
-			if (Error == VK_SUCCESS)
-				return Result;
-			if (Error == VK_SUBOPTIMAL_KHR || Error == VK_ERROR_OUT_OF_DATE_KHR)
-			{
-				RecreateSwapchain();
-				SwapchainWasRecreated = true;
-			}
-			if (Error == VK_TIMEOUT || Error == VK_NOT_READY)
-				return {};
-			VK_CHECK_RESULT(Error); // This will trigger assert
-			return {};
-		}
-
-		void VulkanSwapchain::Present(uint32 ImageIndex, bool& SwapchainWasRecreated)
-		{
-			VkPresentInfoKHR Info = {};
-			VkResult Result;
-			Info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-			Info.pResults = &Result;
-			Info.pImageIndices = &ImageIndex;
-			Info.pSwapchains = &Swapchain;
-			Info.swapchainCount = 1;
-			Info.waitSemaphoreCount = 0;
-			vkQueuePresentKHR(std::reinterpret_pointer_cast<VulkanQueue>(Device->GetQueue(RenderInterface::QueueType::Presentation))->GetQueue(), &Info);
-			if (Info.pResults[0] == VK_SUBOPTIMAL_KHR || Info.pResults[0] == VK_ERROR_OUT_OF_DATE_KHR)
-			{
-				RecreateSwapchain();
-				SwapchainWasRecreated = true;
-			}
-		}
-
-		void VulkanSwapchain::RecreateSwapchain()
-		{
-
 		}
 	}
 }

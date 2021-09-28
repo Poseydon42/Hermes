@@ -9,18 +9,8 @@
 #include "Math/Vector2.h"
 #include "RenderInterface/Vulkan/VulkanCommonTypes.h"
 #include "RenderInterface/Vulkan/VulkanImage.h"
+#include "Platform/GenericPlatform/PlatformWindow.h"
 #include "Vulkan.h"
-
-namespace Hermes
-{
-	class IPlatformWindow;
-}
-
-namespace Hermes {
-	namespace RenderInterface {
-		class Fence;
-	}
-}
 
 namespace Hermes
 {
@@ -32,7 +22,7 @@ namespace Hermes
 		{
 			MAKE_NON_COPYABLE(VulkanSwapchain)
 		public:
-			VulkanSwapchain(std::shared_ptr<VulkanDevice> InDevice, VkPhysicalDevice PhysicalDevice, VkSurfaceKHR Surface, std::weak_ptr<const IPlatformWindow> InWindow, uint32 Frames);
+			VulkanSwapchain(std::shared_ptr<VulkanDevice> InDevice, VkPhysicalDevice InPhysicalDevice, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow, uint32 NumFrames);
 			
 			~VulkanSwapchain() override;
 			VulkanSwapchain(VulkanSwapchain&& Other);
@@ -51,10 +41,12 @@ namespace Hermes
 			uint32 GetImageCount() const override { return (uint32)Images.size(); }
 			
 		private:
-			void RecreateSwapchain();
+			void RecreateSwapchain(uint32 NumFrames);
 
-			VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
-			VkFormat SwapchainFormat = VK_FORMAT_UNDEFINED;
+			VkPhysicalDevice PhysicalDevice;
+			VkSurfaceKHR Surface;
+			VkSwapchainKHR Swapchain;
+			VkFormat SwapchainFormat;
 			std::shared_ptr<VulkanDevice> Device;
 			std::weak_ptr<const IPlatformWindow> Window;
 			std::vector<std::shared_ptr<VulkanImage>> Images;

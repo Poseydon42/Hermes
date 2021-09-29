@@ -27,12 +27,16 @@ namespace Hermes
 		void Run();
 
 		void RequestExit();
+
+		void SetPause(bool IsPaused);
 		
 		std::shared_ptr<const IPlatformWindow> GetWindow() const;
 	private:
 		void WindowCloseEventHandler(const IEvent& Event);
 
 		bool RequestedExit;
+
+		bool Paused; // TODO : separate 'game pause' and 'rendering pause'(e.g. when window is minimized)
 		
 		std::unique_ptr<IApplication> Application;
 

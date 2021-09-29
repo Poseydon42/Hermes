@@ -1,5 +1,7 @@
 ﻿#include "WindowsWindow.h"
 
+#include "Core/Application/GameLoop.h"
+
 #ifdef HERMES_PLATFORM_WINDOWS
 
 namespace Hermes
@@ -169,12 +171,25 @@ namespace Hermes
 			break;
 		case WM_SIZE:
 		{
-			if (WParam != SIZE_RESTORED)
+			if (WParam == SIZE_MINIMIZED)
+			{
+				GGameLoop->SetPause(true);
 				break;
-			WORD NewWidth = LParam & 0xFFFF;
-			WORD NewHeight = (LParam >> 16) & 0xFFFF;
-			LastKnownSize = { NewWidth, NewHeight };
-			break;
+			}
+			if (WParam == SIZE_RESTORED)
+			{
+				WORD NewWidth = LParam & 0xFFFF;
+				WORD NewHeight = (LParam >> 16) & 0xFFFF;
+				if (NewWidth == LastKnownSize.X && NewHeight == LastKnownSize.Y)
+				{
+					GGameLoop->SetPause(false); // If size wasn't changed then window was restored from minimized state
+				}
+				else
+				{
+					LastKnownSize = { NewWidth, NewHeight };
+				}
+				break;
+			}
 		}
 		// WM_KEYDOWN and WM_PAINT handling is temporary to check whether fullscreen works properly
 		// TODO : remove this debug stuff when it's no longer needed

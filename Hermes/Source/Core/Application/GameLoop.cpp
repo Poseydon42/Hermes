@@ -11,7 +11,9 @@ namespace Hermes
 {
 	GameLoop* GGameLoop = 0;
 	
-	GameLoop::GameLoop(IApplication* App) : RequestedExit(false)
+	GameLoop::GameLoop(IApplication* App)
+		: RequestedExit(false)
+		, Paused(false)
 	{
 		Logger::SetLogLevel(LogLevel::Debug);
 		Logger::SetLogFormat(L"[%Y-%M-%d %h:%m:%s:%u][%f:%#][%l] %v");
@@ -50,7 +52,10 @@ namespace Hermes
 		while (!RequestedExit)
 		{
 			ApplicationWindow->Run();
-			Application->Run(0.0f);
+			if (!Paused)
+			{
+				Application->Run(0.0f);
+			}
 		}
 		Application->Shutdown();
 	}
@@ -59,6 +64,12 @@ namespace Hermes
 	{
 		HERMES_LOG_INFO(L"Game loop received exit request");
 		RequestedExit = true;
+	}
+
+	void GameLoop::SetPause(bool IsPaused)
+	{
+		HERMES_LOG_INFO(L"Game loop is%s paused now", IsPaused ? L"" : L" not");
+		Paused = IsPaused;
 	}
 
 	std::shared_ptr<const IPlatformWindow> GameLoop::GetWindow() const

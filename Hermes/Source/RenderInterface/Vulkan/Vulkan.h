@@ -15,7 +15,7 @@ SUPPRESS_ALL_WARNINGS_END
 namespace Hermes::Vulkan
 {
 	extern VkAllocationCallbacks* GVulkanAllocator;
-	extern const uint32 GVulkanVersion;
+	constexpr uint32 GVulkanVersion = VK_API_VERSION_1_1;
 }
 
 #define VK_CHECK_RESULT(Call) \

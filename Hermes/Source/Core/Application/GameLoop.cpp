@@ -52,7 +52,7 @@ namespace Hermes
 		while (!RequestedExit)
 		{
 			ApplicationWindow->Run();
-			if (!Paused)
+			if (!Paused && !RequestedExit)
 			{
 				Application->Run(0.0f);
 			}

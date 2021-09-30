@@ -166,12 +166,12 @@ public:
 		auto RenderCommandBuffer = RenderQueue->CreateCommandBuffer(true);
 		RenderCommandBuffer->BeginRecording();
 		BufferBarrier.NumBytes = VertexBuffer->GetSize();
-		RenderCommandBuffer->InsertBufferMemoryBarrier(*VertexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::VertexInput);
+		RenderCommandBuffer->InsertBufferMemoryBarrier(*VertexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::VertexInput);
 		BufferBarrier.NumBytes = IndexBuffer->GetSize();
-		RenderCommandBuffer->InsertBufferMemoryBarrier(*IndexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::VertexInput);
+		RenderCommandBuffer->InsertBufferMemoryBarrier(*IndexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::VertexInput);
 		BufferBarrier.NumBytes = UniformBuffer->GetSize();
-		RenderCommandBuffer->InsertBufferMemoryBarrier(*UniformBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::VertexShader);
-		RenderCommandBuffer->InsertImageMemoryBarrier(*Texture, ImageBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::FragmentShader);
+		RenderCommandBuffer->InsertBufferMemoryBarrier(*UniformBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::VertexShader);
+		RenderCommandBuffer->InsertImageMemoryBarrier(*Texture, ImageBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::FragmentShader);
 		RenderCommandBuffer->EndRecording();
 		RenderQueue->SubmitCommandBuffer(RenderCommandBuffer, {});
 		Device->WaitForIdle();

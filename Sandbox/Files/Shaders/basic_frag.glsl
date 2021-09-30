@@ -3,11 +3,6 @@
 
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(set = 0, binding = 0) uniform UniformBuffer
-{
-    vec3 Color;
-} UBO;
-
 layout(set = 1, binding = 0) uniform sampler TextureSampler;
 layout(set = 1, binding = 1) uniform texture2D Texture;
 

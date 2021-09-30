@@ -1,4 +1,5 @@
 #include "Math/Common.h"
+#include "Math/Matrix.h"
 #include "Math/Vector.h"
 #include "Platform/GenericPlatform/PlatformFile.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
@@ -57,7 +58,7 @@ public:
 
 		struct UniformBufferData
 		{
-			Hermes::Vec3 Color = { 1.0f, 0.5f, 0.0f };
+			Hermes::Mat4 Model = Hermes::Mat4::Transform({-0.3f, -0.3f, 0.0f});
 		} UniformData;
 
 		Hermes::Vec2ui ImageSize;
@@ -194,7 +195,7 @@ public:
 		Hermes::RenderInterface::DescriptorBinding UBOBinding = {};
 		UBOBinding.Index = 0;
 		UBOBinding.DescriptorCount = 1;
-		UBOBinding.Shader = Hermes::RenderInterface::ShaderType::FragmentShader;
+		UBOBinding.Shader = Hermes::RenderInterface::ShaderType::VertexShader;
 		UBOBinding.Type = Hermes::RenderInterface::DescriptorType::UniformBuffer;
 		UBODescriptorSetLayout = Device->CreateDescriptorSetLayout({ UBOBinding });
 		auto UBODescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());

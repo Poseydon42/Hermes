@@ -78,7 +78,7 @@ namespace Hermes
 				case L'd':
 				{
 					// Avoiding many calls to GetPlatformTime() as it may be very time consuming
-					PlatformTimestamp Time = PlatformTime::GetPlatformTime();
+					PlatformDateTime Time = PlatformTime::GetPlatformTime();
 					switch (*s)
 					{
 					case L'h':

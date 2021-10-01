@@ -6,10 +6,10 @@
 
 namespace Hermes
 {
-	PlatformTimestamp PlatformTime::GetPlatformTime()
+	PlatformDateTime PlatformTime::GetPlatformTime()
 	{
 		SYSTEMTIME WinTime;
-		PlatformTimestamp Result;
+		PlatformDateTime Result;
 
 		GetSystemTime(&WinTime);
 		Result.Year = WinTime.wYear;

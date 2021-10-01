@@ -4,7 +4,7 @@
 
 namespace Hermes
 {
-	struct PlatformTimestamp
+	struct PlatformDateTime
 	{
 		uint16 Year;
 		uint16 Month;
@@ -17,6 +17,6 @@ namespace Hermes
 
 	struct HERMES_API PlatformTime
 	{
-		static PlatformTimestamp GetPlatformTime();
+		static PlatformDateTime GetPlatformTime();
 	};
 }

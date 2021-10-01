@@ -42,7 +42,7 @@ namespace Hermes
 
 	PlatformTimestamp PlatformTime::GetCurrentTimestamp()
 	{
-		PlatformTimestamp Result;
+		PlatformTimestamp Result = {};
 		HERMES_ASSERT(QueryPerformanceCounter(&Result.Value));
 		return Result;
 	}

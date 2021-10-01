@@ -5,6 +5,7 @@
 #include "Core/Core.h"
 #include "Core/Application/Application.h"
 #include "Core/Misc/NonCopyableMovable.h"
+#include "Platform/GenericPlatform/PlatformTime.h"
 
 namespace Hermes
 {
@@ -37,6 +38,8 @@ namespace Hermes
 		bool RequestedExit;
 
 		bool Paused; // TODO : separate 'game pause' and 'rendering pause'(e.g. when window is minimized)
+
+		PlatformTimestamp PrevFrameEndTimestamp;
 		
 		std::unique_ptr<IApplication> Application;
 

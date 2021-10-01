@@ -14,6 +14,7 @@ namespace Hermes
 	GameLoop::GameLoop(IApplication* App)
 		: RequestedExit(false)
 		, Paused(false)
+		, PrevFrameEndTimestamp{}
 	{
 		Logger::SetLogLevel(LogLevel::Debug);
 		Logger::SetLogFormat(L"[%Y-%M-%d %h:%m:%s:%u][%f:%#][%l] %v");
@@ -27,6 +28,8 @@ namespace Hermes
 
 	bool GameLoop::Init()
 	{
+		PlatformTime::Init();
+
 		ApplicationWindow = IPlatformWindow::CreatePlatformWindow(L"Hermes Engine", { 1280, 720 });
 		if (!ApplicationWindow->IsValid())
 			return false;
@@ -44,6 +47,8 @@ namespace Hermes
 			return false;
 		}
 
+		PrevFrameEndTimestamp = PlatformTime::GetCurrentTimestamp();
+
 		return true;
 	}
 
@@ -54,7 +59,10 @@ namespace Hermes
 			ApplicationWindow->Run();
 			if (!Paused && !RequestedExit)
 			{
-				Application->Run(0.0f);
+				auto CurrentTimestamp = PlatformTime::GetCurrentTimestamp();
+				float DeltaTime = PlatformTime::ToSeconds(CurrentTimestamp - PrevFrameEndTimestamp);
+				Application->Run(DeltaTime);
+				PrevFrameEndTimestamp = CurrentTimestamp;
 			}
 		}
 		Application->Shutdown();

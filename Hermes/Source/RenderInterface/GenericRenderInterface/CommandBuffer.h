@@ -12,6 +12,7 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		enum class ShaderType;
 		class Queue;
 		enum class ImageLayout;
 		class Image;
@@ -134,6 +135,12 @@ namespace Hermes
 			 * Binds a descriptor set for further drawing commands
 			 */
 			virtual void BindDescriptorSet(const DescriptorSet& Set, const Pipeline& Pipeline, uint32 BindingIndex) = 0;
+
+			/*
+			 * Uploads push constants data onto GPU
+			 * This data is valid until the next call to this function or end of render pass
+			 */
+			virtual void UploadPushConstants(const Pipeline& Pipeline, ShaderType ShadersThatUse, void* Data, uint32 Size, uint32 Offset) = 0;
 
 			// TODO : generic, multi-barrier version
 			/*

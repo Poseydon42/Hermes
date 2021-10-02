@@ -247,7 +247,7 @@ public:
 		return true;
 	}
 
-	void Run(float) override
+	void Run(float DeltaTime) override
 	{
 		if (SwapchainRecreated)
 		{
@@ -326,6 +326,10 @@ public:
 		PresentationFence->Wait(UINT64_MAX);
 		HERMES_ASSERT(NewIndex.has_value());
 		Hermes::uint32 ImageIndex = NewIndex.value();
+
+		TimeSinceStart += DeltaTime;
+		CurrentTranslation.X = sin(TimeSinceStart);
+		Hermes::Mat4 ModelMatrix = Hermes::Mat4::Translation(CurrentTranslation);
 		
 		GraphicsCommandBuffer->BeginRecording();
 		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTargets[ImageIndex], { {1.0f, 1.0f, 0.0f, 1.0f } });
@@ -333,6 +337,7 @@ public:
 		GraphicsCommandBuffer->BindVertexBuffer(*VertexBuffer);
 		GraphicsCommandBuffer->BindIndexBuffer(*IndexBuffer, Hermes::RenderInterface::IndexSize::Uint32);
 		GraphicsCommandBuffer->BindDescriptorSet(*TextureDescriptorSets[ImageIndex], *Pipeline, 0);
+		GraphicsCommandBuffer->UploadPushConstants(*Pipeline, Hermes::RenderInterface::ShaderType::VertexShader, &ModelMatrix, sizeof(ModelMatrix), 0);
 		GraphicsCommandBuffer->DrawIndexed(6, 1, 0, 0, 0);
 		GraphicsCommandBuffer->Draw(3, 1, 2, 0);
 		GraphicsCommandBuffer->EndRenderPass();
@@ -459,7 +464,8 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::Image> Texture;
 	std::shared_ptr<Hermes::RenderInterface::Shader> VertexShader, FragmentShader;
 
-	Hermes::Vec3 CurrentTranslation;
+	Hermes::Vec3 CurrentTranslation = {};
+	float TimeSinceStart = 0.0f;
 
 	bool SwapchainRecreated;
 };

@@ -27,7 +27,7 @@ namespace Hermes
 		void operator-=(const Matrix& Rhs);
 		
 		static std::enable_if_t<Rows == Columns, Matrix> Identity();
-		static Matrix<4, 4, InternalType> Transform(Vector3<InternalType> Transform);
+		static Matrix<4, 4, InternalType> Translation(Vector3<InternalType> Translation);
 
 		struct RowProxy
 		{
@@ -137,12 +137,12 @@ namespace Hermes
 	}
 
 	template <int Rows, int Columns, typename InternalType>
-	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::Transform(Vector3<InternalType> Transform)
+	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::Translation(Vector3<InternalType> Translation)
 	{
 		auto Result = Matrix<4, 4, InternalType>::Identity();
-		Result[0][3] = Transform.X;
-		Result[1][3] = Transform.Y;
-		Result[2][3] = Transform.Z;
+		Result[0][3] = Translation.X;
+		Result[1][3] = Translation.Y;
+		Result[2][3] = Translation.Z;
 		return Result;
 	}
 

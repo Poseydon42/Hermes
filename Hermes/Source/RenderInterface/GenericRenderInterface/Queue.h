@@ -44,6 +44,11 @@ namespace Hermes
 			 * @param Fence An optional fence object that needs to be signaled when GPU finishes execution of given command buffer
 			 */
 			virtual void SubmitCommandBuffer(std::shared_ptr<CommandBuffer> Buffer, std::optional<std::shared_ptr<Fence>> Fence) = 0;
+
+			/*
+			 * Blocks current thread until all pending operations on this queue are finished
+			 */
+			virtual void WaitForIdle() const = 0;
 		};
 	}
 }

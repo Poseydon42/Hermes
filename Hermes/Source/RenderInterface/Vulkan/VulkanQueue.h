@@ -27,9 +27,12 @@ namespace Hermes
 			
 			void SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer, std::optional<std::shared_ptr<RenderInterface::Fence>> Fence) override;
 
+			void WaitForIdle() const override;
+
 			VkQueue GetQueue() const;
 
 			uint32 GetQueueFamilyIndex() const;
+			
 		private:
 			std::shared_ptr<VulkanDevice> Device;
 			VkQueue Queue;

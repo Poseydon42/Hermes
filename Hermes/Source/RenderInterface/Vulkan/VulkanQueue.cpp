@@ -62,6 +62,11 @@ namespace Hermes
 			VK_CHECK_RESULT(vkQueueSubmit(Queue, 1, &SubmitInfo, VkFenceObject));
 		}
 
+		void VulkanQueue::WaitForIdle() const
+		{
+			VK_CHECK_RESULT(vkQueueWaitIdle(Queue));
+		}
+
 		VkQueue VulkanQueue::GetQueue() const
 		{
 			return Queue;

@@ -94,7 +94,7 @@ public:
 		TransferCommandBuffer->InsertBufferMemoryBarrier(*VertexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::TopOfPipe);
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
-		Device->WaitForIdle(); // TODO : add Queue::WaitForIdle()
+		TransferQueue->WaitForIdle();
 
 		// Index data copy
 		Dst = StagingBuffer->Map();
@@ -110,7 +110,7 @@ public:
 		TransferCommandBuffer->InsertBufferMemoryBarrier(*IndexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::TopOfPipe);
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
-		Device->WaitForIdle();
+		TransferQueue->WaitForIdle();
 
 		// Image copy
 		Dst = StagingBuffer->Map();
@@ -135,7 +135,7 @@ public:
 		TransferCommandBuffer->InsertImageMemoryBarrier(*Texture, ImageBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::Transfer);
 		TransferCommandBuffer->EndRecording();
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
-		Device->WaitForIdle();
+		TransferQueue->WaitForIdle();
 		free(CheckerImage);
 
 		// We now have to acquire ownership of all resources on render queue
@@ -149,7 +149,7 @@ public:
 		RenderCommandBuffer->InsertImageMemoryBarrier(*Texture, ImageBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::FragmentShader);
 		RenderCommandBuffer->EndRecording();
 		RenderQueue->SubmitCommandBuffer(RenderCommandBuffer, {});
-		Device->WaitForIdle();
+		RenderQueue->WaitForIdle();
 		
 
 		VertexShader = Device->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", Hermes::RenderInterface::ShaderType::VertexShader);
@@ -315,8 +315,6 @@ public:
 				TextureDescriptorSets[Index]->UpdateWithSampler(0, 0, *TextureSampler);
 				TextureDescriptorSets[Index]->UpdateWithImage(1, 0, *Texture, Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 			}
-
-			Device->WaitForIdle();
 		}
 
 		SwapchainRecreated = false;
@@ -343,11 +341,11 @@ public:
 		GraphicsCommandBuffer->EndRenderPass();
 		GraphicsCommandBuffer->EndRecording();
 		Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->SubmitCommandBuffer(GraphicsCommandBuffer, GraphicsFence);
-		GraphicsFence->Wait(UINT64_MAX);
+		Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->WaitForIdle();
 
 		GraphicsFence->Reset();
 		Swapchain->Present(ImageIndex, SwapchainRecreated);
-		Device->WaitForIdle(); // TODO : fix it!
+		Device->GetQueue(Hermes::RenderInterface::QueueType::Presentation)->WaitForIdle();
 		PresentationFence->Reset();
 	}
 

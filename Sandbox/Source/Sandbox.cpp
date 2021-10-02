@@ -214,6 +214,14 @@ public:
 		auto TextureDescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
 		
 		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
+		PipelineDesc.PushConstants =
+			{
+				{
+					Hermes::RenderInterface::ShaderType::VertexShader,
+					0,
+					sizeof(Hermes::Mat4)
+				}
+			};
 		PipelineDesc.ShaderStages =
 			{
 				VertexShader,
@@ -295,6 +303,14 @@ public:
 			RenderPass = Device->CreateRenderPass(Description);
 
 			Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
+			PipelineDesc.PushConstants =
+				{
+					{
+						Hermes::RenderInterface::ShaderType::VertexShader,
+						0,
+						sizeof(Hermes::Mat4)
+					}
+				};
 			PipelineDesc.ShaderStages =
 				{
 					VertexShader,

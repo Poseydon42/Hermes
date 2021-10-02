@@ -114,13 +114,24 @@ namespace Hermes
 			LayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 			std::vector<VkDescriptorSetLayout> Layouts;
 			Layouts.reserve(Description.DescriptorLayouts.size());
+			std::vector<VkPushConstantRange> PushConstantRanges;
+			PushConstantRanges.reserve(Description.PushConstants.size());
 			for (const auto& CurrentLayout : Description.DescriptorLayouts)
 			{
 				Layouts.push_back(std::reinterpret_pointer_cast<VulkanDescriptorSetLayout>(CurrentLayout)->GetDescriptorSetLayout());
 			}
+			for (const auto& PushConstantRange : Description.PushConstants)
+			{
+				VkPushConstantRange NewPushConstantRange;
+				NewPushConstantRange.size = PushConstantRange.Size;
+				NewPushConstantRange.offset = PushConstantRange.Offset;
+				NewPushConstantRange.stageFlags = ShaderTypeToVkShaderStage(PushConstantRange.ShadersThatAccess);
+				PushConstantRanges.push_back(NewPushConstantRange);
+			}
 			LayoutCreateInfo.setLayoutCount = static_cast<uint32>(Layouts.size());
 			LayoutCreateInfo.pSetLayouts = Layouts.data();
-			// TODO : other fields
+			LayoutCreateInfo.pushConstantRangeCount = static_cast<uint32>(PushConstantRanges.size());
+			LayoutCreateInfo.pPushConstantRanges = PushConstantRanges.data();
 			VK_CHECK_RESULT(vkCreatePipelineLayout(Device->GetDevice(), &LayoutCreateInfo, GVulkanAllocator, &Layout));
 
 			std::vector<VkPipelineShaderStageCreateInfo> ShaderCreateInfos(Description.ShaderStages.size());

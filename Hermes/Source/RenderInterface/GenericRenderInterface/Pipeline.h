@@ -10,6 +10,7 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		enum class ShaderType;
 		class DescriptorSetLayout;
 		class Shader;
 		
@@ -111,8 +112,16 @@ namespace Hermes
 			// TODO : proper implementation. Currently this is just stub, as we don't need to use any blending to draw simple triangle. But we will eventually :^)
 		};
 
+		struct PushConstantRange
+		{
+			ShaderType ShadersThatAccess;
+			uint32 Offset;
+			uint32 Size;
+		};
+
 		struct PipelineDescription
 		{
+			std::vector<PushConstantRange> PushConstants;
 			std::vector<std::shared_ptr<Shader>> ShaderStages;
 			std::vector<std::shared_ptr<DescriptorSetLayout>> DescriptorLayouts;
 			VertexInputDescription VertexInput;

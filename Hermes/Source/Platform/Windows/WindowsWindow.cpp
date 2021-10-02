@@ -140,7 +140,7 @@ namespace Hermes
 		return WindowHandle != 0;
 	}
 
-	std::weak_ptr<EventQueue> WindowsWindow::WindowQueue()
+	std::weak_ptr<EventQueue> WindowsWindow::WindowQueue() const
 	{
 		return MessagePump;
 	}

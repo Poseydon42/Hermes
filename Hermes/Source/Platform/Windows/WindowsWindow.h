@@ -36,7 +36,7 @@ namespace Hermes
 		
 		bool IsValid() const override;
 
-		std::weak_ptr<EventQueue> WindowQueue() override;
+		std::weak_ptr<EventQueue> WindowQueue() const override;
 
 		void Run() const override;
 		

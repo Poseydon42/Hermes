@@ -56,11 +56,6 @@ public:
 			2, 4, 0
 		};
 
-		struct UniformBufferData
-		{
-			Hermes::Mat4 Model = Hermes::Mat4::Transform({-0.3f, -0.3f, 0.0f});
-		} UniformData;
-
 		Hermes::Vec2ui ImageSize;
 		auto CheckerImage = LoadTGA(L"checker_colored.tga", ImageSize);
 		Texture = Device->CreateImage(
@@ -70,15 +65,12 @@ public:
 
 		Hermes::uint32 StagingBufferSize = Hermes::Math::Max(
 			Hermes::Math::Max(
-				Hermes::Math::Max(
 					(Hermes::uint32)sizeof(VertexData),
 					(Hermes::uint32)sizeof(IndexData)),
-				(Hermes::uint32)sizeof(UniformData)),
 			ImageSizeInBytes);
 		auto StagingBuffer = Device->CreateBuffer(StagingBufferSize, Hermes::RenderInterface::BufferUsageType::CPUAccessible | Hermes::RenderInterface::BufferUsageType::CopySource);
 		VertexBuffer = Device->CreateBuffer(sizeof(VertexData), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::VertexBuffer);
 		IndexBuffer = Device->CreateBuffer(sizeof(IndexData), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::IndexBuffer);
-		UniformBuffer = Device->CreateBuffer(sizeof(UniformData), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::UniformBuffer);
 		auto TransferQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer);
 		auto TransferCommandBuffer = TransferQueue->CreateCommandBuffer(true);
 
@@ -120,22 +112,6 @@ public:
 		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
 		Device->WaitForIdle();
 
-		// Uniform data copy
-		Dst = StagingBuffer->Map();
-		memcpy(Dst, &UniformData, sizeof(UniformData));
-		StagingBuffer->Unmap();
-		TransferCommandBuffer->BeginRecording();
-		Region = {};
-		Region.SourceOffset = 0;
-		Region.DestinationOffset = 0;
-		Region.NumBytes = sizeof(UniformData);
-		TransferCommandBuffer->CopyBuffer(*StagingBuffer, *UniformBuffer, { Region });
-		BufferBarrier.NumBytes = UniformBuffer->GetSize();
-		TransferCommandBuffer->InsertBufferMemoryBarrier(*UniformBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::TopOfPipe);
-		TransferCommandBuffer->EndRecording();
-		TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, {});
-		Device->WaitForIdle();
-
 		// Image copy
 		Dst = StagingBuffer->Map();
 		memcpy(Dst, CheckerImage, ImageSizeInBytes);
@@ -170,8 +146,6 @@ public:
 		RenderCommandBuffer->InsertBufferMemoryBarrier(*VertexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::VertexInput);
 		BufferBarrier.NumBytes = IndexBuffer->GetSize();
 		RenderCommandBuffer->InsertBufferMemoryBarrier(*IndexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::VertexInput);
-		BufferBarrier.NumBytes = UniformBuffer->GetSize();
-		RenderCommandBuffer->InsertBufferMemoryBarrier(*UniformBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::VertexShader);
 		RenderCommandBuffer->InsertImageMemoryBarrier(*Texture, ImageBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::FragmentShader);
 		RenderCommandBuffer->EndRecording();
 		RenderQueue->SubmitCommandBuffer(RenderCommandBuffer, {});
@@ -191,14 +165,6 @@ public:
 		Description.ColorAttachments[0].StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
 		Description.ColorAttachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
 		RenderPass = Device->CreateRenderPass(Description);
-
-		Hermes::RenderInterface::DescriptorBinding UBOBinding = {};
-		UBOBinding.Index = 0;
-		UBOBinding.DescriptorCount = 1;
-		UBOBinding.Shader = Hermes::RenderInterface::ShaderType::VertexShader;
-		UBOBinding.Type = Hermes::RenderInterface::DescriptorType::UniformBuffer;
-		UBODescriptorSetLayout = Device->CreateDescriptorSetLayout({ UBOBinding });
-		auto UBODescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
 
 		Hermes::RenderInterface::DescriptorBinding SamplerBinding = {};
 		SamplerBinding.Index = 0;
@@ -229,7 +195,6 @@ public:
 			};
 		PipelineDesc.DescriptorLayouts =
 			{
-				UBODescriptorSetLayout,
 				TextureDescriptorSetLayout
 			};
 		PipelineDesc.VertexInput.VertexBindings.push_back({});
@@ -266,14 +231,11 @@ public:
 		TextureSampler = Device->CreateSampler(SamplerDesc);
 
 		RenderTargets.reserve(Swapchain->GetImageCount());
-		UBODescriptorSets.reserve(Swapchain->GetImageCount());
 		TextureDescriptorSets.reserve(Swapchain->GetImageCount());
 		for (Hermes::uint32 Index = 0; Index < Swapchain->GetImageCount(); Index++)
 		{
 			RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index)}, Swapchain->GetSize()));
-			UBODescriptorSets.push_back(UBODescriptorSetPool->CreateDescriptorSet(UBODescriptorSetLayout));
 			TextureDescriptorSets.push_back(TextureDescriptorSetPool->CreateDescriptorSet(TextureDescriptorSetLayout));
-			UBODescriptorSets[Index]->UpdateWithBuffer(0, 0, *UniformBuffer, 0, (Hermes::uint32)UniformBuffer->GetSize());
 			TextureDescriptorSets[Index]->UpdateWithSampler(0, 0, *TextureSampler);
 			TextureDescriptorSets[Index]->UpdateWithImage(1, 0, *Texture, Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 		}
@@ -318,7 +280,6 @@ public:
 				};
 			PipelineDesc.DescriptorLayouts =
 				{
-					UBODescriptorSetLayout,
 					TextureDescriptorSetLayout
 				};
 			PipelineDesc.VertexInput.VertexBindings.push_back({});
@@ -347,12 +308,10 @@ public:
 			Pipeline = Device->CreatePipeline(RenderPass, PipelineDesc);
 
 			RenderTargets.reserve(Swapchain->GetImageCount());
-			UBODescriptorSets.reserve(Swapchain->GetImageCount());
 			TextureDescriptorSets.reserve(Swapchain->GetImageCount());
 			for (Hermes::uint32 Index = 0; Index < Swapchain->GetImageCount(); Index++)
 			{
 				RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index)}, Swapchain->GetSize()));
-				UBODescriptorSets[Index]->UpdateWithBuffer(0, 0, *UniformBuffer, 0, (Hermes::uint32)UniformBuffer->GetSize());
 				TextureDescriptorSets[Index]->UpdateWithSampler(0, 0, *TextureSampler);
 				TextureDescriptorSets[Index]->UpdateWithImage(1, 0, *Texture, Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 			}
@@ -373,8 +332,7 @@ public:
 		GraphicsCommandBuffer->BindPipeline(Pipeline);
 		GraphicsCommandBuffer->BindVertexBuffer(*VertexBuffer);
 		GraphicsCommandBuffer->BindIndexBuffer(*IndexBuffer, Hermes::RenderInterface::IndexSize::Uint32);
-		GraphicsCommandBuffer->BindDescriptorSet(*UBODescriptorSets[ImageIndex], *Pipeline, 0);
-		GraphicsCommandBuffer->BindDescriptorSet(*TextureDescriptorSets[ImageIndex], *Pipeline, 1);
+		GraphicsCommandBuffer->BindDescriptorSet(*TextureDescriptorSets[ImageIndex], *Pipeline, 0);
 		GraphicsCommandBuffer->DrawIndexed(6, 1, 0, 0, 0);
 		GraphicsCommandBuffer->Draw(3, 1, 2, 0);
 		GraphicsCommandBuffer->EndRenderPass();
@@ -491,15 +449,17 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::Swapchain> Swapchain;
 	std::shared_ptr<Hermes::RenderInterface::RenderPass> RenderPass;
 	std::shared_ptr<Hermes::RenderInterface::Pipeline> Pipeline;
-	std::shared_ptr<Hermes::RenderInterface::Buffer> VertexBuffer, IndexBuffer, UniformBuffer;
+	std::shared_ptr<Hermes::RenderInterface::Buffer> VertexBuffer, IndexBuffer;
 	std::vector<std::shared_ptr<Hermes::RenderInterface::RenderTarget>> RenderTargets;
-	std::vector<std::shared_ptr<Hermes::RenderInterface::DescriptorSet>> UBODescriptorSets, TextureDescriptorSets;
-	std::shared_ptr<Hermes::RenderInterface::DescriptorSetLayout> UBODescriptorSetLayout, TextureDescriptorSetLayout;
+	std::vector<std::shared_ptr<Hermes::RenderInterface::DescriptorSet>> TextureDescriptorSets;
+	std::shared_ptr<Hermes::RenderInterface::DescriptorSetLayout> TextureDescriptorSetLayout;
 	std::shared_ptr<Hermes::RenderInterface::CommandBuffer> GraphicsCommandBuffer;
 	std::shared_ptr<Hermes::RenderInterface::Fence> GraphicsFence, PresentationFence;
 	std::shared_ptr<Hermes::RenderInterface::Sampler> TextureSampler;
 	std::shared_ptr<Hermes::RenderInterface::Image> Texture;
 	std::shared_ptr<Hermes::RenderInterface::Shader> VertexShader, FragmentShader;
+
+	Hermes::Vec3 CurrentTranslation;
 
 	bool SwapchainRecreated;
 };

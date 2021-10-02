@@ -3,6 +3,7 @@
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
+#include "Core/Misc/EnumClassOperators.h"
 
 namespace Hermes
 {
@@ -10,10 +11,12 @@ namespace Hermes
 	{
 		enum class ShaderType
 		{
-			VertexShader,
-			FragmentShader,
+			VertexShader = 1,
+			FragmentShader = 2,
 			// TODO : expand
 		};
+
+		ENUM_CLASS_OPERATORS(ShaderType)
 		
 		class HERMES_API Shader
 		{

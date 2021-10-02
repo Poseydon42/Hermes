@@ -140,7 +140,7 @@ namespace Hermes
 				ShaderCreateInfos[Index].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 				ShaderCreateInfos[Index].module = ((VulkanShader*)Description.ShaderStages[Index].get())->GetShader();
 				ShaderCreateInfos[Index].pName = "main"; // TODO : allow user to choice or decide using reflection
-				ShaderCreateInfos[Index].stage = ShaderTypeToVkShaderStage(Description.ShaderStages[Index]->GetType());
+				ShaderCreateInfos[Index].stage = static_cast<VkShaderStageFlagBits>(ShaderTypeToVkShaderStage(Description.ShaderStages[Index]->GetType()));
 			}
 
 			std::vector<VkVertexInputAttributeDescription> InputAttributes;

@@ -9,18 +9,14 @@ namespace Hermes
 {
 	namespace Vulkan
 	{	
-		inline VkShaderStageFlagBits ShaderTypeToVkShaderStage(RenderInterface::ShaderType Type)
+		inline VkShaderStageFlags ShaderTypeToVkShaderStage(RenderInterface::ShaderType Type)
 		{
-			switch (Type)
-			{
-			case RenderInterface::ShaderType::VertexShader:
-				return VK_SHADER_STAGE_VERTEX_BIT;
-			case RenderInterface::ShaderType::FragmentShader:
-				return VK_SHADER_STAGE_FRAGMENT_BIT;
-			default:
-				HERMES_ASSERT(false);
-				return (VkShaderStageFlagBits)0;
-			}
+			auto Result = static_cast<VkShaderStageFlags>(0);
+#define CORRESPONDING_BIT(Bit, VkBit) if (static_cast<bool>(Type & (Bit))) Result |= (VkBit);
+			CORRESPONDING_BIT(RenderInterface::ShaderType::VertexShader, VK_SHADER_STAGE_VERTEX_BIT);
+			CORRESPONDING_BIT(RenderInterface::ShaderType::FragmentShader, VK_SHADER_STAGE_FRAGMENT_BIT);
+#undef CORRESPONDING_BIT
+			return Result;
 		}
 
 		inline VkFormat DataFormatToVkFormat(RenderInterface::DataFormat Format)

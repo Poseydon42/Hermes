@@ -190,25 +190,14 @@ namespace Hermes
 				}
 				break;
 			}
+			break;
 		}
-		// WM_KEYDOWN and WM_PAINT handling is temporary to check whether fullscreen works properly
-		// TODO : remove this debug stuff when it's no longer needed
 		case WM_KEYDOWN:
 			if (WParam == VK_LEFT)
 				ToggleFullscreen(true);
 			if (WParam == VK_RIGHT)
 				ToggleFullscreen(false);
 			break;
-		case WM_PAINT:
-			HERMES_LOG_INFO(L"Got WM_PAINT message.");
-			PAINTSTRUCT Paint;
-			RECT ClientRect;
-			HDC DeviceContext = BeginPaint(Window, &Paint);
-			GetClientRect(Window, &ClientRect);
-			HBRUSH TempBrush = CreateSolidBrush(RGB(255, 255, 255));
-			FillRect(DeviceContext, &ClientRect, TempBrush);
-			DeleteObject(TempBrush);
-			EndPaint(Window, &Paint);
 		}
 		return DefWindowProcW(Window, Message, WParam, LParam);
 	}

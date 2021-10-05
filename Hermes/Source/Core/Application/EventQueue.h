@@ -27,14 +27,14 @@ namespace Hermes
 		 * Member function implementation
 		 */
 		template<class C, void(C::*Function)(const IEvent&)>
-		void Subscribe(IEvent::EventType Type, C* Instance);
+		void Subscribe(IEvent::EventType Type, C* Instance) const;
 
 		/**
 		 * Adds new listener to given event type
 		 * Free function implementation
 		 */
 		template<void(*Function)(const IEvent&)>
-		void Subscribe(IEvent::EventType Type);
+		void Subscribe(IEvent::EventType Type) const;
 
 		/**
 		 * Removes all subscribers of given event type
@@ -47,19 +47,19 @@ namespace Hermes
 		 */
 		void Run();
 	private:
-		std::unordered_map<IEvent::EventType, CallbackDelegate> CallbackList;
+		mutable std::unordered_map<IEvent::EventType, CallbackDelegate> CallbackList;
 
 		std::queue<IEvent*> Queue;
 	};
 
 	template<void(*Function)(const IEvent&)>
-	void EventQueue::Subscribe(IEvent::EventType Type)
+	void EventQueue::Subscribe(IEvent::EventType Type) const
 	{
 		CallbackList[Type].Bind<Function>();
 	}
 
 	template<class C, void(C::* Function)(const IEvent&)>
-	void EventQueue::Subscribe(IEvent::EventType Type, C* Instance)
+	void EventQueue::Subscribe(IEvent::EventType Type, C* Instance) const
 	{
 		CallbackList[Type].Bind<C, Function>(Instance);
 	}

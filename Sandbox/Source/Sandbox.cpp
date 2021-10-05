@@ -241,6 +241,21 @@ public:
 		GraphicsCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
 		GraphicsFence = Device->CreateFence(false);
 		PresentationFence = Device->CreateFence(false);
+
+		Hermes::Matrix<2, 2, int> Mat1;
+		Hermes::Matrix<2, 3, int> Mat2;
+		Mat1[0][0] = 11;
+		Mat1[0][1] = 3;
+		Mat1[1][0] = 7;
+		Mat1[1][1] = 11;
+		Mat2[0][0] = 8;
+		Mat2[0][1] = 0;
+		Mat2[0][2] = 1;
+		Mat2[1][0] = 0;
+		Mat2[1][1] = 3;
+		Mat2[1][2] = 5;
+
+		auto Mat = Mat1 * Mat2;
 		
 		return true;
 	}

@@ -23,6 +23,9 @@ namespace Hermes
 		Matrix operator+(const Matrix& Rhs) const;
 		Matrix operator-(const Matrix& Rhs) const;
 
+		template<int OtherColumns>
+		Matrix<Rows, OtherColumns, InternalType> operator*(const Matrix<Columns, OtherColumns, InternalType>& Rhs) const;
+
 		void operator+=(const Matrix& Rhs);
 		void operator-=(const Matrix& Rhs);
 
@@ -106,6 +109,26 @@ namespace Hermes
 			Res.Data[Index] = Data[Index] - Rhs.Data[Index];
 		}
 		return Res;
+	}
+
+	template <int Rows, int Columns, typename InternalType>
+	template <int OtherColumns>
+	Matrix<Rows, OtherColumns, InternalType> Matrix<Rows, Columns, InternalType>::operator*(const Matrix<Columns, OtherColumns, InternalType>& Rhs) const
+	{
+		Matrix<Rows, OtherColumns, InternalType> Result;
+		for (int Row = 0; Row < Rows; Row++)
+		{
+			for (int Column = 0; Column < OtherColumns; Column++)
+			{
+				InternalType Value = 0;
+				for (int Index = 0; Index < Columns; Index++)
+				{
+					Value += this->operator[](Row)[Index] * Rhs[Index][Column];
+				}
+				Result[Row][Column] = Value;
+			}
+		}
+		return Result;
 	}
 
 	template <int Rows, int Columns, typename InternalType>

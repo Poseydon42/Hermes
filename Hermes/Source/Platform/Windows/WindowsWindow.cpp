@@ -1,6 +1,7 @@
 ﻿#include "WindowsWindow.h"
 
 #include "Core/Application/GameLoop.h"
+#include "Core/Application/InputEngine.h"
 
 #ifdef HERMES_PLATFORM_WINDOWS
 
@@ -162,6 +163,11 @@ namespace Hermes
 		return (void*)WindowHandle;
 	}
 
+	void WindowsWindow::SetInputEngine(std::weak_ptr<class InputEngine> InInputEngine)
+	{
+		this->InputEngine = InInputEngine;
+	}
+
 	LRESULT WindowsWindow::MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 	{
 		switch (Message)
@@ -193,10 +199,130 @@ namespace Hermes
 			break;
 		}
 		case WM_KEYDOWN:
-			if (WParam == VK_LEFT)
-				ToggleFullscreen(true);
-			if (WParam == VK_RIGHT)
-				ToggleFullscreen(false);
+		case WM_KEYUP:
+			static std::unordered_map<uint32, KeyCode> VKCodeToKeyCodeMap =
+			{
+				{ VK_LBUTTON , KeyCode::LeftMouseButton },
+				{ VK_RBUTTON, KeyCode::RightMouseButton },
+				{ VK_MBUTTON, KeyCode::MiddleMouseButton },
+				{ VK_XBUTTON1, KeyCode::FourthMouseButton },
+				{ VK_XBUTTON2, KeyCode::FifthMouseButton },
+				{ VK_SPACE, KeyCode::Space },
+				{ VK_BACK, KeyCode::Backspace },
+				{ VK_TAB, KeyCode::Tab },
+				{ VK_RETURN, KeyCode::Enter },
+				{ VK_LSHIFT, KeyCode::LeftShift },
+				{ VK_RSHIFT, KeyCode::RightShift },
+				{ VK_LCONTROL, KeyCode::LeftCtrl },
+				{ VK_RCONTROL, KeyCode::RightCtrl },
+				{ VK_LMENU, KeyCode::LeftAlt },
+				{ VK_RMENU, KeyCode::RightAlt },
+				{ VK_PAUSE, KeyCode::Pause },
+				{ VK_ESCAPE, KeyCode::Esc },
+				{ VK_PRIOR, KeyCode::PageUp },
+				{ VK_NEXT, KeyCode::PageDown },
+				{ VK_END, KeyCode::End },
+				{ VK_HOME, KeyCode::Home },
+				{ VK_LEFT, KeyCode::ArrowLeft },
+				{ VK_RIGHT, KeyCode::ArrowRight },
+				{ VK_UP, KeyCode::ArrowUp },
+				{ VK_DOWN, KeyCode::ArrowDown },
+				{ VK_SNAPSHOT, KeyCode::PrintScreen },
+				{ VK_INSERT, KeyCode::Insert },
+				{ VK_DELETE, KeyCode::Delete },
+				{ '0', KeyCode::Digit0 },
+				{ '1', KeyCode::Digit1 },
+				{ '2', KeyCode::Digit2 },
+				{ '3', KeyCode::Digit3 },
+				{ '4', KeyCode::Digit4 },
+				{ '5', KeyCode::Digit5 },
+				{ '6', KeyCode::Digit6 },
+				{ '7', KeyCode::Digit7 },
+				{ '8', KeyCode::Digit8 },
+				{ '9', KeyCode::Digit9 },
+				{ 'A', KeyCode::A },
+				{ 'B', KeyCode::B },
+				{ 'C', KeyCode::C },
+				{ 'D', KeyCode::D },
+				{ 'E', KeyCode::E },
+				{ 'F', KeyCode::F },
+				{ 'G', KeyCode::G },
+				{ 'H', KeyCode::H },
+				{ 'I', KeyCode::I },
+				{ 'J', KeyCode::J },
+				{ 'K', KeyCode::K },
+				{ 'L', KeyCode::L },
+				{ 'M', KeyCode::M },
+				{ 'N', KeyCode::N },
+				{ 'O', KeyCode::O },
+				{ 'P', KeyCode::P },
+				{ 'Q', KeyCode::Q },
+				{ 'R', KeyCode::R },
+				{ 'S', KeyCode::S },
+				{ 'T', KeyCode::T },
+				{ 'U', KeyCode::U },
+				{ 'V', KeyCode::V },
+				{ 'W', KeyCode::W },
+				{ 'X', KeyCode::X },
+				{ 'Y', KeyCode::Y },
+				{ 'Z', KeyCode::Z },
+				{ VK_LWIN, KeyCode::LeftWindows },
+				{ VK_RWIN, KeyCode::RightWindows },
+				{ VK_NUMPAD0, KeyCode::Num0 },
+				{ VK_NUMPAD1, KeyCode::Num1 },
+				{ VK_NUMPAD2, KeyCode::Num2 },
+				{ VK_NUMPAD3, KeyCode::Num3 },
+				{ VK_NUMPAD4, KeyCode::Num4 },
+				{ VK_NUMPAD5, KeyCode::Num5 },
+				{ VK_NUMPAD6, KeyCode::Num6 },
+				{ VK_NUMPAD7, KeyCode::Num7 },
+				{ VK_NUMPAD8, KeyCode::Num8 },
+				{ VK_NUMPAD9, KeyCode::Num9 },
+				{ VK_MULTIPLY, KeyCode::Multiply },
+				{ VK_ADD, KeyCode::Add },
+				{ VK_SUBTRACT, KeyCode::Subtract },
+				{ VK_DECIMAL, KeyCode::Decimal },
+				{ VK_DIVIDE, KeyCode::Divide },
+				{ VK_F1, KeyCode::F1 },
+				{ VK_F2, KeyCode::F2 },
+				{ VK_F3, KeyCode::F3 },
+				{ VK_F4, KeyCode::F4 },
+				{ VK_F5, KeyCode::F5 },
+				{ VK_F6, KeyCode::F6 },
+				{ VK_F7, KeyCode::F7 },
+				{ VK_F8, KeyCode::F8 },
+				{ VK_F9, KeyCode::F9 },
+				{ VK_F10, KeyCode::F10 },
+				{ VK_F11, KeyCode::F11 },
+				{ VK_F12, KeyCode::F12 },
+				{ VK_F13, KeyCode::F13 },
+				{ VK_F14, KeyCode::F14 },
+				{ VK_F15, KeyCode::F15 },
+				{ VK_F16, KeyCode::F16 },
+				{ VK_F17, KeyCode::F17 },
+				{ VK_F18, KeyCode::F18 },
+				{ VK_F19, KeyCode::F19 },
+				{ VK_F20, KeyCode::F20 },
+				{ VK_F21, KeyCode::F21 },
+				{ VK_F22, KeyCode::F22 },
+				{ VK_F23, KeyCode::F23 },
+				{ VK_F24, KeyCode::F24 },
+				{ VK_NUMLOCK, KeyCode::NumLock },
+				{ VK_SCROLL, KeyCode::ScrollLock }
+			};
+			bool IsPressEvent = Message == WM_KEYDOWN;
+			auto VKCode = static_cast<uint32>(WParam);
+			if (auto LockedInputEngine = InputEngine.lock())
+			{
+				auto Iterator = VKCodeToKeyCodeMap.find(VKCode);
+				if (Iterator == VKCodeToKeyCodeMap.end())
+				{
+					HERMES_LOG_DEBUG(L"Failed to translate VK code: 0x%02hhx", VKCode);
+					break;
+				}
+				KeyCode Code = Iterator->second;
+				LockedInputEngine->PushEvent(Code, IsPressEvent);
+			}
 			break;
 		}
 		return DefWindowProcW(Window, Message, WParam, LParam);

@@ -1,3 +1,4 @@
+#include "Core/Application/InputEngine.h"
 #include "Math/Common.h"
 #include "Math/Matrix.h"
 #include "Math/Vector.h"
@@ -22,17 +23,14 @@
 #include "RenderInterface/GenericRenderInterface/Pipeline.h"
 #include "Core/Application/GameLoop.h"
 
-void WindowEventHandler(const Hermes::IEvent& Event)
-{
-	HERMES_LOG_INFO(L"Received window event: %s", Event.ToString().c_str());
-}
-
 class SandboxApp : public Hermes::IApplication
 {
 public:
 	bool Init() override
 	{
 		ApplicationWindow = Hermes::GGameLoop->GetWindow();
+		auto& InputEngine = Hermes::GGameLoop->GetInputEngine();
+		InputEngine.GetEventQueue().Subscribe<SandboxApp, &SandboxApp::KeyEventHandler>(Hermes::KeyEvent::GetStaticType(), this);
 		
 		auto RenderInstance = Hermes::RenderInterface::Instance::CreateRenderInterfaceInstance(ApplicationWindow);
 		auto Devices = RenderInstance->EnumerateAvailableDevices();
@@ -351,7 +349,18 @@ public:
 
 	void Shutdown() override
 	{
-		
+		HERMES_LOG_INFO(SavedText.c_str());
+	}
+
+	void KeyEventHandler(const Hermes::IEvent& InEvent)
+	{
+		auto& Event = static_cast<const Hermes::KeyEvent&>(InEvent);
+		if (Event.IsPressEvent())
+		{
+			auto Char = Event.TryConvertToChar();
+			if (Char.has_value())
+				SavedText += Char.value();
+		}
 	}
 
 	// NOTE : test-only function, will be removed soon
@@ -466,6 +475,8 @@ private:
 	float TimeSinceStart = 0.0f;
 
 	bool SwapchainRecreated;
+
+	Hermes::String SavedText;
 };
 
 extern "C" _declspec(dllexport) Hermes::IApplication* CreateApplicationInstance()

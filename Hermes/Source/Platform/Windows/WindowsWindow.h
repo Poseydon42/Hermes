@@ -41,6 +41,8 @@ namespace Hermes
 		void Run() const override;
 		
 		void* GetNativeHandle() const override;
+		
+		void SetInputEngine(std::weak_ptr<class InputEngine> InInputEngine) override;
 	
 	private:
 		HWND WindowHandle;
@@ -52,6 +54,8 @@ namespace Hermes
 		WINDOWPLACEMENT PrevPlacement;
 
 		Vec2ui LastKnownSize;
+
+		std::weak_ptr<InputEngine> InputEngine;
 
 		static bool ClassRegistered;
 

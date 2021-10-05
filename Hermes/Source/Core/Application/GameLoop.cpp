@@ -1,7 +1,7 @@
 #include "GameLoop.h"
 
-
-#include "EventQueue.h"
+#include "Core/Application/EventQueue.h"
+#include "Core/Application/InputEngine.h"
 #include "Core/Log/Logger.h"
 #include "Core/Log/DebugLogDevice.h"
 #include "Core/Log/FileLogDevice.h"
@@ -33,6 +33,8 @@ namespace Hermes
 		ApplicationWindow = IPlatformWindow::CreatePlatformWindow(L"Hermes Engine", { 1280, 720 });
 		if (!ApplicationWindow->IsValid())
 			return false;
+		InputEngine = std::make_shared<class InputEngine>();
+		ApplicationWindow->SetInputEngine(InputEngine);
 		if (auto WindowMessageQueue = ApplicationWindow->WindowQueue().lock())
 		{
 			WindowMessageQueue->Subscribe<GameLoop, &GameLoop::WindowCloseEventHandler>(WindowCloseEvent::GetStaticType(), this);
@@ -61,7 +63,10 @@ namespace Hermes
 			{
 				auto CurrentTimestamp = PlatformTime::GetCurrentTimestamp();
 				float DeltaTime = PlatformTime::ToSeconds(CurrentTimestamp - PrevFrameEndTimestamp);
+
+				InputEngine->ProcessDeferredEvents();
 				Application->Run(DeltaTime);
+
 				PrevFrameEndTimestamp = CurrentTimestamp;
 			}
 		}
@@ -83,6 +88,11 @@ namespace Hermes
 	std::shared_ptr<const IPlatformWindow> GameLoop::GetWindow() const
 	{
 		return ApplicationWindow;
+	}
+
+	const InputEngine& GameLoop::GetInputEngine() const
+	{
+		return *InputEngine;
 	}
 
 	void GameLoop::WindowCloseEventHandler(const IEvent& Event)

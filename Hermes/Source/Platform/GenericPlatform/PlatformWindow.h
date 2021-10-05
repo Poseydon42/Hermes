@@ -9,9 +9,10 @@
 
 namespace Hermes
 {
+	class InputEngine;
 	class EventQueue;
 
-	class WindowCloseEvent : public IEvent
+	class HERMES_API WindowCloseEvent : public IEvent
 	{
 		EVENT_BODY(WindowCloseEvent)
 	
@@ -26,7 +27,7 @@ namespace Hermes
 	private:
 		String WindowName;
 	};
-
+	
 	/**
 	 * Interface to platform windowing API
 	 */
@@ -96,6 +97,11 @@ namespace Hermes
 		 * Returns underlying platform-specific handle
 		 */
 		virtual void* GetNativeHandle() const = 0;
+
+		/*
+		 * Updates pointer to input engine instance that is used to process window input messages
+		 */
+		virtual void SetInputEngine(std::weak_ptr<InputEngine> InputEngine) = 0;
 
 		static std::shared_ptr<IPlatformWindow> CreatePlatformWindow(const String& Name, Vec2ui Size);
 	};

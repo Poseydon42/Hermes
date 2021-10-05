@@ -9,6 +9,7 @@
 
 namespace Hermes
 {
+	class InputEngine;
 	class IEvent;
 	class IPlatformWindow;
 
@@ -32,6 +33,8 @@ namespace Hermes
 		void SetPause(bool IsPaused);
 		
 		std::shared_ptr<const IPlatformWindow> GetWindow() const;
+
+		const InputEngine& GetInputEngine() const;
 	private:
 		void WindowCloseEventHandler(const IEvent& Event);
 
@@ -44,6 +47,8 @@ namespace Hermes
 		std::unique_ptr<IApplication> Application;
 
 		std::shared_ptr<IPlatformWindow> ApplicationWindow;
+
+		std::shared_ptr<InputEngine> InputEngine;
 	};
 
 	HERMES_API extern GameLoop* GGameLoop;

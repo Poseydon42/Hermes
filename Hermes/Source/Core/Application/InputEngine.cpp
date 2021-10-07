@@ -370,6 +370,7 @@ namespace Hermes
 
 	void InputEngine::PushEvent(KeyCode Code, bool WasPressed)
 	{
+		KeyState[static_cast<int16>(Code)] = WasPressed;
 		Queue.PushEvent(KeyEvent(Code, WasPressed ? KeyEventType::Pressed : KeyEventType::Released));
 	}
 
@@ -381,5 +382,10 @@ namespace Hermes
 	const EventQueue& InputEngine::GetEventQueue() const
 	{
 		return Queue;
+	}
+
+	bool InputEngine::IsKeyPressed(KeyCode Key) const
+	{
+		return KeyState[static_cast<int16>(Key)];
 	}
 }

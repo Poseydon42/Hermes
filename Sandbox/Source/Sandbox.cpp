@@ -340,7 +340,7 @@ public:
 
 		TimeSinceStart += DeltaTime;
 		CurrentTranslation.X = sin(TimeSinceStart);
-		auto TranslationMatrix = Hermes::Mat4::Translation(CurrentTranslation);
+		auto TranslationMatrix = Hermes::GGameLoop->GetInputEngine().IsKeyPressed(Hermes::KeyCode::Space) ? Hermes::Mat4::Translation(CurrentTranslation) : Hermes::Mat4::Identity();
 		auto RotationMatrix = Hermes::Mat4::Rotation(Hermes::Vec3{1.0f, 0.4f, 3.14159262f});
 		auto ConvertedRotationMatrix = Hermes::Mat4(RotationMatrix);
 		ConvertedRotationMatrix[3][3] = 1.0f;

@@ -8,9 +8,9 @@
 
 namespace Hermes
 {
-	enum class KeyCode
+	enum class KeyCode : int16
 	{
-		LeftMouseButton,
+		LeftMouseButton = 0,
 		RightMouseButton,
 		MiddleMouseButton,
 		FourthMouseButton,
@@ -116,7 +116,8 @@ namespace Hermes
 		F23,
 		F24,
 		NumLock,
-		ScrollLock
+		ScrollLock,
+		Count_
 	};
 
 	String KeyCodeToString(KeyCode Code);
@@ -161,7 +162,10 @@ namespace Hermes
 		void ProcessDeferredEvents();
 
 		const EventQueue& GetEventQueue() const;
+
+		bool IsKeyPressed(KeyCode Key) const;
 	private:
 		EventQueue Queue;
+		bool KeyState[static_cast<int16>(KeyCode::Count_)] = {};
 	};
 }

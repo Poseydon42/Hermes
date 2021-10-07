@@ -340,7 +340,13 @@ public:
 
 		TimeSinceStart += DeltaTime;
 		CurrentTranslation.X = sin(TimeSinceStart);
-		Hermes::Mat4 ModelMatrix = Hermes::Mat4::Translation(CurrentTranslation);
+		auto TranslationMatrix = Hermes::Mat4::Translation(CurrentTranslation);
+		auto RotationMatrix = Hermes::Mat4::Rotation(Hermes::Vec3{1.0f, 0.4f, 3.14159262f});
+		auto ConvertedRotationMatrix = Hermes::Mat4(RotationMatrix);
+		ConvertedRotationMatrix[3][3] = 1.0f;
+		auto ConvertedScaleMatrix = Hermes::Mat4(Hermes::Mat4::Scale(Hermes::Vec3(3.0f)));
+		ConvertedScaleMatrix[3][3] = 1.0f;
+		Hermes::Mat4 ModelMatrix = TranslationMatrix * ConvertedRotationMatrix * ConvertedScaleMatrix;
 		
 		GraphicsCommandBuffer->BeginRecording();
 		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTargets[ImageIndex], { {1.0f, 1.0f, 0.0f, 1.0f } });

@@ -17,6 +17,9 @@ namespace Hermes
 	public:
 		Matrix(InternalType V = 0);
 
+		template<int OtherRows, int OtherColumns, typename OtherInternalType>
+		explicit Matrix(Matrix<OtherRows, OtherColumns, OtherInternalType> Other);
+
 		bool operator==(const Matrix& Rhs) const;
 		bool operator!=(const Matrix& Rhs) const;
 
@@ -31,7 +34,22 @@ namespace Hermes
 
 		template<int OutRows = Rows, int OutColumns = Columns>
 		static std::enable_if_t<OutRows == OutColumns, Matrix> Identity();
-		static Matrix<4, 4, InternalType> Translation(Vector3<InternalType> Translation);
+
+		template<typename VectorInternalType>
+		static Matrix<4, 4, InternalType> Translation(Vector3<VectorInternalType> Translation);
+
+		template<typename AngleType>
+		static Matrix<3, 3, InternalType> RotationX(AngleType Angle);
+		template<typename AngleType>
+		static Matrix<3, 3, InternalType> RotationY(AngleType Angle);
+		template<typename AngleType>
+		static Matrix<3, 3, InternalType> RotationZ(AngleType Angle);
+
+		template<typename AngleVectorType>
+		static Matrix<3, 3, InternalType> Rotation(Vector3<AngleVectorType> Rotation);
+
+		template<typename ScaleVectorType>
+		static Matrix<3, 3, InternalType> Scale(Vector3<ScaleVectorType> Scale);
 
 		struct RowProxy
 		{
@@ -71,6 +89,24 @@ namespace Hermes
 		for (size_t Index = 0; Index < Rows * Columns; Index++)
 		{
 			Data[Index] = V;
+		}
+	}
+
+	template <int Rows, int Columns, typename InternalType>
+	template <int OtherRows, int OtherColumns, typename OtherInternalType>
+	Matrix<Rows, Columns, InternalType>::Matrix(Matrix<OtherRows, OtherColumns, OtherInternalType> Other)
+	{
+		int TotalRows = Math::Min(Rows, OtherRows);
+		int TotalColumns = Math::Min(Columns, OtherColumns);
+		for (int Row = 0; Row < Rows; Row++)
+		{
+			for (int Column = 0; Column < Columns; Column++)
+			{
+				if (Row < TotalRows && Column < TotalColumns)
+					this->operator[](Row)[Column] = InternalType(Other[Row][Column]);
+				else
+					this->operator[](Row)[Column] = 0;
+			}
 		}
 	}
 
@@ -162,12 +198,70 @@ namespace Hermes
 	}
 
 	template <int Rows, int Columns, typename InternalType>
-	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::Translation(Vector3<InternalType> Translation)
+	template <typename VectorInternalType>
+	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::Translation(Vector3<VectorInternalType> Translation)
 	{
 		auto Result = Matrix<4, 4, InternalType>::Identity();
 		Result[0][3] = Translation.X;
 		Result[1][3] = Translation.Y;
 		Result[2][3] = Translation.Z;
+		return Result;
+	}
+
+	template <int Rows, int Columns, typename InternalType>
+	template <typename AngleType>
+	Matrix<3, 3, InternalType> Matrix<Rows, Columns, InternalType>::RotationX(AngleType Angle)
+	{
+		Matrix<3, 3, InternalType> Result;
+		Result[0][0] = 1;
+		Result[1][1] = cos(Angle);
+		Result[1][2] = -sin(Angle);
+		Result[2][1] = sin(Angle);
+		Result[2][2] = cos(Angle);
+		return Result;
+	}
+
+	template <int Rows, int Columns, typename InternalType>
+	template <typename AngleType>
+	Matrix<3, 3, InternalType> Matrix<Rows, Columns, InternalType>::RotationY(AngleType Angle)
+	{
+		Matrix<3, 3, InternalType> Result;
+		Result[0][0] = cos(Angle);
+		Result[0][3] = sin(Angle);
+		Result[1][1] = 1;
+		Result[2][0] = -sin(Angle);
+		Result[2][2] = cos(Angle);
+		return Result;
+	}
+
+	template <int Rows, int Columns, typename InternalType>
+	template <typename AngleType>
+	Matrix<3, 3, InternalType> Matrix<Rows, Columns, InternalType>::RotationZ(AngleType Angle)
+	{
+		Matrix<3, 3, InternalType> Result;
+		Result[0][0] = cos(Angle);
+		Result[0][1] = -sin(Angle);
+		Result[1][0] = sin(Angle);
+		Result[1][1] = cos(Angle);
+		Result[2][2] = 1;
+		return Result;
+	}
+
+	template <int Rows, int Columns, typename InternalType>
+	template <typename AngleVectorType>
+	Matrix<3, 3, InternalType> Matrix<Rows, Columns, InternalType>::Rotation(Vector3<AngleVectorType> Rotation)
+	{
+		return RotationY(Rotation.Y) * RotationX(Rotation.X) * RotationZ(Rotation.Z); // TODO : recheck order
+	}
+
+	template <int Rows, int Columns, typename InternalType>
+	template <typename ScaleVectorType>
+	Matrix<3, 3, InternalType> Matrix<Rows, Columns, InternalType>::Scale(Vector3<ScaleVectorType> Scale)
+	{
+		Matrix<3, 3, InternalType> Result;
+		Result[0][0] = static_cast<InternalType>(Scale.X);
+		Result[1][1] = static_cast<InternalType>(Scale.Y);
+		Result[2][2] = static_cast<InternalType>(Scale.Z);
 		return Result;
 	}
 

@@ -35,6 +35,7 @@ namespace Hermes
 			return false;
 		InputEngine = std::make_shared<class InputEngine>();
 		ApplicationWindow->SetInputEngine(InputEngine);
+		ApplicationWindow->SetCursorVisibility(false);
 		if (auto WindowMessageQueue = ApplicationWindow->WindowQueue().lock())
 		{
 			WindowMessageQueue->Subscribe<GameLoop, &GameLoop::WindowCloseEventHandler>(WindowCloseEvent::GetStaticType(), this);

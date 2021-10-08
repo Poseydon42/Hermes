@@ -43,6 +43,8 @@ namespace Hermes
 		void* GetNativeHandle() const override;
 		
 		void SetInputEngine(std::weak_ptr<class InputEngine> InInputEngine) override;
+
+		void SetCursorVisibility(bool IsVisible) override;
 	
 	private:
 		HWND WindowHandle;

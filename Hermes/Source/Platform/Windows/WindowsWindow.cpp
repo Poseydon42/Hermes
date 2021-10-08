@@ -192,6 +192,11 @@ namespace Hermes
 		this->InputEngine = InInputEngine;
 	}
 
+	void WindowsWindow::SetCursorVisibility(bool IsVisible)
+	{
+		ShowCursor(IsVisible);
+	}
+
 	LRESULT WindowsWindow::MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 	{
 		switch (Message)

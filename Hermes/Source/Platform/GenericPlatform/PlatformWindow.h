@@ -103,6 +103,8 @@ namespace Hermes
 		 */
 		virtual void SetInputEngine(std::weak_ptr<InputEngine> InputEngine) = 0;
 
+		virtual void SetCursorVisibility(bool IsVisible) = 0;
+
 		static std::shared_ptr<IPlatformWindow> CreatePlatformWindow(const String& Name, Vec2ui Size);
 	};
 }

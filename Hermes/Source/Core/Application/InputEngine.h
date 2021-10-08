@@ -160,21 +160,17 @@ namespace Hermes
 	public:
 		void PushEvent(KeyCode Code, bool WasPressed);
 
-		void SetMousePosition(Vec2 Position);
-
 		void ProcessDeferredEvents();
 
 		const EventQueue& GetEventQueue() const;
 
 		bool IsKeyPressed(KeyCode Key) const;
 
+		void SetDeltaMousePosition(Vec2 Position);
 		Vec2 GetDeltaMousePosition() const;
-
-		Vec2 GetNormalizedMousePosition() const;
 	private:
 		EventQueue Queue;
 		bool KeyState[static_cast<int16>(KeyCode::Count_)] = {};
-		Vec2 CurrentMousePosition;
-		Vec2 MousePositionInLastFrame;
+		Vec2 DeltaMousePosition;
 	};
 }

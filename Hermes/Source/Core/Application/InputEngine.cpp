@@ -374,14 +374,8 @@ namespace Hermes
 		Queue.PushEvent(KeyEvent(Code, WasPressed ? KeyEventType::Pressed : KeyEventType::Released));
 	}
 
-	void InputEngine::SetMousePosition(Vec2 Position)
-	{
-		CurrentMousePosition = Position;
-	}
-
 	void InputEngine::ProcessDeferredEvents()
 	{
-		MousePositionInLastFrame = CurrentMousePosition;
 		Queue.Run();
 	}
 
@@ -395,13 +389,13 @@ namespace Hermes
 		return KeyState[static_cast<int16>(Key)];
 	}
 
-	Vec2 InputEngine::GetDeltaMousePosition() const
+	void InputEngine::SetDeltaMousePosition(Vec2 Position)
 	{
-		return CurrentMousePosition - MousePositionInLastFrame;
+		DeltaMousePosition = Position;
 	}
 
-	Vec2 InputEngine::GetNormalizedMousePosition() const
+	Vec2 InputEngine::GetDeltaMousePosition() const
 	{
-		return CurrentMousePosition;
+		return DeltaMousePosition;
 	}
 }

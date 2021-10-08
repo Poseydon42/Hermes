@@ -155,6 +155,30 @@ namespace Hermes
 			TranslateMessage(&Message);
 			DispatchMessage(&Message);
 		}
+
+		POINT CursorPos;
+		if (GetCursorPos(&CursorPos) && ScreenToClient(WindowHandle, &CursorPos))
+		{
+			auto RelativeX = static_cast<float>(CursorPos.x) / static_cast<float>(LastKnownSize.X) * 2.0f - 1.0f;
+			auto RelativeY = static_cast<float>(CursorPos.y) / static_cast<float>(LastKnownSize.Y) * 2.0f - 1.0f;
+			if (auto Input = InputEngine.lock())
+			{
+				Input->SetDeltaMousePosition(Vec2{ RelativeX, RelativeY });
+			}
+			uint32 WindowCenterX = LastKnownSize.X / 2;
+			uint32 WindowCenterY = LastKnownSize.Y / 2;
+			POINT CenterCoords;
+			CenterCoords.x = static_cast<decltype(CenterCoords.x)>(WindowCenterX);
+			CenterCoords.y = static_cast<decltype(CenterCoords.y)>(WindowCenterY);
+			ClientToScreen(WindowHandle, &CenterCoords);
+			SetCursorPos(CenterCoords.x, CenterCoords.y);
+		}
+		else
+		{
+			DWORD ErrorCode = GetLastError();
+			HERMES_LOG_WARNING(L"GetCursorPos() or ScreenToClient() failed, error code: 0x%x", static_cast<uint32>(ErrorCode));
+		}
+
 		MessagePump->Run();
 	}
 
@@ -325,18 +349,6 @@ namespace Hermes
 					}
 					KeyCode Code = Iterator->second;
 					LockedInputEngine->PushEvent(Code, IsPressEvent);
-				}
-				break;
-			}
-			case WM_MOUSEMOVE:
-			{
-				if (auto Input = InputEngine.lock())
-				{
-					auto WindowX = static_cast<int16>((LParam & 0x0000FFFF) >> 0);
-					auto WindowY = static_cast<int16>((LParam & 0xFFFF0000) >> 16);
-					float X = static_cast<float>(WindowX) / static_cast<float>(LastKnownSize.X) * 2.0f - 1.0f;
-					float Y = static_cast<float>(WindowY) / static_cast<float>(LastKnownSize.Y) * 2.0f - 1.0f;
-					Input->SetMousePosition(Vec2{ X, Y });
 				}
 				break;
 			}

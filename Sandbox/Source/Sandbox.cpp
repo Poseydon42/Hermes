@@ -340,9 +340,18 @@ public:
 
 		TimeSinceStart += DeltaTime;
 		const auto& InputEngine = Hermes::GGameLoop->GetInputEngine();
-		auto MousePos = InputEngine.GetNormalizedMousePosition();
-		Hermes::Vec3 Translation = Hermes::Vec3(MousePos.X, MousePos.Y, 0);
-		Hermes::Mat4 ModelMatrix = Hermes::Mat4::Translation(Translation);
+		auto DeltaMousePos = InputEngine.GetDeltaMousePosition();
+		static constexpr float Speed = 3.0f;
+		Hermes::Vec3 DeltaTranslation = Hermes::Vec3(DeltaMousePos.X, DeltaMousePos.Y, 0);
+		if (!DeltaTranslation.IsCloseToZero())
+			DeltaTranslation.Normalize();
+		DeltaTranslation *= DeltaTime * Speed;
+		CurrentTranslation += DeltaTranslation;
+		/*HERMES_LOG_INFO(L"DeltaMousePos{%f, %f}; DeltaTranslation{%f, %f}; CurrentTranslation{%f, %f}",
+						DeltaMousePos.X, DeltaMousePos.Y,
+						DeltaTranslation.X, DeltaTranslation.Y,
+						CurrentTranslation.X, CurrentTranslation.Y);*/
+		Hermes::Mat4 ModelMatrix = Hermes::Mat4::Translation(CurrentTranslation);
 		
 		GraphicsCommandBuffer->BeginRecording();
 		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTargets[ImageIndex], { {1.0f, 1.0f, 0.0f, 1.0f } });
@@ -489,6 +498,7 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::Shader> VertexShader, FragmentShader;
 
 	float TimeSinceStart = 0.0f;
+	Hermes::Vec3 CurrentTranslation;
 
 	bool SwapchainRecreated;
 

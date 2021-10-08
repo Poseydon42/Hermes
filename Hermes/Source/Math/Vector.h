@@ -65,6 +65,11 @@ namespace Hermes
 		 * Normalizes a vector and returns reference to itself
 		 */
 		Vector3& Normalize();
+
+		/*
+		 * Returns true if all components of vector are close to zero with a tolerance of Epsilon
+		 */
+		bool IsCloseToZero(InternalType Epsilon = InternalType(FLT_EPSILON)) const;
 	};
 
 	/**
@@ -248,5 +253,11 @@ namespace Hermes
 	{
 		*this /= Length();
 		return *this;
+	}
+
+	template <typename InternalType>
+	bool Vector3<InternalType>::IsCloseToZero(InternalType Epsilon) const
+	{
+		return Math::Abs(X) < Epsilon && Math::Abs(Y) < Epsilon && Math::Abs(Z) < Epsilon;
 	}
 }

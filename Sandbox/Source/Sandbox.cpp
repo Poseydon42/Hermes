@@ -339,14 +339,10 @@ public:
 		Hermes::uint32 ImageIndex = NewIndex.value();
 
 		TimeSinceStart += DeltaTime;
-		CurrentTranslation.X = sin(TimeSinceStart);
-		auto TranslationMatrix = Hermes::GGameLoop->GetInputEngine().IsKeyPressed(Hermes::KeyCode::Space) ? Hermes::Mat4::Translation(CurrentTranslation) : Hermes::Mat4::Identity();
-		auto RotationMatrix = Hermes::Mat4::Rotation(Hermes::Vec3{1.0f, 0.4f, 3.14159262f});
-		auto ConvertedRotationMatrix = Hermes::Mat4(RotationMatrix);
-		ConvertedRotationMatrix[3][3] = 1.0f;
-		auto ConvertedScaleMatrix = Hermes::Mat4(Hermes::Mat4::Scale(Hermes::Vec3(3.0f)));
-		ConvertedScaleMatrix[3][3] = 1.0f;
-		Hermes::Mat4 ModelMatrix = TranslationMatrix * ConvertedRotationMatrix * ConvertedScaleMatrix;
+		const auto& InputEngine = Hermes::GGameLoop->GetInputEngine();
+		auto MousePos = InputEngine.GetNormalizedMousePosition();
+		Hermes::Vec3 Translation = Hermes::Vec3(MousePos.X, MousePos.Y, 0);
+		Hermes::Mat4 ModelMatrix = Hermes::Mat4::Translation(Translation);
 		
 		GraphicsCommandBuffer->BeginRecording();
 		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTargets[ImageIndex], { {1.0f, 1.0f, 0.0f, 1.0f } });
@@ -492,7 +488,6 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::Image> Texture;
 	std::shared_ptr<Hermes::RenderInterface::Shader> VertexShader, FragmentShader;
 
-	Hermes::Vec3 CurrentTranslation = {};
 	float TimeSinceStart = 0.0f;
 
 	bool SwapchainRecreated;

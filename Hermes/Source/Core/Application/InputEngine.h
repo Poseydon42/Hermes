@@ -5,6 +5,7 @@
 #include "Core/Core.h"
 #include "Core/Application/Event.h"
 #include "Core/Application/EventQueue.h"
+#include "Math/Vector2.h"
 
 namespace Hermes
 {
@@ -159,13 +160,21 @@ namespace Hermes
 	public:
 		void PushEvent(KeyCode Code, bool WasPressed);
 
+		void SetMousePosition(Vec2 Position);
+
 		void ProcessDeferredEvents();
 
 		const EventQueue& GetEventQueue() const;
 
 		bool IsKeyPressed(KeyCode Key) const;
+
+		Vec2 GetDeltaMousePosition() const;
+
+		Vec2 GetNormalizedMousePosition() const;
 	private:
 		EventQueue Queue;
 		bool KeyState[static_cast<int16>(KeyCode::Count_)] = {};
+		Vec2 CurrentMousePosition;
+		Vec2 MousePositionInLastFrame;
 	};
 }

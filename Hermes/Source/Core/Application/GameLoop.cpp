@@ -64,9 +64,9 @@ namespace Hermes
 				auto CurrentTimestamp = PlatformTime::GetCurrentTimestamp();
 				float DeltaTime = PlatformTime::ToSeconds(CurrentTimestamp - PrevFrameEndTimestamp);
 
-				InputEngine->ProcessDeferredEvents();
 				Application->Run(DeltaTime);
-
+				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
+				
 				PrevFrameEndTimestamp = CurrentTimestamp;
 			}
 		}

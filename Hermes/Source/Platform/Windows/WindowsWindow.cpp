@@ -157,26 +157,29 @@ namespace Hermes
 		}
 
 		POINT CursorPos;
-		if (IsInFocus() && GetCursorPos(&CursorPos) && ScreenToClient(WindowHandle, &CursorPos))
+		if (IsInFocus())
 		{
-			auto RelativeX = static_cast<float>(CursorPos.x) / static_cast<float>(LastKnownSize.X) * 2.0f - 1.0f;
-			auto RelativeY = static_cast<float>(CursorPos.y) / static_cast<float>(LastKnownSize.Y) * 2.0f - 1.0f;
-			if (auto Input = InputEngine.lock())
+			if (GetCursorPos(&CursorPos) && ScreenToClient(WindowHandle, &CursorPos))
 			{
-				Input->SetDeltaMousePosition(Vec2{ RelativeX, RelativeY });
+				auto RelativeX = static_cast<float>(CursorPos.x) / static_cast<float>(LastKnownSize.X) * 2.0f - 1.0f;
+				auto RelativeY = static_cast<float>(CursorPos.y) / static_cast<float>(LastKnownSize.Y) * 2.0f - 1.0f;
+				if (auto Input = InputEngine.lock())
+				{
+					Input->SetDeltaMousePosition(Vec2{ RelativeX, RelativeY });
+				}
+				uint32 WindowCenterX = LastKnownSize.X / 2;
+				uint32 WindowCenterY = LastKnownSize.Y / 2;
+				POINT CenterCoords;
+				CenterCoords.x = static_cast<decltype(CenterCoords.x)>(WindowCenterX);
+				CenterCoords.y = static_cast<decltype(CenterCoords.y)>(WindowCenterY);
+				ClientToScreen(WindowHandle, &CenterCoords);
+				SetCursorPos(CenterCoords.x, CenterCoords.y);
 			}
-			uint32 WindowCenterX = LastKnownSize.X / 2;
-			uint32 WindowCenterY = LastKnownSize.Y / 2;
-			POINT CenterCoords;
-			CenterCoords.x = static_cast<decltype(CenterCoords.x)>(WindowCenterX);
-			CenterCoords.y = static_cast<decltype(CenterCoords.y)>(WindowCenterY);
-			ClientToScreen(WindowHandle, &CenterCoords);
-			SetCursorPos(CenterCoords.x, CenterCoords.y);
-		}
-		else
-		{
-			DWORD ErrorCode = GetLastError();
-			HERMES_LOG_WARNING(L"GetCursorPos() or ScreenToClient() failed, error code: 0x%x", static_cast<uint32>(ErrorCode));
+			else
+			{
+				DWORD ErrorCode = GetLastError();
+				HERMES_LOG_WARNING(L"GetCursorPos() or ScreenToClient() failed, error code: 0x%x", static_cast<uint32>(ErrorCode));
+			}
 		}
 
 		MessagePump->Run();

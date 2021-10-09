@@ -340,18 +340,42 @@ public:
 
 		TimeSinceStart += DeltaTime;
 		const auto& InputEngine = Hermes::GGameLoop->GetInputEngine();
-		auto DeltaMousePos = InputEngine.GetDeltaMousePosition();
-		static constexpr float Speed = 3.0f;
-		Hermes::Vec3 DeltaTranslation = Hermes::Vec3(DeltaMousePos.X, DeltaMousePos.Y, 0);
-		if (!DeltaTranslation.IsCloseToZero())
-			DeltaTranslation.Normalize();
-		DeltaTranslation *= DeltaTime * Speed;
-		CurrentTranslation += DeltaTranslation;
-		/*HERMES_LOG_INFO(L"DeltaMousePos{%f, %f}; DeltaTranslation{%f, %f}; CurrentTranslation{%f, %f}",
-						DeltaMousePos.X, DeltaMousePos.Y,
-						DeltaTranslation.X, DeltaTranslation.Y,
-						CurrentTranslation.X, CurrentTranslation.Y);*/
-		Hermes::Mat4 ModelMatrix = Hermes::Mat4::Translation(CurrentTranslation);
+
+		static constexpr float CameraRotationSpeed = 2.5f;
+		Hermes::Vec2 MouseDelta = InputEngine.GetDeltaMousePosition();
+#if 0
+		MouseDelta = {};
+#endif
+		MouseDelta = MouseDelta.SafeNormalize() * DeltaTime * CameraRotationSpeed;
+		CameraPitch = Hermes::Math::Clamp(-Hermes::Math::HalfPi, Hermes::Math::HalfPi, CameraPitch + MouseDelta.Y);
+		CameraYaw += MouseDelta.X;
+		Hermes::Vec3 CameraForward;
+		CameraForward.X = Hermes::Math::Sin(CameraYaw);
+		CameraForward.Y = Hermes::Math::Sin(CameraPitch);
+		CameraForward.Z = -Hermes::Math::Cos(CameraYaw) * Hermes::Math::Cos(CameraPitch);
+		CameraForward.Normalize();
+		Hermes::Vec3 GlobalUp = { 0.0f, 1.0f, 0.0f };
+		Hermes::Vec3 CameraRight = CameraForward ^ GlobalUp;
+		Hermes::Vec3 CameraUp = CameraRight ^ CameraForward;
+
+		Hermes::Vec3 DeltaCameraPosition = {};
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::W))
+			DeltaCameraPosition += CameraForward;
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::S))
+			DeltaCameraPosition -= CameraForward;
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::A))
+			DeltaCameraPosition.X -= 1.0f;
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::D))
+			DeltaCameraPosition.X += 1.0f;
+		if (!DeltaCameraPosition.IsCloseToZero())
+			DeltaCameraPosition.Normalize();
+		DeltaCameraPosition *= DeltaTime * 5.0f;
+		CameraPos += DeltaCameraPosition;
+		
+		Hermes::Mat4 ModelMatrix =
+			Hermes::Mat4::Perspective(Hermes::Math::Radians(60.0f), 1280.0f / 720.0f, 0.1f, 100.0f) *
+			Hermes::Mat4::LookAt(CameraPos, CameraForward, CameraUp) *
+			Hermes::Mat4::Translation(Hermes::Vec3{0.0f, 0.3f, -1.0f});
 		
 		GraphicsCommandBuffer->BeginRecording();
 		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTargets[ImageIndex], { {1.0f, 1.0f, 0.0f, 1.0f } });
@@ -498,7 +522,8 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::Shader> VertexShader, FragmentShader;
 
 	float TimeSinceStart = 0.0f;
-	Hermes::Vec3 CurrentTranslation;
+	Hermes::Vec3 CameraPos = {0.0f, 0.0f, 3.0f};
+	float CameraPitch = 0.0f, CameraYaw = 0.0f;
 
 	bool SwapchainRecreated;
 

@@ -51,6 +51,12 @@ namespace Hermes
 		template<typename ScaleVectorType>
 		static Matrix<3, 3, InternalType> Scale(Vector3<ScaleVectorType> Scale);
 
+		template<typename VectorType>
+		static Matrix<4, 4, InternalType> LookAt(Vector3<VectorType> Origin, Vector3<VectorType> Forward, Vector3<VectorType> Up);
+
+		template<typename T>
+		static Matrix<4, 4, InternalType> Perspective(T VerticalFOV, T AspectRatio, T NearClipPlane, T FarClipPlane);
+
 		struct RowProxy
 		{
 			InternalType& operator[](size_t Index);
@@ -262,6 +268,48 @@ namespace Hermes
 		Result[0][0] = static_cast<InternalType>(Scale.X);
 		Result[1][1] = static_cast<InternalType>(Scale.Y);
 		Result[2][2] = static_cast<InternalType>(Scale.Z);
+		return Result;
+	}
+
+	template <int Rows, int Columns, typename InternalType>
+	template <typename VectorType>
+	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::LookAt(Vector3<VectorType> Origin, Vector3<VectorType> Forward, Vector3<VectorType> Up)
+	{
+		auto Result = Matrix<4, 4, InternalType>::Identity();
+		Result[0][3] = -Origin.X;
+		Result[1][3] = -Origin.Y;
+		Result[2][3] = -Origin.Z;
+
+		auto Right = Forward ^ Up;
+		Result[0][0] = Right.X;
+		Result[0][1] = Right.Y;
+		Result[0][2] = Right.Z;
+
+		Result[1][0] = Up.X;
+		Result[1][1] = Up.Y;
+		Result[1][2] = Up.Z;
+
+		Result[2][0] = Forward.X;
+		Result[2][1] = Forward.Y;
+		Result[2][2] = Forward.Z;
+
+		return Result;
+	}
+
+	template <int Rows, int Columns, typename InternalType>
+	template <typename T>
+	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::Perspective(T VerticalFOV, T AspectRatio, T NearClipPlane, T FarClipPlane)
+	{
+		Mat4 Result;
+
+		T CotanHalfFOV = Math::Cotan(VerticalFOV / static_cast<T>(2));
+
+		Result[0][0] = CotanHalfFOV / AspectRatio;
+		Result[1][1] = CotanHalfFOV;
+		Result[2][2] = FarClipPlane / (NearClipPlane - FarClipPlane);
+		Result[2][3] = -(FarClipPlane * NearClipPlane) / (FarClipPlane - NearClipPlane);
+		Result[3][2] = static_cast<T>(-1);
+
 		return Result;
 	}
 

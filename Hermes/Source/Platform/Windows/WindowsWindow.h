@@ -67,6 +67,8 @@ namespace Hermes
 		
 		static constexpr DWORD ExStyle = 0;
 
+		bool IsInFocus() const;
+
 		LRESULT MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam);
 		
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

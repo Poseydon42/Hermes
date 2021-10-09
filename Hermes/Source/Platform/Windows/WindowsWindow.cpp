@@ -157,7 +157,7 @@ namespace Hermes
 		}
 
 		POINT CursorPos;
-		if (GetCursorPos(&CursorPos) && ScreenToClient(WindowHandle, &CursorPos))
+		if (IsInFocus() && GetCursorPos(&CursorPos) && ScreenToClient(WindowHandle, &CursorPos))
 		{
 			auto RelativeX = static_cast<float>(CursorPos.x) / static_cast<float>(LastKnownSize.X) * 2.0f - 1.0f;
 			auto RelativeY = static_cast<float>(CursorPos.y) / static_cast<float>(LastKnownSize.Y) * 2.0f - 1.0f;
@@ -195,6 +195,11 @@ namespace Hermes
 	void WindowsWindow::SetCursorVisibility(bool IsVisible)
 	{
 		ShowCursor(IsVisible);
+	}
+
+	bool WindowsWindow::IsInFocus() const
+	{
+		return (GetFocus() == WindowHandle);
 	}
 
 	LRESULT WindowsWindow::MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)

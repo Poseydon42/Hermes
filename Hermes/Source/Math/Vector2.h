@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Core/Core.h"
+#include "Math/Common.h"
 #include <cmath>
 
 namespace Hermes
@@ -59,6 +60,17 @@ namespace Hermes
 		 * Normalizes a vector and returns reference to itself
 		 */
 		Vector2& Normalize();
+
+		/*
+		 * Normalizes a vector only if at least one of its components is greater than zero
+		 * with a tolerance of Epsilon and returns reference to itself
+		 */
+		Vector2& SafeNormalize(InternalType Epsilon = InternalType(FLT_EPSILON));
+
+		/*
+		 * Returns true if all components of vector are close to zero with a tolerance of Epsilon
+		 */
+		bool IsCloseToZero(InternalType Epsilon = InternalType(FLT_EPSILON)) const;
 	};
 
 	/**
@@ -233,5 +245,19 @@ namespace Hermes
 	{
 		*this /= Length();
 		return *this;
+	}
+
+	template <typename InternalType>
+	Vector2<InternalType>& Vector2<InternalType>::SafeNormalize(InternalType Epsilon)
+	{
+		if (!IsCloseToZero(Epsilon))
+			return Normalize();
+		return *this;
+	}
+
+	template <typename InternalType>
+	bool Vector2<InternalType>::IsCloseToZero(InternalType Epsilon) const
+	{
+		return Math::Abs(X) < Epsilon && Math::Abs(Y) < Epsilon;
 	}
 }

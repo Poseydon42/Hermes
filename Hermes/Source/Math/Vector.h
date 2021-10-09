@@ -67,6 +67,12 @@ namespace Hermes
 		Vector3& Normalize();
 
 		/*
+		 * Normalizes a vector only if at least one of its components is greater than zero
+		 * with a tolerance of Epsilon and returns reference to itself
+		 */
+		Vector3& SafeNormalize(InternalType Epsilon = InternalType(FLT_EPSILON));
+
+		/*
 		 * Returns true if all components of vector are close to zero with a tolerance of Epsilon
 		 */
 		bool IsCloseToZero(InternalType Epsilon = InternalType(FLT_EPSILON)) const;
@@ -252,6 +258,14 @@ namespace Hermes
 	Vector3<InternalType>& Vector3<InternalType>::Normalize()
 	{
 		*this /= Length();
+		return *this;
+	}
+
+	template <typename InternalType>
+	Vector3<InternalType>& Vector3<InternalType>::SafeNormalize(InternalType Epsilon)
+	{
+		if (!IsCloseToZero(Epsilon))
+			return Normalize();
 		return *this;
 	}
 

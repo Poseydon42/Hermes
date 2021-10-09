@@ -56,5 +56,11 @@ namespace Hermes
 		{
 			return tan(HalfPi - Value);
 		}
+
+		template<typename T>
+		T Radians(T Degrees)
+		{
+			return static_cast<T>(Pi) / static_cast<T>(180) * Degrees;
+		}
 	}
 }

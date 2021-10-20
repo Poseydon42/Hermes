@@ -22,6 +22,7 @@
 #include "RenderInterface/GenericRenderInterface/RenderPass.h"
 #include "RenderInterface/GenericRenderInterface/Pipeline.h"
 #include "Core/Application/GameLoop.h"
+#include <sstream>
 
 class SandboxApp : public Hermes::IApplication
 {
@@ -42,21 +43,10 @@ public:
 		Device = PhysicalDevice->CreateDevice();
 		Swapchain = Device->CreateSwapchain(3);
 
-		Vertex VertexData[] =
-		{
-			{ {-0.5f, -0.5f, 0.0f }, {0.0f, 0.0f } },
-			{ { 0.5f, -0.5f, 0.0f }, {1.0f, 0.0f } },
-			{ { 0.5f,  0.5f, 0.0f }, {1.0f, 1.0f } },
-			{ { 0.0f,  0.8f, 0.0f }, {0.5f, 0.8f } },
-			{ {-0.5f,  0.5f, 0.0f }, {0.0f, 1.0f } }
-		};
-
-		// Square is drawn indexed, triangle - only with vertex buffer(vertices 2, 3, 4)
-		Hermes::uint32 IndexData[] =
-		{
-			0, 1, 2,
-			2, 4, 0
-		};
+		std::vector<Vertex> SuzanneVertexData;
+		std::vector<Hermes::uint32> SuzanneIndexData;
+		HERMES_ASSERT(LoadOBJ(L"suzanne.obj", SuzanneVertexData, SuzanneIndexData));
+		DrawIndexCount = static_cast<Hermes::uint32>(SuzanneIndexData.size());
 
 		Hermes::Vec2ui ImageSize;
 		auto CheckerImage = LoadTGA(L"checker_colored.tga", ImageSize);
@@ -67,12 +57,12 @@ public:
 
 		Hermes::uint32 StagingBufferSize = Hermes::Math::Max(
 			Hermes::Math::Max(
-					(Hermes::uint32)sizeof(VertexData),
-					(Hermes::uint32)sizeof(IndexData)),
+					static_cast<Hermes::uint32>(SuzanneVertexData.size() * sizeof(SuzanneVertexData[0])),
+					static_cast<Hermes::uint32>(SuzanneIndexData.size() * sizeof(SuzanneIndexData[0]))),
 			ImageSizeInBytes);
 		auto StagingBuffer = Device->CreateBuffer(StagingBufferSize, Hermes::RenderInterface::BufferUsageType::CPUAccessible | Hermes::RenderInterface::BufferUsageType::CopySource);
-		VertexBuffer = Device->CreateBuffer(sizeof(VertexData), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::VertexBuffer);
-		IndexBuffer = Device->CreateBuffer(sizeof(IndexData), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::IndexBuffer);
+		VertexBuffer = Device->CreateBuffer(static_cast<Hermes::uint32>(SuzanneVertexData.size() * sizeof(SuzanneVertexData[0])), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::VertexBuffer);
+		IndexBuffer = Device->CreateBuffer(static_cast<Hermes::uint32>(SuzanneIndexData.size() * sizeof(SuzanneIndexData[0])), Hermes::RenderInterface::BufferUsageType::CopyDestination | Hermes::RenderInterface::BufferUsageType::IndexBuffer);
 		auto TransferQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer);
 		auto TransferCommandBuffer = TransferQueue->CreateCommandBuffer(true);
 
@@ -82,13 +72,13 @@ public:
 
 		// Vertex data copy
 		void* Dst = StagingBuffer->Map();
-		memcpy(Dst, VertexData, sizeof(VertexData));
+		memcpy(Dst, SuzanneVertexData.data(), SuzanneVertexData.size() * sizeof(SuzanneVertexData[0]));
 		StagingBuffer->Unmap();
 		TransferCommandBuffer->BeginRecording();
 		Hermes::RenderInterface::BufferCopyRegion Region = {};
 		Region.SourceOffset = 0;
 		Region.DestinationOffset = 0;
-		Region.NumBytes = sizeof(VertexData);
+		Region.NumBytes = SuzanneVertexData.size() * sizeof(SuzanneVertexData[0]);
 		TransferCommandBuffer->CopyBuffer(*StagingBuffer, *VertexBuffer, { Region });
 		Hermes::RenderInterface::BufferMemoryBarrier BufferBarrier = {};
 		BufferBarrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::TransferWrite;
@@ -104,13 +94,13 @@ public:
 
 		// Index data copy
 		Dst = StagingBuffer->Map();
-		memcpy(Dst, IndexData, sizeof(IndexData));
+		memcpy(Dst, SuzanneIndexData.data(), SuzanneIndexData.size() * sizeof(SuzanneIndexData[0]));
 		StagingBuffer->Unmap();
 		TransferCommandBuffer->BeginRecording();
 		Region = {};
 		Region.SourceOffset = 0;
 		Region.DestinationOffset = 0;
-		Region.NumBytes = sizeof(IndexData);
+		Region.NumBytes = SuzanneIndexData.size() * sizeof(SuzanneIndexData[0]);
 		TransferCommandBuffer->CopyBuffer(*StagingBuffer, *IndexBuffer, { Region });
 		BufferBarrier.NumBytes = IndexBuffer->GetSize();
 		TransferCommandBuffer->InsertBufferMemoryBarrier(*IndexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::TopOfPipe);
@@ -440,8 +430,7 @@ public:
 		GraphicsCommandBuffer->BindIndexBuffer(*IndexBuffer, Hermes::RenderInterface::IndexSize::Uint32);
 		GraphicsCommandBuffer->BindDescriptorSet(*TextureDescriptorSets[ImageIndex], *Pipeline, 0);
 		GraphicsCommandBuffer->UploadPushConstants(*Pipeline, Hermes::RenderInterface::ShaderType::VertexShader, &PushConstants, sizeof(PushConstants), 0);
-		GraphicsCommandBuffer->DrawIndexed(6, 1, 0, 0, 0);
-		GraphicsCommandBuffer->Draw(3, 1, 2, 0);
+		GraphicsCommandBuffer->DrawIndexed(DrawIndexCount, 1, 0, 0, 0);
 		GraphicsCommandBuffer->EndRenderPass();
 		GraphicsCommandBuffer->EndRecording();
 		Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->SubmitCommandBuffer(GraphicsCommandBuffer, GraphicsFence);
@@ -546,6 +535,122 @@ public:
 		return Result;
 	}
 
+	// Very, VERY dirty function that loads OBJ files
+	// Needs to be replaced ASAP
+	static bool LoadOBJ(const Hermes::String& Path, std::vector<Vertex>& Vertices, std::vector<Hermes::uint32>& Indices)
+	{
+		auto File = Hermes::PlatformFilesystem::OpenFile(Path, Hermes::IPlatformFile::FileAccessMode::Read, Hermes::IPlatformFile::FileOpenMode::OpenExisting);
+		if (!File)
+			return false;
+
+		auto* Buffer = static_cast<Hermes::uint8*>(malloc(File->Size()));
+		if (!Buffer)
+			return false;
+
+		if (!File->Read(Buffer, File->Size()))
+			return false;
+
+		Hermes::ANSIString FileData(reinterpret_cast<const char*>(Buffer), File->Size());
+		free(Buffer);
+
+		std::istringstream FileStream(FileData);
+		std::string CurrentLine;
+
+		std::vector<Hermes::Vec3> VertexPositions;
+		std::vector<Hermes::Vec2> VertexTextureCoordinates;
+		struct UniqueVertex
+		{
+			Hermes::uint32 PositionIndex;
+			Hermes::uint32 TextureCoordinateIndex;
+
+			bool operator==(const UniqueVertex& Other) const { return !memcmp(this, &Other, sizeof(*this)); }
+		};
+		std::vector<UniqueVertex> UniqueVertices;
+		while (std::getline(FileStream, CurrentLine))
+		{
+			CurrentLine = CurrentLine.substr(CurrentLine.find_first_not_of(' '), CurrentLine.find_last_not_of(' ') - CurrentLine.find_first_not_of(' ') + 1);
+			if (CurrentLine[0] == '#')
+				continue;
+			if (CurrentLine.length() < 3)
+				continue;
+			if (CurrentLine[0] == 'v' && CurrentLine[1] == ' ')
+			{
+				std::istringstream LineStream(CurrentLine);
+				char Dummy;
+				Hermes::Vec3 NewPosition;
+				LineStream >> Dummy >> NewPosition.X >> NewPosition.Y >> NewPosition.Z;
+				VertexPositions.push_back(NewPosition);
+			}
+			else if (CurrentLine[0] == 'v' && CurrentLine[1] == 't' && CurrentLine[2] == ' ')
+			{
+				std::istringstream LineStream(CurrentLine);
+				char Dummy;
+				Hermes::Vec2 NewTextureCoordinates;
+				LineStream >> Dummy >> Dummy >> NewTextureCoordinates.X >> NewTextureCoordinates.Y;
+				VertexTextureCoordinates.push_back(NewTextureCoordinates);
+			}
+			else if (CurrentLine[0] == 'f' && CurrentLine[1] == ' ')
+			{
+				char DummyChar;
+				Hermes::uint32 DummyNormalNumber;
+				UniqueVertex V1, V2, V3;
+
+				std::istringstream LineStream(CurrentLine);
+				LineStream >> DummyChar >>
+					V1.PositionIndex >> DummyChar >> V1.TextureCoordinateIndex >> DummyChar >> DummyNormalNumber >>
+					V2.PositionIndex >> DummyChar >> V2.TextureCoordinateIndex >> DummyChar >> DummyNormalNumber >>
+					V3.PositionIndex >> DummyChar >> V3.TextureCoordinateIndex >> DummyChar >> DummyNormalNumber;
+
+				// Because in OBJ file indexing starts from 1
+				V1.PositionIndex--;
+				V1.TextureCoordinateIndex--;
+				V2.PositionIndex--;
+				V2.TextureCoordinateIndex--;
+				V3.PositionIndex--;
+				V3.TextureCoordinateIndex--;
+
+				// We push back in reverse order (V3, V2, V1) because we need to flip front face direction
+				if (std::find(UniqueVertices.begin(), UniqueVertices.end(), V3) == UniqueVertices.end())
+				{
+					UniqueVertices.push_back(V3);
+					Indices.push_back(static_cast<Hermes::uint32>(UniqueVertices.size()) - 1);
+				}
+				else
+				{
+					Indices.push_back(static_cast<Hermes::uint32>(std::find(UniqueVertices.begin(), UniqueVertices.end(), V3) - UniqueVertices.begin()));
+				}
+				if (std::find(UniqueVertices.begin(), UniqueVertices.end(), V2) == UniqueVertices.end())
+				{
+					UniqueVertices.push_back(V2);
+					Indices.push_back(static_cast<Hermes::uint32>(UniqueVertices.size()) - 1);
+				}
+				else
+				{
+					Indices.push_back(static_cast<Hermes::uint32>(std::find(UniqueVertices.begin(), UniqueVertices.end(), V2) - UniqueVertices.begin()));
+				}
+				if (std::find(UniqueVertices.begin(), UniqueVertices.end(), V1) == UniqueVertices.end())
+				{
+					UniqueVertices.push_back(V1);
+					Indices.push_back(static_cast<Hermes::uint32>(UniqueVertices.size()) - 1);
+				}
+				else
+				{
+					Indices.push_back(static_cast<Hermes::uint32>(std::find(UniqueVertices.begin(), UniqueVertices.end(), V1) - UniqueVertices.begin()));
+				}
+			}
+		}
+
+		for (const auto& CurrentVertex : UniqueVertices)
+		{
+			Vertex NewVertex;
+			NewVertex.Position = VertexPositions[CurrentVertex.PositionIndex];
+			NewVertex.TextureCoordinate = VertexTextureCoordinates[CurrentVertex.TextureCoordinateIndex];
+			Vertices.push_back(NewVertex);
+		}
+
+		return true;
+	}
+
 private:
 	std::shared_ptr<const Hermes::IPlatformWindow> ApplicationWindow;
 
@@ -570,6 +675,8 @@ private:
 	float TimeSinceStart = 0.0f;
 	Hermes::Vec3 CameraPos = {0.0f, 0.0f, -0.5f};
 	float CameraPitch = 0.0f, CameraYaw = 0.0f;
+
+	Hermes::uint32 DrawIndexCount = 0;
 
 	bool SwapchainRecreated = false;
 };

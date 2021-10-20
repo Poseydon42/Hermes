@@ -183,7 +183,7 @@ public:
 				{
 					Hermes::RenderInterface::ShaderType::VertexShader,
 					0,
-					sizeof(Hermes::Mat4)
+					3 * sizeof(Hermes::Mat4)
 				}
 			};
 		PipelineDesc.ShaderStages =
@@ -213,7 +213,7 @@ public:
 		PipelineDesc.Viewport.Origin = { 0, 0 };
 		PipelineDesc.Viewport.Dimensions = Swapchain->GetSize();
 		PipelineDesc.Rasterizer.Fill = Hermes::RenderInterface::FillMode::Fill;
-		PipelineDesc.Rasterizer.Direction = Hermes::RenderInterface::FaceDirection::Clockwise;
+		PipelineDesc.Rasterizer.Direction = Hermes::RenderInterface::FaceDirection::CounterClockwise;
 		PipelineDesc.Rasterizer.Cull = Hermes::RenderInterface::CullMode::Back;
 		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = false;
 		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = false;
@@ -283,7 +283,7 @@ public:
 					{
 						Hermes::RenderInterface::ShaderType::VertexShader,
 						0,
-						sizeof(Hermes::Mat4)
+						3 * sizeof(Hermes::Mat4)
 					}
 				};
 			PipelineDesc.ShaderStages =
@@ -313,7 +313,7 @@ public:
 			PipelineDesc.Viewport.Origin = { 0, 0 };
 			PipelineDesc.Viewport.Dimensions = Swapchain->GetSize();
 			PipelineDesc.Rasterizer.Fill = Hermes::RenderInterface::FillMode::Fill;
-			PipelineDesc.Rasterizer.Direction = Hermes::RenderInterface::FaceDirection::Clockwise;
+			PipelineDesc.Rasterizer.Direction = Hermes::RenderInterface::FaceDirection::CounterClockwise;
 			PipelineDesc.Rasterizer.Cull = Hermes::RenderInterface::CullMode::Back;
 			PipelineDesc.DepthStencilStage.IsDepthTestEnabled = false;
 			PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = false;
@@ -341,41 +341,52 @@ public:
 		TimeSinceStart += DeltaTime;
 		const auto& InputEngine = Hermes::GGameLoop->GetInputEngine();
 
-		static constexpr float CameraRotationSpeed = 2.5f;
+		static constexpr float CameraRotationSpeed = 150.0f;
 		Hermes::Vec2 MouseDelta = InputEngine.GetDeltaMousePosition();
-#if 0
-		MouseDelta = {};
-#endif
-		MouseDelta = MouseDelta.SafeNormalize() * DeltaTime * CameraRotationSpeed;
-		CameraPitch = Hermes::Math::Clamp(-Hermes::Math::HalfPi, Hermes::Math::HalfPi, CameraPitch + MouseDelta.Y);
+		MouseDelta = MouseDelta.SafeNormalize() * DeltaTime * CameraRotationSpeed * Hermes::Vec2{ 1.0f, -1.0f };
+		HERMES_LOG_DEBUG(L"MouseDelta.X: %f, MouseDelta.Y: %f; DeltaTime: %f", MouseDelta.X, MouseDelta.Y, DeltaTime);
+		CameraPitch = Hermes::Math::Clamp(-85.0f, 85.0f, CameraPitch + MouseDelta.Y);
 		CameraYaw += MouseDelta.X;
+		CameraYaw = fmod(CameraYaw, 360.0f);
+		if (CameraYaw > 180.0f)
+			CameraYaw = 360.0f - CameraYaw;
+		if (CameraYaw < -180.0f)
+			CameraYaw = 360.0f + CameraYaw;
 		Hermes::Vec3 CameraForward;
-		CameraForward.X = Hermes::Math::Sin(CameraYaw);
-		CameraForward.Y = Hermes::Math::Sin(CameraPitch);
-		CameraForward.Z = -Hermes::Math::Cos(CameraYaw) * Hermes::Math::Cos(CameraPitch);
+		CameraForward.X = Hermes::Math::Sin(Hermes::Math::Radians(CameraYaw));
+		CameraForward.Y = Hermes::Math::Sin(Hermes::Math::Radians(CameraPitch));
+		CameraForward.Z = Hermes::Math::Cos(Hermes::Math::Radians(CameraYaw)) * Hermes::Math::Cos(Hermes::Math::Radians(CameraPitch));
 		CameraForward.Normalize();
 		Hermes::Vec3 GlobalUp = { 0.0f, 1.0f, 0.0f };
-		Hermes::Vec3 CameraRight = CameraForward ^ GlobalUp;
-		Hermes::Vec3 CameraUp = CameraRight ^ CameraForward;
+		Hermes::Vec3 CameraRight = (GlobalUp ^ CameraForward).Normalize();
+		Hermes::Vec3 CameraUp = (CameraForward ^ CameraRight).Normalize();
+		HERMES_LOG_DEBUG(L"CameraForward: { %f, %f, %f }; CameraUp: { %f, %f, %f }", 
+			CameraForward.X, CameraForward.Y, CameraForward.Z,
+			CameraUp.X, CameraUp.Y, CameraUp.Z);
 
 		Hermes::Vec3 DeltaCameraPosition = {};
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::W))
 			DeltaCameraPosition += CameraForward;
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::S))
 			DeltaCameraPosition -= CameraForward;
-		if (InputEngine.IsKeyPressed(Hermes::KeyCode::A))
-			DeltaCameraPosition.X -= 1.0f;
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::D))
-			DeltaCameraPosition.X += 1.0f;
-		if (!DeltaCameraPosition.IsCloseToZero())
-			DeltaCameraPosition.Normalize();
-		DeltaCameraPosition *= DeltaTime * 5.0f;
+			DeltaCameraPosition += CameraRight;
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::A))
+			DeltaCameraPosition -= CameraRight;
+		DeltaCameraPosition.SafeNormalize();
+		DeltaCameraPosition *= DeltaTime * 10.0f;
 		CameraPos += DeltaCameraPosition;
-		
-		Hermes::Mat4 ModelMatrix =
-			Hermes::Mat4::Perspective(Hermes::Math::Radians(60.0f), 1280.0f / 720.0f, 0.1f, 100.0f) *
-			Hermes::Mat4::LookAt(CameraPos, CameraForward, CameraUp) *
-			Hermes::Mat4::Translation(Hermes::Vec3{0.0f, 0.3f, -1.0f});
+
+		struct PushConstant
+		{
+			Hermes::Mat4 ModelMatrix;
+			Hermes::Mat4 ViewMatrix;
+			Hermes::Mat4 ProjectionMatrix;
+		} PushConstants;
+		PushConstants.ProjectionMatrix = Hermes::Mat4::Perspective(Hermes::Math::Radians(60.0f), 1280.0f / 720.0f, 0.01f, 100.0f);
+		PushConstants.ViewMatrix = Hermes::Mat4::LookAt(CameraPos, CameraForward, CameraUp);
+		PushConstants.ModelMatrix = Hermes::Mat4::Translation(Hermes::Vec3{0.0f, 0.0f, 10.0f});
+		HERMES_LOG_DEBUG(L"Pitch: %d, Yaw: %d; CameraPosition: %f, %f, %f", static_cast<Hermes::int32>(CameraPitch), static_cast<Hermes::int32>(CameraYaw), CameraPos.X, CameraPos.Y, CameraPos.Z);
 		
 		GraphicsCommandBuffer->BeginRecording();
 		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTargets[ImageIndex], { {1.0f, 1.0f, 0.0f, 1.0f } });
@@ -383,7 +394,7 @@ public:
 		GraphicsCommandBuffer->BindVertexBuffer(*VertexBuffer);
 		GraphicsCommandBuffer->BindIndexBuffer(*IndexBuffer, Hermes::RenderInterface::IndexSize::Uint32);
 		GraphicsCommandBuffer->BindDescriptorSet(*TextureDescriptorSets[ImageIndex], *Pipeline, 0);
-		GraphicsCommandBuffer->UploadPushConstants(*Pipeline, Hermes::RenderInterface::ShaderType::VertexShader, &ModelMatrix, sizeof(ModelMatrix), 0);
+		GraphicsCommandBuffer->UploadPushConstants(*Pipeline, Hermes::RenderInterface::ShaderType::VertexShader, &PushConstants, sizeof(PushConstants), 0);
 		GraphicsCommandBuffer->DrawIndexed(6, 1, 0, 0, 0);
 		GraphicsCommandBuffer->Draw(3, 1, 2, 0);
 		GraphicsCommandBuffer->EndRenderPass();
@@ -522,7 +533,7 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::Shader> VertexShader, FragmentShader;
 
 	float TimeSinceStart = 0.0f;
-	Hermes::Vec3 CameraPos = {0.0f, 0.0f, 3.0f};
+	Hermes::Vec3 CameraPos = {0.0f, 0.0f, -0.5f};
 	float CameraPitch = 0.0f, CameraYaw = 0.0f;
 
 	bool SwapchainRecreated;

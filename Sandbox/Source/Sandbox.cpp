@@ -26,11 +26,15 @@
 class SandboxApp : public Hermes::IApplication
 {
 public:
+	struct Vertex
+	{
+		Hermes::Vec3 Position;
+		Hermes::Vec2 TextureCoordinate;
+	};
+
 	bool Init() override
 	{
 		ApplicationWindow = Hermes::GGameLoop->GetWindow();
-		auto& InputEngine = Hermes::GGameLoop->GetInputEngine();
-		InputEngine.GetEventQueue().Subscribe<SandboxApp, &SandboxApp::KeyEventHandler>(Hermes::KeyEvent::GetStaticType(), this);
 		
 		auto RenderInstance = Hermes::RenderInterface::Instance::CreateRenderInterfaceInstance(ApplicationWindow);
 		auto Devices = RenderInstance->EnumerateAvailableDevices();
@@ -38,13 +42,13 @@ public:
 		Device = PhysicalDevice->CreateDevice();
 		Swapchain = Device->CreateSwapchain(3);
 
-		float VertexData[] =
+		Vertex VertexData[] =
 		{
-			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
-			 0.0f,  0.8f, 0.0f, 0.5f, 0.8f,
-			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f
+			{ {-0.5f, -0.5f, 0.0f }, {0.0f, 0.0f } },
+			{ { 0.5f, -0.5f, 0.0f }, {1.0f, 0.0f } },
+			{ { 0.5f,  0.5f, 0.0f }, {1.0f, 1.0f } },
+			{ { 0.0f,  0.8f, 0.0f }, {0.5f, 0.8f } },
+			{ {-0.5f,  0.5f, 0.0f }, {0.0f, 1.0f } }
 		};
 
 		// Square is drawn indexed, triangle - only with vertex buffer(vertices 2, 3, 4)
@@ -344,7 +348,6 @@ public:
 		static constexpr float CameraRotationSpeed = 150.0f;
 		Hermes::Vec2 MouseDelta = InputEngine.GetDeltaMousePosition();
 		MouseDelta = MouseDelta.SafeNormalize() * DeltaTime * CameraRotationSpeed * Hermes::Vec2{ 1.0f, -1.0f };
-		HERMES_LOG_DEBUG(L"MouseDelta.X: %f, MouseDelta.Y: %f; DeltaTime: %f", MouseDelta.X, MouseDelta.Y, DeltaTime);
 		CameraPitch = Hermes::Math::Clamp(-85.0f, 85.0f, CameraPitch + MouseDelta.Y);
 		CameraYaw += MouseDelta.X;
 		CameraYaw = fmod(CameraYaw, 360.0f);
@@ -360,10 +363,7 @@ public:
 		Hermes::Vec3 GlobalUp = { 0.0f, 1.0f, 0.0f };
 		Hermes::Vec3 CameraRight = (GlobalUp ^ CameraForward).Normalize();
 		Hermes::Vec3 CameraUp = (CameraForward ^ CameraRight).Normalize();
-		HERMES_LOG_DEBUG(L"CameraForward: { %f, %f, %f }; CameraUp: { %f, %f, %f }", 
-			CameraForward.X, CameraForward.Y, CameraForward.Z,
-			CameraUp.X, CameraUp.Y, CameraUp.Z);
-
+		
 		Hermes::Vec3 DeltaCameraPosition = {};
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::W))
 			DeltaCameraPosition += CameraForward;
@@ -386,7 +386,6 @@ public:
 		PushConstants.ProjectionMatrix = Hermes::Mat4::Perspective(Hermes::Math::Radians(60.0f), 1280.0f / 720.0f, 0.01f, 100.0f);
 		PushConstants.ViewMatrix = Hermes::Mat4::LookAt(CameraPos, CameraForward, CameraUp);
 		PushConstants.ModelMatrix = Hermes::Mat4::Translation(Hermes::Vec3{0.0f, 0.0f, 10.0f});
-		HERMES_LOG_DEBUG(L"Pitch: %d, Yaw: %d; CameraPosition: %f, %f, %f", static_cast<Hermes::int32>(CameraPitch), static_cast<Hermes::int32>(CameraYaw), CameraPos.X, CameraPos.Y, CameraPos.Z);
 		
 		GraphicsCommandBuffer->BeginRecording();
 		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTargets[ImageIndex], { {1.0f, 1.0f, 0.0f, 1.0f } });
@@ -410,18 +409,6 @@ public:
 
 	void Shutdown() override
 	{
-		HERMES_LOG_INFO(SavedText.c_str());
-	}
-
-	void KeyEventHandler(const Hermes::IEvent& InEvent)
-	{
-		auto& Event = static_cast<const Hermes::KeyEvent&>(InEvent);
-		if (Event.IsPressEvent())
-		{
-			auto Char = Event.TryConvertToChar();
-			if (Char.has_value())
-				SavedText += Char.value();
-		}
 	}
 
 	// NOTE : test-only function, will be removed soon
@@ -536,9 +523,7 @@ private:
 	Hermes::Vec3 CameraPos = {0.0f, 0.0f, -0.5f};
 	float CameraPitch = 0.0f, CameraYaw = 0.0f;
 
-	bool SwapchainRecreated;
-
-	Hermes::String SavedText;
+	bool SwapchainRecreated = false;
 };
 
 extern "C" _declspec(dllexport) Hermes::IApplication* CreateApplicationInstance()

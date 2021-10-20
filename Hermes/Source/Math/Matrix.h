@@ -54,6 +54,12 @@ namespace Hermes
 		template<typename VectorType>
 		static Matrix<4, 4, InternalType> LookAt(Vector3<VectorType> Origin, Vector3<VectorType> Forward, Vector3<VectorType> Up);
 
+		/*
+		 * Provides a perspective projection matrix
+		 * Expects NDC range for Z axis to be [0;1]
+		 * Expects near and far clip plane to be positive
+		 * Expects camera to be looking into +Z direction(e.g. will clip any vertices which Z coordinate is not in range [near;far])
+		 */
 		template<typename T>
 		static Matrix<4, 4, InternalType> Perspective(T VerticalFOV, T AspectRatio, T NearClipPlane, T FarClipPlane);
 
@@ -300,15 +306,15 @@ namespace Hermes
 	template <typename T>
 	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::Perspective(T VerticalFOV, T AspectRatio, T NearClipPlane, T FarClipPlane)
 	{
-		Mat4 Result;
+		Mat4 Result = { 0.0f };
 
 		T CotanHalfFOV = Math::Cotan(VerticalFOV / static_cast<T>(2));
 
 		Result[0][0] = CotanHalfFOV / AspectRatio;
 		Result[1][1] = CotanHalfFOV;
-		Result[2][2] = FarClipPlane / (NearClipPlane - FarClipPlane);
-		Result[2][3] = -(FarClipPlane * NearClipPlane) / (FarClipPlane - NearClipPlane);
-		Result[3][2] = static_cast<T>(-1);
+		Result[2][2] = FarClipPlane / (FarClipPlane - NearClipPlane);
+		Result[2][3] = -FarClipPlane * NearClipPlane / (FarClipPlane - NearClipPlane);
+		Result[3][2] = static_cast<T>(1);
 
 		return Result;
 	}

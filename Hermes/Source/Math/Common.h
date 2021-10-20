@@ -62,5 +62,11 @@ namespace Hermes
 		{
 			return static_cast<T>(Pi) / static_cast<T>(180) * Degrees;
 		}
+
+		template<typename T>
+		T Degrees(T Radians)
+		{
+			return static_cast<T>(180) / static_cast<T>(Pi) * Radians;
+		}
 	}
 }

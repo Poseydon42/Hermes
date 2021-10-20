@@ -4,6 +4,7 @@ Welcome to Hermes! This is my simple 3D game engine that I'm making for fun and 
 ## History:
  - The first line of code was put down 15th February 2021
  - The first triangle was rendered on 2nd September 2021, after 5210 lines of code according to CLOC
+ - The first actual 3D model was drawn on 21st October 2021 after aproximately 7200 lines of code
 
 ## Current features:
  - Uhh, well, maybe readme file is already a good feature?

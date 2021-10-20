@@ -76,6 +76,10 @@ public:
 		auto TransferQueue = Device->GetQueue(Hermes::RenderInterface::QueueType::Transfer);
 		auto TransferCommandBuffer = TransferQueue->CreateCommandBuffer(true);
 
+		DepthBuffer = Device->CreateImage(
+			ApplicationWindow->GetSize(), Hermes::RenderInterface::ImageUsageType::DepthStencilAttachment, 
+			Hermes::RenderInterface::DataFormat::D32SignedFloat, 1, Hermes::RenderInterface::ImageLayout::Undefined);
+
 		// Vertex data copy
 		void* Dst = StagingBuffer->Map();
 		memcpy(Dst, VertexData, sizeof(VertexData));
@@ -149,6 +153,12 @@ public:
 		BufferBarrier.NumBytes = IndexBuffer->GetSize();
 		RenderCommandBuffer->InsertBufferMemoryBarrier(*IndexBuffer, BufferBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::VertexInput);
 		RenderCommandBuffer->InsertImageMemoryBarrier(*Texture, ImageBarrier, Hermes::RenderInterface::PipelineStage::Transfer, Hermes::RenderInterface::PipelineStage::FragmentShader);
+		Hermes::RenderInterface::ImageMemoryBarrier DepthBufferTransitionBarrier = {};
+		DepthBufferTransitionBarrier.NewLayout = Hermes::RenderInterface::ImageLayout::DepthAttachmentOptimal;
+		DepthBufferTransitionBarrier.OldLayout = Hermes::RenderInterface::ImageLayout::Undefined;
+		DepthBufferTransitionBarrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::MemoryWrite;
+		DepthBufferTransitionBarrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::MemoryRead | Hermes::RenderInterface::AccessType::MemoryWrite;
+		RenderCommandBuffer->InsertImageMemoryBarrier(*DepthBuffer, DepthBufferTransitionBarrier, Hermes::RenderInterface::PipelineStage::TopOfPipe, Hermes::RenderInterface::PipelineStage::BottomOfPipe);
 		RenderCommandBuffer->EndRecording();
 		RenderQueue->SubmitCommandBuffer(RenderCommandBuffer, {});
 		RenderQueue->WaitForIdle();
@@ -166,6 +176,14 @@ public:
 		Description.ColorAttachments[0].StoreOp = Hermes::RenderInterface::AttachmentStoreOp::Store;
 		Description.ColorAttachments[0].StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
 		Description.ColorAttachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
+		Description.DepthAttachment = Hermes::RenderInterface::RenderPassAttachment{};
+		Description.DepthAttachment.value().LayoutAtStart = Hermes::RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
+		Description.DepthAttachment.value().LayoutAtEnd = Hermes::RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
+		Description.DepthAttachment.value().Format = DepthBuffer->GetDataFormat();
+		Description.DepthAttachment.value().LoadOp = Hermes::RenderInterface::AttachmentLoadOp::Clear;
+		Description.DepthAttachment.value().StoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
+		Description.DepthAttachment.value().StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
+		Description.DepthAttachment.value().StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
 		RenderPass = Device->CreateRenderPass(Description);
 
 		Hermes::RenderInterface::DescriptorBinding SamplerBinding = {};
@@ -219,8 +237,9 @@ public:
 		PipelineDesc.Rasterizer.Fill = Hermes::RenderInterface::FillMode::Fill;
 		PipelineDesc.Rasterizer.Direction = Hermes::RenderInterface::FaceDirection::CounterClockwise;
 		PipelineDesc.Rasterizer.Cull = Hermes::RenderInterface::CullMode::Back;
-		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = false;
-		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = false;
+		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = true;
+		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = true;
+		PipelineDesc.DepthStencilStage.ComparisonMode = Hermes::RenderInterface::ComparisonOperator::Less;
 
 		Pipeline = Device->CreatePipeline(RenderPass, PipelineDesc);
 
@@ -236,7 +255,7 @@ public:
 		TextureDescriptorSets.reserve(Swapchain->GetImageCount());
 		for (Hermes::uint32 Index = 0; Index < Swapchain->GetImageCount(); Index++)
 		{
-			RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index)}, Swapchain->GetSize()));
+			RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index), DepthBuffer}, Swapchain->GetSize()));
 			TextureDescriptorSets.push_back(TextureDescriptorSetPool->CreateDescriptorSet(TextureDescriptorSetLayout));
 			TextureDescriptorSets[Index]->UpdateWithSampler(0, 0, *TextureSampler);
 			TextureDescriptorSets[Index]->UpdateWithImage(1, 0, *Texture, Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
@@ -270,6 +289,23 @@ public:
 		{
 			RenderTargets.clear();
 
+			DepthBuffer = Device->CreateImage(
+				ApplicationWindow->GetSize(), Hermes::RenderInterface::ImageUsageType::DepthStencilAttachment, 
+				Hermes::RenderInterface::DataFormat::D32SignedFloat, 1, Hermes::RenderInterface::ImageLayout::Undefined);
+
+			Hermes::RenderInterface::ImageMemoryBarrier DepthBufferTransitionBarrier = {};
+			DepthBufferTransitionBarrier.NewLayout = Hermes::RenderInterface::ImageLayout::DepthAttachmentOptimal;
+			DepthBufferTransitionBarrier.OldLayout = Hermes::RenderInterface::ImageLayout::Undefined;
+			DepthBufferTransitionBarrier.OperationsThatHaveToEndBefore = Hermes::RenderInterface::AccessType::MemoryWrite;
+			DepthBufferTransitionBarrier.OperationsThatCanStartAfter = Hermes::RenderInterface::AccessType::MemoryRead | Hermes::RenderInterface::AccessType::MemoryWrite;
+
+			auto DepthBufferTransitionCommandBuffer = Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
+			DepthBufferTransitionCommandBuffer->BeginRecording();
+			DepthBufferTransitionCommandBuffer->InsertImageMemoryBarrier(*DepthBuffer, DepthBufferTransitionBarrier, Hermes::RenderInterface::PipelineStage::BottomOfPipe, Hermes::RenderInterface::PipelineStage::TopOfPipe);
+			DepthBufferTransitionCommandBuffer->EndRecording();
+			Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->SubmitCommandBuffer(DepthBufferTransitionCommandBuffer, {});
+			Device->GetQueue(Hermes::RenderInterface::QueueType::Render)->WaitForIdle();
+
 			Hermes::RenderInterface::RenderPassDescription Description = {};
 			Description.ColorAttachments.push_back({});
 			Description.ColorAttachments[0].LayoutAtStart = Hermes::RenderInterface::ImageLayout::ColorAttachmentOptimal;
@@ -279,6 +315,14 @@ public:
 			Description.ColorAttachments[0].StoreOp = Hermes::RenderInterface::AttachmentStoreOp::Store;
 			Description.ColorAttachments[0].StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
 			Description.ColorAttachments[0].StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
+			Description.DepthAttachment = Hermes::RenderInterface::RenderPassAttachment{};
+			Description.DepthAttachment.value().LayoutAtStart = Hermes::RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
+			Description.DepthAttachment.value().LayoutAtEnd = Hermes::RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
+			Description.DepthAttachment.value().Format = DepthBuffer->GetDataFormat();
+			Description.DepthAttachment.value().LoadOp = Hermes::RenderInterface::AttachmentLoadOp::Clear;
+			Description.DepthAttachment.value().StoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
+			Description.DepthAttachment.value().StencilLoadOp = Hermes::RenderInterface::AttachmentLoadOp::Undefined;
+			Description.DepthAttachment.value().StencilStoreOp = Hermes::RenderInterface::AttachmentStoreOp::Undefined;
 			RenderPass = Device->CreateRenderPass(Description);
 
 			Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
@@ -319,8 +363,9 @@ public:
 			PipelineDesc.Rasterizer.Fill = Hermes::RenderInterface::FillMode::Fill;
 			PipelineDesc.Rasterizer.Direction = Hermes::RenderInterface::FaceDirection::CounterClockwise;
 			PipelineDesc.Rasterizer.Cull = Hermes::RenderInterface::CullMode::Back;
-			PipelineDesc.DepthStencilStage.IsDepthTestEnabled = false;
-			PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = false;
+			PipelineDesc.DepthStencilStage.IsDepthTestEnabled = true;
+			PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = true;
+			PipelineDesc.DepthStencilStage.ComparisonMode = Hermes::RenderInterface::ComparisonOperator::Less;
 
 			Pipeline = Device->CreatePipeline(RenderPass, PipelineDesc);
 
@@ -328,7 +373,7 @@ public:
 			TextureDescriptorSets.reserve(Swapchain->GetImageCount());
 			for (Hermes::uint32 Index = 0; Index < Swapchain->GetImageCount(); Index++)
 			{
-				RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index)}, Swapchain->GetSize()));
+				RenderTargets.push_back(Device->CreateRenderTarget(RenderPass, {Swapchain->GetImage(Index), DepthBuffer}, Swapchain->GetSize()));
 				TextureDescriptorSets[Index]->UpdateWithSampler(0, 0, *TextureSampler);
 				TextureDescriptorSets[Index]->UpdateWithImage(1, 0, *Texture, Hermes::RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 			}
@@ -388,7 +433,8 @@ public:
 		PushConstants.ModelMatrix = Hermes::Mat4::Translation(Hermes::Vec3{0.0f, 0.0f, 10.0f});
 		
 		GraphicsCommandBuffer->BeginRecording();
-		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTargets[ImageIndex], { {1.0f, 1.0f, 0.0f, 1.0f } });
+		// WARNING : always make sure to clear depth buffer with 1.0 in all channels because we use less comparision operator
+		GraphicsCommandBuffer->BeginRenderPass(RenderPass, RenderTargets[ImageIndex], { {1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } });
 		GraphicsCommandBuffer->BindPipeline(Pipeline);
 		GraphicsCommandBuffer->BindVertexBuffer(*VertexBuffer);
 		GraphicsCommandBuffer->BindIndexBuffer(*IndexBuffer, Hermes::RenderInterface::IndexSize::Uint32);
@@ -510,6 +556,8 @@ private:
 	std::shared_ptr<Hermes::RenderInterface::RenderPass> RenderPass;
 	std::shared_ptr<Hermes::RenderInterface::Pipeline> Pipeline;
 	std::shared_ptr<Hermes::RenderInterface::Buffer> VertexBuffer, IndexBuffer;
+	std::shared_ptr<Hermes::RenderInterface::Image> DepthBuffer;
+	std::shared_ptr<Hermes::RenderInterface::RenderTarget> DepthBufferRenderTarget;
 	std::vector<std::shared_ptr<Hermes::RenderInterface::RenderTarget>> RenderTargets;
 	std::vector<std::shared_ptr<Hermes::RenderInterface::DescriptorSet>> TextureDescriptorSets;
 	std::shared_ptr<Hermes::RenderInterface::DescriptorSetLayout> TextureDescriptorSetLayout;

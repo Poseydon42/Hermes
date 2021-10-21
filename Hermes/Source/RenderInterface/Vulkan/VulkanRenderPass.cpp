@@ -47,7 +47,7 @@ namespace Hermes
 			auto FillVkAttachment = [](const RenderInterface::RenderPassAttachment& Attachment)
 			{
 				VkAttachmentDescription NewAttachment = {};
-				NewAttachment.format = (VkFormat)Attachment.Format; // TODO : replace with valid enum conversion function when we'd have one
+				NewAttachment.format = DataFormatToVkFormat(Attachment.Format);
 				NewAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 				NewAttachment.loadOp = LoadOpToVkAttachmentLoadOp(Attachment.LoadOp);
 				NewAttachment.storeOp = StoreOpToVkAttachmentStoreOp(Attachment.StoreOp);

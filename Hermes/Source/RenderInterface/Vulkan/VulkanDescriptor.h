@@ -37,7 +37,7 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanDescriptorSetPool)
 
 		public:
-			VulkanDescriptorSetPool(std::shared_ptr<VulkanDevice> InDevice, uint32 Size);
+			VulkanDescriptorSetPool(std::shared_ptr<VulkanDevice> InDevice, uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools);
 
 			~VulkanDescriptorSetPool() override;
 			VulkanDescriptorSetPool(VulkanDescriptorSetPool&& Other);
@@ -45,13 +45,13 @@ namespace Hermes
 
 			std::shared_ptr<RenderInterface::DescriptorSet> CreateDescriptorSet(std::shared_ptr<RenderInterface::DescriptorSetLayout> Layout) override;
 
-			uint32 GetSize() const override { return MaxSize; }
-
 			VkDescriptorPool GetDescriptorPool() const { return Pool; }
+
+			uint32 GetNumberOfSets() const override { return NumSets; }
 
 		private:
 			std::shared_ptr<VulkanDevice> Device;
-			uint32 MaxSize;
+			uint32 NumSets;
 			VkDescriptorPool Pool;
 		};
 

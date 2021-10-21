@@ -65,6 +65,12 @@ namespace Hermes
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(DescriptorSetLayout)
 		};
 
+		struct SubpoolDescription
+		{
+			DescriptorType Type;
+			uint32 Count;
+		};
+
 		class HERMES_API DescriptorSetPool
 		{
 			MAKE_NON_COPYABLE(DescriptorSetPool)
@@ -75,7 +81,7 @@ namespace Hermes
 		public:
 			virtual std::shared_ptr<DescriptorSet> CreateDescriptorSet(std::shared_ptr<DescriptorSetLayout> Layout) = 0;
 
-			virtual uint32 GetSize() const = 0;
+			virtual uint32 GetNumberOfSets() const = 0;
 		};
 	}
 }

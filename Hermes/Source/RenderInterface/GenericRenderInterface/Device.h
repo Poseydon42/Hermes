@@ -15,6 +15,8 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		struct SubpoolDescription;
+		enum class DescriptorType;
 		struct SamplerDescription;
 		class Sampler;
 		enum class ImageLayout;
@@ -63,8 +65,8 @@ namespace Hermes
 			virtual std::shared_ptr<RenderTarget> CreateRenderTarget(std::shared_ptr<RenderPass> RenderPass, const std::vector<std::shared_ptr<Image>>& Attachments, Vec2ui Size) = 0;
 
 			virtual std::shared_ptr<DescriptorSetLayout> CreateDescriptorSetLayout(const std::vector<DescriptorBinding>& Bindings) = 0;
-
-			virtual std::shared_ptr<DescriptorSetPool> CreateDescriptorSetPool(uint32 Size) = 0;
+			
+			virtual std::shared_ptr<DescriptorSetPool> CreateDescriptorSetPool(uint32 NumberOfSets, const std::vector<SubpoolDescription>& Subpools) = 0;
 
 			virtual std::shared_ptr<Sampler> CreateSampler(const SamplerDescription& Description) = 0;
 

@@ -232,9 +232,9 @@ namespace Hermes
 			return std::make_shared<VulkanDescriptorSetLayout>(shared_from_this(), Bindings);
 		}
 
-		std::shared_ptr<RenderInterface::DescriptorSetPool> VulkanDevice::CreateDescriptorSetPool(uint32 Size)
+		std::shared_ptr<RenderInterface::DescriptorSetPool> VulkanDevice::CreateDescriptorSetPool(uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools)
 		{
-			return std::make_shared<VulkanDescriptorSetPool>(shared_from_this(), Size);
+			return std::make_shared<VulkanDescriptorSetPool>(shared_from_this(), NumberOfSets, Subpools);
 		}
 
 		std::shared_ptr<RenderInterface::Sampler> VulkanDevice::CreateSampler(const RenderInterface::SamplerDescription& Description)

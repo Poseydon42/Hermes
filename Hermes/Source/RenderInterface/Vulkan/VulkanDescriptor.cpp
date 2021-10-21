@@ -68,19 +68,24 @@ namespace Hermes
 			return *this;
 		}
 
-		VulkanDescriptorSetPool::VulkanDescriptorSetPool(std::shared_ptr<VulkanDevice> InDevice, uint32 Size)
+		VulkanDescriptorSetPool::VulkanDescriptorSetPool(std::shared_ptr<VulkanDevice> InDevice, uint32 InNumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools)
 			: Device(std::move(InDevice))
-			, MaxSize(Size)
+			, NumSets(InNumberOfSets)
 			, Pool(VK_NULL_HANDLE)
 		{
 			VkDescriptorPoolCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-			CreateInfo.maxSets = Size;
-			VkDescriptorPoolSize PoolSize = {};
-			PoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // TODO : fix
-			PoolSize.descriptorCount = Size;
-			CreateInfo.pPoolSizes = &PoolSize;
-			CreateInfo.poolSizeCount = 1;
+			CreateInfo.maxSets = InNumberOfSets;
+			std::vector<VkDescriptorPoolSize> VulkanPoolSizes;
+			for (const auto& Subpool : Subpools)
+			{
+				VkDescriptorPoolSize NewSize;
+				NewSize.descriptorCount = Subpool.Count;
+				NewSize.type = DescriptorTypeToVkDescriptorType(Subpool.Type);
+				VulkanPoolSizes.push_back(NewSize);
+			}
+			CreateInfo.pPoolSizes = VulkanPoolSizes.data();
+			CreateInfo.poolSizeCount = static_cast<uint32>(VulkanPoolSizes.size());
 			CreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT; // TODO : do we really need it?
 
 			VK_CHECK_RESULT(vkCreateDescriptorPool(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Pool))
@@ -99,7 +104,7 @@ namespace Hermes
 		VulkanDescriptorSetPool& VulkanDescriptorSetPool::operator=(VulkanDescriptorSetPool&& Other)
 		{
 			std::swap(Device, Other.Device);
-			std::swap(MaxSize, Other.MaxSize);
+			std::swap(NumSets, Other.NumSets);
 			std::swap(Pool, Other.Pool);
 
 			return *this;

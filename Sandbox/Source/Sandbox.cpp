@@ -187,7 +187,19 @@ public:
 		TextureBinding.Shader = Hermes::RenderInterface::ShaderType::FragmentShader;
 		TextureBinding.Type = Hermes::RenderInterface::DescriptorType::SampledImage;
 		TextureDescriptorSetLayout = Device->CreateDescriptorSetLayout({ SamplerBinding, TextureBinding });
-		auto TextureDescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount());
+		std::vector<Hermes::RenderInterface::SubpoolDescription> Subpools =
+		{
+			{
+				Hermes::RenderInterface::DescriptorType::Sampler,
+				Swapchain->GetImageCount()
+			},
+			{
+				
+				Hermes::RenderInterface::DescriptorType::SampledImage,
+				Swapchain->GetImageCount()
+			}
+		};
+		auto TextureDescriptorSetPool = Device->CreateDescriptorSetPool(Swapchain->GetImageCount(), Subpools);
 		
 		Hermes::RenderInterface::PipelineDescription PipelineDesc = {};
 		PipelineDesc.PushConstants =

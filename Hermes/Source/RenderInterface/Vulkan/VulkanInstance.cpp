@@ -58,14 +58,14 @@ namespace Hermes
 		}
 
 		VulkanInstance::VulkanInstance(std::weak_ptr<const IPlatformWindow> InWindow)
-			: Window(InWindow)
+			: Window(std::move(InWindow))
 		{
 			VkApplicationInfo AppInfo = {};
 			AppInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 			AppInfo.apiVersion = GVulkanVersion;
 			AppInfo.applicationVersion = VK_MAKE_VERSION(0, 1, 0);
 			AppInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
-			AppInfo.pApplicationName = "Game"; // TODO : set actual app name
+			AppInfo.pApplicationName = HERMES_GAME_NAME;
 			AppInfo.pEngineName = "Hermes Engine";
 
 			bool ValidationLayersEnabled = false;

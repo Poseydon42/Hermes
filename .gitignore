@@ -1,10 +1,12 @@
 # VS and builds
 .vs/
 Build/
+Tools/Binaries/
 *.user
 *.vcxproj
 *.filters
 *.sln
 
+#Log files and SPIR-V files
 Sandbox/Files/*.log
 **.spv

@@ -5,3 +5,4 @@ workspace "Hermes"
 
 include "Hermes"
 include "Sandbox"
+include "Tools/ImgToAsset"

@@ -16,4 +16,10 @@
 #define SUPPRESS_ALL_WARNINGS_END \
 	__pragma(warning(pop))
 
+#define PACKED_STRUCT_BEGIN \
+	__pragma(pack(push, 1))
+
+#define PACKED_STRUCT_END \
+	__pragma(pack(pop))
+
 #endif

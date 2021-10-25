@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 /*
  * TODO : setup our build so that we can use our own platform layer

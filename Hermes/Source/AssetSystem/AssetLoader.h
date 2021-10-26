@@ -25,5 +25,7 @@ namespace Hermes
 		PACKED_STRUCT_END
 
 		static std::shared_ptr<Asset> LoadImage(IPlatformFile& File, const AssetHeader& Header, const String& Name);
+
+		static std::shared_ptr<Asset> LoadMesh(IPlatformFile& File, const AssetHeader& AssetHeader, const String& Name);
 	};
 }

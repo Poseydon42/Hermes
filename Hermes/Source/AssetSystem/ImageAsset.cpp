@@ -4,6 +4,8 @@
 
 namespace Hermes
 {
+	DEFINE_ASSET_TYPE(Image)
+
 	uint8 BytesPerPixelForImageFormat(ImageFormat Format)
 	{
 		switch (Format)

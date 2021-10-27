@@ -42,11 +42,10 @@ public:
 		Swapchain = Device->CreateSwapchain(3);
 
 		auto SuzanneAsset = Hermes::AssetLoader::Load(L"suzanne");
-		HERMES_ASSERT(SuzanneAsset->GetType() == Hermes::AssetType::Mesh);
-		auto SuzanneMesh = std::reinterpret_pointer_cast<Hermes::MeshAsset>(SuzanneAsset);
+		auto SuzanneMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"suzanne"));
 		DrawIndexCount = SuzanneMesh->GetIndexCount();
 		
-		auto CheckerImageAsset = std::reinterpret_pointer_cast<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"checker_colored"));
+		auto CheckerImageAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"checker_colored"));
 		auto CheckerImage = CheckerImageAsset->GetRawData();
 		Texture = Device->CreateImage(
 			CheckerImageAsset->GetDimensions(), Hermes::RenderInterface::ImageUsageType::CopyDestination | Hermes::RenderInterface::ImageUsageType::Sampled,

@@ -2,6 +2,8 @@
 
 namespace Hermes
 {
+	DEFINE_ASSET_TYPE(Mesh)
+
 	size_t MeshAsset::GetMemorySize() const
 	{
 		return Indices.size() * sizeof(Indices[0]) + Vertices.size() * sizeof(Vertices[0]);

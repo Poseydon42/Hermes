@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
@@ -32,9 +34,20 @@ namespace Hermes
 		virtual bool IsValid() const;
 
 		virtual size_t GetMemorySize() const;
-
+		
+		template<class AssetType>
+		static std::shared_ptr<AssetType> As(std::shared_ptr<Asset> From);
 	private:
 		String Name;
 		AssetType Type;
 	};
 }
+
+#define DEFINE_ASSET_TYPE(Type)                                                                 \
+	template<>                                                                                  \
+	HERMES_API std::shared_ptr<Type##Asset> Asset::As<Type##Asset>(std::shared_ptr<Asset> From) \
+	{                                                                                           \
+		if (From->GetType() == AssetType::Type)                                                 \
+			return std::reinterpret_pointer_cast<Type##Asset>(From);                            \
+		return nullptr;                                                                         \
+	}

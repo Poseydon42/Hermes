@@ -33,7 +33,7 @@ namespace Hermes
 			VulkanPhysicalDevice& operator=(VulkanPhysicalDevice&&);
 
 			const RenderInterface::DeviceProperties& GetProperties() const override;
-			std::shared_ptr<RenderInterface::Device> CreateDevice() override;
+			std::shared_ptr<RenderInterface::Device> CreateDevice() const override;
 
 			VkInstance GetInstance() const;
 			

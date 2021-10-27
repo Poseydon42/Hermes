@@ -37,7 +37,7 @@ namespace Hermes
 			/**
 			 * Creates a logical device from given physical device
 			 */
-			virtual std::shared_ptr<Device> CreateDevice() = 0;
+			virtual std::shared_ptr<Device> CreateDevice() const = 0;
 		};
 	}
 }

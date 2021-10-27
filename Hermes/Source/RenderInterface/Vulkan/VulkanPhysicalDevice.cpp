@@ -38,7 +38,7 @@ namespace Hermes
 			return Properties;
 		}
 
-		std::shared_ptr<RenderInterface::Device> VulkanPhysicalDevice::CreateDevice()
+		std::shared_ptr<RenderInterface::Device> VulkanPhysicalDevice::CreateDevice() const
 		{
 			return std::make_shared<VulkanDevice>(Device, Instance, Surface, Window);
 		}

@@ -176,7 +176,7 @@ namespace Hermes
 			ColorAttachmentWrite = 1 << 8,
 			DepthStencilRead = 1 << 9,
 			DepthStencilWrite = 1 << 10,
-			TransferRead = 1 << 1,
+			TransferRead = 1 << 11,
 			TransferWrite = 1 << 12,
 			HostRead = 1 << 13,
 			HostWrite = 1 << 14,

@@ -6,6 +6,8 @@
 #include "Core/Application/Application.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
+#include "RenderingEngine/Renderer.h"
+#include "RenderingEngine/Scene/Scene.h"
 
 namespace Hermes
 {
@@ -35,20 +37,27 @@ namespace Hermes
 		std::shared_ptr<const IPlatformWindow> GetWindow() const;
 
 		const InputEngine& GetInputEngine() const;
+
+		/*
+		 * DEBUG ONLY
+		 */
+		Scene& GetScene();
 	private:
 		void WindowCloseEventHandler(const IEvent& Event);
 
 		bool RequestedExit;
-
 		bool Paused; // TODO : separate 'game pause' and 'rendering pause'(e.g. when window is minimized)
 
 		PlatformTimestamp PrevFrameEndTimestamp;
-		
+
 		std::unique_ptr<IApplication> Application;
-
 		std::shared_ptr<IPlatformWindow> ApplicationWindow;
-
 		std::shared_ptr<InputEngine> InputEngine;
+
+		/*
+		 * DEBUG ONLY
+		 */
+		Scene GameScene;
 	};
 
 	HERMES_API extern GameLoop* GGameLoop;

@@ -6,6 +6,7 @@
 #include "Core/Log/DebugLogDevice.h"
 #include "Core/Log/FileLogDevice.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
+#include "RenderInterface/GenericRenderInterface/Instance.h"
 
 namespace Hermes
 {
@@ -44,6 +45,13 @@ namespace Hermes
 		{
 			return false;
 		}
+
+		auto RenderInterfaceInstance = RenderInterface::Instance::CreateRenderInterfaceInstance(ApplicationWindow);
+		auto GPUName = RenderInterfaceInstance->EnumerateAvailableDevices()[0].Name;
+		HERMES_LOG_INFO(L"Using GPU#0: %S", GPUName.c_str());
+		auto GPU = RenderInterfaceInstance->GetPhysicalDevice(0);
+		Renderer::Get().Init(*GPU);
+
 		if (!Application->Init())
 		{
 			HERMES_LOG_FATAL(L"Application::Init() returned false. Exiting");
@@ -67,7 +75,10 @@ namespace Hermes
 
 				Application->Run(DeltaTime);
 				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
-				
+
+				auto& Renderer = Renderer::Get();
+				Renderer.RunFrame(GameScene);
+
 				PrevFrameEndTimestamp = CurrentTimestamp;
 			}
 		}
@@ -94,6 +105,11 @@ namespace Hermes
 	const InputEngine& GameLoop::GetInputEngine() const
 	{
 		return *InputEngine;
+	}
+
+	Scene& GameLoop::GetScene()
+	{
+		return GameScene;
 	}
 
 	void GameLoop::WindowCloseEventHandler(const IEvent& Event)

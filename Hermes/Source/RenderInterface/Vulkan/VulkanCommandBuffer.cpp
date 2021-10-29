@@ -131,7 +131,7 @@ namespace Hermes
 			vkCmdBindDescriptorSets(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline&>(Pipeline).GetPipelineLayout(), BindingIndex, 1, &DescriptorSet, 0, nullptr);
 		}
 
-		void VulkanCommandBuffer::UploadPushConstants(const RenderInterface::Pipeline& Pipeline, RenderInterface::ShaderType ShadersThatUse, void* Data, uint32 Size, uint32 Offset)
+		void VulkanCommandBuffer::UploadPushConstants(const RenderInterface::Pipeline& Pipeline, RenderInterface::ShaderType ShadersThatUse, const void* Data, uint32 Size, uint32 Offset)
 		{
 			vkCmdPushConstants(
 				Buffer,

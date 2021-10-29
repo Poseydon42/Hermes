@@ -140,7 +140,7 @@ namespace Hermes
 			 * Uploads push constants data onto GPU
 			 * This data is valid until the next call to this function or end of render pass
 			 */
-			virtual void UploadPushConstants(const Pipeline& Pipeline, ShaderType ShadersThatUse, void* Data, uint32 Size, uint32 Offset) = 0;
+			virtual void UploadPushConstants(const Pipeline& Pipeline, ShaderType ShadersThatUse, const void* Data, uint32 Size, uint32 Offset) = 0;
 
 			// TODO : generic, multi-barrier version
 			/*

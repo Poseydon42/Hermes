@@ -42,7 +42,7 @@ namespace Hermes
 
 			void BindDescriptorSet(const RenderInterface::DescriptorSet& Set, const RenderInterface::Pipeline& Pipeline, uint32 BindingIndex) override;
 
-			void UploadPushConstants(const RenderInterface::Pipeline& Pipeline, RenderInterface::ShaderType ShadersThatUse, void* Data, uint32 Size, uint32 Offset) override;
+			void UploadPushConstants(const RenderInterface::Pipeline& Pipeline, RenderInterface::ShaderType ShadersThatUse, const void* Data, uint32 Size, uint32 Offset) override;
 
 			void InsertBufferMemoryBarrier(const RenderInterface::Buffer& Buffer, const RenderInterface::BufferMemoryBarrier& Barrier, RenderInterface::PipelineStage SourceStage, RenderInterface::PipelineStage DestinationStage) override;
 

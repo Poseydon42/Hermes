@@ -52,6 +52,8 @@ namespace Hermes
 
 			void CopyBufferToImage(const RenderInterface::Buffer& Source, const RenderInterface::Image& Destination, RenderInterface::ImageLayout DestinationImageLayout, std::vector<RenderInterface::BufferToImageCopyRegion> CopyRegions) override;
 
+			void CopyImage(const RenderInterface::Image& Source, RenderInterface::ImageLayout SourceLayout, const RenderInterface::Image& Destination, RenderInterface::ImageLayout DestinationLayout, std::vector<RenderInterface::ImageCopyRegion> CopyRegions) override;
+
 			VkCommandBuffer GetBuffer() const { return Buffer; }
 
 		private:

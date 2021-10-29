@@ -7,6 +7,7 @@
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "RenderInterface/GenericRenderInterface/CommonTypes.h"
+#include "Math/Math.h"
 
 namespace Hermes
 {
@@ -52,6 +53,15 @@ namespace Hermes
 		struct BufferToImageCopyRegion
 		{
 			uint32 BufferOffset;
+		};
+
+		struct ImageCopyRegion
+		{
+			Vec2i SourceOffset;
+			uint32 SourceMipLayer;
+			Vec2i DestinationOffset;
+			uint32 DestinationMipLayer;
+			Vec2ui Dimensions;
 		};
 
 		struct ClearColor
@@ -159,6 +169,8 @@ namespace Hermes
 			virtual void CopyBuffer(const Buffer& Source, const Buffer& Destination, std::vector<BufferCopyRegion> CopyRegions) = 0;
 
 			virtual void CopyBufferToImage(const Buffer& Source, const Image& Destination, ImageLayout DestinationImageLayout, std::vector<BufferToImageCopyRegion> CopyRegions) = 0;
+
+			virtual void CopyImage(const Image& Source, ImageLayout SourceLayout, const Image& Destination, ImageLayout DestinationLayout, std::vector<ImageCopyRegion> CopyRegions) = 0;
 		};
 	}
 }

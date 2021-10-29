@@ -233,5 +233,46 @@ namespace Hermes
 			}
 			vkCmdCopyBufferToImage(Buffer, SourceBuffer.GetBuffer(), DestinationImage.GetImage(), Layout, static_cast<uint32>(VulkanCopyRegions.size()), VulkanCopyRegions.data());
 		}
+
+		void VulkanCommandBuffer::CopyImage(const RenderInterface::Image& Source, RenderInterface::ImageLayout SourceLayout, const RenderInterface::Image& Destination, RenderInterface::ImageLayout DestinationLayout, std::vector<RenderInterface::ImageCopyRegion> CopyRegions)
+		{
+			const auto& VulkanSourceImage      = static_cast<const VulkanImage&>(Source);
+			const auto& VulkanDestinationImage = static_cast<const VulkanImage&>(Destination);
+
+			std::vector<VkImageCopy> Regions;
+			Regions.reserve(CopyRegions.size());
+			for (const auto& CopyRegion : CopyRegions)
+			{
+				VkImageCopy NewRegion = {};
+
+				NewRegion.extent.width  = CopyRegion.Dimensions.X;
+				NewRegion.extent.height = CopyRegion.Dimensions.Y;
+				NewRegion.extent.depth  = 1;
+
+				NewRegion.srcOffset.x = CopyRegion.SourceOffset.X;
+				NewRegion.srcOffset.y = CopyRegion.SourceOffset.Y;
+				NewRegion.srcOffset.z = 0;
+				NewRegion.srcSubresource.aspectMask = VkAspectFlagsFromVkFormat(DataFormatToVkFormat(VulkanSourceImage.GetDataFormat()));
+				NewRegion.srcSubresource.baseArrayLayer = 0;
+				NewRegion.srcSubresource.layerCount = 1;
+				NewRegion.srcSubresource.mipLevel = CopyRegion.SourceMipLayer;
+
+				NewRegion.dstOffset.x = CopyRegion.DestinationOffset.X;
+				NewRegion.dstOffset.y = CopyRegion.DestinationOffset.Y;
+				NewRegion.dstOffset.z = 0;
+				NewRegion.dstSubresource.aspectMask = VkAspectFlagsFromVkFormat(DataFormatToVkFormat(VulkanDestinationImage.GetDataFormat()));
+				NewRegion.dstSubresource.baseArrayLayer = 0;
+				NewRegion.dstSubresource.layerCount = 1;
+				NewRegion.dstSubresource.mipLevel = CopyRegion.DestinationMipLayer;
+
+				Regions.push_back(NewRegion);
+			}
+
+			vkCmdCopyImage(
+				Buffer,
+				VulkanSourceImage.GetImage(), ImageLayoutToVkImageLayout(SourceLayout),
+				VulkanDestinationImage.GetImage(), ImageLayoutToVkImageLayout(DestinationLayout),
+				static_cast<uint32>(Regions.size()), Regions.data());
+		}
 	}
 }

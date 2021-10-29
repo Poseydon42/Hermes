@@ -166,7 +166,7 @@ namespace Hermes
 			CreateInfo.imageFormat = SurfaceFormat.format;
 			CreateInfo.imageColorSpace = SurfaceFormat.colorSpace;
 			CreateInfo.imageArrayLayers = 1;
-			CreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			CreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 			CreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			CreateInfo.preTransform = Capabilities.currentTransform;
 			CreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;

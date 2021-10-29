@@ -3,29 +3,23 @@
 
 layout(location = 0) in vec3 coord;
 layout(location = 1) in vec2 tex_coord;
+layout(location = 2) in vec3 normal;
 
 layout(push_constant, row_major) uniform PushConstant
 {
     mat4 Model;
-    mat4 View;
-    mat4 Projection;
-} PushConstants;
+} PerDrawcallData;
+
+layout(set = 0, binding = 0, row_major) uniform PerFrameUBO
+{
+    mat4 ViewProjection;
+} PerFrameData;
 
 layout(location = 0) out vec2 passed_tex_coord;
 
-vec4 ApplyDefaultNDCTransformations(vec4 Input)
-{
-    vec4 Multiplier = vec4(1.0, -1.0, 1.0, 1.0);
-    return Input * Multiplier;
-}
-
 void main()
 {
-    vec4 Result = vec4(coord, 1.0);
-    Result = PushConstants.Model * Result;
-    Result = PushConstants.View * Result;
-    Result = PushConstants.Projection * Result;
-    Result = ApplyDefaultNDCTransformations(Result);
+    vec4 Result = PerFrameData.ViewProjection * PerDrawcallData.Model * vec4(coord, 1.0);
     gl_Position = Result;
     passed_tex_coord = tex_coord;
 }

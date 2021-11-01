@@ -21,9 +21,9 @@ namespace Hermes
 			VulkanInstance(VulkanInstance&& Other);
 			VulkanInstance& operator=(VulkanInstance&& Other);
 
-			std::vector<RenderInterface::DeviceProperties> EnumerateAvailableDevices() override;
+			std::vector<RenderInterface::DeviceProperties> EnumerateAvailableDevices() const override;
 			
-			std::shared_ptr<RenderInterface::PhysicalDevice> GetPhysicalDevice(RenderInterface::DeviceIndex Index) override;
+			std::shared_ptr<RenderInterface::PhysicalDevice> GetPhysicalDevice(RenderInterface::DeviceIndex Index) const override;
 
 			VkInstance GetInstance() const { return Instance; }
 			
@@ -35,8 +35,8 @@ namespace Hermes
 			VkSurfaceKHR Surface = VK_NULL_HANDLE;
 			std::weak_ptr<const IPlatformWindow> Window;
 
-			std::vector<VkPhysicalDevice> AvailableDevices;
-			std::vector<RenderInterface::DeviceProperties> AvailableDeviceProperties;
+			mutable std::vector<VkPhysicalDevice> AvailableDevices;
+			mutable std::vector<RenderInterface::DeviceProperties> AvailableDeviceProperties;
 		};
 	}
 }

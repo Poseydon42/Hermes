@@ -14,9 +14,9 @@ namespace Hermes
 
 		class HERMES_API VulkanShader : public RenderInterface::ShaderBase
 		{
-			MAKE_NON_COPYABLE(VulkanShader);
+			MAKE_NON_COPYABLE(VulkanShader)
 		public:
-			VulkanShader(std::shared_ptr<VulkanDevice>InDevice, const String& Path, RenderInterface::ShaderType Type);
+			VulkanShader(std::shared_ptr<const VulkanDevice>InDevice, const String& Path, RenderInterface::ShaderType Type);
 			~VulkanShader() override;
 
 			VulkanShader(VulkanShader&& Other);
@@ -25,7 +25,7 @@ namespace Hermes
 			VkShaderModule GetShader() const { return Handle; }
 			
 		private:
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			VkShaderModule Handle;
 		};
 	}

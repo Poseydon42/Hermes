@@ -19,7 +19,7 @@ namespace Hermes
 	namespace Vulkan
 	{
 
-		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow)
+		VulkanDevice::VulkanDevice(VkPhysicalDevice InPhysicalDevice, std::shared_ptr<const VulkanInstance> InInstance, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow)
 			: Device(VK_NULL_HANDLE)
 			, PhysicalDevice(InPhysicalDevice)
 			, Instance(std::move(InInstance))
@@ -39,18 +39,18 @@ namespace Hermes
 			vkGetPhysicalDeviceQueueFamilyProperties(InPhysicalDevice, &QueueCount, QueueFamilies.data());
 			float QueuePriority = 1.0f;
 
-			for (size_t i = 0; i < QueueFamilies.size(); i++)
+			for (size_t Index = 0; Index < QueueFamilies.size(); Index++)
 			{
-				const auto& QueueFamily = QueueFamilies[i];
+				const auto& QueueFamily = QueueFamilies[Index];
 				bool QueueUsed = false;
 				if (RenderQueueIndex == -1 && (QueueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT && !QueueUsed)
 				{
-					RenderQueueIndex = (uint32)i;
+					RenderQueueIndex = static_cast<int32>(Index);
 					QueueUsed = true;
 				}
 				if (TransferQueueIndex == -1 && (QueueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT && !QueueUsed)
 				{
-					TransferQueueIndex = (uint32)i;
+					TransferQueueIndex = static_cast<int32>(Index);
 					QueueUsed = true;
 				}
 
@@ -60,7 +60,7 @@ namespace Hermes
 				VkDeviceQueueCreateInfo CreateInfo = {};
 				CreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 				CreateInfo.queueCount = 1;
-				CreateInfo.queueFamilyIndex = (uint32)i;
+				CreateInfo.queueFamilyIndex = (uint32)Index;
 				CreateInfo.pQueuePriorities = &QueuePriority;
 				QueueCreateInfos.push_back(CreateInfo);
 			}
@@ -165,12 +165,12 @@ namespace Hermes
 			return *this;
 		}
 
-		std::shared_ptr<RenderInterface::Swapchain> VulkanDevice::CreateSwapchain(uint32 NumFrames)
+		std::shared_ptr<RenderInterface::Swapchain> VulkanDevice::CreateSwapchain(uint32 NumFrames) const
 		{
 			return std::make_shared<VulkanSwapchain>(shared_from_this(), PhysicalDevice, Surface, Window, NumFrames);
 		}
 
-		std::shared_ptr<RenderInterface::Queue> VulkanDevice::GetQueue(RenderInterface::QueueType Type)
+		const RenderInterface::Queue& VulkanDevice::GetQueue(RenderInterface::QueueType Type) const
 		{
 			// NOTE : we need to 'lazily construct' those because we can't use shared_from_this() in constructor
 			switch (Type)
@@ -178,76 +178,72 @@ namespace Hermes
 			case RenderInterface::QueueType::Render:
 				if (RenderQueue == nullptr)
 					RenderQueue = std::make_shared<VulkanQueue>(shared_from_this(), RenderQueueIndex);
-				return RenderQueue;
-				break;
+				return *RenderQueue;
 			case RenderInterface::QueueType::Transfer:
 				if (TransferQueue == nullptr)
 					TransferQueue = std::make_shared<VulkanQueue>(shared_from_this(), TransferQueueIndex);
-				return TransferQueue;
-				break;
+				return *TransferQueue;
 			case RenderInterface::QueueType::Presentation:
 				if (PresentationQueue == nullptr)
 					PresentationQueue = RenderQueue;
-				return PresentationQueue;
-				break;
+				return *PresentationQueue;
 			default:
-				HERMES_LOG_FATAL(L"Someone is trying to get unknown queue type from logical device.");
-				GGameLoop->RequestExit();
-				return {};
+				HERMES_ASSERT_LOG(false, L"Someone is trying to get unknown queue type from logical device.");
 			}
+			return *RenderQueue;
 		}
 
-		std::shared_ptr<RenderInterface::Buffer> VulkanDevice::CreateBuffer(size_t Size, RenderInterface::BufferUsageType Usage)
+		std::shared_ptr<RenderInterface::Buffer> VulkanDevice::CreateBuffer(size_t Size, RenderInterface::BufferUsageType Usage)  const
 		{
 			return std::make_shared<VulkanBuffer>(shared_from_this(), Size, Usage);
 		}
 
-		std::shared_ptr<RenderInterface::Fence> VulkanDevice::CreateFence(bool InitialState)
+		std::shared_ptr<RenderInterface::Fence> VulkanDevice::CreateFence(bool InitialState) const
 		{
 			return std::make_shared<VulkanFence>(shared_from_this(), InitialState);
 		}
 
-		std::shared_ptr<RenderInterface::Shader> VulkanDevice::CreateShader(const String& Path, RenderInterface::ShaderType Type)
+		std::shared_ptr<RenderInterface::Shader> VulkanDevice::CreateShader(const String& Path, RenderInterface::ShaderType Type) const
 		{
 			return std::make_shared<VulkanShader>(shared_from_this(), Path, Type);
 		}
 
-		std::shared_ptr<RenderInterface::RenderPass> VulkanDevice::CreateRenderPass(const RenderInterface::RenderPassDescription& Description)
+		std::shared_ptr<RenderInterface::RenderPass> VulkanDevice::CreateRenderPass(const RenderInterface::RenderPassDescription& Description) const
 		{
 			return std::make_shared<VulkanRenderPass>(shared_from_this(), Description);
 		}
 
-		std::shared_ptr<RenderInterface::Pipeline> VulkanDevice::CreatePipeline(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const RenderInterface::PipelineDescription& Description)
+		std::shared_ptr<RenderInterface::Pipeline> VulkanDevice::CreatePipeline(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const RenderInterface::PipelineDescription& Description) const
 		{
 			return std::make_shared<VulkanPipeline>(shared_from_this(), std::move(RenderPass), Description);
 		}
 
-		std::shared_ptr<RenderInterface::RenderTarget> VulkanDevice::CreateRenderTarget(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size)
+		std::shared_ptr<RenderInterface::RenderTarget> VulkanDevice::CreateRenderTarget(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size) const
 		{
-			return std::make_shared<VulkanRenderTarget>(shared_from_this(), RenderPass, Attachments, Size);
+			return std::make_shared<VulkanRenderTarget>(shared_from_this(), std::move(RenderPass), Attachments, Size);
 		}
 
-		std::shared_ptr<RenderInterface::DescriptorSetLayout> VulkanDevice::CreateDescriptorSetLayout(const std::vector<RenderInterface::DescriptorBinding>& Bindings)
+		std::shared_ptr<RenderInterface::DescriptorSetLayout> VulkanDevice::CreateDescriptorSetLayout(const std::vector<RenderInterface::DescriptorBinding>& Bindings) const
 		{
 			return std::make_shared<VulkanDescriptorSetLayout>(shared_from_this(), Bindings);
 		}
 
-		std::shared_ptr<RenderInterface::DescriptorSetPool> VulkanDevice::CreateDescriptorSetPool(uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools)
+		std::shared_ptr<RenderInterface::DescriptorSetPool> VulkanDevice::CreateDescriptorSetPool(uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools) const
 		{
 			return std::make_shared<VulkanDescriptorSetPool>(shared_from_this(), NumberOfSets, Subpools);
 		}
 
-		std::shared_ptr<RenderInterface::Sampler> VulkanDevice::CreateSampler(const RenderInterface::SamplerDescription& Description)
+		std::shared_ptr<RenderInterface::Sampler> VulkanDevice::CreateSampler(const RenderInterface::SamplerDescription& Description) const
 		{
 			return std::make_shared<VulkanSampler>(shared_from_this(), Description);
 		}
 
-		std::shared_ptr<RenderInterface::Image> VulkanDevice::CreateImage(Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, uint32 MipLevels, RenderInterface::ImageLayout InitialLayout)
+		std::shared_ptr<RenderInterface::Image> VulkanDevice::CreateImage(Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, uint32 MipLevels, RenderInterface::ImageLayout InitialLayout) const
 		{
 			return std::make_shared<VulkanImage>(shared_from_this(), Size, Usage, Format, MipLevels, InitialLayout);
 		}
 
-		void VulkanDevice::WaitForIdle()
+		void VulkanDevice::WaitForIdle() const
 		{
 			vkDeviceWaitIdle(Device);
 		}

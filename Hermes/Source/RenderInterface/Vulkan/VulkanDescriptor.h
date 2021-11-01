@@ -19,7 +19,7 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanDescriptorSetLayout)
 
 		public:
-			VulkanDescriptorSetLayout(std::shared_ptr<VulkanDevice> InDevice, const std::vector<RenderInterface::DescriptorBinding>& Bindings);
+			VulkanDescriptorSetLayout(std::shared_ptr<const VulkanDevice> InDevice, const std::vector<RenderInterface::DescriptorBinding>& Bindings);
 
 			~VulkanDescriptorSetLayout() override;
 			VulkanDescriptorSetLayout(VulkanDescriptorSetLayout&& Other);
@@ -28,7 +28,7 @@ namespace Hermes
 			VkDescriptorSetLayout GetDescriptorSetLayout() const { return Layout; }
 
 		private:
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			VkDescriptorSetLayout Layout;
 		};
 
@@ -37,7 +37,7 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanDescriptorSetPool)
 
 		public:
-			VulkanDescriptorSetPool(std::shared_ptr<VulkanDevice> InDevice, uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools);
+			VulkanDescriptorSetPool(std::shared_ptr<const VulkanDevice> InDevice, uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools);
 
 			~VulkanDescriptorSetPool() override;
 			VulkanDescriptorSetPool(VulkanDescriptorSetPool&& Other);
@@ -50,7 +50,7 @@ namespace Hermes
 			uint32 GetNumberOfSets() const override { return NumSets; }
 
 		private:
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			uint32 NumSets;
 			VkDescriptorPool Pool;
 		};
@@ -60,7 +60,7 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanDescriptorSet)
 
 		public:
-			VulkanDescriptorSet(std::shared_ptr<VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout);
+			VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout);
 
 			~VulkanDescriptorSet() override;
 			VulkanDescriptorSet(VulkanDescriptorSet&& Other);
@@ -75,7 +75,7 @@ namespace Hermes
 			VkDescriptorSet GetDescriptorSet() const { return Set; }
 
 		private:
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			std::shared_ptr<VulkanDescriptorSetPool> Pool;
 			std::shared_ptr<VulkanDescriptorSetLayout> Layout;
 			VkDescriptorSet Set;

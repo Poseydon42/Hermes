@@ -37,7 +37,8 @@ namespace Hermes
 			}
 		}
 
-		VulkanRenderPass::VulkanRenderPass(std::shared_ptr<VulkanDevice> InDevice, const RenderInterface::RenderPassDescription& Description)
+		VulkanRenderPass::VulkanRenderPass(
+			std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::RenderPassDescription& Description)
 			: Device(std::move(InDevice))
 			, RenderPass(VK_NULL_HANDLE)
 			, ColorAttachmentCount(0)

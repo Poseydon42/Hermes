@@ -16,7 +16,7 @@ namespace Hermes
 		{
 			MAKE_NON_COPYABLE(VulkanSampler)
 		public:
-			VulkanSampler(std::shared_ptr<VulkanDevice> InDevice, const RenderInterface::SamplerDescription& Description);
+			VulkanSampler(std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::SamplerDescription& Description);
 
 			~VulkanSampler() override;
 
@@ -26,7 +26,7 @@ namespace Hermes
 			VkSampler GetSampler() const;
 
 		private:
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			VkSampler Sampler;
 		};
 	}

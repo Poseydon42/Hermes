@@ -22,7 +22,7 @@ namespace Hermes
 		{
 			MAKE_NON_COPYABLE(VulkanSwapchain)
 		public:
-			VulkanSwapchain(std::shared_ptr<VulkanDevice> InDevice, VkPhysicalDevice InPhysicalDevice, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow, uint32 NumFrames);
+			VulkanSwapchain(std::shared_ptr<const VulkanDevice> InDevice, VkPhysicalDevice InPhysicalDevice, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow, uint32 NumFrames);
 			
 			~VulkanSwapchain() override;
 			VulkanSwapchain(VulkanSwapchain&& Other);
@@ -47,7 +47,7 @@ namespace Hermes
 			VkSurfaceKHR Surface;
 			VkSwapchainKHR Swapchain;
 			VkFormat SwapchainFormat;
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			std::weak_ptr<const IPlatformWindow> Window;
 			std::vector<std::shared_ptr<VulkanImage>> Images;
 			Vec2ui Size;

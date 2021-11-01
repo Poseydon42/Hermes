@@ -26,7 +26,7 @@ namespace Hermes
 		{
 			MAKE_NON_COPYABLE(VulkanPhysicalDevice)
 		public:
-			VulkanPhysicalDevice(VkPhysicalDevice InDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow);
+			VulkanPhysicalDevice(VkPhysicalDevice InDevice, std::shared_ptr<const VulkanInstance> InInstance, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow);
 			
 			~VulkanPhysicalDevice() override = default;
 			VulkanPhysicalDevice(VulkanPhysicalDevice&&);
@@ -39,7 +39,7 @@ namespace Hermes
 			
 		private:
 			VkPhysicalDevice Device;
-			std::shared_ptr<VulkanInstance> Instance;
+			std::shared_ptr<const VulkanInstance> Instance;
 			VkSurfaceKHR Surface;
 			RenderInterface::DeviceProperties Properties;
 			std::weak_ptr<const IPlatformWindow> Window;

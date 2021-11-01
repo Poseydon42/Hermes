@@ -15,7 +15,9 @@ namespace Hermes
 		class VulkanRenderPass : public RenderInterface::RenderPass
 		{
 		public:
-			VulkanRenderPass(std::shared_ptr<VulkanDevice> InDevice, const RenderInterface::RenderPassDescription& Description);
+			VulkanRenderPass(
+				std::shared_ptr<const VulkanDevice> InDevice, 
+				const RenderInterface::RenderPassDescription& Description);
 			
 			~VulkanRenderPass() override;
 
@@ -28,7 +30,7 @@ namespace Hermes
 			VkRenderPass GetRenderPass() const { return RenderPass; }
 		
 		private:
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			VkRenderPass RenderPass;
 			uint32 ColorAttachmentCount;
 		};

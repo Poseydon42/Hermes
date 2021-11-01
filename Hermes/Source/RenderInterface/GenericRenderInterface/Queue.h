@@ -36,14 +36,14 @@ namespace Hermes
 			 * @param IsPrimaryBuffer If true then this command buffer can be submitted to queue, but can not be called from other command buffers \n
 			 * If false then this command buffer can be called from other command buffers, but can not be submitted to queue directly
 			 */
-			virtual std::shared_ptr<CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) = 0;
+			virtual std::shared_ptr<CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) const = 0;
 
 			/**
 			 * Pushes given command buffer into queue's internal 'execution list'
 			 * @param Buffer A command buffer to be executed
 			 * @param Fence An optional fence object that needs to be signaled when GPU finishes execution of given command buffer
 			 */
-			virtual void SubmitCommandBuffer(std::shared_ptr<CommandBuffer> Buffer, std::optional<std::shared_ptr<Fence>> Fence) = 0;
+			virtual void SubmitCommandBuffer(std::shared_ptr<CommandBuffer> Buffer, std::optional<std::shared_ptr<Fence>> Fence) const = 0;
 
 			/*
 			 * Blocks current thread until all pending operations on this queue are finished

@@ -48,7 +48,7 @@ namespace Hermes
 			}
 		}
 		
-		VulkanSwapchain::VulkanSwapchain(std::shared_ptr<VulkanDevice> InDevice, VkPhysicalDevice InPhysicalDevice, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow, uint32 NumFrames)
+		VulkanSwapchain::VulkanSwapchain(std::shared_ptr<const VulkanDevice> InDevice, VkPhysicalDevice InPhysicalDevice, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow, uint32 NumFrames)
 			: PhysicalDevice(InPhysicalDevice)
 			, Surface(InSurface)
 			, Swapchain(VK_NULL_HANDLE)
@@ -112,7 +112,7 @@ namespace Hermes
 			Info.pSwapchains = &Swapchain;
 			Info.swapchainCount = 1;
 			Info.waitSemaphoreCount = 0;
-			vkQueuePresentKHR(std::reinterpret_pointer_cast<VulkanQueue>(Device->GetQueue(RenderInterface::QueueType::Presentation))->GetQueue(), &Info);
+			vkQueuePresentKHR(static_cast<const VulkanQueue&>(Device->GetQueue(RenderInterface::QueueType::Presentation)).GetQueue(), &Info);
 			if (Info.pResults[0] == VK_SUBOPTIMAL_KHR || Info.pResults[0] == VK_ERROR_OUT_OF_DATE_KHR)
 			{
 				RecreateSwapchain(static_cast<uint32>(Images.size()));

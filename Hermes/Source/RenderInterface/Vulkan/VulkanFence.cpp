@@ -6,7 +6,7 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanFence::VulkanFence(std::shared_ptr<VulkanDevice> InDevice, bool InitialState)
+		VulkanFence::VulkanFence(std::shared_ptr<const VulkanDevice> InDevice, bool InitialState)
 			: Device(std::move(InDevice))
 			, Fence(VK_NULL_HANDLE)
 		{

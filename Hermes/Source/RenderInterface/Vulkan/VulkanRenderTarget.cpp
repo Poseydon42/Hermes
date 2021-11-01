@@ -8,7 +8,7 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanRenderTarget::VulkanRenderTarget(std::shared_ptr<VulkanDevice> InDevice, const std::shared_ptr<RenderInterface::RenderPass>& InRenderPass, std::vector<std::shared_ptr<RenderInterface::Image>> InAttachments, Vec2ui InSize)
+		VulkanRenderTarget::VulkanRenderTarget(std::shared_ptr<const VulkanDevice> InDevice, const std::shared_ptr<RenderInterface::RenderPass>& InRenderPass, std::vector<std::shared_ptr<RenderInterface::Image>> InAttachments, Vec2ui InSize)
 			: Device(std::move(InDevice))
 			, RenderPass(std::reinterpret_pointer_cast<VulkanRenderPass>(InRenderPass))
 			, Framebuffer(VK_NULL_HANDLE)

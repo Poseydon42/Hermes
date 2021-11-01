@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "Core/Core.h"
-#include "Core/Misc/EnumClassOperators.h"
+#include "Core/Misc/DefaultConstructors.h"
 
 namespace Hermes
 {
@@ -26,11 +26,10 @@ namespace Hermes
 		class HERMES_API PhysicalDevice
 		{
 			MAKE_NON_COPYABLE(PhysicalDevice)
+			ADD_DEFAULT_CONSTRUCTOR(PhysicalDevice)
+			ADD_DEFAULT_MOVE_CONSTRUCTOR(PhysicalDevice)
+			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(PhysicalDevice)
 		public:
-			PhysicalDevice() = default;
-			virtual ~PhysicalDevice() = default;
-			PhysicalDevice(PhysicalDevice&&) = default;
-			PhysicalDevice& operator=(PhysicalDevice&&) = default;
 
 			virtual const DeviceProperties& GetProperties() const = 0;
 

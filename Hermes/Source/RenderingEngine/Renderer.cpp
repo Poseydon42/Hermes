@@ -143,8 +143,8 @@ namespace Hermes
 
 		CurrentCommandBuffer->EndRecording();
 
-		auto RenderQueue = RenderingDevice->GetQueue(RenderInterface::QueueType::Render);
-		RenderQueue->SubmitCommandBuffer(CurrentCommandBuffer, RenderingFinishedFence);
+		auto& RenderQueue = RenderingDevice->GetQueue(RenderInterface::QueueType::Render);
+		RenderQueue.SubmitCommandBuffer(CurrentCommandBuffer, RenderingFinishedFence);
 
 		SwapchainImageAcquiredFence->Wait(UINT64_MAX);
 		RenderingFinishedFence->Wait(UINT64_MAX);
@@ -189,7 +189,7 @@ namespace Hermes
 		PerFrameObjects.resize(Swapchain->GetImageCount());
 		for (auto& Object : PerFrameObjects)
 		{
-			Object.CommandBuffer = RenderingDevice->GetQueue(RenderInterface::QueueType::Render)->CreateCommandBuffer(true);
+			Object.CommandBuffer = RenderingDevice->GetQueue(RenderInterface::QueueType::Render).CreateCommandBuffer(true);
 			Object.UniformBuffer = RenderingDevice->CreateBuffer(sizeof(PerFrameUBOData), RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::UniformBuffer);
 			Object.PerFrameDataDescriptor = PerFrameUBODescriptorPool->CreateDescriptorSet(PerFrameUBODescriptorLayout);
 

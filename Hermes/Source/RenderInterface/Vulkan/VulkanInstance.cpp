@@ -139,7 +139,7 @@ namespace Hermes
 			return *this;
 		}
 
-		std::vector<RenderInterface::DeviceProperties> VulkanInstance::EnumerateAvailableDevices()
+		std::vector<RenderInterface::DeviceProperties> VulkanInstance::EnumerateAvailableDevices() const
 		{
 			if (AvailableDevices.empty()) // We should do this only one time
 			{
@@ -150,17 +150,17 @@ namespace Hermes
 				AvailableDevices.resize(DeviceCount);
 				VK_CHECK_RESULT(vkEnumeratePhysicalDevices(Instance, &DeviceCount, AvailableDevices.data()));
 
-				for (size_t i = 0; i < AvailableDevices.size(); i++)
+				for (size_t Index = 0; Index < AvailableDevices.size(); Index++)
 				{
-					AvailableDeviceProperties[i] = GetPhysicalDeviceProperties(AvailableDevices[i]);
-					AvailableDeviceProperties[i].InternalIndex = (RenderInterface::DeviceIndex)i;
+					AvailableDeviceProperties[Index] = GetPhysicalDeviceProperties(AvailableDevices[Index]);
+					AvailableDeviceProperties[Index].InternalIndex = static_cast<RenderInterface::DeviceIndex>(Index);
 				}
 			}
 
 			return AvailableDeviceProperties;
 		}
 
-		std::shared_ptr<RenderInterface::PhysicalDevice> VulkanInstance::GetPhysicalDevice(RenderInterface::DeviceIndex Index)
+		std::shared_ptr<RenderInterface::PhysicalDevice> VulkanInstance::GetPhysicalDevice(RenderInterface::DeviceIndex Index) const
 		{
 			return std::make_shared<VulkanPhysicalDevice>(AvailableDevices[Index], shared_from_this(), Surface, Window);
 		}

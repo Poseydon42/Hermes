@@ -28,7 +28,7 @@ namespace Hermes
 			}
 		}
 		
-		VulkanCommandBuffer::VulkanCommandBuffer(std::shared_ptr<VulkanDevice> InDevice, VkCommandPool InPool, bool IsPrimaryBuffer)
+		VulkanCommandBuffer::VulkanCommandBuffer(std::shared_ptr<const VulkanDevice> InDevice, VkCommandPool InPool, bool IsPrimaryBuffer)
 			: Buffer(VK_NULL_HANDLE)
 			, Pool(InPool)
 			, Device(std::move(InDevice))

@@ -22,12 +22,12 @@ namespace Hermes
 			/*
 			 * Non-owning constructor
 			 */
-			VulkanImage(std::shared_ptr<VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat, Vec2ui InSize);
+			VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat, Vec2ui InSize);
 
 			/*
 			 * Owning constructor
 			 */
-			VulkanImage(std::shared_ptr<VulkanDevice> InDevice, Vec2ui InSize, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat InFormat, uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout);
+			VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, Vec2ui InSize, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat InFormat, uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout);
 
 			~VulkanImage() override;
 			VulkanImage(VulkanImage&& Other);
@@ -48,7 +48,7 @@ namespace Hermes
 			VkImageView GetDefaultView() const;
 
 		private:
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			VkImage Handle;
 			Vec2ui Size;
 			VkFormat Format;

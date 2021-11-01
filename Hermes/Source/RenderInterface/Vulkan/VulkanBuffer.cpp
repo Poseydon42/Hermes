@@ -6,7 +6,7 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanBuffer::VulkanBuffer(std::shared_ptr<VulkanDevice> InDevice, size_t BufferSize, RenderInterface::BufferUsageType Usage)
+		VulkanBuffer::VulkanBuffer(std::shared_ptr<const VulkanDevice> InDevice, size_t BufferSize, RenderInterface::BufferUsageType Usage)
 			: Buffer(VK_NULL_HANDLE)
 			, Allocation(VK_NULL_HANDLE)
 			, Device(std::move(InDevice))

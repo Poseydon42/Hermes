@@ -36,7 +36,7 @@ namespace Hermes
 			}
 		}
 
-		VulkanSampler::VulkanSampler(std::shared_ptr<VulkanDevice> InDevice, const RenderInterface::SamplerDescription& Description)
+		VulkanSampler::VulkanSampler(std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::SamplerDescription& Description)
 			: Device(std::move(InDevice))
 			, Sampler(VK_NULL_HANDLE)
 		{

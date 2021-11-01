@@ -17,15 +17,15 @@ namespace Hermes
 		public:
 			MAKE_NON_COPYABLE(VulkanQueue);
 			
-			VulkanQueue(std::shared_ptr<VulkanDevice> InDevice, uint32 InQueueFamilyIndex);
+			VulkanQueue(std::shared_ptr<const VulkanDevice> InDevice, uint32 InQueueFamilyIndex);
 
 			~VulkanQueue() override;
 			VulkanQueue(VulkanQueue&& Other);
 			VulkanQueue& operator=(VulkanQueue&& Other);
 
-			std::shared_ptr<RenderInterface::CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) override;
+			std::shared_ptr<RenderInterface::CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) const override;
 			
-			void SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer, std::optional<std::shared_ptr<RenderInterface::Fence>> Fence) override;
+			void SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer, std::optional<std::shared_ptr<RenderInterface::Fence>> Fence) const override;
 
 			void WaitForIdle() const override;
 
@@ -34,7 +34,7 @@ namespace Hermes
 			uint32 GetQueueFamilyIndex() const;
 			
 		private:
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			VkQueue Queue;
 			VkCommandPool CommandPool;
 			uint32 QueueFamilyIndex;

@@ -14,8 +14,8 @@ namespace Hermes
 		auto& Device = Renderer::Get().GetActiveDevice();
 
 		auto& CurrentStagingBuffer = EnsureStagingBuffer();
-		auto TransferQueue = Device.GetQueue(RenderInterface::QueueType::Transfer);
-		auto TransferCommandBuffer = TransferQueue->CreateCommandBuffer(true);
+		auto& TransferQueue = Device.GetQueue(RenderInterface::QueueType::Transfer);
+		auto TransferCommandBuffer = TransferQueue.CreateCommandBuffer(true);
 		auto TransferFinishedFence = Device.CreateFence(true);
 		HERMES_ASSERT(TargetOffset + DataSize <= Target.GetSize())
 
@@ -38,7 +38,7 @@ namespace Hermes
 			TransferCommandBuffer->CopyBuffer(CurrentStagingBuffer, Target, { Region });
 			TransferCommandBuffer->EndRecording();
 
-			TransferQueue->SubmitCommandBuffer(TransferCommandBuffer, TransferFinishedFence);
+			TransferQueue.SubmitCommandBuffer(TransferCommandBuffer, TransferFinishedFence);
 			TransferFinishedFence->Wait(UINT64_MAX);
 		}
 	}

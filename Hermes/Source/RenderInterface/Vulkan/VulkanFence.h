@@ -22,7 +22,7 @@ namespace Hermes
 			
 			~VulkanFence() override;
 			
-			VulkanFence(std::shared_ptr<VulkanDevice> InDevice, bool InitialState);
+			VulkanFence(std::shared_ptr<const VulkanDevice> InDevice, bool InitialState);
 
 			bool IsSignaled() const override;
 			
@@ -33,7 +33,7 @@ namespace Hermes
 			VkFence GetFence() const { return Fence; }
 
 		private:
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			VkFence Fence;
 		};
 	}

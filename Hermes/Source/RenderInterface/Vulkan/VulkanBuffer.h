@@ -17,7 +17,7 @@ namespace Hermes
 		public:
 			MAKE_NON_COPYABLE(VulkanBuffer)
 			
-			VulkanBuffer(std::shared_ptr<VulkanDevice> InDevice, size_t BufferSize, RenderInterface::BufferUsageType Usage);
+			VulkanBuffer(std::shared_ptr<const VulkanDevice> InDevice, size_t BufferSize, RenderInterface::BufferUsageType Usage);
 			
 			~VulkanBuffer() override;
 
@@ -35,7 +35,7 @@ namespace Hermes
 		private:
 			VkBuffer Buffer;
 			VmaAllocation Allocation;
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 			bool IsMapped;
 			size_t Size;
 		};

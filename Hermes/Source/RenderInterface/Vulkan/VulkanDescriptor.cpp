@@ -26,7 +26,7 @@ namespace Hermes
 			}
 		}
 
-		VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::shared_ptr<VulkanDevice> InDevice, const std::vector<RenderInterface::DescriptorBinding>& Bindings)
+		VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::shared_ptr<const VulkanDevice> InDevice, const std::vector<RenderInterface::DescriptorBinding>& Bindings)
 			: Device(std::move(InDevice))
 			, Layout(VK_NULL_HANDLE)
 		{
@@ -68,7 +68,7 @@ namespace Hermes
 			return *this;
 		}
 
-		VulkanDescriptorSetPool::VulkanDescriptorSetPool(std::shared_ptr<VulkanDevice> InDevice, uint32 InNumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools)
+		VulkanDescriptorSetPool::VulkanDescriptorSetPool(std::shared_ptr<const VulkanDevice> InDevice, uint32 InNumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools)
 			: Device(std::move(InDevice))
 			, NumSets(InNumberOfSets)
 			, Pool(VK_NULL_HANDLE)
@@ -115,7 +115,7 @@ namespace Hermes
 			return std::make_shared<VulkanDescriptorSet>(Device, shared_from_this(), std::reinterpret_pointer_cast<VulkanDescriptorSetLayout>(Layout));
 		}
 
-		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout)
+		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout)
 			: Device(std::move(InDevice))
 			, Pool(std::move(InPool))
 			, Layout(std::move(InLayout))
@@ -161,7 +161,7 @@ namespace Hermes
 			Write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
-			VkDescriptorBufferInfo BufferInfo = {};
+			VkDescriptorBufferInfo BufferInfo;
 			BufferInfo.buffer = reinterpret_cast<const VulkanBuffer&>(Buffer).GetBuffer();
 			BufferInfo.offset = Offset;
 			BufferInfo.range = Size;

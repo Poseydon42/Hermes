@@ -15,7 +15,7 @@ namespace Hermes
 		public:
 			MAKE_NON_COPYABLE(VulkanCommandBuffer)
 
-			VulkanCommandBuffer(std::shared_ptr<VulkanDevice> InDevice, VkCommandPool InPool, bool IsPrimaryBuffer);
+			VulkanCommandBuffer(std::shared_ptr<const VulkanDevice> InDevice, VkCommandPool InPool, bool IsPrimaryBuffer);
 
 			~VulkanCommandBuffer() override;
 
@@ -59,7 +59,7 @@ namespace Hermes
 		private:
 			VkCommandBuffer Buffer;
 			VkCommandPool Pool;
-			std::shared_ptr<VulkanDevice> Device;
+			std::shared_ptr<const VulkanDevice> Device;
 		};
 	}
 }

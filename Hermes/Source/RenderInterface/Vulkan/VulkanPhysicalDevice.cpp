@@ -48,7 +48,7 @@ namespace Hermes
 			return Instance->GetInstance();
 		}
 
-		VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice InDevice, std::shared_ptr<VulkanInstance> InInstance, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow)
+		VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice InDevice, std::shared_ptr<const VulkanInstance> InInstance, VkSurfaceKHR InSurface, std::weak_ptr<const IPlatformWindow> InWindow)
 			: Device(InDevice)
 			, Instance(std::move(InInstance))
 			, Surface(InSurface)

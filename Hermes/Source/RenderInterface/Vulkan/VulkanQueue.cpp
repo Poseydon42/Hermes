@@ -8,7 +8,7 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanQueue::VulkanQueue(std::shared_ptr<VulkanDevice> InDevice, uint32 InQueueFamilyIndex)
+		VulkanQueue::VulkanQueue(std::shared_ptr<const VulkanDevice> InDevice, uint32 InQueueFamilyIndex)
 			: Device(std::move(InDevice))
 			, QueueFamilyIndex(InQueueFamilyIndex)
 		{
@@ -40,12 +40,12 @@ namespace Hermes
 			return *this;
 		}
 
-		std::shared_ptr<RenderInterface::CommandBuffer> VulkanQueue::CreateCommandBuffer(bool IsPrimaryBuffer)
+		std::shared_ptr<RenderInterface::CommandBuffer> VulkanQueue::CreateCommandBuffer(bool IsPrimaryBuffer) const
 		{
 			return std::make_shared<VulkanCommandBuffer>(Device, CommandPool, IsPrimaryBuffer);
 		}
 
-		void VulkanQueue::SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer, std::optional<std::shared_ptr<RenderInterface::Fence>> Fence)
+		void VulkanQueue::SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer, std::optional<std::shared_ptr<RenderInterface::Fence>> Fence) const
 		{
 			auto* VulkanBuffer = (VulkanCommandBuffer*)Buffer.get();
 			VkSubmitInfo SubmitInfo = {};

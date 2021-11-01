@@ -38,7 +38,7 @@ namespace Hermes
 		public:
 			explicit ShaderBase(ShaderType InType) : Type(InType) { }
 
-			virtual ShaderType GetType() const override { return Type; };
+			virtual ShaderType GetType() const override { return Type; }
 
 		private:
 			ShaderType Type;

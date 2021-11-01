@@ -8,7 +8,7 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanShader::VulkanShader(std::shared_ptr<VulkanDevice> InDevice, const String& Path, RenderInterface::ShaderType Type)
+		VulkanShader::VulkanShader(std::shared_ptr<const VulkanDevice> InDevice, const String& Path, RenderInterface::ShaderType Type)
 			: ShaderBase(Type)
 			, Device(std::move(InDevice))
 			, Handle(VK_NULL_HANDLE)

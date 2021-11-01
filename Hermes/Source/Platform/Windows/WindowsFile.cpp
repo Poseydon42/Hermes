@@ -108,24 +108,81 @@ namespace Hermes
 		File = CreateFileW(Path.c_str(), Win32Access, FILE_SHARE_READ, 0, Win32OpenMode, FILE_ATTRIBUTE_NORMAL, 0);
 	}
 
+	std::multiset<MountRecord> PlatformFilesystem::Mounts;
+
+	static bool TryFindFile(const std::multiset<MountRecord>& Mounts, const String& Path, bool AlwaysSearchForFile, String& Result)
+	{
+		auto Iterator = Mounts.rbegin();
+		while (Iterator != Mounts.rend())
+		{
+			auto& Record = *Iterator;
+			if (Path.rfind(Record.To, 0) != String::npos)
+			{
+				if (AlwaysSearchForFile)
+				{
+					Result = Record.From + L"/" + String(Path.begin() + static_cast<int32>(Record.To.length()), Path.end());
+					WIN32_FIND_DATA FindData;
+					HANDLE FoundFile = FindFirstFileW(Result.c_str(), &FindData);
+					if (FoundFile != INVALID_HANDLE_VALUE)
+					{
+						FindClose(FoundFile);
+						return true;
+					}
+				}
+				else
+				{
+					// We need to just find a suitable directory according to
+					// mounting table, not the specific file
+					Result = Record.From + L"/" + String(Path.begin() + static_cast<int32>(Record.To.length()), Path.end());
+					return true;
+				}
+			}
+
+			++Iterator;
+		}
+		return false;
+	}
+
 	bool PlatformFilesystem::FileExists(const String& Path)
 	{
-		WIN32_FIND_DATA FindData;
-		HANDLE FoundFile = FindFirstFileW(Path.c_str(), &FindData);
-		bool Result = (FoundFile != INVALID_HANDLE_VALUE);
-		if (Result)
-			FindClose(FoundFile);
-		return Result;
+		String TruePath;
+		return TryFindFile(Mounts, Path, true, TruePath);
 	}
 
 	std::shared_ptr<IPlatformFile> PlatformFilesystem::OpenFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode)
 	{
-		return std::make_shared<WindowsFile>(Path, Access, OpenMode);
+		auto FixedPath = Path;
+		if (FixedPath.empty() || FixedPath[0] != L'/')
+			FixedPath = L"/" + FixedPath;
+		String TruePath;
+		bool AlwaysOpenExistingFile = 
+			(OpenMode == IPlatformFile::FileOpenMode::OpenExisting || 
+			 OpenMode == IPlatformFile::FileOpenMode::OpenExistingOverwrite);
+		if (TryFindFile(Mounts, FixedPath, AlwaysOpenExistingFile, TruePath))
+			return std::make_shared<WindowsFile>(TruePath, Access, OpenMode);
+		return std::make_shared<WindowsFile>(L"/", Access, OpenMode);
 	}
-	
+
+	void PlatformFilesystem::Mount(const String& FolderPath, const String& MountingPath, uint32 Priority)
+	{
+		MountRecord NewMount;
+		NewMount.From = FolderPath;
+		NewMount.To = MountingPath;
+		NewMount.Priority = Priority;
+		Mounts.insert(NewMount);
+	}
+
+	void PlatformFilesystem::ClearMountedFolders()
+	{
+		Mounts.clear();
+	}
+
 	bool PlatformFilesystem::RemoveFile(const String& Path)
 	{
-		return DeleteFileW(Path.c_str());
+		String TruePath;
+		if (!TryFindFile(Mounts, Path, true, TruePath))
+			return false;
+		return DeleteFileW(TruePath.c_str());
 	}
 }
 

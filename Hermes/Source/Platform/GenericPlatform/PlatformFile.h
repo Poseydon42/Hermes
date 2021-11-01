@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 
 #include "Core/Core.h"
 #include "Core/Misc/EnumClassOperators.h"
@@ -81,6 +82,15 @@ namespace Hermes
 
 	ENUM_CLASS_OPERATORS(IPlatformFile::FileAccessMode)
 
+	struct MountRecord
+	{
+		String From;
+		String To;
+		uint32 Priority;
+
+		bool operator<(const MountRecord& Rhs) const { return Priority < Rhs.Priority; }
+	};
+
 	/**
 	 * Set of platform-independent functions for managing filesystem
 	 */
@@ -98,9 +108,24 @@ namespace Hermes
 		static std::shared_ptr<IPlatformFile> OpenFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode);
 
 		/**
+		 * Mounts all files and subdirectories from FolderPath to a virtual folder with path MountingPath
+		 */
+		static void Mount(const String& FolderPath, const String& MountingPath, uint32 Priority);
+
+		/**
+		 * Removes all previously mounted directories
+		 * After using this function filesystem becomes completely unusable until you
+		 * new directories are mounted
+		 */
+		static void ClearMountedFolders();
+
+		/**
 		 * Deletes a file
 		 * @return True if file was successfully deleted
 		 */
 		static bool RemoveFile(const String& Path);
+
+	private:
+		static std::multiset<MountRecord> Mounts;
 	};
 }

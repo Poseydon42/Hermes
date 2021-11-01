@@ -5,6 +5,7 @@
 #include "Core/Log/Logger.h"
 #include "Core/Log/DebugLogDevice.h"
 #include "Core/Log/FileLogDevice.h"
+#include "Core/Misc/StringUtils.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"
 
@@ -17,6 +18,9 @@ namespace Hermes
 		, Paused(false)
 		, PrevFrameEndTimestamp{}
 	{
+		PlatformFilesystem::Mount(L"Hermes/Files", L"/", 0);
+		PlatformFilesystem::Mount(StringUtils::ANSIToString(HERMES_GAME_NAME) + L"/Files", L"/", 1);
+
 		Logger::SetLogLevel(LogLevel::Debug);
 		Logger::SetLogFormat(L"[%Y-%M-%d %h:%m:%s:%u][%f:%#][%l] %v");
 		Logger::AttachLogDevice(new DebugLogDevice());

@@ -53,6 +53,10 @@ namespace Hermes
 		struct BufferToImageCopyRegion
 		{
 			uint32 BufferOffset;
+			std::optional<uint32> RowLengthInBuffer;
+			Vec2ui ImageOffset;
+			Vec2ui ImageDimensions;
+			uint32 MipLevel;
 		};
 
 		struct ImageCopyRegion

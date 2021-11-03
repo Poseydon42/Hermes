@@ -217,18 +217,18 @@ namespace Hermes
 			{
 				auto& VulkanCopyRegion = *It;
 				VulkanCopyRegion.bufferOffset = CopyRegion.BufferOffset;
-				VulkanCopyRegion.bufferRowLength = 0; // TODO : user should be able to specify these
+				VulkanCopyRegion.bufferRowLength = CopyRegion.RowLengthInBuffer.value_or(0);
 				VulkanCopyRegion.bufferImageHeight = 0;
-				VulkanCopyRegion.imageExtent.width = DestinationImage.GetSize().X;
-				VulkanCopyRegion.imageExtent.height = DestinationImage.GetSize().Y;
+				VulkanCopyRegion.imageExtent.width = CopyRegion.ImageDimensions.X;
+				VulkanCopyRegion.imageExtent.height = CopyRegion.ImageDimensions.Y;
 				VulkanCopyRegion.imageExtent.depth = 1;
-				VulkanCopyRegion.imageOffset.x = 0;
-				VulkanCopyRegion.imageOffset.y = 0;
+				VulkanCopyRegion.imageOffset.x = static_cast<int32>(CopyRegion.ImageOffset.X);
+				VulkanCopyRegion.imageOffset.y = static_cast<int32>(CopyRegion.ImageOffset.Y);
 				VulkanCopyRegion.imageOffset.z = 0;
 				VulkanCopyRegion.imageSubresource.aspectMask = VkAspectFlagsFromVkFormat(DataFormatToVkFormat(DestinationImage.GetDataFormat()));
 				VulkanCopyRegion.imageSubresource.baseArrayLayer = 0;
 				VulkanCopyRegion.imageSubresource.layerCount = 1;
-				VulkanCopyRegion.imageSubresource.mipLevel = 0;
+				VulkanCopyRegion.imageSubresource.mipLevel = CopyRegion.MipLevel;
 				++It;
 			}
 			vkCmdCopyBufferToImage(Buffer, SourceBuffer.GetBuffer(), DestinationImage.GetImage(), Layout, static_cast<uint32>(VulkanCopyRegions.size()), VulkanCopyRegions.data());

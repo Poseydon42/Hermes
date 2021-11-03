@@ -99,6 +99,7 @@ namespace Hermes
 		CurrentCommandBuffer->BindPipeline(Pipeline);
 		CurrentCommandBuffer->BindDescriptorSet(*PerFrameObjects[BackBufferIndex.value()].PerFrameDataDescriptor, *Pipeline, 0);
 
+		// TODO : mesh sorting by material
 		for (const auto& Mesh : Scene.GetMeshes())
 		{
 			if (!Mesh.MeshData.IsReady())
@@ -106,6 +107,7 @@ namespace Hermes
 
 			CurrentCommandBuffer->BindVertexBuffer(Mesh.MeshData.GetVertexBuffer());
 			CurrentCommandBuffer->BindIndexBuffer(Mesh.MeshData.GetIndexBuffer(), RenderInterface::IndexSize::Uint32);
+			CurrentCommandBuffer->BindDescriptorSet(Mesh.Material->GetMaterialDescriptorSet(), *Pipeline, 1);
 			CurrentCommandBuffer->UploadPushConstants(
 				*Pipeline, RenderInterface::ShaderType::VertexShader,
 				&Mesh.TransformationMatrix, sizeof(Mesh.TransformationMatrix), 0);
@@ -216,7 +218,7 @@ namespace Hermes
 
 		PipelineDesc.ShaderStages = { VertexShader, FragmentShader };
 
-		PipelineDesc.DescriptorLayouts = { PerFrameUBODescriptorLayout };
+		PipelineDesc.DescriptorLayouts = { PerFrameUBODescriptorLayout, Material::GetDescriptorSetLayout() };
 
 		RenderInterface::VertexBinding VertexInput;
 		VertexInput.Index = 0;

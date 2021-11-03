@@ -17,11 +17,15 @@ public:
 		auto SuzanneAsset = Hermes::AssetLoader::Load(L"suzanne");
 		auto SuzanneMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"suzanne"));
 		auto SuzanneMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SuzanneMesh);
+		auto CheckerAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"checker_colored"));
 
+		auto CheckerTexture = Hermes::Texture::CreateFromAsset(CheckerAsset);
+		std::shared_ptr<Hermes::Material> CheckerMaterial = std::make_shared<Hermes::Material>(std::vector{ CheckerTexture });
 		Hermes::MeshProxy SuzanneMeshProxy =
 		{
 			Hermes::Mat4::Translation(Hermes::Vec3{ 0.0f, 2.0f, 11.0f }),
-			*SuzanneMeshBuffer
+			*SuzanneMeshBuffer,
+			CheckerMaterial
 		};
 		Hermes::GGameLoop->GetScene().AddMesh(SuzanneMeshProxy);
 		

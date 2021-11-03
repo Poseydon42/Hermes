@@ -251,7 +251,7 @@ namespace Hermes
 		PipelineDesc.Viewport.Dimensions = Swapchain->GetSize();
 
 		PipelineDesc.Rasterizer.Cull = RenderInterface::CullMode::Back;
-		PipelineDesc.Rasterizer.Direction = RenderInterface::FaceDirection::CounterClockwise;
+		PipelineDesc.Rasterizer.Direction = RenderInterface::FaceDirection::Clockwise;
 		PipelineDesc.Rasterizer.Fill = RenderInterface::FillMode::Fill;
 
 		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = true;

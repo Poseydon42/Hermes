@@ -239,7 +239,7 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 					IntermediateImagePixel[0] = B;
 					IntermediateImagePixel[1] = G;
 					IntermediateImagePixel[2] = R;
-					IntermediateImagePixel[3] = IsAlphaChannelAvailable ? A : 0x00;
+					IntermediateImagePixel[3] = IsAlphaChannelAvailable ? A : 0xFF;
 				}
 
 				SourceImagePixel += SourceBytesPerPixel;

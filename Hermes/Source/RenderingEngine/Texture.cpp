@@ -21,9 +21,8 @@ namespace Hermes
 		case ImageFormat::R16G16:
 			return RenderInterface::DataFormat::R16G16UnsignedNormalized;
 		case ImageFormat::B8G8R8A8:
-			return RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
 		case ImageFormat::B8G8R8X8:
-			return RenderInterface::DataFormat::B8G8R8UnsignedNormalized;
+			return RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
 		default:
 			HERMES_ASSERT(false);
 			return static_cast<RenderInterface::DataFormat>(0);

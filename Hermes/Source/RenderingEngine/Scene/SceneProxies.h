@@ -17,4 +17,11 @@ namespace Hermes
 		MeshBuffer MeshData;
 		std::shared_ptr<Material> Material;
 	};
+
+	struct HERMES_API PointLightProxy
+	{
+		Vec3 Position;
+		Vec3 Color;
+		float AttenuationCoefficients[3] = {};
+	};
 }

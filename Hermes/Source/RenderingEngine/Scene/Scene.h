@@ -18,14 +18,20 @@ namespace Hermes
 	public:
 		void AddMesh(MeshProxy Proxy);
 
+		void AddPointLight(PointLightProxy Proxy);
+
 		void UpdateCameraTransform(Vec3 Position, float Pitch, float Yaw);
 
 		Mat4 GetViewMatrix() const;
 
 		const std::vector<MeshProxy>& GetMeshes() const;
 
+		const std::vector<PointLightProxy>& GetPointLights() const;
+
 	private:
 		std::vector<MeshProxy> Meshes;
+		std::vector<PointLightProxy> PointLights;
+
 		Vec3 CameraPosition;
 		Vec3 CameraDirection;
 	};

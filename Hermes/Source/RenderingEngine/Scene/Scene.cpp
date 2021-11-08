@@ -7,6 +7,11 @@ namespace Hermes
 		Meshes.push_back(std::move(Proxy));
 	}
 
+	const std::vector<PointLightProxy>& Scene::GetPointLights() const
+	{
+		return PointLights;
+	}
+
 	void Scene::UpdateCameraTransform(Vec3 Position, float Pitch, float Yaw)
 	{
 		CameraPosition = Position;
@@ -27,5 +32,10 @@ namespace Hermes
 	const std::vector<MeshProxy>& Scene::GetMeshes() const
 	{
 		return Meshes;
+	}
+
+	void Scene::AddPointLight(PointLightProxy Proxy)
+	{
+		PointLights.push_back(Proxy);
 	}
 }

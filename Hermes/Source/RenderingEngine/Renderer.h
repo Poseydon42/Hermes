@@ -4,6 +4,7 @@
 
 #include "Core/Core.h"
 #include "Math/Matrix.h"
+#include "RenderingEngine/Scene/SceneProxies.h"
 #include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
@@ -39,13 +40,24 @@ namespace Hermes
 			std::shared_ptr<RenderInterface::Image> ColorBuffer, DepthBuffer;
 			std::shared_ptr<RenderInterface::RenderTarget> RenderTarget;
 			std::shared_ptr<RenderInterface::CommandBuffer> CommandBuffer;
-			std::shared_ptr<RenderInterface::Buffer> UniformBuffer;
+			std::shared_ptr<RenderInterface::Buffer> SceneDataUniformBuffer, LightingDataUniformBuffer;
 			std::shared_ptr<RenderInterface::DescriptorSet> PerFrameDataDescriptor;
 		};
 
-		struct PerFrameUBOData
+		struct PerFrameSceneUBO
 		{
 			Mat4 ViewProjection;
+		};
+
+		// NOTE : keep in sync with shader code
+		static constexpr uint32 MaxPointLightCount = 256;
+		static constexpr float DefaultAmbientLightingCoefficient = 0.1f;
+
+		struct PerFrameLightingUBO
+		{
+			PointLightProxy PointLights[MaxPointLightCount];
+			uint32 PointLightCount;
+			float AmbientLightingCoefficient;
 		};
 
 		std::vector<PerFrameStorage> PerFrameObjects;

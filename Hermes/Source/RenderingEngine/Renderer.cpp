@@ -33,15 +33,21 @@ namespace Hermes
 		if (!Swapchain)
 			return false;
 
-		RenderInterface::DescriptorBinding PerFrameUBOBinging;
-		PerFrameUBOBinging.DescriptorCount = 1;
-		PerFrameUBOBinging.Index = 0;
-		PerFrameUBOBinging.Type = RenderInterface::DescriptorType::UniformBuffer;
-		PerFrameUBOBinging.Shader = RenderInterface::ShaderType::VertexShader;
-		PerFrameUBODescriptorLayout = RenderingDevice->CreateDescriptorSetLayout({ PerFrameUBOBinging });
+		RenderInterface::DescriptorBinding PerFrameVertexShaderUBOBinging;
+		PerFrameVertexShaderUBOBinging.DescriptorCount = 1;
+		PerFrameVertexShaderUBOBinging.Index = 0;
+		PerFrameVertexShaderUBOBinging.Type = RenderInterface::DescriptorType::UniformBuffer;
+		PerFrameVertexShaderUBOBinging.Shader = RenderInterface::ShaderType::VertexShader;
+
+		RenderInterface::DescriptorBinding PerFrameLightingDataUBOBinding;
+		PerFrameLightingDataUBOBinding.DescriptorCount = 1;
+		PerFrameLightingDataUBOBinding.Index = 1;
+		PerFrameLightingDataUBOBinding.Type = RenderInterface::DescriptorType::UniformBuffer;
+		PerFrameLightingDataUBOBinding.Shader = RenderInterface::ShaderType::FragmentShader;
+		PerFrameUBODescriptorLayout = RenderingDevice->CreateDescriptorSetLayout({ PerFrameVertexShaderUBOBinging, PerFrameLightingDataUBOBinding });
 
 		RenderInterface::SubpoolDescription PerFrameUBOSubpoolDesc;
-		PerFrameUBOSubpoolDesc.Count = NumberOfBackBuffers;
+		PerFrameUBOSubpoolDesc.Count = NumberOfBackBuffers * 2;
 		PerFrameUBOSubpoolDesc.Type = RenderInterface::DescriptorType::UniformBuffer;
 		PerFrameUBODescriptorPool = RenderingDevice->CreateDescriptorSetPool(NumberOfBackBuffers, { PerFrameUBOSubpoolDesc });
 
@@ -67,16 +73,33 @@ namespace Hermes
 			return;
 		}
 
-		auto CurrentUniformBuffer = PerFrameObjects[BackBufferIndex.value()].UniformBuffer;
-		PerFrameUBOData UBOData;
+		auto CurrentSceneUniformBuffer = PerFrameObjects[BackBufferIndex.value()].SceneDataUniformBuffer;
+		PerFrameSceneUBO SceneUBOData;
 		auto PerspectiveMatrix = Mat4::Perspective(
 			VerticalFOV, static_cast<float>(Swapchain->GetSize().X) / static_cast<float>(Swapchain->GetSize().Y),
 			NearPlane, FarPlane);
-		UBOData.ViewProjection = PerspectiveMatrix * Scene.GetViewMatrix();
+		SceneUBOData.ViewProjection = PerspectiveMatrix * Scene.GetViewMatrix();
 
-		auto UBOMemory = CurrentUniformBuffer->Map();
-		memcpy(UBOMemory, &UBOData, sizeof(UBOData));
-		CurrentUniformBuffer->Unmap();
+		auto SceneUBOMemory = CurrentSceneUniformBuffer->Map();
+		memcpy(SceneUBOMemory, &SceneUBOData, sizeof(SceneUBOData));
+		CurrentSceneUniformBuffer->Unmap();
+
+		auto CurrentLightingUniformBuffer = PerFrameObjects[BackBufferIndex.value()].LightingDataUniformBuffer;
+		PerFrameLightingUBO LightingUBOData;
+		LightingUBOData.PointLightCount = static_cast<uint32>(Scene.GetPointLights().size());
+		LightingUBOData.AmbientLightingCoefficient = DefaultAmbientLightingCoefficient;
+		if (Scene.GetPointLights().size() > MaxPointLightCount)
+			HERMES_LOG_WARNING(L"Scene has %zu point lights, but at most %u are supported.", Scene.GetPointLights().size(), MaxPointLightCount);
+		for (uint32 LightIndex = 0;
+			LightIndex < Math::Min(MaxPointLightCount, static_cast<uint32>(Scene.GetPointLights().size()));
+			LightIndex++)
+		{
+			LightingUBOData.PointLights[LightIndex] = Scene.GetPointLights()[LightIndex];
+		}
+
+		auto LightingUBOMemory = CurrentLightingUniformBuffer->Map();
+		memcpy(LightingUBOMemory, &LightingUBOData, sizeof(LightingUBOData));
+		CurrentLightingUniformBuffer->Unmap();
 
 		auto CurrentCommandBuffer = PerFrameObjects[BackBufferIndex.value()].CommandBuffer;
 		CurrentCommandBuffer->BeginRecording();
@@ -192,7 +215,12 @@ namespace Hermes
 		for (auto& Object : PerFrameObjects)
 		{
 			Object.CommandBuffer = RenderingDevice->GetQueue(RenderInterface::QueueType::Render).CreateCommandBuffer(true);
-			Object.UniformBuffer = RenderingDevice->CreateBuffer(sizeof(PerFrameUBOData), RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::UniformBuffer);
+			Object.SceneDataUniformBuffer = RenderingDevice->CreateBuffer(
+				sizeof(PerFrameSceneUBO),
+				RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::UniformBuffer);
+			Object.LightingDataUniformBuffer = RenderingDevice->CreateBuffer(
+				sizeof(PerFrameLightingUBO),
+				RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::UniformBuffer);
 			Object.PerFrameDataDescriptor = PerFrameUBODescriptorPool->CreateDescriptorSet(PerFrameUBODescriptorLayout);
 
 			Vec2ui FramebufferDimensions = Swapchain->GetSize();
@@ -205,7 +233,8 @@ namespace Hermes
 
 			Object.RenderTarget = RenderingDevice->CreateRenderTarget(RenderPass, { Object.ColorBuffer, Object.DepthBuffer }, FramebufferDimensions);
 
-			Object.PerFrameDataDescriptor->UpdateWithBuffer(0, 0, *Object.UniformBuffer, 0, sizeof(PerFrameUBOData));
+			Object.PerFrameDataDescriptor->UpdateWithBuffer(0, 0, *Object.SceneDataUniformBuffer, 0, sizeof(PerFrameSceneUBO));
+			Object.PerFrameDataDescriptor->UpdateWithBuffer(1, 0, *Object.LightingDataUniformBuffer, 0, sizeof(PerFrameLightingUBO));
 		}
 
 		RenderInterface::PipelineDescription PipelineDesc = {};

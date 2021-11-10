@@ -14,21 +14,25 @@ public:
 
 	bool Init() override
 	{
-		auto SuzanneAsset = Hermes::AssetLoader::Load(L"suzanne");
-		auto SuzanneMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"suzanne"));
-		auto SuzanneMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SuzanneMesh);
-		auto CheckerAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"checker_colored"));
+		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"sphere"));
+		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
+		auto AlbedoTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_albedo"));
 
-		auto CheckerTexture = Hermes::Texture::CreateFromAsset(CheckerAsset);
-		std::shared_ptr<Hermes::Material> CheckerMaterial = std::make_shared<Hermes::Material>(std::vector{ CheckerTexture });
-		Hermes::MeshProxy SuzanneMeshProxy =
+		auto AlbedoTexture = Hermes::Texture::CreateFromAsset(AlbedoTextureAsset);
+		std::shared_ptr<Hermes::Material> PBRMaterial = std::make_shared<Hermes::Material>(std::vector{ AlbedoTexture });
+		Hermes::MeshProxy SphereMeshProxy =
 		{
-			Hermes::Mat4::Translation(Hermes::Vec3{ 0.0f, 2.0f, 11.0f }),
-			*SuzanneMeshBuffer,
-			CheckerMaterial
+			Hermes::Mat4::Translation(Hermes::Vec3{ 0.0f, 0.0f, 10.0f }),
+			*SphereMeshBuffer,
+			PBRMaterial
 		};
-		Hermes::GGameLoop->GetScene().AddMesh(SuzanneMeshProxy);
-		
+		Hermes::GGameLoop->GetScene().AddMesh(SphereMeshProxy);
+
+		Hermes::PointLightProxy PointLight = {};
+		PointLight.Color = { 1.0f, 1.0f, 0.9f, 0.0f };
+		PointLight.Position = { 0.0f, 3.0f, 0.0f, 0.0f };
+		Hermes::GGameLoop->GetScene().AddPointLight(PointLight);
+
 		return true;
 	}
 
@@ -75,7 +79,7 @@ public:
 	}
 
 private:
-	Hermes::Vec3 CameraPos = {0.0f, 0.0f, -0.5f};
+	Hermes::Vec3 CameraPos = {0.0f, 0.0f, 0.0f};
 	float CameraPitch = 0.0f, CameraYaw = 0.0f;
 };
 

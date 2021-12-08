@@ -239,7 +239,7 @@ namespace Hermes
 	{
 		Matrix<3, 3, InternalType> Result;
 		Result[0][0] = cos(Angle);
-		Result[0][3] = sin(Angle);
+		Result[0][2] = sin(Angle);
 		Result[1][1] = 1;
 		Result[2][0] = -sin(Angle);
 		Result[2][2] = cos(Angle);

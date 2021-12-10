@@ -9,6 +9,8 @@ namespace Hermes
 	enum class TextureType : uint32
 	{
 		Albedo = 0,
+		Roughness = 1,
+		Metallic = 2,
 		Count_
 	};
 

@@ -11,15 +11,15 @@ namespace Hermes
 		switch (Format)
 		{
 		case ImageFormat::R8:
-			return 8;
+			return 1;
 		case ImageFormat::R16:
 		case ImageFormat::R8G8:
-			return 16;
+			return 2;
 		case ImageFormat::B8G8R8X8:
 		case ImageFormat::B8G8R8A8:
 		case ImageFormat::R16G16:
 		case ImageFormat::R32:
-			return 32;
+			return 4;
 		default:
 			HERMES_ASSERT(false);
 		}
@@ -77,6 +77,6 @@ namespace Hermes
 
 	uint8 ImageAsset::GetBitsPerPixel() const
 	{
-		return BytesPerPixelForImageFormat(Format);
+		return BytesPerPixelForImageFormat(Format) * 8;
 	}
 }

@@ -86,6 +86,7 @@ namespace Hermes
 
 		auto CurrentLightingUniformBuffer = PerFrameObjects[BackBufferIndex.value()].LightingDataUniformBuffer;
 		PerFrameLightingUBO LightingUBOData;
+		LightingUBOData.CameraPosition = Scene.GetCameraPosition();
 		LightingUBOData.PointLightCount = static_cast<uint32>(Scene.GetPointLights().size());
 		LightingUBOData.AmbientLightingCoefficient = DefaultAmbientLightingCoefficient;
 		if (Scene.GetPointLights().size() > MaxPointLightCount)

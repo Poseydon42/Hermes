@@ -56,6 +56,7 @@ namespace Hermes
 		struct PerFrameLightingUBO
 		{
 			PointLightProxy PointLights[MaxPointLightCount];
+			Vec4 CameraPosition;
 			uint32 PointLightCount;
 			float AmbientLightingCoefficient;
 		};

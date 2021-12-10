@@ -17,9 +17,13 @@ public:
 		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"sphere"));
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
 		auto AlbedoTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_albedo"));
+		auto MetallicTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_metallic"));
+		auto RoughnessTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_roughness"));
 
 		auto AlbedoTexture = Hermes::Texture::CreateFromAsset(AlbedoTextureAsset);
-		std::shared_ptr<Hermes::Material> PBRMaterial = std::make_shared<Hermes::Material>(std::vector{ AlbedoTexture });
+		auto MetallicTexture = Hermes::Texture::CreateFromAsset(MetallicTextureAsset);
+		auto RoughnessTexture = Hermes::Texture::CreateFromAsset(RoughnessTextureAsset);
+		std::shared_ptr<Hermes::Material> PBRMaterial = std::make_shared<Hermes::Material>(std::vector{ AlbedoTexture, RoughnessTexture, MetallicTexture });
 		Hermes::MeshProxy SphereMeshProxy =
 		{
 			Hermes::Mat4::Translation(Hermes::Vec3{ 0.0f, 0.0f, 10.0f }),
@@ -29,7 +33,7 @@ public:
 		Hermes::GGameLoop->GetScene().AddMesh(SphereMeshProxy);
 
 		Hermes::PointLightProxy PointLight = {};
-		PointLight.Color = { 1.0f, 1.0f, 0.9f, 0.0f };
+		PointLight.Color = { 1.0f, 1.0f, 0.9f, 200.0f };
 		PointLight.Position = { 0.0f, 3.0f, 0.0f, 0.0f };
 		Hermes::GGameLoop->GetScene().AddPointLight(PointLight);
 
@@ -72,6 +76,29 @@ public:
 		CameraPos += DeltaCameraPosition;
 
 		Hermes::GGameLoop->GetScene().UpdateCameraTransform(CameraPos, CameraPitch, CameraYaw);
+
+		/* LIGHT DEBUG */
+		float DeltaLightPower = 0.0f;
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::ArrowUp))
+			DeltaLightPower += 1.0f;
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::ArrowDown))
+			DeltaLightPower -= 1.0f;
+		DeltaLightPower *= DeltaTime * 200.0f;
+		const_cast<Hermes::PointLightProxy&>(Hermes::GGameLoop->GetScene().GetPointLights()[0]).Color.W += DeltaLightPower;
+
+		/* OBJECT ROTATION DEBUG */
+		float DeltaAngle = 0.0f;
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::E))
+			DeltaAngle += 1.0f;
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::Q))
+			DeltaAngle -= 1.0f;
+		DeltaAngle *= DeltaTime * Hermes::Math::Pi / 3.0f;
+		DebugObjectAngle += DeltaAngle;
+		auto RotationMatrix = Hermes::Mat4::Rotation(Hermes::Vec3{0.0f, DebugObjectAngle, 0.0f});
+		auto RotationMatrix4 = Hermes::Mat4(RotationMatrix);
+		RotationMatrix4[3][3] = 1.0f;
+		const_cast<Hermes::MeshProxy&>(Hermes::GGameLoop->GetScene().GetMeshes()[0]).TransformationMatrix =
+			Hermes::Mat4::Translation(Hermes::Vec3{ 0.0f, 0.0f, 10.0f }) * RotationMatrix4;
 	}
 
 	void Shutdown() override
@@ -81,6 +108,9 @@ public:
 private:
 	Hermes::Vec3 CameraPos = {0.0f, 0.0f, 0.0f};
 	float CameraPitch = 0.0f, CameraYaw = 0.0f;
+
+	/* OBJECT ROTATION DEBUG */
+	float DebugObjectAngle = 0.0f;
 };
 
 extern "C" _declspec(dllexport) Hermes::IApplication* CreateApplicationInstance()

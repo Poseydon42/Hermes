@@ -24,6 +24,8 @@ namespace Hermes
 
 		Mat4 GetViewMatrix() const;
 
+		Vec4 GetCameraPosition() const;
+
 		const std::vector<MeshProxy>& GetMeshes() const;
 
 		const std::vector<PointLightProxy>& GetPointLights() const;

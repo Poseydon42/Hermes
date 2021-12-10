@@ -29,6 +29,11 @@ namespace Hermes
 		return Mat4::LookAt(CameraPosition, CameraDirection, CameraUp);
 	}
 
+	Vec4 Scene::GetCameraPosition() const
+	{
+		return Vec4(CameraPosition.X, CameraPosition.Y, CameraPosition.Z, 1.0f);
+	}
+
 	const std::vector<MeshProxy>& Scene::GetMeshes() const
 	{
 		return Meshes;

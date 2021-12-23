@@ -100,7 +100,14 @@ namespace Hermes
 			CreateInfo.pQueueCreateInfos = QueueCreateInfos.data();
 			CreateInfo.ppEnabledExtensionNames = EnabledExtensions.data();
 			CreateInfo.enabledExtensionCount = (uint32)EnabledExtensions.size();
+
+			bool IsAnisotropyAvailable = false;
+			VkPhysicalDeviceFeatures AvailableFeatures;
+			vkGetPhysicalDeviceFeatures(PhysicalDevice, &AvailableFeatures);
+			IsAnisotropyAvailable = AvailableFeatures.samplerAnisotropy;
+
 			VkPhysicalDeviceFeatures RequiredFeatures = {};
+			RequiredFeatures.samplerAnisotropy = IsAnisotropyAvailable;
 			CreateInfo.pEnabledFeatures = &RequiredFeatures;
 			VK_CHECK_RESULT(vkCreateDevice(PhysicalDevice, &CreateInfo, GVulkanAllocator, &Device));
 

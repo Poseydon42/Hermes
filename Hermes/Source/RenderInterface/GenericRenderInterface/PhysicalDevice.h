@@ -15,6 +15,8 @@ namespace Hermes
 		{
 			ANSIString Name;
 			DeviceIndex InternalIndex = 0;
+			bool AnisotropySupport = false;
+			float MaxAnisotropyLevel = 0;
 		};
 
 		class Device;

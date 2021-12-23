@@ -15,6 +15,11 @@ namespace Hermes
 
 			vkGetPhysicalDeviceProperties(Device, &Properties);
 			Result.Name = Properties.deviceName;
+			Result.MaxAnisotropyLevel = Properties.limits.maxSamplerAnisotropy;
+
+			VkPhysicalDeviceFeatures Features;
+			vkGetPhysicalDeviceFeatures(Device, &Features);
+			Result.AnisotropySupport = Features.samplerAnisotropy;
 
 			return Result;
 		}

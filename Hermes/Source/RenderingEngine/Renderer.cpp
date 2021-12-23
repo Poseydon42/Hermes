@@ -28,6 +28,8 @@ namespace Hermes
 		RenderingDevice = GPU.CreateDevice();
 		if (!RenderingDevice)
 			return false;
+		GPUProperties = GPU.GetProperties();
+		DumpGPUProperties();
 
 		Swapchain = RenderingDevice->CreateSwapchain(NumberOfBackBuffers);
 		if (!Swapchain)
@@ -289,5 +291,12 @@ namespace Hermes
 		PipelineDesc.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Less;
 
 		Pipeline = RenderingDevice->CreatePipeline(RenderPass, PipelineDesc);
+	}
+
+	void Renderer::DumpGPUProperties() const
+	{
+		HERMES_LOG_INFO(L"======== GPU Information ========");
+		HERMES_LOG_INFO(L"Name: %S", GPUProperties.Name.c_str());
+		HERMES_LOG_INFO(L"Anisotropy: %s, %f", GPUProperties.AnisotropySupport ? L"true" : L"false", GPUProperties.MaxAnisotropyLevel);
 	}
 }

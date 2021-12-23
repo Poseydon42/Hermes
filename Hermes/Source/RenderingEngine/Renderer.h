@@ -29,6 +29,8 @@ namespace Hermes
 	private:
 		Renderer();
 
+		RenderInterface::DeviceProperties GPUProperties;
+
 		std::shared_ptr<RenderInterface::Device> RenderingDevice;
 		std::shared_ptr<RenderInterface::Swapchain> Swapchain;
 
@@ -79,5 +81,6 @@ namespace Hermes
 		static constexpr float FarPlane = 1000.0f;
 
 		void RecreatePerFrameObjects();
+		void DumpGPUProperties() const;
 	};
 }

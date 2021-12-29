@@ -53,6 +53,8 @@ namespace Hermes
 			else
 				HERMES_ASSERT(false);
 			CreateInfo.compareEnable = VK_FALSE; // TODO
+			CreateInfo.anisotropyEnable = Description.AnisotropyLevel.has_value();
+			CreateInfo.maxAnisotropy = Description.AnisotropyLevel.value_or(0.0f);
 
 			VK_CHECK_RESULT(vkCreateSampler(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Sampler));
 		}

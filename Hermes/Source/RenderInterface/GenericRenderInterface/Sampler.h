@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include <optional>
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
 
@@ -34,8 +35,8 @@ namespace Hermes
 			FilteringMode MinificationFilteringMode;
 			FilteringMode MagnificationFilteringMode;
 			CoordinateSystem CoordinateSystem;
+			std::optional<float> AnisotropyLevel;
 			// TODO : mip levels
-			// TODO : anisotropy
 		};
 
 		class HERMES_API Sampler

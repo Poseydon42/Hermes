@@ -64,6 +64,16 @@ namespace Hermes
 		return true;
 	}
 
+	void Renderer::UpdateGraphicsSettings(GraphicsSettings NewSettings)
+	{
+		if (NewSettings.AnisotropyLevel != CurrentSettings.AnisotropyLevel)
+		{
+			Material::SetDefaultAnisotropyLevel(NewSettings.AnisotropyLevel);
+		}
+
+		CurrentSettings = NewSettings;
+	}
+
 	void Renderer::RunFrame(const Scene& Scene)
 	{
 		auto BackBufferIndex = Swapchain->AcquireImage(UINT64_MAX, *SwapchainImageAcquiredFence, SwapchainWasRecreated);

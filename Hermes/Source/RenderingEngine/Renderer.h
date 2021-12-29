@@ -15,12 +15,19 @@ namespace Hermes
 	class Scene;
 	class IPlatformWindow;
 
+	struct GraphicsSettings
+	{
+		float AnisotropyLevel = 1.0;
+	};
+
 	class HERMES_API Renderer
 	{
 	public:
 		static Renderer& Get();
 
 		bool Init(const RenderInterface::PhysicalDevice& GPU);
+
+		void UpdateGraphicsSettings(GraphicsSettings NewSettings);
 
 		void RunFrame(const Scene& Scene);
 
@@ -30,6 +37,7 @@ namespace Hermes
 		Renderer();
 
 		RenderInterface::DeviceProperties GPUProperties;
+		GraphicsSettings CurrentSettings;
 
 		std::shared_ptr<RenderInterface::Device> RenderingDevice;
 		std::shared_ptr<RenderInterface::Swapchain> Swapchain;

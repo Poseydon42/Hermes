@@ -6,6 +6,7 @@
 #include "AssetSystem/AssetLoader.h"
 #include "AssetSystem/MeshAsset.h"
 #include "Core/Application/InputEngine.h"
+#include "Core/Application/Event.h"
 #include "Math/Vector.h"
 
 class SandboxApp : public Hermes::IApplication
@@ -36,6 +37,8 @@ public:
 		PointLight.Color = { 1.0f, 1.0f, 0.9f, 200.0f };
 		PointLight.Position = { 0.0f, 3.0f, 0.0f, 0.0f };
 		Hermes::GGameLoop->GetScene().AddPointLight(PointLight);
+
+		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe<SandboxApp, &SandboxApp::KeyEventHandler>(Hermes::KeyEvent::GetStaticType(), this);
 
 		return true;
 	}
@@ -77,6 +80,13 @@ public:
 
 		Hermes::GGameLoop->GetScene().UpdateCameraTransform(CameraPos, CameraPitch, CameraYaw);
 
+		if (AnisotropyChanged)
+		{
+			Hermes::GraphicsSettings Settings;
+			Settings.AnisotropyLevel = AnisotropyEnabled ? 16.0f : 0.0f;
+			Hermes::Renderer::Get().UpdateGraphicsSettings(Settings);
+		}
+
 		/* LIGHT DEBUG */
 		float DeltaLightPower = 0.0f;
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::ArrowUp))
@@ -108,6 +118,20 @@ public:
 private:
 	Hermes::Vec3 CameraPos = {0.0f, 0.0f, 0.0f};
 	float CameraPitch = 0.0f, CameraYaw = 0.0f;
+	bool AnisotropyEnabled = false, AnisotropyChanged = false;
+
+	void KeyEventHandler(const Hermes::IEvent& Event)
+	{
+		if (Event.GetType() == Hermes::KeyEvent::GetStaticType())
+		{
+			const auto& KeyEvent = static_cast<const Hermes::KeyEvent&>(Event);
+			if (KeyEvent.GetEventType() == Hermes::KeyEventType::Pressed && KeyEvent.GetKeyCode() == Hermes::KeyCode::M)
+			{
+				AnisotropyChanged = true;
+				AnisotropyEnabled = !AnisotropyEnabled;
+			}
+		}
+	}
 
 	/* OBJECT ROTATION DEBUG */
 	float DebugObjectAngle = 0.0f;

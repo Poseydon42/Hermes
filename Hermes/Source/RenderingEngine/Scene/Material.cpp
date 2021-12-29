@@ -6,6 +6,8 @@
 
 namespace Hermes
 {
+	float                                                 Material::DefaultAnisotropyLevel;
+	std::vector<Material*>                                Material::Instances;
 	std::shared_ptr<RenderInterface::Sampler>             Material::DefaultSampler;
 	std::shared_ptr<RenderInterface::DescriptorSetPool>   Material::MaterialDescriptorPool;
 	std::shared_ptr<RenderInterface::DescriptorSetLayout> Material::MaterialDescriptorLayout;
@@ -13,13 +15,16 @@ namespace Hermes
 	Material::Material(std::vector<std::shared_ptr<Texture>> InTextures)
 		: Textures(std::move(InTextures))
 		, Descriptor(AllocateDescriptor())
+		, DefaultSamplerChanged(false)
 	{
 		HERMES_ASSERT(Textures.size() == static_cast<uint32>(TextureType::Count_));
-
 		static_assert(SamplersPerMaterial == 1);
+
+		Instances.push_back(this);
+
 		if (!DefaultSampler)
 			CreateDefaultSampler();
-		Descriptor->UpdateWithSampler(0, 0, *DefaultSampler);
+
 		for (uint32 ImageIndex = 0; ImageIndex < static_cast<uint32>(TextureType::Count_); ImageIndex++)
 		{
 			if (Textures[ImageIndex]->IsReady())
@@ -31,6 +36,13 @@ namespace Hermes
 				HERMES_LOG_WARNING(L"Trying to create material with invalid texture handle %u", static_cast<uint32>(ImageIndex));
 			}
 		}
+	}
+
+	Material::~Material()
+	{
+		auto InstanceIterator = std::find(Instances.begin(), Instances.end(), this);
+		HERMES_ASSERT_LOG(InstanceIterator != Instances.end(), L"Found material instance that is not contained in Material::Instances list");
+		Instances.erase(InstanceIterator);
 	}
 
 	const Texture& Material::GetBasicTexture(TextureType Type) const
@@ -45,6 +57,11 @@ namespace Hermes
 
 	const RenderInterface::DescriptorSet& Material::GetMaterialDescriptorSet() const
 	{
+		if (DefaultSamplerChanged)
+		{
+			Descriptor->UpdateWithSampler(0, 0, *DefaultSampler);
+			DefaultSamplerChanged = false;
+		}
 		return *Descriptor;
 	}
 
@@ -53,6 +70,15 @@ namespace Hermes
 		if (!MaterialDescriptorLayout)
 			CreateDescriptorSetLayout();
 		return MaterialDescriptorLayout;
+	}
+
+	void Material::SetDefaultAnisotropyLevel(float NewLevel)
+	{
+		if (DefaultAnisotropyLevel != NewLevel)
+		{
+			DefaultAnisotropyLevel = NewLevel;
+			CreateDefaultSampler();
+		}
 	}
 
 	std::shared_ptr<RenderInterface::DescriptorSet> Material::AllocateDescriptor()
@@ -143,6 +169,10 @@ namespace Hermes
 		Description.AddressingModeV = RenderInterface::AddressingMode::Repeat;
 		Description.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
 		Description.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
+		Description.AnisotropyLevel = DefaultAnisotropyLevel > 0.0f ? DefaultAnisotropyLevel : std::optional<float>{};
 		DefaultSampler = RenderingDevice.CreateSampler(Description);
+
+		for (auto* Instance : Instances)
+			Instance->DefaultSamplerChanged = true;
 	}
 }

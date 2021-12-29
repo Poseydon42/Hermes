@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Core/Core.h"
+#include "Core/Misc/DefaultConstructors.h"
 #include "RenderingEngine/Texture.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 
@@ -19,6 +20,10 @@ namespace Hermes
 	public:
 		Material(std::vector<std::shared_ptr<Texture>> InTextures);
 
+		~Material();
+		ADD_DEFAULT_COPY_CONSTRUCTOR(Material)
+		ADD_DEFAULT_MOVE_CONSTRUCTOR(Material)
+
 		const Texture& GetBasicTexture(TextureType Type) const;
 		Texture& GetBasicTexture(TextureType Type);
 
@@ -26,18 +31,23 @@ namespace Hermes
 
 		static std::shared_ptr<RenderInterface::DescriptorSetLayout> GetDescriptorSetLayout();
 
+		static void SetDefaultAnisotropyLevel(float NewLevel);
+
 	private:
 		std::vector<std::shared_ptr<Texture>> Textures;
 
 		std::shared_ptr<RenderInterface::DescriptorSet> Descriptor;
+		mutable bool DefaultSamplerChanged;
 		
 		static constexpr uint32 MaterialDescriptorSetAllocationGranularity = 16;
 		static constexpr uint32 SamplersPerMaterial = 1;
 		static constexpr uint32 TexturesPerMaterial = static_cast<uint32>(TextureType::Count_);
-		
+
+		static float DefaultAnisotropyLevel;
 		static std::shared_ptr<RenderInterface::Sampler> DefaultSampler;
 		static std::shared_ptr<RenderInterface::DescriptorSetPool> MaterialDescriptorPool;
 		static std::shared_ptr<RenderInterface::DescriptorSetLayout> MaterialDescriptorLayout;
+		static std::vector<Material*> Instances;
 
 		static std::shared_ptr<RenderInterface::DescriptorSet> AllocateDescriptor();
 		static void CreateDescriptorSetLayout();

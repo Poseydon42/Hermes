@@ -68,5 +68,26 @@ namespace Hermes
 		{
 			return static_cast<T>(180) / static_cast<T>(Pi) * Radians;
 		}
+
+		/*
+		 * Fast floor(log2) calculation for integer types
+		 * Returns static_cast<T>(-1) if the number is zero
+		 */
+		template<typename T>
+		uint32 FloorLog2(T Value)
+		{
+			uint32 BitNumber = sizeof(Value) * 8;
+			uint32 Index = BitNumber;
+			if (!Value)
+				return static_cast<uint32>(-1);
+			while (Index--)
+			{
+				if (Value & (static_cast<uint64>(0x01) << (BitNumber - 1)))
+					return Index;
+				Value <<= 1;
+			}
+			HERMES_ASSERT(false);
+			return 0;
+		}
 	}
 }

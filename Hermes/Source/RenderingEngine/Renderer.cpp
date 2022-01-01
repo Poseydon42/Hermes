@@ -122,6 +122,8 @@ namespace Hermes
 		BeforeRenderingImageTransition.NewLayout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		BeforeRenderingImageTransition.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferRead;
 		BeforeRenderingImageTransition.OperationsThatCanStartAfter = RenderInterface::AccessType::ColorAttachmentWrite;
+		BeforeRenderingImageTransition.BaseMipLevel = 0;
+		BeforeRenderingImageTransition.MipLevelCount = 1;
 
 		CurrentCommandBuffer->InsertImageMemoryBarrier(
 			*PerFrameObjects[BackBufferIndex.value()].ColorBuffer, BeforeRenderingImageTransition,
@@ -159,6 +161,8 @@ namespace Hermes
 		SwapchainImageToCopyDestination.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
 		SwapchainImageToCopyDestination.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryRead;
 		SwapchainImageToCopyDestination.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferWrite;
+		SwapchainImageToCopyDestination.BaseMipLevel = 0;
+		SwapchainImageToCopyDestination.MipLevelCount = 1;
 		CurrentCommandBuffer->InsertImageMemoryBarrier(
 			*Swapchain->GetImage(BackBufferIndex.value()), SwapchainImageToCopyDestination,
 			RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
@@ -175,6 +179,8 @@ namespace Hermes
 		SwapchainImageToPresentationReady.NewLayout = RenderInterface::ImageLayout::ReadyForPresentation;
 		SwapchainImageToPresentationReady.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferWrite;
 		SwapchainImageToPresentationReady.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead;
+		SwapchainImageToPresentationReady.BaseMipLevel = 0;
+		SwapchainImageToPresentationReady.MipLevelCount = 1;
 		CurrentCommandBuffer->InsertImageMemoryBarrier(
 			*Swapchain->GetImage(BackBufferIndex.value()), SwapchainImageToPresentationReady,
 			RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);

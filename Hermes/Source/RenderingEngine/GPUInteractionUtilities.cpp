@@ -84,6 +84,8 @@ namespace Hermes
 				Barrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferWrite;
 				Barrier.OldLayout = CurrentLayout;
 				Barrier.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
+				Barrier.BaseMipLevel = 0;
+				Barrier.MipLevelCount = Destination.GetMipLevelsCount();
 				TransferCommandBuffer->InsertImageMemoryBarrier(
 					Destination, Barrier,
 					RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
@@ -104,6 +106,8 @@ namespace Hermes
 				Barrier.OperationsThatCanStartAfter = RenderInterface::AccessType::None;
 				Barrier.OldLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
 				Barrier.NewLayout = LayoutToTransitionTo;
+				Barrier.BaseMipLevel = 0;
+				Barrier.MipLevelCount = Destination.GetMipLevelsCount();
 				TransferCommandBuffer->InsertImageMemoryBarrier(
 					Destination, Barrier,
 					RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);

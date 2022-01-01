@@ -31,6 +31,8 @@ namespace Hermes
 			std::optional<const Queue*> NewOwnerQueue {};
 			AccessType OperationsThatHaveToEndBefore { AccessType::None };
 			AccessType OperationsThatCanStartAfter { AccessType::None };
+			uint32 BaseMipLevel;
+			uint32 MipLevelCount;
 		};
 
 		struct BufferMemoryBarrier

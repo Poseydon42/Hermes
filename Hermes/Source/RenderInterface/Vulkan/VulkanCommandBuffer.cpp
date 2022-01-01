@@ -178,8 +178,8 @@ namespace Hermes
 			NewBarrier.srcAccessMask = AccessTypeToVkAccessFlags(Barrier.OperationsThatHaveToEndBefore);
 			NewBarrier.dstAccessMask = AccessTypeToVkAccessFlags(Barrier.OperationsThatCanStartAfter);
 			NewBarrier.image = static_cast<const VulkanImage&>(Image).GetImage();
-			NewBarrier.subresourceRange.baseMipLevel = 0;
-			NewBarrier.subresourceRange.levelCount = Image.GetMipLevelsCount();
+			NewBarrier.subresourceRange.baseMipLevel = Barrier.BaseMipLevel;
+			NewBarrier.subresourceRange.levelCount = Barrier.MipLevelCount;
 			NewBarrier.subresourceRange.baseArrayLayer = 0;
 			NewBarrier.subresourceRange.layerCount = 1;
 			NewBarrier.subresourceRange.aspectMask = VkAspectFlagsFromVkFormat(DataFormatToVkFormat(Image.GetDataFormat()));

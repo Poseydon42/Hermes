@@ -274,5 +274,48 @@ namespace Hermes
 				VulkanDestinationImage.GetImage(), ImageLayoutToVkImageLayout(DestinationLayout),
 				static_cast<uint32>(Regions.size()), Regions.data());
 		}
+
+		void VulkanCommandBuffer::BlitImage(const RenderInterface::Image& Source,
+			RenderInterface::ImageLayout SourceLayout, const RenderInterface::Image& Destination,
+			RenderInterface::ImageLayout DestinationLayout,
+			const std::vector<RenderInterface::ImageBlitRegion>& Regions, RenderInterface::FilteringMode Filter)
+		{
+			const auto& VulkanSourceImage      = static_cast<const VulkanImage&>(Source);
+			const auto& VulkanDestinationImage = static_cast<const VulkanImage&>(Destination);
+
+			std::vector<VkImageBlit> VulkanRegions;
+			VulkanRegions.reserve(Regions.size());
+			for (const auto& Region : Regions)
+			{
+				VkImageBlit VulkanRegion = {};
+
+				VulkanRegion.srcOffsets[0].x = static_cast<int32>(Region.SourceRegion.RectMin.X);
+				VulkanRegion.srcOffsets[0].y = static_cast<int32>(Region.SourceRegion.RectMin.Y);
+				VulkanRegion.srcOffsets[1].x = static_cast<int32>(Region.SourceRegion.RectMax.X);
+				VulkanRegion.srcOffsets[1].y = static_cast<int32>(Region.SourceRegion.RectMax.Y);
+				VulkanRegion.srcOffsets[1].z = 1;
+				VulkanRegion.srcSubresource.aspectMask = ImageAspectToVkImageAspectFlags(Region.SourceRegion.AspectMask);
+				VulkanRegion.srcSubresource.mipLevel = Region.SourceRegion.MipLevel;
+				VulkanRegion.srcSubresource.baseArrayLayer = 0;
+				VulkanRegion.srcSubresource.layerCount = 1;
+
+				VulkanRegion.dstOffsets[0].x = static_cast<int32>(Region.DestinationRegion.RectMin.X);
+				VulkanRegion.dstOffsets[0].y = static_cast<int32>(Region.DestinationRegion.RectMin.Y);
+				VulkanRegion.dstOffsets[1].x = static_cast<int32>(Region.DestinationRegion.RectMax.X);
+				VulkanRegion.dstOffsets[1].y = static_cast<int32>(Region.DestinationRegion.RectMax.Y);
+				VulkanRegion.dstOffsets[1].z = 1;
+				VulkanRegion.dstSubresource.aspectMask = ImageAspectToVkImageAspectFlags(Region.DestinationRegion.AspectMask);
+				VulkanRegion.dstSubresource.mipLevel = Region.DestinationRegion.MipLevel;
+				VulkanRegion.dstSubresource.baseArrayLayer = 0;
+				VulkanRegion.dstSubresource.layerCount = 1;
+
+				VulkanRegions.push_back(VulkanRegion);
+			}
+
+			vkCmdBlitImage(
+				Buffer, VulkanSourceImage.GetImage(), ImageLayoutToVkImageLayout(SourceLayout),
+				VulkanDestinationImage.GetImage(), ImageLayoutToVkImageLayout(DestinationLayout),
+				static_cast<uint32>(VulkanRegions.size()), VulkanRegions.data(), FilteringModeToVkFilter(Filter));
+		}
 	}
 }

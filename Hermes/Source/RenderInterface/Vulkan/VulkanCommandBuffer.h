@@ -54,6 +54,11 @@ namespace Hermes
 
 			void CopyImage(const RenderInterface::Image& Source, RenderInterface::ImageLayout SourceLayout, const RenderInterface::Image& Destination, RenderInterface::ImageLayout DestinationLayout, std::vector<RenderInterface::ImageCopyRegion> CopyRegions) override;
 
+			void BlitImage(
+				const RenderInterface::Image& Source, RenderInterface::ImageLayout SourceLayout,
+				const RenderInterface::Image& Destination, RenderInterface::ImageLayout DestinationLayout,
+				const std::vector<RenderInterface::ImageBlitRegion>& Regions, RenderInterface::FilteringMode Filter) override;
+
 			VkCommandBuffer GetBuffer() const { return Buffer; }
 
 		private:

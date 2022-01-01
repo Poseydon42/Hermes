@@ -13,6 +13,8 @@ namespace Hermes
 {
 	namespace RenderInterface
 	{
+		enum class ImageAspect;
+		enum class FilteringMode;
 		enum class ShaderType;
 		class Queue;
 		enum class ImageLayout;
@@ -68,6 +70,17 @@ namespace Hermes
 			Vec2i DestinationOffset;
 			uint32 DestinationMipLayer;
 			Vec2ui Dimensions;
+		};
+
+		struct ImageBlitRegion
+		{
+			struct
+			{
+				ImageAspect AspectMask;
+				uint32 MipLevel;
+				Vec2ui RectMin;
+				Vec2ui RectMax;
+			} SourceRegion, DestinationRegion;
 		};
 
 		struct ClearColor
@@ -177,6 +190,10 @@ namespace Hermes
 			virtual void CopyBufferToImage(const Buffer& Source, const Image& Destination, ImageLayout DestinationImageLayout, std::vector<BufferToImageCopyRegion> CopyRegions) = 0;
 
 			virtual void CopyImage(const Image& Source, ImageLayout SourceLayout, const Image& Destination, ImageLayout DestinationLayout, std::vector<ImageCopyRegion> CopyRegions) = 0;
+
+			virtual void BlitImage(
+				const Image& Source, ImageLayout SourceLayout, const Image& Destination, ImageLayout DestinationLayout,
+				const std::vector<ImageBlitRegion>& Regions, FilteringMode Filter) = 0;
 		};
 	}
 }

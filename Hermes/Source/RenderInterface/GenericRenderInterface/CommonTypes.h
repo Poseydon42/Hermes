@@ -209,5 +209,14 @@ namespace Hermes
 			Nearest,
 			Linear
 		};
+
+		enum class ImageAspect
+		{
+			Color = 1 << 0,
+			Depth = 1 << 1,
+			Stencil = 1 << 2
+		};
+
+		ENUM_CLASS_OPERATORS(ImageAspect)
 	}
 }

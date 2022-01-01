@@ -937,6 +937,17 @@ namespace Hermes
 				return static_cast<VkFilter>(0);
 			}
 		}
+
+		inline VkImageAspectFlags ImageAspectToVkImageAspectFlags(RenderInterface::ImageAspect Aspect)
+		{
+			auto Result = static_cast<VkImageAspectFlags>(0);
+#define CORRESPONDING_BIT(Bit, VkBit) if (static_cast<bool>(Aspect & (Bit))) Result |= (VkBit);
+			CORRESPONDING_BIT(Hermes::RenderInterface::ImageAspect::Color, VK_IMAGE_ASPECT_COLOR_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::ImageAspect::Depth, VK_IMAGE_ASPECT_DEPTH_BIT);
+			CORRESPONDING_BIT(Hermes::RenderInterface::ImageAspect::Stencil, VK_IMAGE_ASPECT_STENCIL_BIT);
+#undef CORRESPONDING_BIT
+			return Result;
+		}
 	}
 }
 

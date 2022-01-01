@@ -203,5 +203,11 @@ namespace Hermes
 		};
 
 		ENUM_CLASS_OPERATORS(PipelineStage)
+
+		enum class FilteringMode
+		{
+			Nearest,
+			Linear
+		};
 	}
 }

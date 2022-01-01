@@ -923,6 +923,20 @@ namespace Hermes
 #undef CORRESPONDING_BIT
 			return Result;
 		}
+
+		inline VkFilter FilteringModeToVkFilter(RenderInterface::FilteringMode Mode)
+		{
+			switch (Mode)
+			{
+			case RenderInterface::FilteringMode::Linear:
+				return VK_FILTER_LINEAR;
+			case RenderInterface::FilteringMode::Nearest:
+				return VK_FILTER_NEAREST;
+			default:
+				HERMES_ASSERT(false);
+				return static_cast<VkFilter>(0);
+			}
+		}
 	}
 }
 

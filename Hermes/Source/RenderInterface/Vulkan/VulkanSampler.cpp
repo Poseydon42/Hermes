@@ -1,5 +1,6 @@
 #include "VulkanSampler.h"
 
+#include "RenderInterface/Vulkan/VulkanCommonTypes.h"
 #include "RenderInterface/Vulkan/VulkanDevice.h"
 
 namespace Hermes
@@ -19,20 +20,6 @@ namespace Hermes
 			default:
 				HERMES_ASSERT(false);
 				return static_cast<VkSamplerAddressMode>(0);
-			}
-		}
-
-		static VkFilter FilteringModeToVkFilter(RenderInterface::FilteringMode Mode)
-		{
-			switch (Mode)
-			{
-			case RenderInterface::FilteringMode::Linear:
-				return VK_FILTER_LINEAR;
-			case RenderInterface::FilteringMode::Nearest:
-				return VK_FILTER_NEAREST;
-			default:
-				HERMES_ASSERT(false);
-				return static_cast<VkFilter>(0);
 			}
 		}
 

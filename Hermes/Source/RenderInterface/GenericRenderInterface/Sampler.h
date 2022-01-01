@@ -4,6 +4,7 @@
 #include <optional>
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
+#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 
 namespace Hermes
 {
@@ -14,12 +15,6 @@ namespace Hermes
 			Repeat,
 			RepeatMirrored,
 			ClampToEdge,
-		};
-
-		enum class FilteringMode
-		{
-			Nearest,
-			Linear
 		};
 
 		enum class CoordinateSystem

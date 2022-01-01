@@ -58,17 +58,23 @@ namespace Hermes
 		auto LockedAsset = Asset.lock();
 		if (!LockedAsset)
 			return;
-
+		
 		Dimensions = LockedAsset->GetDimensions();
+		uint32 BiggestDimension = Math::Max(Dimensions.X, Dimensions.Y);
+		HERMES_ASSERT(BiggestDimension > 0);
+		uint32 MipLevelCount = Math::FloorLog2(BiggestDimension);
 		Image = Renderer::Get().GetActiveDevice().CreateImage(
 			Dimensions, 
-			RenderInterface::ImageUsageType::Sampled | RenderInterface::ImageUsageType::CopyDestination,
-			ChooseFormatFromImageType(LockedAsset->GetImageFormat()), 1, RenderInterface::ImageLayout::Undefined);
+			RenderInterface::ImageUsageType::Sampled | RenderInterface::ImageUsageType::CopyDestination | RenderInterface::ImageUsageType::CopySource,
+			ChooseFormatFromImageType(LockedAsset->GetImageFormat()), MipLevelCount + 1, RenderInterface::ImageLayout::Undefined);
 
 		GPUInteractionUtilities::UploadDataToGPUImage(
 			LockedAsset->GetRawData(), { 0, 0 }, Dimensions,
 			LockedAsset->GetBitsPerPixel() / 8, 0, *Image, 
-			RenderInterface::ImageLayout::Undefined, RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+			RenderInterface::ImageLayout::Undefined, RenderInterface::ImageLayout::TransferSourceOptimal);
+
+		GPUInteractionUtilities::GenerateMipMaps(
+			*Image, RenderInterface::ImageLayout::TransferSourceOptimal, RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
 		DataUploadFinished = true;
 	}

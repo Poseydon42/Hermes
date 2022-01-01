@@ -121,6 +121,82 @@ namespace Hermes
 		}
 	}
 
+	void GPUInteractionUtilities::GenerateMipMaps(
+		RenderInterface::Image& Image,
+		RenderInterface::ImageLayout CurrentLayout, RenderInterface::ImageLayout LayoutToTransitionTo)
+	{
+		auto& Device = Renderer::Get().GetActiveDevice();
+		
+		auto& RenderQueue = Device.GetQueue(RenderInterface::QueueType::Render);
+		auto RenderCommandBuffer = RenderQueue.CreateCommandBuffer(true);
+
+		RenderCommandBuffer->BeginRecording();
+
+		Vec2ui SourceMipLevelDimensions = Image.GetSize();
+		Vec2ui DestinationMipLevelDimensions = {};
+		for (uint32 CurrentMipLevel = 1; CurrentMipLevel < Image.GetMipLevelsCount(); CurrentMipLevel++)
+		{
+			RenderInterface::ImageMemoryBarrier SourceMipLevelBarrier = {};
+			SourceMipLevelBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryWrite;
+			SourceMipLevelBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferRead;
+			// If the mip level that we're going to blit from is 0, then its layout
+			// wasn't changed in this function, in other cases layout is Render destination
+			// optimal because we've performed blits into it in previous loop iterations
+			SourceMipLevelBarrier.OldLayout = CurrentMipLevel == 1 ? CurrentLayout : RenderInterface::ImageLayout::TransferDestinationOptimal;
+			SourceMipLevelBarrier.NewLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
+			SourceMipLevelBarrier.BaseMipLevel = CurrentMipLevel - 1;
+			SourceMipLevelBarrier.MipLevelCount = 1;
+
+			RenderInterface::ImageMemoryBarrier DestinationMipLevelBarrier = {};
+			DestinationMipLevelBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryRead;
+			DestinationMipLevelBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferWrite;
+			DestinationMipLevelBarrier.OldLayout = CurrentLayout;
+			DestinationMipLevelBarrier.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
+			DestinationMipLevelBarrier.BaseMipLevel = CurrentMipLevel;
+			DestinationMipLevelBarrier.MipLevelCount = 1;
+
+			RenderCommandBuffer->InsertImageMemoryBarrier(
+				Image, SourceMipLevelBarrier,
+				RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
+			RenderCommandBuffer->InsertImageMemoryBarrier(
+				Image, DestinationMipLevelBarrier,
+				RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
+
+			DestinationMipLevelDimensions.X = Math::Max(SourceMipLevelDimensions.X / 2, static_cast<uint32>(1));
+			DestinationMipLevelDimensions.Y = Math::Max(SourceMipLevelDimensions.Y / 2, static_cast<uint32>(1));
+			RenderInterface::ImageBlitRegion BlitInfo = {};
+			BlitInfo.SourceRegion.RectMin = { 0, 0 };
+			BlitInfo.SourceRegion.RectMax = SourceMipLevelDimensions;
+			BlitInfo.SourceRegion.MipLevel = CurrentMipLevel - 1;
+			BlitInfo.SourceRegion.AspectMask = RenderInterface::ImageAspect::Color; // TODO : fix
+			BlitInfo.DestinationRegion.RectMin = { 0, 0 };
+			BlitInfo.DestinationRegion.RectMax = DestinationMipLevelDimensions;
+			BlitInfo.DestinationRegion.MipLevel = CurrentMipLevel;
+			BlitInfo.DestinationRegion.AspectMask = RenderInterface::ImageAspect::Color;
+			RenderCommandBuffer->BlitImage(
+				Image, RenderInterface::ImageLayout::TransferSourceOptimal,
+				Image, RenderInterface::ImageLayout::TransferDestinationOptimal,
+				{ BlitInfo }, RenderInterface::FilteringMode::Linear);
+
+			SourceMipLevelDimensions = DestinationMipLevelDimensions;
+		}
+
+		RenderInterface::ImageMemoryBarrier FinalBarrier = {};
+		FinalBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferRead | RenderInterface::AccessType::TransferWrite;
+		FinalBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead | RenderInterface::AccessType::MemoryWrite;
+		FinalBarrier.OldLayout = RenderInterface::ImageLayout::Undefined;
+		FinalBarrier.NewLayout = LayoutToTransitionTo;
+		FinalBarrier.BaseMipLevel = 0;
+		FinalBarrier.MipLevelCount = Image.GetMipLevelsCount();
+		RenderCommandBuffer->InsertImageMemoryBarrier(
+			Image, FinalBarrier, RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);
+
+		RenderCommandBuffer->EndRecording();
+		auto FinishFence = Device.CreateFence();
+		Device.GetQueue(RenderInterface::QueueType::Render).SubmitCommandBuffer(RenderCommandBuffer, FinishFence);
+		FinishFence->Wait(UINT64_MAX);
+	}
+
 	RenderInterface::Buffer& GPUInteractionUtilities::EnsureStagingBuffer()
 	{
 		if (StagingBuffer)

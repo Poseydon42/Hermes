@@ -18,6 +18,8 @@ namespace Hermes
 
 		Vec2ui GetDimensions() const;
 
+		uint32 GetMipLevelsCount() const;
+
 		bool IsReady() const;
 	private:
 		explicit Texture(std::weak_ptr<ImageAsset> Source);

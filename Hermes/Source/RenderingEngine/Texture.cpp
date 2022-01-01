@@ -45,6 +45,11 @@ namespace Hermes
 		return Dimensions;
 	}
 
+	uint32 Texture::GetMipLevelsCount() const
+	{
+		return Image->GetMipLevelsCount();
+	}
+
 	bool Texture::IsReady() const
 	{
 		return DataUploadFinished && Image != nullptr && Dimensions.LengthSq() > 0;

@@ -8,22 +8,29 @@ namespace Hermes
 {
 	float                                                 Material::DefaultAnisotropyLevel;
 	std::vector<Material*>                                Material::Instances;
-	std::shared_ptr<RenderInterface::Sampler>             Material::DefaultSampler;
 	std::shared_ptr<RenderInterface::DescriptorSetPool>   Material::MaterialDescriptorPool;
 	std::shared_ptr<RenderInterface::DescriptorSetLayout> Material::MaterialDescriptorLayout;
 
 	Material::Material(std::vector<std::shared_ptr<Texture>> InTextures)
 		: Textures(std::move(InTextures))
 		, Descriptor(AllocateDescriptor())
-		, DefaultSamplerChanged(false)
 	{
 		HERMES_ASSERT(Textures.size() == static_cast<uint32>(TextureType::Count_));
 		static_assert(SamplersPerMaterial == 1);
 
 		Instances.push_back(this);
 
-		if (!DefaultSampler)
-			CreateDefaultSampler();
+		Vec2ui TextureDimensions = Textures[0]->GetDimensions();
+		for (size_t Index = 1; Index < Textures.size(); Index++)
+		{
+			if (TextureDimensions.X != Textures[Index]->GetDimensions().X ||
+				TextureDimensions.Y != Textures[Index]->GetDimensions().Y)
+			{
+				HERMES_ASSERT_LOG(false, L"Found two textures with different sizes while trying to create material instance.");
+			}
+		}
+
+		UpdateSampler();
 
 		for (uint32 ImageIndex = 0; ImageIndex < static_cast<uint32>(TextureType::Count_); ImageIndex++)
 		{
@@ -57,11 +64,6 @@ namespace Hermes
 
 	const RenderInterface::DescriptorSet& Material::GetMaterialDescriptorSet() const
 	{
-		if (DefaultSamplerChanged)
-		{
-			Descriptor->UpdateWithSampler(0, 0, *DefaultSampler);
-			DefaultSamplerChanged = false;
-		}
 		return *Descriptor;
 	}
 
@@ -74,10 +76,13 @@ namespace Hermes
 
 	void Material::SetDefaultAnisotropyLevel(float NewLevel)
 	{
-		if (DefaultAnisotropyLevel != NewLevel)
+		if (Math::Abs(DefaultAnisotropyLevel - NewLevel) > 0.000001f)
 		{
 			DefaultAnisotropyLevel = NewLevel;
-			CreateDefaultSampler();
+			for (const auto& Instance : Instances)
+			{
+				Instance->UpdateSampler();
+			}
 		}
 	}
 
@@ -159,7 +164,7 @@ namespace Hermes
 		MaterialDescriptorPool = RenderingDevice.CreateDescriptorSetPool(MaterialDescriptorSetAllocationGranularity, MaterialDescriptorSubpools);
 	}
 
-	void Material::CreateDefaultSampler()
+	void Material::UpdateSampler()
 	{
 		auto& RenderingDevice = Renderer::Get().GetActiveDevice();
 
@@ -171,12 +176,11 @@ namespace Hermes
 		Description.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
 		Description.AnisotropyLevel = DefaultAnisotropyLevel > 0.0f ? DefaultAnisotropyLevel : std::optional<float>{};
 		Description.MinMipLevel = 0.0f;
-		Description.MaxMipLevel = static_cast<float>(Math::FloorLog2(1024)); // TODO : fix this ASAP, this is just a hack to get things running
+		Description.MaxMipLevel = static_cast<float>(Textures[0]->GetMipLevelsCount());
 		Description.MipBias = 0.0f;
 		Description.MipMode = RenderInterface::MipmappingMode::Linear;
-		DefaultSampler = RenderingDevice.CreateSampler(Description);
+		Sampler = RenderingDevice.CreateSampler(Description);
 
-		for (auto* Instance : Instances)
-			Instance->DefaultSamplerChanged = true;
+		Descriptor->UpdateWithSampler(0, 0, *Sampler);
 	}
 }

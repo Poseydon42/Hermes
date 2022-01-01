@@ -37,21 +37,21 @@ namespace Hermes
 		std::vector<std::shared_ptr<Texture>> Textures;
 
 		std::shared_ptr<RenderInterface::DescriptorSet> Descriptor;
-		mutable bool DefaultSamplerChanged;
+		std::shared_ptr<RenderInterface::Sampler> Sampler;
 		
 		static constexpr uint32 MaterialDescriptorSetAllocationGranularity = 16;
 		static constexpr uint32 SamplersPerMaterial = 1;
 		static constexpr uint32 TexturesPerMaterial = static_cast<uint32>(TextureType::Count_);
 
 		static float DefaultAnisotropyLevel;
-		static std::shared_ptr<RenderInterface::Sampler> DefaultSampler;
 		static std::shared_ptr<RenderInterface::DescriptorSetPool> MaterialDescriptorPool;
 		static std::shared_ptr<RenderInterface::DescriptorSetLayout> MaterialDescriptorLayout;
 		static std::vector<Material*> Instances;
+		
+		void UpdateSampler();
 
 		static std::shared_ptr<RenderInterface::DescriptorSet> AllocateDescriptor();
 		static void CreateDescriptorSetLayout();
 		static void CreateDescriptorSetPool();
-		static void CreateDefaultSampler();
 	};
 }

@@ -23,6 +23,20 @@ namespace Hermes
 			}
 		}
 
+		static VkSamplerMipmapMode MipmappingModeToVkSamplerMipmapMode(RenderInterface::MipmappingMode Mode)
+		{
+			switch (Mode)
+			{
+			case RenderInterface::MipmappingMode::Linear:
+				return VK_SAMPLER_MIPMAP_MODE_LINEAR;
+			case RenderInterface::MipmappingMode::Nearest:
+				return VK_SAMPLER_MIPMAP_MODE_NEAREST;
+			default:
+				HERMES_ASSERT(false);
+				return static_cast<VkSamplerMipmapMode>(0);
+			}
+		}
+
 		VulkanSampler::VulkanSampler(std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::SamplerDescription& Description)
 			: Device(std::move(InDevice))
 			, Sampler(VK_NULL_HANDLE)
@@ -42,6 +56,10 @@ namespace Hermes
 			CreateInfo.compareEnable = VK_FALSE; // TODO
 			CreateInfo.anisotropyEnable = Description.AnisotropyLevel.has_value();
 			CreateInfo.maxAnisotropy = Description.AnisotropyLevel.value_or(0.0f);
+			CreateInfo.minLod = Description.MinMipLevel;
+			CreateInfo.maxLod = Description.MaxMipLevel;
+			CreateInfo.mipLodBias = Description.MipBias;
+			CreateInfo.mipmapMode = MipmappingModeToVkSamplerMipmapMode(Description.MipMode);
 
 			VK_CHECK_RESULT(vkCreateSampler(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Sampler));
 		}

@@ -170,6 +170,10 @@ namespace Hermes
 		Description.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
 		Description.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
 		Description.AnisotropyLevel = DefaultAnisotropyLevel > 0.0f ? DefaultAnisotropyLevel : std::optional<float>{};
+		Description.MinMipLevel = 0.0f;
+		Description.MaxMipLevel = static_cast<float>(Math::FloorLog2(1024)); // TODO : fix this ASAP, this is just a hack to get things running
+		Description.MipBias = 0.0f;
+		Description.MipMode = RenderInterface::MipmappingMode::Linear;
 		DefaultSampler = RenderingDevice.CreateSampler(Description);
 
 		for (auto* Instance : Instances)

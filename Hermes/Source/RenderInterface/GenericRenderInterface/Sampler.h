@@ -23,6 +23,12 @@ namespace Hermes
 			Unnormalized
 		};
 
+		enum class MipmappingMode
+		{
+			Nearest,
+			Linear
+		};
+
 		struct SamplerDescription
 		{
 			AddressingMode AddressingModeU;
@@ -31,7 +37,10 @@ namespace Hermes
 			FilteringMode MagnificationFilteringMode;
 			CoordinateSystem CoordinateSystem;
 			std::optional<float> AnisotropyLevel;
-			// TODO : mip levels
+			MipmappingMode MipMode;
+			float MinMipLevel;
+			float MaxMipLevel;
+			float MipBias;
 		};
 
 		class HERMES_API Sampler

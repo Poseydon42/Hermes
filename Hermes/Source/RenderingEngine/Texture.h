@@ -24,8 +24,6 @@ namespace Hermes
 	private:
 		explicit Texture(std::weak_ptr<ImageAsset> Source);
 
-		std::weak_ptr<ImageAsset> Asset;
-
 		bool DataUploadFinished;
 		std::shared_ptr<RenderInterface::Image> Image;
 		Vec2ui Dimensions;

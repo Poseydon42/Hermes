@@ -56,11 +56,10 @@ namespace Hermes
 	}
 
 	Texture::Texture(std::weak_ptr<ImageAsset> Source)
-		: Asset(std::move(Source))
-		, DataUploadFinished(false)
+		: DataUploadFinished(false)
 		, Dimensions(0)
 	{
-		auto LockedAsset = Asset.lock();
+		auto LockedAsset = Source.lock();
 		if (!LockedAsset)
 			return;
 		

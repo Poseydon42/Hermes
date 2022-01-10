@@ -21,9 +21,9 @@ public:
 		auto MetallicTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_metallic"));
 		auto RoughnessTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_roughness"));
 
-		auto AlbedoTexture = Hermes::Texture::CreateFromAsset(AlbedoTextureAsset);
-		auto MetallicTexture = Hermes::Texture::CreateFromAsset(MetallicTextureAsset);
-		auto RoughnessTexture = Hermes::Texture::CreateFromAsset(RoughnessTextureAsset);
+		auto AlbedoTexture = Hermes::Texture::CreateFromAsset(*AlbedoTextureAsset);
+		auto MetallicTexture = Hermes::Texture::CreateFromAsset(*MetallicTextureAsset);
+		auto RoughnessTexture = Hermes::Texture::CreateFromAsset(*RoughnessTextureAsset);
 		std::shared_ptr<Hermes::Material> PBRMaterial = std::make_shared<Hermes::Material>(std::vector{ AlbedoTexture, RoughnessTexture, MetallicTexture });
 		Hermes::MeshProxy SphereMeshProxy =
 		{

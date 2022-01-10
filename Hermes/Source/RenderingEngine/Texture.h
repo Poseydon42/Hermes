@@ -12,7 +12,7 @@ namespace Hermes
 	class HERMES_API Texture
 	{
 	public:
-		static std::shared_ptr<Texture> CreateFromAsset(std::weak_ptr<ImageAsset> Source);
+		static std::shared_ptr<Texture> CreateFromAsset(const ImageAsset& Source);
 
 		const RenderInterface::Image& GetRawImage() const;
 
@@ -22,7 +22,7 @@ namespace Hermes
 
 		bool IsReady() const;
 	private:
-		explicit Texture(std::weak_ptr<ImageAsset> Source);
+		explicit Texture(const ImageAsset& Source);
 
 		bool DataUploadFinished;
 		std::shared_ptr<RenderInterface::Image> Image;

@@ -29,9 +29,9 @@ namespace Hermes
 		}
 	}
 
-	std::shared_ptr<Texture> Texture::CreateFromAsset(std::weak_ptr<ImageAsset> Source)
+	std::shared_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source)
 	{
-		return std::shared_ptr<Texture>(new Texture(std::move(Source)));
+		return std::shared_ptr<Texture>(new Texture(Source));
 	}
 
 	const RenderInterface::Image& Texture::GetRawImage() const
@@ -55,26 +55,21 @@ namespace Hermes
 		return DataUploadFinished && Image != nullptr && Dimensions.LengthSq() > 0;
 	}
 
-	Texture::Texture(std::weak_ptr<ImageAsset> Source)
+	Texture::Texture(const ImageAsset& Source)
 		: DataUploadFinished(false)
-		, Dimensions(0)
+		, Dimensions(Source.GetDimensions())
 	{
-		auto LockedAsset = Source.lock();
-		if (!LockedAsset)
-			return;
-		
-		Dimensions = LockedAsset->GetDimensions();
 		uint32 BiggestDimension = Math::Max(Dimensions.X, Dimensions.Y);
 		HERMES_ASSERT(BiggestDimension > 0);
 		uint32 MipLevelCount = Math::FloorLog2(BiggestDimension);
 		Image = Renderer::Get().GetActiveDevice().CreateImage(
 			Dimensions, 
 			RenderInterface::ImageUsageType::Sampled | RenderInterface::ImageUsageType::CopyDestination | RenderInterface::ImageUsageType::CopySource,
-			ChooseFormatFromImageType(LockedAsset->GetImageFormat()), MipLevelCount + 1, RenderInterface::ImageLayout::Undefined);
+			ChooseFormatFromImageType(Source.GetImageFormat()), MipLevelCount + 1, RenderInterface::ImageLayout::Undefined);
 
 		GPUInteractionUtilities::UploadDataToGPUImage(
-			LockedAsset->GetRawData(), { 0, 0 }, Dimensions,
-			LockedAsset->GetBitsPerPixel() / 8, 0, *Image, 
+			Source.GetRawData(), { 0, 0 }, Dimensions,
+			Source.GetBitsPerPixel() / 8, 0, *Image, 
 			RenderInterface::ImageLayout::Undefined, RenderInterface::ImageLayout::TransferSourceOptimal);
 
 		GPUInteractionUtilities::GenerateMipMaps(

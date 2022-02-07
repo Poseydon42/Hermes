@@ -35,6 +35,7 @@ namespace Hermes
 
 	private:
 		Renderer();
+		RenderInterface::Swapchain& GetSwapchain();
 
 		RenderInterface::DeviceProperties GPUProperties;
 		GraphicsSettings CurrentSettings;

@@ -309,6 +309,11 @@ namespace Hermes
 		Pipeline = RenderingDevice->CreatePipeline(RenderPass, PipelineDesc);
 	}
 
+	RenderInterface::Swapchain& Renderer::GetSwapchain()
+	{
+		return *Swapchain;
+	}
+
 	void Renderer::DumpGPUProperties() const
 	{
 		HERMES_LOG_INFO(L"======== GPU Information ========");

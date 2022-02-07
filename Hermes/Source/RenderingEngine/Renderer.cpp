@@ -12,11 +12,6 @@
 
 namespace Hermes
 {
-	Renderer::Renderer()
-		: SwapchainWasRecreated(false)
-	{
-	}
-
 	Renderer& Renderer::Get()
 	{
 		static Renderer Instance;
@@ -56,205 +51,74 @@ namespace Hermes
 		VertexShader = RenderingDevice->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", RenderInterface::ShaderType::VertexShader);
 		FragmentShader = RenderingDevice->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", RenderInterface::ShaderType::FragmentShader);
 
-		SwapchainImageAcquiredFence = RenderingDevice->CreateFence();
-		RenderingFinishedFence = RenderingDevice->CreateFence();
-
-		RecreatePerFrameObjects();
-
-		return true;
-	}
-
-	void Renderer::UpdateGraphicsSettings(GraphicsSettings NewSettings)
-	{
-		if (NewSettings.AnisotropyLevel != CurrentSettings.AnisotropyLevel)
-		{
-			Material::SetDefaultAnisotropyLevel(NewSettings.AnisotropyLevel);
-		}
-
-		CurrentSettings = NewSettings;
-	}
-
-	void Renderer::RunFrame(const Scene& Scene)
-	{
-		auto BackBufferIndex = Swapchain->AcquireImage(UINT64_MAX, *SwapchainImageAcquiredFence, SwapchainWasRecreated);
-		if (SwapchainWasRecreated)
-			RecreatePerFrameObjects();
-		if (!BackBufferIndex.has_value())
-		{
-			HERMES_LOG_WARNING(L"Swapchain::AcquireImage did not return valid image index. Current frame will be skipped");
-			return;
-		}
-
-		auto CurrentSceneUniformBuffer = PerFrameObjects[BackBufferIndex.value()].SceneDataUniformBuffer;
-		PerFrameSceneUBO SceneUBOData;
-		auto PerspectiveMatrix = Mat4::Perspective(
-			VerticalFOV, static_cast<float>(Swapchain->GetSize().X) / static_cast<float>(Swapchain->GetSize().Y),
-			NearPlane, FarPlane);
-		SceneUBOData.ViewProjection = PerspectiveMatrix * Scene.GetViewMatrix();
-
-		auto SceneUBOMemory = CurrentSceneUniformBuffer->Map();
-		memcpy(SceneUBOMemory, &SceneUBOData, sizeof(SceneUBOData));
-		CurrentSceneUniformBuffer->Unmap();
-
-		auto CurrentLightingUniformBuffer = PerFrameObjects[BackBufferIndex.value()].LightingDataUniformBuffer;
-		PerFrameLightingUBO LightingUBOData;
-		LightingUBOData.CameraPosition = Scene.GetCameraPosition();
-		LightingUBOData.PointLightCount = static_cast<uint32>(Scene.GetPointLights().size());
-		LightingUBOData.AmbientLightingCoefficient = DefaultAmbientLightingCoefficient;
-		if (Scene.GetPointLights().size() > MaxPointLightCount)
-			HERMES_LOG_WARNING(L"Scene has %zu point lights, but at most %u are supported.", Scene.GetPointLights().size(), MaxPointLightCount);
-		for (uint32 LightIndex = 0;
-			LightIndex < Math::Min(MaxPointLightCount, static_cast<uint32>(Scene.GetPointLights().size()));
-			LightIndex++)
-		{
-			LightingUBOData.PointLights[LightIndex] = Scene.GetPointLights()[LightIndex];
-		}
-
-		auto LightingUBOMemory = CurrentLightingUniformBuffer->Map();
-		memcpy(LightingUBOMemory, &LightingUBOData, sizeof(LightingUBOData));
-		CurrentLightingUniformBuffer->Unmap();
-
-		auto CurrentCommandBuffer = PerFrameObjects[BackBufferIndex.value()].CommandBuffer;
-		CurrentCommandBuffer->BeginRecording();
-
-		RenderInterface::ImageMemoryBarrier BeforeRenderingImageTransition = {};
-		BeforeRenderingImageTransition.OldLayout = RenderInterface::ImageLayout::Undefined;
-		BeforeRenderingImageTransition.NewLayout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
-		BeforeRenderingImageTransition.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferRead;
-		BeforeRenderingImageTransition.OperationsThatCanStartAfter = RenderInterface::AccessType::ColorAttachmentWrite;
-		BeforeRenderingImageTransition.BaseMipLevel = 0;
-		BeforeRenderingImageTransition.MipLevelCount = 1;
-
-		CurrentCommandBuffer->InsertImageMemoryBarrier(
-			*PerFrameObjects[BackBufferIndex.value()].ColorBuffer, BeforeRenderingImageTransition,
-			RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::ColorAttachmentOutput);
-
-		auto CurrentRenderTarget = PerFrameObjects[BackBufferIndex.value()].RenderTarget;
-		RenderInterface::ClearColor ColorAttachmentClearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
-		RenderInterface::ClearColor DepthAttachmentClearColor = { 1.0f, 0.0f, 0.0f, 0.0f };
-		CurrentCommandBuffer->BeginRenderPass(RenderPass, CurrentRenderTarget, { ColorAttachmentClearColor, DepthAttachmentClearColor });
-
-		CurrentCommandBuffer->BindPipeline(Pipeline);
-		CurrentCommandBuffer->BindDescriptorSet(*PerFrameObjects[BackBufferIndex.value()].PerFrameDataDescriptor, *Pipeline, 0);
-
-		// TODO : mesh sorting by material
-		for (const auto& Mesh : Scene.GetMeshes())
-		{
-			if (!Mesh.MeshData.IsReady())
-				continue;
-
-			CurrentCommandBuffer->BindVertexBuffer(Mesh.MeshData.GetVertexBuffer());
-			CurrentCommandBuffer->BindIndexBuffer(Mesh.MeshData.GetIndexBuffer(), RenderInterface::IndexSize::Uint32);
-			CurrentCommandBuffer->BindDescriptorSet(Mesh.Material->GetMaterialDescriptorSet(), *Pipeline, 1);
-			CurrentCommandBuffer->UploadPushConstants(
-				*Pipeline, RenderInterface::ShaderType::VertexShader,
-				&Mesh.TransformationMatrix, sizeof(Mesh.TransformationMatrix), 0);
-
-			auto DrawcallInformation = Mesh.MeshData.GetDrawInformation();
-			CurrentCommandBuffer->DrawIndexed(DrawcallInformation.IndexCount, 1, DrawcallInformation.IndexOffset, DrawcallInformation.VertexOffset, 0);
-		}
-
-		CurrentCommandBuffer->EndRenderPass();
-
-		RenderInterface::ImageMemoryBarrier SwapchainImageToCopyDestination = {};
-		SwapchainImageToCopyDestination.OldLayout = RenderInterface::ImageLayout::Undefined;
-		SwapchainImageToCopyDestination.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
-		SwapchainImageToCopyDestination.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryRead;
-		SwapchainImageToCopyDestination.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferWrite;
-		SwapchainImageToCopyDestination.BaseMipLevel = 0;
-		SwapchainImageToCopyDestination.MipLevelCount = 1;
-		CurrentCommandBuffer->InsertImageMemoryBarrier(
-			*Swapchain->GetImage(BackBufferIndex.value()), SwapchainImageToCopyDestination,
-			RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
-
-		RenderInterface::ImageCopyRegion CopyToSwapchain = {};
-		CopyToSwapchain.Dimensions = Swapchain->GetSize();
-		CurrentCommandBuffer->CopyImage(
-			*PerFrameObjects[BackBufferIndex.value()].ColorBuffer, RenderInterface::ImageLayout::TransferSourceOptimal,
-			*Swapchain->GetImage(BackBufferIndex.value()), RenderInterface::ImageLayout::TransferDestinationOptimal,
-			{ CopyToSwapchain });
-
-		RenderInterface::ImageMemoryBarrier SwapchainImageToPresentationReady = {};
-		SwapchainImageToPresentationReady.OldLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
-		SwapchainImageToPresentationReady.NewLayout = RenderInterface::ImageLayout::ReadyForPresentation;
-		SwapchainImageToPresentationReady.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferWrite;
-		SwapchainImageToPresentationReady.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead;
-		SwapchainImageToPresentationReady.BaseMipLevel = 0;
-		SwapchainImageToPresentationReady.MipLevelCount = 1;
-		CurrentCommandBuffer->InsertImageMemoryBarrier(
-			*Swapchain->GetImage(BackBufferIndex.value()), SwapchainImageToPresentationReady,
-			RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);
-
-		CurrentCommandBuffer->EndRecording();
-
-		auto& RenderQueue = RenderingDevice->GetQueue(RenderInterface::QueueType::Render);
-		RenderQueue.SubmitCommandBuffer(CurrentCommandBuffer, RenderingFinishedFence);
-
-		SwapchainImageAcquiredFence->Wait(UINT64_MAX);
-		RenderingFinishedFence->Wait(UINT64_MAX);
-		SwapchainImageAcquiredFence->Reset();
-		RenderingFinishedFence->Reset();
-
-		Swapchain->Present(BackBufferIndex.value(), SwapchainWasRecreated);
-	}
-
-	RenderInterface::Device& Renderer::GetActiveDevice()
-	{
-		return *RenderingDevice;
-	}
-
-	void Renderer::RecreatePerFrameObjects()
-	{
-		RenderInterface::RenderPassDescription RenderPassDesc = {};
-
-		RenderInterface::RenderPassAttachment ColorAttachment = {};
-		ColorAttachment.Format = ColorAttachmentFormat;
-		ColorAttachment.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		ColorAttachment.StoreOp = RenderInterface::AttachmentStoreOp::Store;
-		ColorAttachment.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
-		ColorAttachment.StencilStoreOp = RenderInterface::AttachmentStoreOp::Undefined;
-		ColorAttachment.LayoutAtStart = RenderInterface::ImageLayout::ColorAttachmentOptimal;
-		ColorAttachment.LayoutAtEnd = RenderInterface::ImageLayout::TransferSourceOptimal;
-		RenderPassDesc.ColorAttachments.push_back(ColorAttachment);
-
-		RenderInterface::RenderPassAttachment DepthAttachment = {};
-		DepthAttachment.Format = DepthAttachmentFormat;
-		DepthAttachment.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		DepthAttachment.StoreOp = RenderInterface::AttachmentStoreOp::Store;
-		DepthAttachment.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
-		DepthAttachment.StencilStoreOp = RenderInterface::AttachmentStoreOp::Undefined;
-		DepthAttachment.LayoutAtStart = RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
-		DepthAttachment.LayoutAtEnd = RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
-		RenderPassDesc.DepthAttachment = DepthAttachment;
-
-		RenderPass = RenderingDevice->CreateRenderPass(RenderPassDesc);
-
-		PerFrameObjects.clear();
-		PerFrameObjects.resize(Swapchain->GetImageCount());
-		for (auto& Object : PerFrameObjects)
-		{
-			Object.CommandBuffer = RenderingDevice->GetQueue(RenderInterface::QueueType::Render).CreateCommandBuffer(true);
-			Object.SceneDataUniformBuffer = RenderingDevice->CreateBuffer(
+		SceneDataUniformBuffer = RenderingDevice->CreateBuffer(
 				sizeof(PerFrameSceneUBO),
 				RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::UniformBuffer);
-			Object.LightingDataUniformBuffer = RenderingDevice->CreateBuffer(
+		LightingDataUniformBuffer = RenderingDevice->CreateBuffer(
 				sizeof(PerFrameLightingUBO),
 				RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::UniformBuffer);
-			Object.PerFrameDataDescriptor = PerFrameUBODescriptorPool->CreateDescriptorSet(PerFrameUBODescriptorLayout);
+		PerFrameDataDescriptor = PerFrameUBODescriptorPool->CreateDescriptorSet(PerFrameUBODescriptorLayout);
+		PerFrameDataDescriptor->UpdateWithBuffer(0, 0, *SceneDataUniformBuffer, 0, sizeof(PerFrameSceneUBO));
+		PerFrameDataDescriptor->UpdateWithBuffer(1, 0, *LightingDataUniformBuffer, 0, sizeof(PerFrameLightingUBO));
 
-			Vec2ui FramebufferDimensions = Swapchain->GetSize();
-			Object.ColorBuffer = RenderingDevice->CreateImage(
-				FramebufferDimensions, RenderInterface::ImageUsageType::ColorAttachment | RenderInterface::ImageUsageType::CopySource,
-				ColorAttachmentFormat, 1, RenderInterface::ImageLayout::Undefined);
-			Object.DepthBuffer = RenderingDevice->CreateImage(
-				FramebufferDimensions, RenderInterface::ImageUsageType::DepthStencilAttachment | RenderInterface::ImageUsageType::CopySource,
-				DepthAttachmentFormat, 1, RenderInterface::ImageLayout::Undefined);
+		FrameGraphScheme Scheme;
+		PassDesc GraphicsPass;
+		PassDesc::RenderPassCallbackType PassCallback;
+		PassCallback.Bind<Renderer, &Renderer::GraphicsPassCallback>(this);
+		GraphicsPass.Callback = PassCallback;
 
-			Object.RenderTarget = RenderingDevice->CreateRenderTarget(RenderPass, { Object.ColorBuffer, Object.DepthBuffer }, FramebufferDimensions);
+		Drain GBufferDrain = {};
+		GBufferDrain.Name = L"GBuffer";
+		GBufferDrain.Binding = BindingMode::ColorAttachment;
+		GBufferDrain.ClearColor[0] =
+			GBufferDrain.ClearColor[1] =
+			GBufferDrain.ClearColor[2] =
+			GBufferDrain.ClearColor[3] = 0.0f;
+		GBufferDrain.Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
+		GBufferDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
+		GBufferDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		GBufferDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-			Object.PerFrameDataDescriptor->UpdateWithBuffer(0, 0, *Object.SceneDataUniformBuffer, 0, sizeof(PerFrameSceneUBO));
-			Object.PerFrameDataDescriptor->UpdateWithBuffer(1, 0, *Object.LightingDataUniformBuffer, 0, sizeof(PerFrameLightingUBO));
-		}
+		Drain DepthBufferDrain = {};
+		DepthBufferDrain.Name = L"DepthBuffer";
+		DepthBufferDrain.Binding = BindingMode::DepthStencilAttachment;
+		DepthBufferDrain.ClearColor[0] =
+			DepthBufferDrain.ClearColor[1] =
+			DepthBufferDrain.ClearColor[2] =
+			DepthBufferDrain.ClearColor[3] = 1.0f;
+		DepthBufferDrain.Format = RenderInterface::DataFormat::D24UnsignedNormalizedS8UnsignedInteger;
+		DepthBufferDrain.Layout = RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
+		DepthBufferDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		DepthBufferDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+
+		GraphicsPass.Drains = { GBufferDrain, DepthBufferDrain };
+
+		Source GBufferSource = {};
+		GBufferSource.Name = L"GBuffer";
+		GBufferSource.Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
+
+		GraphicsPass.Sources = { GBufferSource };
+
+		Scheme.AddPass(L"GraphicsPass", GraphicsPass);
+
+		ResourceDesc BackbufferResource = {};
+		BackbufferResource.Dimensions = Swapchain->GetSize();
+		BackbufferResource.Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
+		BackbufferResource.MipLevels = 1;
+		Scheme.AddResource(L"Backbuffer", BackbufferResource);
+
+		ResourceDesc DepthBufferResource = {};
+		DepthBufferResource.Format = RenderInterface::DataFormat::D24UnsignedNormalizedS8UnsignedInteger;
+		DepthBufferResource.Dimensions = Swapchain->GetSize();
+		DepthBufferResource.MipLevels = 1;
+		Scheme.AddResource(L"DepthBuffer", DepthBufferResource);
+
+		Scheme.AddLink(L"$.Backbuffer", L"GraphicsPass.GBuffer");
+		Scheme.AddLink(L"$.DepthBuffer", L"GraphicsPass.DepthBuffer");
+		Scheme.AddLink(L"GraphicsPass.GBuffer", L"$.BLIT_TO_SWAPCHAIN");
+
+		FrameGraph = Scheme.Compile();
+
 
 		RenderInterface::PipelineDescription PipelineDesc = {};
 
@@ -306,12 +170,84 @@ namespace Hermes
 		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = true;
 		PipelineDesc.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Less;
 
-		Pipeline = RenderingDevice->CreatePipeline(RenderPass, PipelineDesc);
+		Pipeline = RenderingDevice->CreatePipeline(FrameGraph->GetRenderPassObject(L"GraphicsPass"), PipelineDesc);
+
+		return true;
+	}
+
+	void Renderer::UpdateGraphicsSettings(GraphicsSettings NewSettings)
+	{
+		if (NewSettings.AnisotropyLevel != CurrentSettings.AnisotropyLevel)
+		{
+			Material::SetDefaultAnisotropyLevel(NewSettings.AnisotropyLevel);
+		}
+
+		CurrentSettings = NewSettings;
+	}
+
+	void Renderer::RunFrame(const Scene& Scene)
+	{
+		FrameGraph->Execute(Scene);
+	}
+
+	RenderInterface::Device& Renderer::GetActiveDevice()
+	{
+		return *RenderingDevice;
 	}
 
 	RenderInterface::Swapchain& Renderer::GetSwapchain()
 	{
 		return *Swapchain;
+	}
+
+	void Renderer::GraphicsPassCallback(RenderInterface::CommandBuffer& CommandBuffer, const Scene& Scene)
+	{
+		PerFrameSceneUBO SceneUBOData;
+		auto PerspectiveMatrix = Mat4::Perspective(
+			VerticalFOV, static_cast<float>(Swapchain->GetSize().X) / static_cast<float>(Swapchain->GetSize().Y),
+			NearPlane, FarPlane);
+		SceneUBOData.ViewProjection = PerspectiveMatrix * Scene.GetViewMatrix();
+
+		auto SceneUBOMemory = SceneDataUniformBuffer->Map();
+		memcpy(SceneUBOMemory, &SceneUBOData, sizeof(SceneUBOData));
+		SceneDataUniformBuffer->Unmap();
+
+		PerFrameLightingUBO LightingUBOData;
+		LightingUBOData.CameraPosition = Scene.GetCameraPosition();
+		LightingUBOData.PointLightCount = static_cast<uint32>(Scene.GetPointLights().size());
+		LightingUBOData.AmbientLightingCoefficient = DefaultAmbientLightingCoefficient;
+		if (Scene.GetPointLights().size() > MaxPointLightCount)
+			HERMES_LOG_WARNING(L"Scene has %zu point lights, but at most %u are supported.", Scene.GetPointLights().size(), MaxPointLightCount);
+		for (uint32 LightIndex = 0;
+			LightIndex < Math::Min(MaxPointLightCount, static_cast<uint32>(Scene.GetPointLights().size()));
+			LightIndex++)
+		{
+			LightingUBOData.PointLights[LightIndex] = Scene.GetPointLights()[LightIndex];
+		}
+
+		auto LightingUBOMemory = LightingDataUniformBuffer->Map();
+		memcpy(LightingUBOMemory, &LightingUBOData, sizeof(LightingUBOData));
+		LightingDataUniformBuffer->Unmap();
+
+		CommandBuffer.BindPipeline(Pipeline);
+		CommandBuffer.BindDescriptorSet(*PerFrameDataDescriptor, *Pipeline, 0);
+
+		// TODO : mesh sorting by material
+		for (const auto& Mesh : Scene.GetMeshes())
+		{
+			if (!Mesh.MeshData.IsReady())
+				continue;
+
+			CommandBuffer.BindVertexBuffer(Mesh.MeshData.GetVertexBuffer());
+			CommandBuffer.BindIndexBuffer(Mesh.MeshData.GetIndexBuffer(), RenderInterface::IndexSize::Uint32);
+			CommandBuffer.BindDescriptorSet(Mesh.Material->GetMaterialDescriptorSet(), *Pipeline, 1);
+			CommandBuffer.UploadPushConstants(
+				*Pipeline, RenderInterface::ShaderType::VertexShader,
+				&Mesh.TransformationMatrix, sizeof(Mesh.TransformationMatrix), 0);
+
+			auto DrawcallInformation = Mesh.MeshData.GetDrawInformation();
+			CommandBuffer.DrawIndexed(DrawcallInformation.IndexCount, 1, DrawcallInformation.IndexOffset, DrawcallInformation.VertexOffset, 0);
+		}
 	}
 
 	void Renderer::DumpGPUProperties() const

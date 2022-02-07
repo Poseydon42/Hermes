@@ -4,6 +4,7 @@
 
 #include "Core/Core.h"
 #include "Math/Matrix.h"
+#include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Scene/SceneProxies.h"
 #include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
@@ -33,10 +34,9 @@ namespace Hermes
 
 		RenderInterface::Device& GetActiveDevice();
 
-	private:
-		Renderer();
 		RenderInterface::Swapchain& GetSwapchain();
 
+	private:
 		RenderInterface::DeviceProperties GPUProperties;
 		GraphicsSettings CurrentSettings;
 
@@ -46,14 +46,8 @@ namespace Hermes
 		std::shared_ptr<RenderInterface::DescriptorSetLayout> PerFrameUBODescriptorLayout;
 		std::shared_ptr<RenderInterface::DescriptorSetPool> PerFrameUBODescriptorPool;
 
-		struct PerFrameStorage
-		{
-			std::shared_ptr<RenderInterface::Image> ColorBuffer, DepthBuffer;
-			std::shared_ptr<RenderInterface::RenderTarget> RenderTarget;
-			std::shared_ptr<RenderInterface::CommandBuffer> CommandBuffer;
-			std::shared_ptr<RenderInterface::Buffer> SceneDataUniformBuffer, LightingDataUniformBuffer;
-			std::shared_ptr<RenderInterface::DescriptorSet> PerFrameDataDescriptor;
-		};
+		std::shared_ptr<RenderInterface::Buffer> SceneDataUniformBuffer, LightingDataUniformBuffer;
+		std::shared_ptr<RenderInterface::DescriptorSet> PerFrameDataDescriptor;
 
 		struct PerFrameSceneUBO
 		{
@@ -72,14 +66,11 @@ namespace Hermes
 			float AmbientLightingCoefficient;
 		};
 
-		std::vector<PerFrameStorage> PerFrameObjects;
-		std::shared_ptr<RenderInterface::RenderPass> RenderPass;
 		std::shared_ptr<RenderInterface::Pipeline> Pipeline;
-		std::shared_ptr<RenderInterface::Fence> RenderingFinishedFence, SwapchainImageAcquiredFence;
 
 		std::shared_ptr<RenderInterface::Shader> VertexShader, FragmentShader;
 
-		bool SwapchainWasRecreated;
+		std::unique_ptr<class FrameGraph> FrameGraph;
 
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
 		static constexpr RenderInterface::DataFormat ColorAttachmentFormat = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
@@ -89,7 +80,8 @@ namespace Hermes
 		static constexpr float NearPlane = 0.1f;
 		static constexpr float FarPlane = 1000.0f;
 
-		void RecreatePerFrameObjects();
+		void GraphicsPassCallback(RenderInterface::CommandBuffer& CommandBuffer, const Scene& Scene);
+
 		void DumpGPUProperties() const;
 	};
 }

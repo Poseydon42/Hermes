@@ -54,7 +54,7 @@ namespace Hermes
 				NewAttachment.storeOp = StoreOpToVkAttachmentStoreOp(Attachment.StoreOp);
 				NewAttachment.stencilLoadOp = LoadOpToVkAttachmentLoadOp(Attachment.StencilLoadOp);
 				NewAttachment.stencilStoreOp = StoreOpToVkAttachmentStoreOp(Attachment.StencilStoreOp);
-				NewAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				NewAttachment.initialLayout = ImageLayoutToVkImageLayout(Attachment.LayoutAtStart);
 				NewAttachment.finalLayout = ImageLayoutToVkImageLayout(Attachment.LayoutAtEnd);
 				return NewAttachment;
 			};

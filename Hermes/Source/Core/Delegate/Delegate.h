@@ -41,12 +41,12 @@ namespace Hermes
 			FuncWrapper = &MemberFunctionWrapper<C, Function>;
 		}
 
-		RetType Invoke(ArgsType&&... Args)
+		RetType Invoke(ArgsType&&... Args) const
 		{
 			return FuncWrapper(Instance, std::forward<ArgsType>(Args)...);
 		}
 
-		RetType operator()(ArgsType&&... Args)
+		RetType operator()(ArgsType&&... Args) const
 		{
 			return Invoke(std::forward<ArgsType>(Args)...);
 		}

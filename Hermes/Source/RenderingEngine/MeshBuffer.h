@@ -4,8 +4,7 @@
 
 #include "AssetSystem/MeshAsset.h"
 #include "Core/Core.h"
-#include "RenderInterface/GenericRenderInterface/Buffer.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/Forward.h"
 
 namespace Hermes
 {

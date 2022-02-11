@@ -1,8 +1,10 @@
 ﻿#pragma once
 
+#include <memory>
+
 #include "Core/Core.h"
-#include "RenderInterface/GenericRenderInterface/Buffer.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "Math/Math.h"
+#include "RenderInterface/GenericRenderInterface/Forward.h"
 
 namespace Hermes
 {

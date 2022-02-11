@@ -3,6 +3,8 @@
 #include "RenderingEngine/Renderer.h"
 #include "RenderInterface/GenericRenderInterface/Sampler.h"
 #include "RenderInterface/GenericRenderInterface/Shader.h"
+#include "RenderInterface/GenericRenderInterface/Descriptor.h"
+#include "RenderInterface/GenericRenderInterface/Device.h"
 
 namespace Hermes
 {

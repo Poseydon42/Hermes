@@ -3,7 +3,8 @@
 #include <memory>
 
 #include "Core/Core.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
+#include "Math/Math.h"
+#include "RenderInterface/GenericRenderInterface/Forward.h"
 
 namespace Hermes
 {

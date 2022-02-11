@@ -1,5 +1,7 @@
 ﻿#include "GPUInteractionUtilities.h"
 
+#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/Fence.h"
 #include "Math/Common.h"

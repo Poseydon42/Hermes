@@ -6,10 +6,9 @@
 #include "Math/Matrix.h"
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Scene/SceneProxies.h"
-#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
-#include "RenderInterface/GenericRenderInterface/Descriptor.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/Forward.h"
 #include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
+#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 
 namespace Hermes
 {

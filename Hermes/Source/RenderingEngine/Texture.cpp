@@ -3,6 +3,8 @@
 #include "AssetSystem/ImageAsset.h"
 #include "RenderingEngine/GPUInteractionUtilities.h"
 #include "RenderingEngine/Renderer.h"
+#include "RenderInterface/GenericRenderInterface/Image.h"
+#include "RenderInterface/GenericRenderInterface/Device.h"
 
 namespace Hermes
 {

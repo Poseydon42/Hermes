@@ -6,6 +6,10 @@
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
 #include "RenderInterface/GenericRenderInterface/Fence.h"
+#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
+#include "RenderInterface/GenericRenderInterface/RenderPass.h"
+#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/Image.h"
 
 namespace Hermes
 {

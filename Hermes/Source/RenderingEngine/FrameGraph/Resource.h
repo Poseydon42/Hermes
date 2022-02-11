@@ -2,8 +2,7 @@
 
 #include "Core/Core.h"
 #include "Math/Math.h"
-#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
-#include "RenderInterface/GenericRenderInterface/RenderPass.h"
+#include "RenderInterface/GenericRenderInterface/Forward.h"
 
 namespace Hermes
 {

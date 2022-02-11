@@ -3,7 +3,7 @@
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "RenderingEngine/Texture.h"
-#include "RenderInterface/GenericRenderInterface/Descriptor.h"
+#include "RenderInterface/GenericRenderInterface/Forward.h"
 
 namespace Hermes
 {

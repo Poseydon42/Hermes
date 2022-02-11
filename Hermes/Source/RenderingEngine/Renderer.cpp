@@ -3,12 +3,13 @@
 #include "AssetSystem/MeshAsset.h"
 #include "RenderingEngine/Scene/Scene.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
-#include "RenderInterface/GenericRenderInterface/Fence.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
 #include "RenderInterface/GenericRenderInterface/Pipeline.h"
 #include "RenderInterface/GenericRenderInterface/RenderPass.h"
-#include "RenderingEngine/Scene/Scene.h"
+#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
+#include "RenderInterface/GenericRenderInterface/Descriptor.h"
+#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
 
 namespace Hermes
 {

@@ -8,8 +8,8 @@
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
 #include "RenderingEngine/Scene/Scene.h"
-#include "RenderInterface/GenericRenderInterface/RenderPass.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
+#include "RenderInterface/GenericRenderInterface/Forward.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 
 namespace Hermes

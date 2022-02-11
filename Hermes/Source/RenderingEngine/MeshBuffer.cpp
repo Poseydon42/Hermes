@@ -2,6 +2,8 @@
 
 #include "RenderingEngine/GPUInteractionUtilities.h"
 #include "RenderingEngine/Renderer.h"
+#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/Buffer.h"
 
 namespace Hermes
 {

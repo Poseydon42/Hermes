@@ -44,6 +44,9 @@ namespace Hermes
 		if (auto WindowMessageQueue = ApplicationWindow->WindowQueue().lock())
 		{
 			WindowMessageQueue->Subscribe<GameLoop, &GameLoop::WindowCloseEventHandler>(WindowCloseEvent::GetStaticType(), this);
+
+			// DEBUG ONLY
+			InputEngine->GetEventQueue().Subscribe<GameLoop, &GameLoop::KeyEventHandler>(KeyEvent::GetStaticType(), this);
 		}
 		else
 		{
@@ -121,5 +124,18 @@ namespace Hermes
 		HERMES_LOG_INFO(L"Window \"%s\" requested exit.", Event.ToString().c_str());
 
 		RequestedExit = true;
+	}
+
+	/*
+	 * DEBUG ONLY
+	 */
+	void GameLoop::KeyEventHandler(const IEvent& Event)
+	{
+		const auto& KeyEvent = static_cast<const class KeyEvent&>(Event);
+		if (KeyEvent.IsPressEvent() && KeyEvent.GetKeyCode() == KeyCode::F)
+		{
+			ApplicationWindow->ToggleFullscreen(!IsFullscreen);
+			IsFullscreen = !IsFullscreen;
+		}
 	}
 }

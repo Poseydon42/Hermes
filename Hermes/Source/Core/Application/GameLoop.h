@@ -58,6 +58,8 @@ namespace Hermes
 		 * DEBUG ONLY
 		 */
 		Scene GameScene;
+		void KeyEventHandler(const IEvent& Event);
+		bool IsFullscreen = false;
 	};
 
 	HERMES_API extern GameLoop* GGameLoop;

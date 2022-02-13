@@ -29,6 +29,16 @@ namespace Hermes
 		};
 	}
 
+	bool SwapchainRelativeDimensions::IsRelative() const
+	{
+		return Type == ValueType::Relative;
+	}
+
+	bool SwapchainRelativeDimensions::IsAbsolute() const
+	{
+		return Type == ValueType::Absolute;
+	}
+
 	SwapchainRelativeDimensions::SwapchainRelativeDimensions(Vec2ui AbsoluteDimensions)
 		: Type(ValueType::Absolute)
 	{

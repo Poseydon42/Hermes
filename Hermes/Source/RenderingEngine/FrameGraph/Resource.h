@@ -16,6 +16,10 @@ namespace Hermes
 		static SwapchainRelativeDimensions CreateFromRelativeDimensions(Vec2 Dimensions);
 
 		Vec2ui GetAbsoluteDimensions(Vec2ui SwapchainDimensions) const;
+
+		bool IsRelative() const;
+
+		bool IsAbsolute() const;
 	private:
 		SwapchainRelativeDimensions(Vec2ui AbsoluteDimensions);
 

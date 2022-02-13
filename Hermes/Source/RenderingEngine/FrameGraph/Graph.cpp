@@ -184,11 +184,13 @@ namespace Hermes
 	FrameGraph::FrameGraph(FrameGraphScheme InScheme)
 		: Scheme(std::move(InScheme))
 	{
+		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetSize();
 		for (const auto& Resource : Scheme.Resources)
 		{
 			auto Image = Renderer::Get().GetActiveDevice().CreateImage(
-				Resource.second.Dimensions, TraverseResourceUsageType(Resource.first),
-				Resource.second.Format, Resource.second.MipLevels, RenderInterface::ImageLayout::Undefined);
+				Resource.second.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
+				TraverseResourceUsageType(Resource.first), Resource.second.Format,
+				Resource.second.MipLevels, RenderInterface::ImageLayout::Undefined);
 
 			ResourceContainer Container = {};
 			Container.Image = std::move(Image);

@@ -103,14 +103,14 @@ namespace Hermes
 		Scheme.AddPass(L"GraphicsPass", GraphicsPass);
 
 		ResourceDesc BackbufferResource = {};
-		BackbufferResource.Dimensions = Swapchain->GetSize();
+		BackbufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
 		BackbufferResource.Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
 		BackbufferResource.MipLevels = 1;
 		Scheme.AddResource(L"Backbuffer", BackbufferResource);
 
 		ResourceDesc DepthBufferResource = {};
 		DepthBufferResource.Format = RenderInterface::DataFormat::D24UnsignedNormalizedS8UnsignedInteger;
-		DepthBufferResource.Dimensions = Swapchain->GetSize();
+		DepthBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
 		DepthBufferResource.MipLevels = 1;
 		Scheme.AddResource(L"DepthBuffer", DepthBufferResource);
 

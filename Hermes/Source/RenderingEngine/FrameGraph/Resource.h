@@ -6,10 +6,37 @@
 
 namespace Hermes
 {
+	class HERMES_API SwapchainRelativeDimensions
+	{
+	public:
+		SwapchainRelativeDimensions();
+
+		static SwapchainRelativeDimensions CreateFromAbsoluteDimensions(Vec2ui Dimensions);
+
+		static SwapchainRelativeDimensions CreateFromRelativeDimensions(Vec2 Dimensions);
+
+		Vec2ui GetAbsoluteDimensions(Vec2ui SwapchainDimensions) const;
+	private:
+		SwapchainRelativeDimensions(Vec2ui AbsoluteDimensions);
+
+		SwapchainRelativeDimensions(Vec2 RelativeDimensions);
+
+		enum class ValueType
+		{
+			Relative,
+			Absolute
+		} Type;
+		union
+		{
+			Vec2 Relative;
+			Vec2ui Absolute;
+		};
+	};
+
 	struct ResourceDesc
 	{
 		RenderInterface::DataFormat Format;
-		Vec2ui Dimensions;
+		SwapchainRelativeDimensions Dimensions;
 		uint32 MipLevels;
 	};
 

@@ -56,6 +56,8 @@ namespace Hermes
 
 		RenderInterface::ImageUsageType TraverseResourceUsageType(const String& ResourceName);
 
+		void RecreateResources();
+
 		FrameGraphScheme Scheme;
 
 		struct ResourceContainer

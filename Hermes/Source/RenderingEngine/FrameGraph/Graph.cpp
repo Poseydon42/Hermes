@@ -63,10 +63,11 @@ namespace Hermes
 		auto& Swapchain = Renderer::Get().GetSwapchain();
 
 		auto SwapchainImageAcquiredFence = Renderer::Get().GetActiveDevice().CreateFence();
-		
-		// TODO : handle swapchain recreation properly
-		bool SwapchainWasRecreated;
+
+		bool SwapchainWasRecreated = false;
 		auto SwapchainImageIndex = Swapchain.AcquireImage(UINT64_MAX, *SwapchainImageAcquiredFence, SwapchainWasRecreated);
+		if (SwapchainWasRecreated)
+			RecreateResources();
 
 		auto& RenderQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Render);
 		
@@ -174,6 +175,8 @@ namespace Hermes
 		PresentationFence->Wait(UINT64_MAX);
 
 		Swapchain.Present(SwapchainImageIndex.value(), SwapchainWasRecreated);
+		if (SwapchainWasRecreated)
+			RecreateResources();
 	}
 
 	std::shared_ptr<RenderInterface::RenderPass> FrameGraph::GetRenderPassObject(const String& PassName)
@@ -354,5 +357,41 @@ namespace Hermes
 		}
 
 		return Result;
+	}
+
+	void FrameGraph::RecreateResources()
+	{
+		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetSize();
+		for (auto& Resource : Resources)
+		{
+			if (Resource.second.Desc.Dimensions.IsRelative())
+			{
+				Resource.second.Image = Renderer::Get().GetActiveDevice().CreateImage(
+					Resource.second.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
+					TraverseResourceUsageType(Resource.first), Resource.second.Desc.Format,
+					Resource.second.Desc.MipLevels, RenderInterface::ImageLayout::Undefined);
+
+				Resource.second.CurrentLayout = RenderInterface::ImageLayout::Undefined;
+			}
+		}
+
+		// TODO : only recreate render targets if their images were recreated
+		for (const auto& Pass : Scheme.Passes)
+		{
+			std::vector<std::shared_ptr<RenderInterface::Image>> Attachments;
+			Attachments.reserve(Pass.second.Drains.size());
+			for (const auto& Drain : Pass.second.Drains)
+			{
+				String FullResourceName = TraverseResourceName(Pass.first + L"." + Drain.Name);
+
+				String PassName, ResourceOwnName;
+				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
+
+				const auto& Resource = Resources[ResourceOwnName];
+				Attachments.push_back(Resource.Image);
+			}
+			Passes[Pass.first].RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
+				Passes[Pass.first].Pass, Attachments, Attachments[0]->GetSize());
+		}
 	}
 }

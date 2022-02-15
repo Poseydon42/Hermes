@@ -101,7 +101,9 @@ namespace Hermes
 
 			CommandBuffer->BeginRenderPass(Pass.second.Pass, Pass.second.RenderTarget, Pass.second.ClearColors);
 
-			Pass.second.Callback(*CommandBuffer, Scene);
+			bool ResourcesWereRecreatedTmp = ResourcesWereRecreated; // TODO : better way to fix this maybe?
+			Pass.second.Callback(*CommandBuffer, Scene, std::move(ResourcesWereRecreatedTmp));
+			ResourcesWereRecreated = false;
 
 			CommandBuffer->EndRenderPass();
 			CommandBuffer->EndRecording();
@@ -393,5 +395,7 @@ namespace Hermes
 			Passes[Pass.first].RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
 				Passes[Pass.first].Pass, Attachments, Attachments[0]->GetSize());
 		}
+
+		ResourcesWereRecreated = true;
 	}
 }

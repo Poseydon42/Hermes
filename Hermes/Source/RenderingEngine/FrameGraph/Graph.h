@@ -81,5 +81,7 @@ namespace Hermes
 		std::unordered_map<String, PassContainer> Passes;
 		
 		String BlitToSwapchainResourceOwnName;
+
+		bool ResourcesWereRecreated = false;
 	};
 }

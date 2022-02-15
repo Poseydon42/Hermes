@@ -16,7 +16,10 @@ namespace Hermes
 
 	struct PassDesc
 	{
-		using RenderPassCallbackType = TDelegate<void, RenderInterface::CommandBuffer&, const Scene&>;
+		/*
+		 * void Callback(RenderInterface::CommandBuffer& TargetCommandBuffer, const Scene& Scene, bool ResourcesWereChanged)
+		 */
+		using RenderPassCallbackType = TDelegate<void, RenderInterface::CommandBuffer&, const Scene&, bool>;
 		
 		std::vector<Drain> Drains;
 		std::vector<Source> Sources;

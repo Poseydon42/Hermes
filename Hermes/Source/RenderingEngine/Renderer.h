@@ -79,7 +79,9 @@ namespace Hermes
 		static constexpr float NearPlane = 0.1f;
 		static constexpr float FarPlane = 1000.0f;
 
-		void GraphicsPassCallback(RenderInterface::CommandBuffer& CommandBuffer, const Scene& Scene);
+		void GraphicsPassCallback(RenderInterface::CommandBuffer& CommandBuffer, const Scene& Scene, bool ResourcesWereRecreated);
+
+		void RecreatePipeline();
 
 		void DumpGPUProperties() const;
 	};

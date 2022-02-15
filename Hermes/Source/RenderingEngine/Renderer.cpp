@@ -120,58 +120,7 @@ namespace Hermes
 
 		FrameGraph = Scheme.Compile();
 
-
-		RenderInterface::PipelineDescription PipelineDesc = {};
-
-		RenderInterface::PushConstantRange ModelMatrixRange;
-		ModelMatrixRange.Size = sizeof(Mat4);
-		ModelMatrixRange.Offset = 0;
-		ModelMatrixRange.ShadersThatAccess = RenderInterface::ShaderType::VertexShader;
-		PipelineDesc.PushConstants.push_back(ModelMatrixRange);
-
-		PipelineDesc.ShaderStages = { VertexShader, FragmentShader };
-
-		PipelineDesc.DescriptorLayouts = { PerFrameUBODescriptorLayout, Material::GetDescriptorSetLayout() };
-
-		RenderInterface::VertexBinding VertexInput;
-		VertexInput.Index = 0;
-		VertexInput.Stride = sizeof(Vertex);
-		VertexInput.IsPerInstance = false;
-		PipelineDesc.VertexInput.VertexBindings.push_back(VertexInput);
-
-		RenderInterface::VertexAttribute PositionAttribute, TextureCoordinatesAttribute, NormalAttribute;
-		PositionAttribute.BindingIndex = 0;
-		PositionAttribute.Location = 0;
-		PositionAttribute.Offset = offsetof(Vertex, Position);
-		PositionAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(PositionAttribute);
-		
-		TextureCoordinatesAttribute.BindingIndex = 0;
-		TextureCoordinatesAttribute.Location = 1;
-		TextureCoordinatesAttribute.Offset = offsetof(Vertex, TextureCoordinates);
-		TextureCoordinatesAttribute.Format = RenderInterface::DataFormat::R32G32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(TextureCoordinatesAttribute);
-		
-		NormalAttribute.BindingIndex = 0;
-		NormalAttribute.Location = 2;
-		NormalAttribute.Offset = offsetof(Vertex, Normal);
-		NormalAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(NormalAttribute);
-
-		PipelineDesc.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
-
-		PipelineDesc.Viewport.Origin = { 0, 0 };
-		PipelineDesc.Viewport.Dimensions = Swapchain->GetSize();
-
-		PipelineDesc.Rasterizer.Cull = RenderInterface::CullMode::Back;
-		PipelineDesc.Rasterizer.Direction = RenderInterface::FaceDirection::Clockwise;
-		PipelineDesc.Rasterizer.Fill = RenderInterface::FillMode::Fill;
-
-		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = true;
-		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = true;
-		PipelineDesc.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Less;
-
-		Pipeline = RenderingDevice->CreatePipeline(FrameGraph->GetRenderPassObject(L"GraphicsPass"), PipelineDesc);
+		RecreatePipeline();
 
 		return true;
 	}
@@ -201,8 +150,11 @@ namespace Hermes
 		return *Swapchain;
 	}
 
-	void Renderer::GraphicsPassCallback(RenderInterface::CommandBuffer& CommandBuffer, const Scene& Scene)
+	void Renderer::GraphicsPassCallback(RenderInterface::CommandBuffer& CommandBuffer, const Scene& Scene, bool ResourcesWereRecreated)
 	{
+		if (ResourcesWereRecreated)
+			RecreatePipeline();
+
 		PerFrameSceneUBO SceneUBOData;
 		auto PerspectiveMatrix = Mat4::Perspective(
 			VerticalFOV, static_cast<float>(Swapchain->GetSize().X) / static_cast<float>(Swapchain->GetSize().Y),
@@ -249,6 +201,61 @@ namespace Hermes
 			auto DrawcallInformation = Mesh.MeshData.GetDrawInformation();
 			CommandBuffer.DrawIndexed(DrawcallInformation.IndexCount, 1, DrawcallInformation.IndexOffset, DrawcallInformation.VertexOffset, 0);
 		}
+	}
+
+	void Renderer::RecreatePipeline()
+	{
+		RenderInterface::PipelineDescription PipelineDesc = {};
+
+		RenderInterface::PushConstantRange ModelMatrixRange;
+		ModelMatrixRange.Size = sizeof(Mat4);
+		ModelMatrixRange.Offset = 0;
+		ModelMatrixRange.ShadersThatAccess = RenderInterface::ShaderType::VertexShader;
+		PipelineDesc.PushConstants.push_back(ModelMatrixRange);
+
+		PipelineDesc.ShaderStages = { VertexShader, FragmentShader };
+
+		PipelineDesc.DescriptorLayouts = { PerFrameUBODescriptorLayout, Material::GetDescriptorSetLayout() };
+
+		RenderInterface::VertexBinding VertexInput;
+		VertexInput.Index = 0;
+		VertexInput.Stride = sizeof(Vertex);
+		VertexInput.IsPerInstance = false;
+		PipelineDesc.VertexInput.VertexBindings.push_back(VertexInput);
+
+		RenderInterface::VertexAttribute PositionAttribute, TextureCoordinatesAttribute, NormalAttribute;
+		PositionAttribute.BindingIndex = 0;
+		PositionAttribute.Location = 0;
+		PositionAttribute.Offset = offsetof(Vertex, Position);
+		PositionAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
+		PipelineDesc.VertexInput.VertexAttributes.push_back(PositionAttribute);
+
+		TextureCoordinatesAttribute.BindingIndex = 0;
+		TextureCoordinatesAttribute.Location = 1;
+		TextureCoordinatesAttribute.Offset = offsetof(Vertex, TextureCoordinates);
+		TextureCoordinatesAttribute.Format = RenderInterface::DataFormat::R32G32SignedFloat;
+		PipelineDesc.VertexInput.VertexAttributes.push_back(TextureCoordinatesAttribute);
+
+		NormalAttribute.BindingIndex = 0;
+		NormalAttribute.Location = 2;
+		NormalAttribute.Offset = offsetof(Vertex, Normal);
+		NormalAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
+		PipelineDesc.VertexInput.VertexAttributes.push_back(NormalAttribute);
+
+		PipelineDesc.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
+
+		PipelineDesc.Viewport.Origin = { 0, 0 };
+		PipelineDesc.Viewport.Dimensions = Swapchain->GetSize();
+
+		PipelineDesc.Rasterizer.Cull = RenderInterface::CullMode::Back;
+		PipelineDesc.Rasterizer.Direction = RenderInterface::FaceDirection::Clockwise;
+		PipelineDesc.Rasterizer.Fill = RenderInterface::FillMode::Fill;
+
+		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = true;
+		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = true;
+		PipelineDesc.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Less;
+
+		Pipeline = RenderingDevice->CreatePipeline(FrameGraph->GetRenderPassObject(L"GraphicsPass"), PipelineDesc);
 	}
 
 	void Renderer::DumpGPUProperties() const

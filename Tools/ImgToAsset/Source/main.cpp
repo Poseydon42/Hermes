@@ -49,6 +49,33 @@ struct ImageHeader
 };
 PACKED_STRUCT_END
 
+std::vector<uint8_t> ReadAllFile(const std::string& Path)
+{
+	std::vector<uint8_t> Result;
+	try
+	{
+		std::ifstream File = std::ifstream(Path, std::ios::in | std::ios::binary);
+		if (!File.is_open())
+		{
+			return Result;
+		}
+
+		File.seekg(0, std::ios::end);
+		size_t FileSize = File.tellg();
+		File.seekg(0, std::ios::beg);
+		Result.resize(FileSize);
+
+		File.read(reinterpret_cast<char*>(Result.data()), static_cast<std::streamsize>(FileSize));
+	}
+	catch (const std::exception& Error)
+	{
+		std::cerr << "Caught exception while reading file " << Path << std::endl;
+		std::cerr << Error.what() << std::endl;
+	}
+
+	return Result;
+}
+
 int WriteAssetFile(
 	const char* Data, size_t DataSize,
 	uint16_t Width, uint16_t Height,
@@ -97,167 +124,141 @@ int WriteAssetFile(
 
 int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 {
-	try
+	auto FileContents = ReadAllFile(Path);
+
+	PACKED_STRUCT_BEGIN
+	struct TGAHeader
 	{
-		std::ifstream File = std::ifstream(Path, std::ios::in | std::ios::binary);
-		if (!File.is_open())
+		uint8_t IDLength;
+		uint8_t ColorMapType;
+		uint8_t ImageType;
+		uint8_t ColorMapSpecificationSkipped[5]; // We're not loading images with color map, so we'll just skip this field and add 5 padding bytes instead
+		struct ImageSpecification
 		{
-			std::cerr << "Failed to open file " << Path << " for reading" << std::endl;
-			return 3;
-		}
+			uint16_t XOrigin;
+			uint16_t YOrigin;
+			uint16_t Width;
+			uint16_t Height;
+			uint8_t  PixelDepth;
+			uint8_t  ImageDescriptor;
+		} Specification;
+	};
 
-		File.seekg(0, std::ios::end);
-		size_t FileSize = File.tellg();
-		File.seekg(0, std::ios::beg);
+	struct TGAFooter
+	{
+		uint32_t ExtensionAreaOffset;
+		uint32_t DeveloperDirectoryOffset;
+		char Signature[18];
+	};
+	PACKED_STRUCT_END
+	auto* InputTGAHeader = reinterpret_cast<TGAHeader*>(FileContents.data());
+	auto* InputTGAFooter = reinterpret_cast<TGAFooter*>(FileContents.data() + FileContents.size() - sizeof(TGAFooter));
 
-		auto* FileContents = reinterpret_cast<uint8_t*>(malloc(FileSize));
-		if (!FileContents)
-		{
-			std::cerr << "Failed to allocate memory to read input file" << std::endl;
-			return 3;
-		}
-		File.read(reinterpret_cast<char*>(FileContents), static_cast<std::streamsize>(FileSize));
+	bool IsNewFormat = strcmp(InputTGAFooter->Signature, "TRUEVISION-XFILE.") == 0;
 
-		PACKED_STRUCT_BEGIN
-		struct TGAHeader
-		{
-			uint8_t IDLength;
-			uint8_t ColorMapType;
-			uint8_t ImageType;
-			uint8_t ColorMapSpecificationSkipped[5]; // We're not loading images with color map, so we'll just skip this field and add 5 padding bytes instead
-			struct ImageSpecification
-			{
-				uint16_t XOrigin;
-				uint16_t YOrigin;
-				uint16_t Width;
-				uint16_t Height;
-				uint8_t  PixelDepth;
-				uint8_t  ImageDescriptor;
-			} Specification;
-		};
-		
-		struct TGAFooter
-		{
-			uint32_t ExtensionAreaOffset;
-			uint32_t DeveloperDirectoryOffset;
-			char Signature[18];
-		};
-		PACKED_STRUCT_END
-		auto* InputTGAHeader = reinterpret_cast<TGAHeader*>(FileContents);
-		auto* InputTGAFooter = reinterpret_cast<TGAFooter*>(FileContents + FileSize - sizeof(TGAFooter));
+	bool IsAlphaChannelAvailable;
+	if (IsNewFormat && InputTGAFooter->ExtensionAreaOffset != 0)
+	{
+		uint8_t* ExtensionArea = FileContents.data() + InputTGAFooter->ExtensionAreaOffset;
+		uint8_t AttributesType = *(ExtensionArea + 0x1EE);
+		if (AttributesType == 2)
+			IsAlphaChannelAvailable = true;
+		else
+			IsAlphaChannelAvailable = false;
+	}
+	else
+	{
+		IsAlphaChannelAvailable = (InputTGAHeader->Specification.ImageDescriptor & 0x0F) != 0;
+	}
+	bool IsMonochrome = (InputTGAHeader->ImageType & 0x0F) == 3;
+	bool IsLeftToRight = !(InputTGAHeader->Specification.ImageDescriptor & 0x10);
+	bool IsTopToBottom = InputTGAHeader->Specification.ImageDescriptor & 0x20;
 
-		bool IsNewFormat = strcmp(InputTGAFooter->Signature, "TRUEVISION-XFILE.") == 0;
-		
-		bool IsAlphaChannelAvailable;
-		if (IsNewFormat && InputTGAFooter->ExtensionAreaOffset != 0)
+	std::cout << "TGA format: " << (IsNewFormat ? "new" : "old") << std::endl;
+	std::cout << "Image size: " << InputTGAHeader->Specification.Width << " x " << InputTGAHeader->Specification.Height << std::endl;
+	std::cout << "Image depth: " << static_cast<uint16_t>(InputTGAHeader->Specification.PixelDepth) << " bits per pixel" << std::endl;
+	std::cout << "Is monochrome: " << (IsMonochrome ? "true" : "false") << std::endl;
+	std::cout << "Alpha channel available: " << (IsAlphaChannelAvailable ? "true" : "false") << std::endl;
+	std::cout << "Horizontal direction: " << (IsLeftToRight ? "left-to-right" : "right-to-left") << std::endl;
+	std::cout << "Vertical direction: " << (IsTopToBottom ? "top-to-bottom" : "bottom-to-top") << std::endl;
+
+	if (InputTGAHeader->Specification.XOrigin != 0 || InputTGAHeader->Specification.YOrigin != 0)
+	{
+		std::cerr << "X and Y origin must be zero" << std::endl;
+		return 3;
+	}
+	if ((InputTGAHeader->ImageType & 0x03) == 1)
+	{
+		std::cerr << "TGA files with color map are currently not supported" << std::endl;
+		return 3;
+	}
+	if (InputTGAHeader->ImageType & 0x08)
+	{
+		std::cerr << "Compressed TGA files are currently not supported" << std::endl;
+		return 3;
+	}
+
+	size_t IntermediateBytesPerPixel;
+	if (IsMonochrome)
+		IntermediateBytesPerPixel = 1;
+	else
+		IntermediateBytesPerPixel = 4;
+	size_t SourceBytesPerPixel = InputTGAHeader->Specification.PixelDepth / 8;
+
+	size_t TotalBytesUsed = static_cast<size_t>(InputTGAHeader->Specification.Width) * InputTGAHeader->Specification.Height * IntermediateBytesPerPixel;
+
+	auto* IntermediateImage = reinterpret_cast<uint8_t*>(malloc(TotalBytesUsed));
+	if (!IntermediateImage)
+	{
+		std::cerr << "Failed to allocate memory for intermediate image representation" << std::endl;
+		return 3;
+	}
+
+	uint8_t* SourceImagePixel = FileContents.data() + sizeof(TGAHeader) + InputTGAHeader->IDLength;
+	// NOTE : Hermes always uses top-to-bottom left-to-right images,
+	// so we have to apply flipping if necessary while converting
+	for (size_t Y = 0; Y < InputTGAHeader->Specification.Height; Y++)
+	{
+		for (size_t X = 0; X < InputTGAHeader->Specification.Width; X++)
 		{
-			uint8_t* ExtensionArea = FileContents + InputTGAFooter->ExtensionAreaOffset;
-			uint8_t AttributesType = *(ExtensionArea + 0x1EE);
-			if (AttributesType == 2)
-				IsAlphaChannelAvailable = true;
+			uint8_t R = SourceImagePixel[2];
+			uint8_t G = SourceImagePixel[1];
+			uint8_t B = SourceImagePixel[0];
+			uint8_t A = SourceImagePixel[3];
+
+			size_t ActualX, ActualY;
+			if (IsLeftToRight)
+				ActualX = X;
 			else
-				IsAlphaChannelAvailable = false;
-		}
-		else
-		{
-			IsAlphaChannelAvailable = (InputTGAHeader->Specification.ImageDescriptor & 0x0F) != 0;
-		}
-		bool IsMonochrome = (InputTGAHeader->ImageType & 0x0F) == 3;
-		bool IsLeftToRight = !(InputTGAHeader->Specification.ImageDescriptor & 0x10);
-		bool IsTopToBottom = InputTGAHeader->Specification.ImageDescriptor & 0x20;
+				ActualX = InputTGAHeader->Specification.Width - 1 - X;
+			if (IsTopToBottom)
+				ActualY = Y;
+			else
+				ActualY = InputTGAHeader->Specification.Height - 1 - Y;
 
-		std::cout << "TGA format: " << (IsNewFormat ? "new" : "old") << std::endl;
-		std::cout << "Image size: " << InputTGAHeader->Specification.Width << " x " << InputTGAHeader->Specification.Height << std::endl;
-		std::cout << "Image depth: " << static_cast<uint16_t>(InputTGAHeader->Specification.PixelDepth) << " bits per pixel" << std::endl;
-		std::cout << "Is monochrome: " << (IsMonochrome ? "true" : "false") << std::endl;
-		std::cout << "Alpha channel available: " << (IsAlphaChannelAvailable ? "true" : "false") << std::endl;
-		std::cout << "Horizontal direction: " << (IsLeftToRight ? "left-to-right" : "right-to-left") << std::endl;
-		std::cout << "Vertical direction: " << (IsTopToBottom ? "top-to-bottom" : "bottom-to-top") << std::endl;
+			uint8_t* IntermediateImagePixel = IntermediateImage + (ActualY * InputTGAHeader->Specification.Width + ActualX) * IntermediateBytesPerPixel;
 
-		if (InputTGAHeader->Specification.XOrigin != 0 || InputTGAHeader->Specification.YOrigin != 0)
-		{
-			std::cerr << "X and Y origin must be zero" << std::endl;
-			return 3;
-		}
-		if ((InputTGAHeader->ImageType & 0x03) == 1)
-		{
-			std::cerr << "TGA files with color map are currently not supported" << std::endl;
-			return 3;
-		}
-		if (InputTGAHeader->ImageType & 0x08)
-		{
-			std::cerr << "Compressed TGA files are currently not supported" << std::endl;
-			return 3;
-		}
-		
-		size_t IntermediateBytesPerPixel;
-		if (IsMonochrome)
-			IntermediateBytesPerPixel = 1;
-		else
-			IntermediateBytesPerPixel = 4;
-		size_t SourceBytesPerPixel = InputTGAHeader->Specification.PixelDepth / 8;
-
-		size_t TotalBytesUsed = static_cast<size_t>(InputTGAHeader->Specification.Width) * InputTGAHeader->Specification.Height * IntermediateBytesPerPixel;
-		
-		auto* IntermediateImage = reinterpret_cast<uint8_t*>(malloc(TotalBytesUsed));
-		if (!IntermediateImage)
-		{
-			std::cerr << "Failed to allocate memory for intermediate image representation" << std::endl;
-			return 3;
-		}
-		
-		uint8_t* SourceImagePixel = FileContents + sizeof(TGAHeader) + InputTGAHeader->IDLength;
-		// NOTE : Hermes always uses top-to-bottom left-to-right images,
-		// so we have to apply flipping if necessary while converting
-		for (size_t Y = 0; Y < InputTGAHeader->Specification.Height; Y++)
-		{
-			for (size_t X = 0; X < InputTGAHeader->Specification.Width; X++)
+			if (IsMonochrome)
 			{
-				uint8_t R = SourceImagePixel[2];
-				uint8_t G = SourceImagePixel[1];
-				uint8_t B = SourceImagePixel[0];
-				uint8_t A = SourceImagePixel[3];
-
-				size_t ActualX, ActualY;
-				if (IsLeftToRight)
-					ActualX = X;
-				else
-					ActualX = InputTGAHeader->Specification.Width - 1 - X;
-				if (IsTopToBottom)
-					ActualY = Y;
-				else
-					ActualY = InputTGAHeader->Specification.Height - 1 - Y;
-
-				uint8_t* IntermediateImagePixel = IntermediateImage + (ActualY * InputTGAHeader->Specification.Width + ActualX) * IntermediateBytesPerPixel;
-
-				if (IsMonochrome)
-				{
-					IntermediateImagePixel[0] = B;
-				}
-				else
-				{
-					IntermediateImagePixel[0] = B;
-					IntermediateImagePixel[1] = G;
-					IntermediateImagePixel[2] = R;
-					IntermediateImagePixel[3] = IsAlphaChannelAvailable ? A : 0xFF;
-				}
-
-				SourceImagePixel += SourceBytesPerPixel;
+				IntermediateImagePixel[0] = B;
 			}
-		}
+			else
+			{
+				IntermediateImagePixel[0] = B;
+				IntermediateImagePixel[1] = G;
+				IntermediateImagePixel[2] = R;
+				IntermediateImagePixel[3] = IsAlphaChannelAvailable ? A : 0xFF;
+			}
 
-		return WriteAssetFile(
-			reinterpret_cast<const char*>(IntermediateImage), TotalBytesUsed,
-			InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height, 
-			IsAlphaChannelAvailable, IsMonochrome,
-			OutputFilename);
+			SourceImagePixel += SourceBytesPerPixel;
+		}
 	}
-	catch (const std::exception& Error)
-	{
-		std::cerr << "Caught exception while processing TGA file " << Path << std::endl;
-		std::cerr << Error.what() << std::endl;
-		return 4;
-	}
+
+	return WriteAssetFile(
+		reinterpret_cast<const char*>(IntermediateImage), TotalBytesUsed,
+		InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height,
+		IsAlphaChannelAvailable, IsMonochrome,
+		OutputFilename);
 }
 
 /*

@@ -117,6 +117,17 @@ namespace Hermes
 		auto& BlitToSwapchainResource = Resources[BlitToSwapchainResourceOwnName];
 
 		SwapchainImageAcquiredFence->Wait(UINT64_MAX);
+		if (!SwapchainImageIndex.has_value())
+		{
+			HERMES_LOG_ERROR(L"Swapchain did not return valid image index");
+			// Waiting for previously submitted rendering command buffers to finish
+			// execution on rendering queue
+			// TODO : any more efficient way to do this?
+			RenderQueue.WaitForIdle();
+			return; // Skip presentation of current frame
+		}
+		const auto SwapchainImage = Swapchain.GetImage(SwapchainImageIndex.value());
+
 		BlitAndPresentCommandBuffer->BeginRecording();
 		
 		RenderInterface::ImageMemoryBarrier SourceImageToTransferSourceBarrier = {};
@@ -130,10 +141,7 @@ namespace Hermes
 			*BlitToSwapchainResource.Image, SourceImageToTransferSourceBarrier, 
 			RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
 		BlitToSwapchainResource.CurrentLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
-
-		HERMES_ASSERT_LOG(SwapchainImageIndex.has_value(), L"Swapchain did not return valid image index");
-		const auto SwapchainImage = Swapchain.GetImage(SwapchainImageIndex.value());
-
+		
 		RenderInterface::ImageMemoryBarrier SwapchainImageToTransferDestinationBarrier = {};
 		SwapchainImageToTransferDestinationBarrier.BaseMipLevel = 0;
 		SwapchainImageToTransferDestinationBarrier.MipLevelCount = 1;

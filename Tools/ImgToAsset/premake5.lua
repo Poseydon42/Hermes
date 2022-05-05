@@ -12,8 +12,8 @@ project "ImgToAsset"
     targetdir(build_dir)
     objdir (intermediate_dir)
 
-    files { "Source/**.h", "Source/**.cpp" }
-    includedirs { "Source/" }
+    files { "Source/**.h", "Source/**.cpp", "ThirdParty/*.h" }
+    includedirs { "Source/", "ThirdParty/" }
     defines { "HERMES_BUILD_TOOLS" }
     flags { "FatalWarnings" }
     warnings "Extra"

@@ -2,6 +2,9 @@
 #include <fstream>
 #include <vector>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 /*
  * TODO : setup our build so that we can use our own platform layer
  * for file IO etc. instead of using STL

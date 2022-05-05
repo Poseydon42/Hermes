@@ -35,7 +35,8 @@ enum class ImageFormat : uint8_t
 	R8G8 = 0x05,
 	R16G16 = 0x0A,
 	B8G8R8X8 = 0x54,
-	B8G8R8A8 = 0x55
+	B8G8R8A8 = 0x55,
+	HDR96 = 0xFC
 };
 
 PACKED_STRUCT_BEGIN
@@ -83,7 +84,7 @@ int WriteAssetFile(
 	const char* Data, size_t DataSize,
 	uint16_t Width, uint16_t Height,
 	bool IsAlphaChannelAvailable, bool IsMonochrome,
-	const std::string& Filename)
+	bool IsHDR, const std::string& Filename)
 {
 	ImageFormat Format;
 	if (IsMonochrome)
@@ -97,6 +98,11 @@ int WriteAssetFile(
 	else
 	{
 		Format = ImageFormat::B8G8R8X8;
+	}
+
+	if (IsHDR)
+	{
+		Format = ImageFormat::HDR96;
 	}
 
 	AssetHeader AssetHeader;
@@ -260,8 +266,50 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 	return WriteAssetFile(
 		reinterpret_cast<const char*>(IntermediateImage), TotalBytesUsed,
 		InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height,
-		IsAlphaChannelAvailable, IsMonochrome,
+		IsAlphaChannelAvailable, IsMonochrome, false,
 		OutputFilename);
+}
+
+int ConvertFromHDR(const std::string& Path, const std::string& OutputFilename)
+{
+	auto FileContents = ReadAllFile(Path);
+
+	if (!stbi_is_hdr_from_memory(FileContents.data(), 
+		static_cast<int>(FileContents.size())))
+	{
+		std::cerr << "File " << Path << " is not a valid HDR Radiance file" << std::endl;
+		return 3;
+	}
+
+	int Width, Height, NumChannels;
+	auto* ImageData = stbi_loadf_from_memory(
+		FileContents.data(), static_cast<int>(FileContents.size()),
+		&Width, &Height, &NumChannels, 0);
+
+	if (ImageData == nullptr)
+	{
+		std::cerr << "Failed to load image from file " << Path << std::endl;
+		return 3;
+	}
+
+	int Result = 0;
+	if (NumChannels != 3)
+	{
+		std::cerr << "File " << Path << " has number of channels " << NumChannels << " other than 3. Loading of this type of file is not supported." << std::endl;
+		Result = 3;
+	}
+	else
+	{
+		Result = WriteAssetFile(
+			reinterpret_cast<const char*>(ImageData),
+			static_cast<size_t>(Width) * Height * NumChannels * sizeof(ImageData[0]),
+			static_cast<uint16_t>(Width), static_cast<uint16_t>(Height),
+			false, false, true,
+			OutputFilename);
+	}
+
+	stbi_image_free(ImageData);
+	return Result;
 }
 
 /*
@@ -269,8 +317,10 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
  * imgtoasset <input file> [options]
  * Possible options:
  *  --tga: override file extension and parse it as TGA image
+ *	--hdr: override file extension and parse it as HDR image
  * Currently supported image formats:
  *  - TGA
+ *	- HDR(Radiance format)
  */
 int main(int argc, char** argv)
 {
@@ -283,7 +333,8 @@ int main(int argc, char** argv)
 	enum class FileType
 	{
 		Undefined,
-		TGA
+		TGA,
+		HDR
 	} FileType = FileType::Undefined;
 
 	std::string InputFilename = std::string(argv[1]);
@@ -292,10 +343,16 @@ int main(int argc, char** argv)
 	{
 		if (strcmp(argv[ArgumentIndex], "--tga") == 0)
 			FileType = FileType::TGA;
+		if (strcmp(argv[ArgumentIndex], "--hdr") == 0)
+			FileType = FileType::HDR;
 	}
 	if (InputFilename.substr(InputFilename.find_last_of('.'), InputFilename.length() - InputFilename.find_last_of('.') + 1) == ".tga")
 	{
 		FileType = FileType::TGA;
+	}
+	if (InputFilename.substr(InputFilename.find_last_of('.'), InputFilename.length() - InputFilename.find_last_of('.') + 1) == ".hdr")
+	{
+		FileType = FileType::HDR;
 	}
 
 	std::string OutputFileName = InputFileNameWithoutExtension + ".hac";
@@ -304,6 +361,8 @@ int main(int argc, char** argv)
 	{
 	case FileType::TGA:
 		return ConvertFromTGA(InputFilename, OutputFileName);
+	case FileType::HDR:
+		return ConvertFromHDR(InputFilename, OutputFileName);
 	case FileType::Undefined:
 	default:
 		std::cerr << "Unknown file format" << std::endl;

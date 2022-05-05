@@ -19,7 +19,8 @@ namespace Hermes
 		R8G8 = 0x05,
 		R16G16 = 0x0A,
 		B8G8R8X8 = 0x54,
-		B8G8R8A8 = 0x55
+		B8G8R8A8 = 0x55,
+		HDR96 = 0xFC // 3 float components, 96 bits per pixel in total
 	};
 
 	uint8 BytesPerPixelForImageFormat(ImageFormat Format);

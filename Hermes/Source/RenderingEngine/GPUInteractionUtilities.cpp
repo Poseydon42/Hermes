@@ -64,7 +64,7 @@ namespace Hermes
 
 		size_t StagingBufferSize = CurrentStagingBuffer.GetSize();
 		size_t BytesPerRow = BytesPerPixel * Dimensions.X;
-		auto RowsPerSingleTransfer = static_cast<uint32>(StagingBufferSize / BytesPerRow * BytesPerRow);
+		auto RowsPerSingleTransfer = static_cast<uint32>(StagingBufferSize / BytesPerRow);
 		HERMES_ASSERT_LOG(BytesPerRow <= StagingBufferSize, L"Trying to upload too large image to GPU; increase staging buffer size");
 
 		for (uint32 Row = 0; Row < Dimensions.Y; Row += RowsPerSingleTransfer)

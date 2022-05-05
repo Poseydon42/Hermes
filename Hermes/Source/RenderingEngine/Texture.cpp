@@ -33,9 +33,9 @@ namespace Hermes
 		}
 	}
 
-	std::shared_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source)
+	std::shared_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source, bool EnableMipMaps)
 	{
-		return std::shared_ptr<Texture>(new Texture(Source));
+		return std::shared_ptr<Texture>(new Texture(Source, EnableMipMaps));
 	}
 
 	const RenderInterface::Image& Texture::GetRawImage() const
@@ -59,25 +59,49 @@ namespace Hermes
 		return DataUploadFinished && Image != nullptr && Dimensions.LengthSq() > 0;
 	}
 
-	Texture::Texture(const ImageAsset& Source)
+	Texture::Texture(const ImageAsset& Source, bool EnableMipMaps)
 		: DataUploadFinished(false)
 		, Dimensions(Source.GetDimensions())
 	{
 		uint32 BiggestDimension = Math::Max(Dimensions.X, Dimensions.Y);
 		HERMES_ASSERT(BiggestDimension > 0);
-		uint32 MipLevelCount = Math::FloorLog2(BiggestDimension);
+
+		uint32 MipLevelCount;
+		if (EnableMipMaps)
+		{
+			MipLevelCount = Math::FloorLog2(BiggestDimension);
+		}
+		else
+		{
+			MipLevelCount = 0;
+		}
+
 		Image = Renderer::Get().GetActiveDevice().CreateImage(
 			Dimensions, 
 			RenderInterface::ImageUsageType::Sampled | RenderInterface::ImageUsageType::CopyDestination | RenderInterface::ImageUsageType::CopySource,
 			ChooseFormatFromImageType(Source.GetImageFormat()), MipLevelCount + 1, RenderInterface::ImageLayout::Undefined);
 
+		// NOTE : normally, after loading image we will move it into
+		// transfer source layout for further blitting to generate mip
+		// maps and transition to shader read only layout will be done
+		// in GPUInteractionUtilities::GenerateMipMaps(). However, if
+		// user does not want to generate mip maps for the texture then
+		// we have to perform transition to shader read only layout
+		// immediately ourselves
+		RenderInterface::ImageLayout LayoutAfterLoad = EnableMipMaps ?
+			RenderInterface::ImageLayout::TransferSourceOptimal :
+			RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+
 		GPUInteractionUtilities::UploadDataToGPUImage(
 			Source.GetRawData(), { 0, 0 }, Dimensions,
 			Source.GetBitsPerPixel() / 8, 0, *Image, 
-			RenderInterface::ImageLayout::Undefined, RenderInterface::ImageLayout::TransferSourceOptimal);
+			RenderInterface::ImageLayout::Undefined, LayoutAfterLoad);
 
-		GPUInteractionUtilities::GenerateMipMaps(
-			*Image, RenderInterface::ImageLayout::TransferSourceOptimal, RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		if (EnableMipMaps)
+		{
+			GPUInteractionUtilities::GenerateMipMaps(
+				*Image, RenderInterface::ImageLayout::TransferSourceOptimal, RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		}
 
 		DataUploadFinished = true;
 	}

@@ -72,6 +72,8 @@ namespace Hermes
 
 			void UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Image& Image, RenderInterface::ImageLayout LayoutAtTimeOfAccess) override;
 
+			void UpdateWithImageAndSampler(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Image& Image, const RenderInterface::Sampler& Sampler, RenderInterface::ImageLayout LayoutAtTimeOfAccess) override;
+
 			VkDescriptorSet GetDescriptorSet() const { return Set; }
 
 		private:

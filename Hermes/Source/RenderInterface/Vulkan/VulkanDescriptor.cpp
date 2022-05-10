@@ -20,6 +20,8 @@ namespace Hermes
 				return VK_DESCRIPTOR_TYPE_SAMPLER;
 			case RenderInterface::DescriptorType::SampledImage:
 				return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			case RenderInterface::DescriptorType::CombinedSampler:
+				return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			default:
 				HERMES_ASSERT(false);
 				return static_cast<VkDescriptorType>(0);
@@ -198,6 +200,24 @@ namespace Hermes
 			VkDescriptorImageInfo ImageInfo = {};
 			ImageInfo.imageView = static_cast<const VulkanImage&>(Image).GetDefaultView();
 			ImageInfo.imageLayout = ImageLayoutToVkImageLayout(LayoutAtTimeOfAccess);
+			Write.pImageInfo = &ImageInfo;
+
+			vkUpdateDescriptorSets(Device->GetDevice(), 1, &Write, 0, nullptr);
+		}
+
+		void VulkanDescriptorSet::UpdateWithImageAndSampler(uint32 BindingIndex, uint32 ArrayIndex,	const RenderInterface::Image& Image, const RenderInterface::Sampler& Sampler, RenderInterface::ImageLayout LayoutAtTimeOfAccess)
+		{
+			VkWriteDescriptorSet Write = {};
+			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			Write.descriptorCount = 1;
+			Write.dstSet = Set;
+			Write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			Write.dstBinding = BindingIndex;
+			Write.dstArrayElement = ArrayIndex;
+			VkDescriptorImageInfo ImageInfo = {};
+			ImageInfo.imageView = static_cast<const VulkanImage&>(Image).GetDefaultView();
+			ImageInfo.imageLayout = ImageLayoutToVkImageLayout(LayoutAtTimeOfAccess);
+			ImageInfo.sampler = static_cast<const VulkanSampler&>(Sampler).GetSampler();
 			Write.pImageInfo = &ImageInfo;
 
 			vkUpdateDescriptorSets(Device->GetDevice(), 1, &Write, 0, nullptr);

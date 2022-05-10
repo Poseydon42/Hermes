@@ -39,6 +39,11 @@ namespace Hermes
 			 * For DescriptorType::SampledImage
 			 */
 			virtual void UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex, const Image& Image, ImageLayout LayoutAtTimeOfAccess) = 0;
+
+			/*
+			 * For DescriptorType::CombinedSampler
+			 */
+			virtual void UpdateWithImageAndSampler(uint32 BindingIndex, uint32 ArrayIndex, const Image& Image, const Sampler& Sampler, ImageLayout LayoutAtTimeOfAccess) = 0;
 		};
 
 		// TODO : other types
@@ -46,7 +51,8 @@ namespace Hermes
 		{
 			UniformBuffer,
 			Sampler,
-			SampledImage
+			SampledImage,
+			CombinedSampler
 		};
 
 		struct DescriptorBinding

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Math/Vector2.h"
 #include <cmath>
 
 namespace Hermes
@@ -15,6 +16,12 @@ namespace Hermes
 		Vector3(InternalType V = 0.0f);
 
 		Vector3(InternalType NX, InternalType NY, InternalType NZ);
+
+		template<typename OtherType>
+		explicit Vector3(Vector3<OtherType> V);
+
+		template<typename OtherVectorType, typename OtherValueType>
+		Vector3(Vector2<OtherVectorType> NXY, OtherValueType NZ);
 		
 		/**
 		 * Bitwise operators
@@ -91,6 +98,24 @@ namespace Hermes
 
 	template <typename InternalType>
 	Vector3<InternalType>::Vector3(InternalType NX, InternalType NY, InternalType NZ) : X(NX), Y(NY), Z(NZ) {}
+
+	template <typename InternalType>
+	template <typename OtherType>
+	Vector3<InternalType>::Vector3(Vector3<OtherType> V)
+		: X(static_cast<InternalType>(V.X))
+		, Y(static_cast<InternalType>(V.Y))
+		, Z(static_cast<InternalType>(V.Z))
+	{
+	}
+
+	template <typename InternalType>
+	template <typename OtherVectorType, typename OtherValueType>
+	Vector3<InternalType>::Vector3(Vector2<OtherVectorType> NXY, OtherValueType NZ)
+		: X(static_cast<InternalType>(NXY.X))
+		, Y(static_cast<InternalType>(NXY.Y))
+		, Z(static_cast<InternalType>(NZ))
+	{
+	}
 
 	template <typename InternalType>
 	Vector3<InternalType> Vector3<InternalType>::operator+(const Vector3& V) const

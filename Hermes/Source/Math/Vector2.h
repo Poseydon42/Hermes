@@ -16,6 +16,9 @@ namespace Hermes
 
 		Vector2(InternalType NX, InternalType NY);
 
+		template<typename OtherType>
+		explicit Vector2(Vector2<OtherType> Other);
+
 		/**
 		 * Bitwise operators
 		 */
@@ -87,6 +90,14 @@ namespace Hermes
 
 	template <typename InternalType>
 	Vector2<InternalType>::Vector2(InternalType NX, InternalType NY) : X(NX), Y(NY) {}
+
+	template <typename InternalType>
+	template <typename OtherType>
+	Vector2<InternalType>::Vector2(Vector2<OtherType> Other)
+		: X(static_cast<InternalType>(Other.X))
+		, Y(static_cast<InternalType>(Other.Y))
+	{
+	}
 
 	template <typename InternalType>
 	Vector2<InternalType> Vector2<InternalType>::operator+(const Vector2& V) const

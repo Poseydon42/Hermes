@@ -10,6 +10,7 @@
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
+#include "Scene/Camera.h"
 
 namespace Hermes
 {
@@ -155,18 +156,17 @@ namespace Hermes
 		if (ResourcesWereRecreated)
 			RecreatePipeline();
 
+		auto& CurrentCamera = Scene.GetActiveCamera();
+
 		PerFrameSceneUBO SceneUBOData;
-		auto PerspectiveMatrix = Mat4::Perspective(
-			VerticalFOV, static_cast<float>(Swapchain->GetSize().X) / static_cast<float>(Swapchain->GetSize().Y),
-			NearPlane, FarPlane);
-		SceneUBOData.ViewProjection = PerspectiveMatrix * Scene.GetViewMatrix();
+		SceneUBOData.ViewProjection = CurrentCamera.BuildViewProjectionMatrix();
 
 		auto SceneUBOMemory = SceneDataUniformBuffer->Map();
 		memcpy(SceneUBOMemory, &SceneUBOData, sizeof(SceneUBOData));
 		SceneDataUniformBuffer->Unmap();
 
 		PerFrameLightingUBO LightingUBOData;
-		LightingUBOData.CameraPosition = Scene.GetCameraPosition();
+		LightingUBOData.CameraPosition = Vec4(CurrentCamera.GetLocation(), 1.0f);
 		LightingUBOData.PointLightCount = static_cast<uint32>(Scene.GetPointLights().size());
 		LightingUBOData.AmbientLightingCoefficient = DefaultAmbientLightingCoefficient;
 		if (Scene.GetPointLights().size() > MaxPointLightCount)

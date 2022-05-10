@@ -75,10 +75,6 @@ namespace Hermes
 		static constexpr RenderInterface::DataFormat ColorAttachmentFormat = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
 		static constexpr RenderInterface::DataFormat DepthAttachmentFormat = RenderInterface::DataFormat::D32SignedFloat;
 
-		static constexpr float VerticalFOV = 50.0f;
-		static constexpr float NearPlane = 0.1f;
-		static constexpr float FarPlane = 1000.0f;
-
 		void GraphicsPassCallback(RenderInterface::CommandBuffer& CommandBuffer, const Scene& Scene, bool ResourcesWereRecreated);
 
 		void RecreatePipeline();

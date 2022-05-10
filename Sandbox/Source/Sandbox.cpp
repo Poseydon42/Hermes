@@ -8,6 +8,8 @@
 #include "Core/Application/InputEngine.h"
 #include "Core/Application/Event.h"
 #include "Math/Vector.h"
+#include "RenderingEngine/Scene/FPSCamera.h"
+#include "RenderInterface/GenericRenderInterface/Swapchain.h"
 
 class SandboxApp : public Hermes::IApplication
 {
@@ -27,7 +29,7 @@ public:
 		std::shared_ptr<Hermes::Material> PBRMaterial = std::make_shared<Hermes::Material>(std::vector{ AlbedoTexture, RoughnessTexture, MetallicTexture });
 		Hermes::MeshProxy SphereMeshProxy =
 		{
-			Hermes::Mat4::Translation(Hermes::Vec3{ 0.0f, 0.0f, 10.0f }),
+			Hermes::Mat4::Translation(SphereLocation),
 			*SphereMeshBuffer,
 			PBRMaterial
 		};
@@ -35,8 +37,13 @@ public:
 
 		Hermes::PointLightProxy PointLight = {};
 		PointLight.Color = { 1.0f, 1.0f, 0.9f, 200.0f };
-		PointLight.Position = { 0.0f, 3.0f, 0.0f, 0.0f };
+		PointLight.Position = { 0.0f, 3.0f, 3.0f, 0.0f };
 		Hermes::GGameLoop->GetScene().AddPointLight(PointLight);
+
+		Camera = std::make_unique<Hermes::FPSCamera>(
+			Hermes::Vec3(0.0f), 0.0f, 0.0f, 0.5f, 25.0f, 50.0f,
+			Hermes::Vec2(Hermes::Renderer::Get().GetSwapchain().GetSize()), true);
+		Hermes::GGameLoop->GetScene().ChangeActiveCamera(Camera);
 
 		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe<SandboxApp, &SandboxApp::KeyEventHandler>(Hermes::KeyEvent::GetStaticType(), this);
 
@@ -46,39 +53,19 @@ public:
 	void Run(float DeltaTime) override
 	{
 		const auto& InputEngine = Hermes::GGameLoop->GetInputEngine();
-
-		static constexpr float CameraRotationSpeed = 150.0f;
-		Hermes::Vec2 MouseDelta = InputEngine.GetDeltaMousePosition();
-		MouseDelta = MouseDelta.SafeNormalize() * DeltaTime * CameraRotationSpeed * Hermes::Vec2 { 1.0f, -1.0f };
-		CameraPitch = Hermes::Math::Clamp(-85.0f, 85.0f, CameraPitch + MouseDelta.Y);
-		CameraYaw += MouseDelta.X;
-		CameraYaw = fmod(CameraYaw, 360.0f);
-		if (CameraYaw > 180.0f)
-			CameraYaw = 360.0f - CameraYaw;
-		if (CameraYaw < -180.0f)
-			CameraYaw = 360.0f + CameraYaw;
-		Hermes::Vec3 CameraForward;
-		CameraForward.X = -Hermes::Math::Sin(Hermes::Math::Radians(CameraYaw));
-		CameraForward.Y = Hermes::Math::Sin(Hermes::Math::Radians(CameraPitch));
-		CameraForward.Z = Hermes::Math::Cos(Hermes::Math::Radians(CameraYaw)) * Hermes::Math::Cos(Hermes::Math::Radians(CameraPitch));
-		CameraForward.Normalize();
-		Hermes::Vec3 GlobalUp = { 0.0f, 1.0f, 0.0f };
-		Hermes::Vec3 CameraRight = (GlobalUp ^ CameraForward).Normalize();
 		
-		Hermes::Vec3 DeltaCameraPosition = {};
+		Hermes::Vec2 CameraMovementInput = {};
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::W))
-			DeltaCameraPosition += CameraForward;
+			CameraMovementInput.X += 1.0f;
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::S))
-			DeltaCameraPosition -= CameraForward;
+			CameraMovementInput.X -= 1.0f;
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::D))
-			DeltaCameraPosition += -CameraRight;
+			CameraMovementInput.Y += 1.0f;
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::A))
-			DeltaCameraPosition -= -CameraRight;
-		DeltaCameraPosition.SafeNormalize();
-		DeltaCameraPosition *= DeltaTime * 10.0f;
-		CameraPos += DeltaCameraPosition;
+			CameraMovementInput.Y -= 1.0f;
 
-		Hermes::GGameLoop->GetScene().UpdateCameraTransform(CameraPos, CameraPitch, CameraYaw);
+		Camera->ApplyMovementInput(CameraMovementInput, DeltaTime);
+		Camera->ApplyRotationInput(InputEngine.GetDeltaMousePosition(), DeltaTime);
 
 		if (AnisotropyChanged)
 		{
@@ -108,7 +95,7 @@ public:
 		auto RotationMatrix4 = Hermes::Mat4(RotationMatrix);
 		RotationMatrix4[3][3] = 1.0f;
 		const_cast<Hermes::MeshProxy&>(Hermes::GGameLoop->GetScene().GetMeshes()[0]).TransformationMatrix =
-			Hermes::Mat4::Translation(Hermes::Vec3{ 0.0f, 0.0f, 10.0f }) * RotationMatrix4;
+			Hermes::Mat4::Translation(SphereLocation) * RotationMatrix4;
 	}
 
 	void Shutdown() override
@@ -116,9 +103,9 @@ public:
 	}
 
 private:
-	Hermes::Vec3 CameraPos = {0.0f, 0.0f, 0.0f};
-	float CameraPitch = 0.0f, CameraYaw = 0.0f;
 	bool AnisotropyEnabled = false, AnisotropyChanged = false;
+	std::shared_ptr<Hermes::FPSCamera> Camera;
+	const Hermes::Vec3 SphereLocation = Hermes::Vec3(0.0f, 0.0f, 10.0f);
 
 	void KeyEventHandler(const Hermes::IEvent& Event)
 	{

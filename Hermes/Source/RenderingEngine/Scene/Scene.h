@@ -5,6 +5,8 @@
 
 namespace Hermes
 {
+	class Camera;
+
 	/*
 	 * NOTE : this all is 'the beginning' of a long looong journey
 	 * This *will* be rewritten many times and currently is done only for testing
@@ -20,11 +22,9 @@ namespace Hermes
 
 		void AddPointLight(PointLightProxy Proxy);
 
-		void UpdateCameraTransform(Vec3 Position, float Pitch, float Yaw);
+		void ChangeActiveCamera(std::shared_ptr<Camera> NewCamera);
 
-		Mat4 GetViewMatrix() const;
-
-		Vec4 GetCameraPosition() const;
+		Camera& GetActiveCamera() const;
 
 		const std::vector<MeshProxy>& GetMeshes() const;
 
@@ -34,7 +34,6 @@ namespace Hermes
 		std::vector<MeshProxy> Meshes;
 		std::vector<PointLightProxy> PointLights;
 
-		Vec3 CameraPosition;
-		Vec3 CameraDirection;
+		std::shared_ptr<Camera> ActiveCamera;
 	};
 }

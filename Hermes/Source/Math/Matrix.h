@@ -58,7 +58,7 @@ namespace Hermes
 		 * Provides a perspective projection matrix
 		 * Expects NDC range for Z axis to be [0;1]
 		 * Expects near and far clip plane to be positive
-		 * Expects camera to be looking into +Z direction(e.g. will clip any vertices which Z coordinate is not in range [near;far])
+		 * Expects camera to be looking into -Z direction
 		 */
 		template<typename T>
 		static Matrix<4, 4, InternalType> Perspective(T VerticalFOV, T AspectRatio, T NearClipPlane, T FarClipPlane);
@@ -284,7 +284,7 @@ namespace Hermes
 		auto Result = Matrix<4, 4, InternalType>::Identity();
 		auto XAxis = (Up ^ Forward).SafeNormalize();
 		auto YAxis = Up.SafeNormalize();
-		auto ZAxis = Forward.SafeNormalize();
+		auto ZAxis = -Forward.SafeNormalize();
 
 		Result[0][3] = -(Origin | XAxis);
 		Result[1][3] = -(Origin | YAxis);
@@ -311,13 +311,13 @@ namespace Hermes
 	{
 		Mat4 Result = { 0.0f };
 
-		T CotanHalfFOV = Math::Cotan(VerticalFOV / static_cast<T>(2));
+		T CotanHalfFOV = Math::Cotan(Math::Radians(VerticalFOV) / static_cast<T>(2));
 
 		Result[0][0] = CotanHalfFOV / AspectRatio;
-		Result[1][1] = CotanHalfFOV;
-		Result[2][2] = FarClipPlane / (FarClipPlane - NearClipPlane);
-		Result[2][3] = -FarClipPlane * NearClipPlane / (FarClipPlane - NearClipPlane);
-		Result[3][2] = static_cast<T>(1);
+		Result[1][1] = -CotanHalfFOV;
+		Result[2][2] = NearClipPlane / (FarClipPlane - NearClipPlane);
+		Result[2][3] = FarClipPlane * NearClipPlane / (FarClipPlane - NearClipPlane);
+		Result[3][2] = static_cast<T>(-1);
 
 		return Result;
 	}

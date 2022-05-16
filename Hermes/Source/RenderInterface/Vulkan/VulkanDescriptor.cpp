@@ -116,24 +116,27 @@ namespace Hermes
 
 		std::shared_ptr<RenderInterface::DescriptorSet> VulkanDescriptorSetPool::CreateDescriptorSet(std::shared_ptr<RenderInterface::DescriptorSetLayout> Layout)
 		{
-			return std::make_shared<VulkanDescriptorSet>(Device, shared_from_this(), std::reinterpret_pointer_cast<VulkanDescriptorSetLayout>(Layout), SupportIndividualDeallocations);
+			VkDescriptorSetAllocateInfo AllocateInfo = {};
+			AllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			AllocateInfo.descriptorPool = Pool;
+			AllocateInfo.descriptorSetCount = 1; // TODO : multi-set multi-layout constructor of some kind
+			VkDescriptorSetLayout DescriptorLayout = static_cast<const VulkanDescriptorSetLayout&>(*Layout).GetDescriptorSetLayout();
+			AllocateInfo.pSetLayouts = &DescriptorLayout;
+
+			VkDescriptorSet AllocatedSet = VK_NULL_HANDLE;
+			if (vkAllocateDescriptorSets(Device->GetDevice(), &AllocateInfo, &AllocatedSet) != VK_SUCCESS)
+				return nullptr;
+			return std::make_shared<VulkanDescriptorSet>(Device, shared_from_this(), std::reinterpret_pointer_cast<VulkanDescriptorSetLayout>(Layout), AllocatedSet, SupportIndividualDeallocations);
 		}
 
-		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout, bool InFreeInDescriptor)
+		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout, VkDescriptorSet InSet, bool InFreeInDescriptor)
 			: Device(std::move(InDevice))
 			, Pool(std::move(InPool))
 			, Layout(std::move(InLayout))
-			, Set(VK_NULL_HANDLE)
+			, Set(InSet)
 			, FreeInDestructor(InFreeInDescriptor)
 		{
-			VkDescriptorSetAllocateInfo AllocateInfo = {};
-			AllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-			AllocateInfo.descriptorPool = Pool->GetDescriptorPool();
-			AllocateInfo.descriptorSetCount = 1; // TODO : multi-set multi-layout constructor of some kind
-			VkDescriptorSetLayout DescriptorLayout = Layout->GetDescriptorSetLayout();
-			AllocateInfo.pSetLayouts = &DescriptorLayout;
-
-			VK_CHECK_RESULT(vkAllocateDescriptorSets(Device->GetDevice(), &AllocateInfo, &Set));
+			
 		}
 
 		VulkanDescriptorSet::~VulkanDescriptorSet()

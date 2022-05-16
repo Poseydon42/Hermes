@@ -6,7 +6,6 @@
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "Vulkan.h"
-#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 
 namespace Hermes
 {
@@ -61,7 +60,7 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanDescriptorSet)
 
 		public:
-			VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout, bool InFreeInDestructor);
+			VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout, VkDescriptorSet InSet, bool InFreeInDestructor);
 
 			~VulkanDescriptorSet() override;
 			VulkanDescriptorSet(VulkanDescriptorSet&& Other);

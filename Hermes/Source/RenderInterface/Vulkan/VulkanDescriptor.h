@@ -37,7 +37,7 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanDescriptorSetPool)
 
 		public:
-			VulkanDescriptorSetPool(std::shared_ptr<const VulkanDevice> InDevice, uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools);
+			VulkanDescriptorSetPool(std::shared_ptr<const VulkanDevice> InDevice, uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools, bool InSupportIndividualDeallocations);
 
 			~VulkanDescriptorSetPool() override;
 			VulkanDescriptorSetPool(VulkanDescriptorSetPool&& Other);
@@ -53,6 +53,7 @@ namespace Hermes
 			std::shared_ptr<const VulkanDevice> Device;
 			uint32 NumSets;
 			VkDescriptorPool Pool;
+			bool SupportIndividualDeallocations;
 		};
 
 		class HERMES_API VulkanDescriptorSet : public RenderInterface::DescriptorSet
@@ -60,7 +61,7 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanDescriptorSet)
 
 		public:
-			VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout);
+			VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout, bool InFreeInDestructor);
 
 			~VulkanDescriptorSet() override;
 			VulkanDescriptorSet(VulkanDescriptorSet&& Other);
@@ -81,6 +82,7 @@ namespace Hermes
 			std::shared_ptr<VulkanDescriptorSetPool> Pool;
 			std::shared_ptr<VulkanDescriptorSetLayout> Layout;
 			VkDescriptorSet Set;
+			bool FreeInDestructor;
 		};
 	}
 }

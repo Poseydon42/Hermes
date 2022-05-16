@@ -71,7 +71,7 @@ namespace Hermes
 
 			virtual std::shared_ptr<DescriptorSetLayout> CreateDescriptorSetLayout(const std::vector<DescriptorBinding>& Bindings) const = 0;
 			
-			virtual std::shared_ptr<DescriptorSetPool> CreateDescriptorSetPool(uint32 NumberOfSets, const std::vector<SubpoolDescription>& Subpools) const = 0;
+			virtual std::shared_ptr<DescriptorSetPool> CreateDescriptorSetPool(uint32 NumberOfSets, const std::vector<SubpoolDescription>& Subpools, bool SupportIndividualDeallocations = false) const = 0;
 
 			virtual std::shared_ptr<Sampler> CreateSampler(const SamplerDescription& Description) const = 0;
 

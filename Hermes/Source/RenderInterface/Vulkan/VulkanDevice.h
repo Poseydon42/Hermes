@@ -57,7 +57,7 @@ namespace Hermes
 				const std::vector<RenderInterface::DescriptorBinding>& Bindings) const override;
 
 			std::shared_ptr<RenderInterface::DescriptorSetPool> CreateDescriptorSetPool(
-				uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools) const override;
+				uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools, bool SupportIndividualDeallocations = false) const override;
 
 			std::shared_ptr<RenderInterface::Sampler> CreateSampler(
 				const RenderInterface::SamplerDescription& Description) const override;

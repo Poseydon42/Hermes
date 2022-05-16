@@ -70,10 +70,11 @@ namespace Hermes
 			return *this;
 		}
 
-		VulkanDescriptorSetPool::VulkanDescriptorSetPool(std::shared_ptr<const VulkanDevice> InDevice, uint32 InNumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools)
+		VulkanDescriptorSetPool::VulkanDescriptorSetPool(std::shared_ptr<const VulkanDevice> InDevice, uint32 InNumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools, bool InSupportIndividualDeallocations)
 			: Device(std::move(InDevice))
 			, NumSets(InNumberOfSets)
 			, Pool(VK_NULL_HANDLE)
+			, SupportIndividualDeallocations(InSupportIndividualDeallocations)
 		{
 			VkDescriptorPoolCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -88,7 +89,7 @@ namespace Hermes
 			}
 			CreateInfo.pPoolSizes = VulkanPoolSizes.data();
 			CreateInfo.poolSizeCount = static_cast<uint32>(VulkanPoolSizes.size());
-			CreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT; // TODO : do we really need it?
+			CreateInfo.flags = SupportIndividualDeallocations ? VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT : 0;
 
 			VK_CHECK_RESULT(vkCreateDescriptorPool(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Pool))
 		}
@@ -108,20 +109,22 @@ namespace Hermes
 			std::swap(Device, Other.Device);
 			std::swap(NumSets, Other.NumSets);
 			std::swap(Pool, Other.Pool);
+			std::swap(SupportIndividualDeallocations, Other.SupportIndividualDeallocations);
 
 			return *this;
 		}
 
 		std::shared_ptr<RenderInterface::DescriptorSet> VulkanDescriptorSetPool::CreateDescriptorSet(std::shared_ptr<RenderInterface::DescriptorSetLayout> Layout)
 		{
-			return std::make_shared<VulkanDescriptorSet>(Device, shared_from_this(), std::reinterpret_pointer_cast<VulkanDescriptorSetLayout>(Layout));
+			return std::make_shared<VulkanDescriptorSet>(Device, shared_from_this(), std::reinterpret_pointer_cast<VulkanDescriptorSetLayout>(Layout), SupportIndividualDeallocations);
 		}
 
-		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout)
+		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout, bool InFreeInDescriptor)
 			: Device(std::move(InDevice))
 			, Pool(std::move(InPool))
 			, Layout(std::move(InLayout))
 			, Set(VK_NULL_HANDLE)
+			, FreeInDestructor(InFreeInDescriptor)
 		{
 			VkDescriptorSetAllocateInfo AllocateInfo = {};
 			AllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -135,7 +138,9 @@ namespace Hermes
 
 		VulkanDescriptorSet::~VulkanDescriptorSet()
 		{
-			vkFreeDescriptorSets(Device->GetDevice(), Pool->GetDescriptorPool(), 1, &Set);
+			if (FreeInDestructor)
+				vkFreeDescriptorSets(Device->GetDevice(), Pool->GetDescriptorPool(), 1, &Set);
+			Set = VK_NULL_HANDLE;
 		}
 
 		VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSet&& Other)
@@ -149,6 +154,7 @@ namespace Hermes
 			std::swap(Pool, Other.Pool);
 			std::swap(Layout, Other.Layout);
 			std::swap(Set, Other.Set);
+			std::swap(FreeInDestructor, Other.FreeInDestructor);
 
 			return *this;
 		}

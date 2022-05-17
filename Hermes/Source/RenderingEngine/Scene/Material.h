@@ -44,7 +44,6 @@ namespace Hermes
 		static constexpr uint32 TexturesPerMaterial = static_cast<uint32>(TextureType::Count_);
 
 		static float DefaultAnisotropyLevel;
-		static std::shared_ptr<RenderInterface::DescriptorSetPool> MaterialDescriptorPool;
 		static std::shared_ptr<RenderInterface::DescriptorSetLayout> MaterialDescriptorLayout;
 		static std::vector<Material*> Instances;
 		
@@ -52,6 +51,5 @@ namespace Hermes
 
 		static std::shared_ptr<RenderInterface::DescriptorSet> AllocateDescriptor();
 		static void CreateDescriptorSetLayout();
-		static void CreateDescriptorSetPool();
 	};
 }

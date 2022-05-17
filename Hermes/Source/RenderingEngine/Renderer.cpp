@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include "AssetSystem/MeshAsset.h"
+#include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Scene/Scene.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
@@ -48,7 +49,7 @@ namespace Hermes
 		RenderInterface::SubpoolDescription PerFrameUBOSubpoolDesc;
 		PerFrameUBOSubpoolDesc.Count = NumberOfBackBuffers * 2;
 		PerFrameUBOSubpoolDesc.Type = RenderInterface::DescriptorType::UniformBuffer;
-		PerFrameUBODescriptorPool = RenderingDevice->CreateDescriptorSetPool(NumberOfBackBuffers, { PerFrameUBOSubpoolDesc });
+		DescriptorAllocator = std::make_shared<class DescriptorAllocator>(RenderingDevice);
 
 		VertexShader = RenderingDevice->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", RenderInterface::ShaderType::VertexShader);
 		FragmentShader = RenderingDevice->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", RenderInterface::ShaderType::FragmentShader);
@@ -59,7 +60,7 @@ namespace Hermes
 		LightingDataUniformBuffer = RenderingDevice->CreateBuffer(
 				sizeof(PerFrameLightingUBO),
 				RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::UniformBuffer);
-		PerFrameDataDescriptor = PerFrameUBODescriptorPool->CreateDescriptorSet(PerFrameUBODescriptorLayout);
+		PerFrameDataDescriptor = DescriptorAllocator->Allocate(PerFrameUBODescriptorLayout);
 		HERMES_ASSERT_LOG(PerFrameDataDescriptor, L"Failed to allocate per frame data descriptor set");
 		PerFrameDataDescriptor->UpdateWithBuffer(0, 0, *SceneDataUniformBuffer, 0, sizeof(PerFrameSceneUBO));
 		PerFrameDataDescriptor->UpdateWithBuffer(1, 0, *LightingDataUniformBuffer, 0, sizeof(PerFrameLightingUBO));
@@ -150,6 +151,11 @@ namespace Hermes
 	RenderInterface::Swapchain& Renderer::GetSwapchain()
 	{
 		return *Swapchain;
+	}
+
+	DescriptorAllocator& Renderer::GetDescriptorAllocator()
+	{
+		return *DescriptorAllocator;
 	}
 
 	void Renderer::GraphicsPassCallback(RenderInterface::CommandBuffer& CommandBuffer, const Scene& Scene, bool ResourcesWereRecreated)

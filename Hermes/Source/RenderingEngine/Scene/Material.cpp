@@ -1,5 +1,6 @@
 ﻿#include "Material.h"
 
+#include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderInterface/GenericRenderInterface/Sampler.h"
 #include "RenderInterface/GenericRenderInterface/Shader.h"
@@ -10,7 +11,6 @@ namespace Hermes
 {
 	float                                                 Material::DefaultAnisotropyLevel;
 	std::vector<Material*>                                Material::Instances;
-	std::shared_ptr<RenderInterface::DescriptorSetPool>   Material::MaterialDescriptorPool;
 	std::shared_ptr<RenderInterface::DescriptorSetLayout> Material::MaterialDescriptorLayout;
 
 	Material::Material(std::vector<std::shared_ptr<Texture>> InTextures)
@@ -94,17 +94,7 @@ namespace Hermes
 		{
 			CreateDescriptorSetLayout();
 		}
-		
-		if (!MaterialDescriptorPool)
-		{
-			CreateDescriptorSetPool();
-		}
-
-		// TODO : currently this code crashes inside Vulkan rendering abstraction if
-		// we fail to allocate descriptor set due to descriptor set pool being full.
-		// Instead, we should be able to track whether descriptor pools get full and in
-		// such case create more of them and successfully allocate further descriptor sets
-		return MaterialDescriptorPool->CreateDescriptorSet(MaterialDescriptorLayout);
+		return Renderer::Get().GetDescriptorAllocator().Allocate(MaterialDescriptorLayout);
 	}
 
 	void Material::CreateDescriptorSetLayout()
@@ -146,24 +136,6 @@ namespace Hermes
 			}
 		};
 		MaterialDescriptorLayout = RenderingDevice.CreateDescriptorSetLayout(PerMaterialDataBindings);
-	}
-
-	void Material::CreateDescriptorSetPool()
-	{
-		auto& RenderingDevice = Renderer::Get().GetActiveDevice();
-
-		std::vector<RenderInterface::SubpoolDescription> MaterialDescriptorSubpools =
-		{
-			{
-				/*Type*/  RenderInterface::DescriptorType::Sampler,
-				/*Count*/ MaterialDescriptorSetAllocationGranularity * SamplersPerMaterial
-			},
-			{
-				/*Type*/  RenderInterface::DescriptorType::SampledImage,
-				/*Count*/ MaterialDescriptorSetAllocationGranularity * TexturesPerMaterial
-			}
-		};
-		MaterialDescriptorPool = RenderingDevice.CreateDescriptorSetPool(MaterialDescriptorSetAllocationGranularity, MaterialDescriptorSubpools);
 	}
 
 	void Material::UpdateSampler()

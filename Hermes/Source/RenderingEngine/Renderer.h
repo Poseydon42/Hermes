@@ -12,6 +12,7 @@
 
 namespace Hermes
 {
+	class DescriptorAllocator;
 	class Scene;
 	class IPlatformWindow;
 
@@ -35,6 +36,8 @@ namespace Hermes
 
 		RenderInterface::Swapchain& GetSwapchain();
 
+		DescriptorAllocator& GetDescriptorAllocator();
+
 	private:
 		RenderInterface::DeviceProperties GPUProperties;
 		GraphicsSettings CurrentSettings;
@@ -43,7 +46,7 @@ namespace Hermes
 		std::shared_ptr<RenderInterface::Swapchain> Swapchain;
 
 		std::shared_ptr<RenderInterface::DescriptorSetLayout> PerFrameUBODescriptorLayout;
-		std::shared_ptr<RenderInterface::DescriptorSetPool> PerFrameUBODescriptorPool;
+		std::shared_ptr<DescriptorAllocator> DescriptorAllocator;
 
 		std::shared_ptr<RenderInterface::Buffer> SceneDataUniformBuffer, LightingDataUniformBuffer;
 		std::shared_ptr<RenderInterface::DescriptorSet> PerFrameDataDescriptor;

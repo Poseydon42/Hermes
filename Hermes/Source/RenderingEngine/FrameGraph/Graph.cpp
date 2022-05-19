@@ -102,7 +102,7 @@ namespace Hermes
 			CommandBuffer->BeginRenderPass(Pass.second.Pass, Pass.second.RenderTarget, Pass.second.ClearColors);
 
 			bool ResourcesWereRecreatedTmp = ResourcesWereRecreated; // TODO : better way to fix this maybe?
-			Pass.second.Callback(*CommandBuffer, Scene, std::move(ResourcesWereRecreatedTmp));
+			Pass.second.Callback(*CommandBuffer, *Pass.second.Pass, Scene, std::move(ResourcesWereRecreatedTmp));
 			ResourcesWereRecreated = false;
 
 			CommandBuffer->EndRenderPass();

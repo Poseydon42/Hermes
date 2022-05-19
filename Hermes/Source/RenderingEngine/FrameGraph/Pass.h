@@ -2,14 +2,10 @@
 
 #include "Core/Core.h"
 #include "Core/Delegate/Delegate.h"
+#include "RenderInterface/GenericRenderInterface/Forward.h"
 
 namespace Hermes
 {
-	namespace RenderInterface
-	{
-		class CommandBuffer;
-	}
-
 	class Scene;
 	struct Source;
 	struct Drain;
@@ -17,9 +13,9 @@ namespace Hermes
 	struct PassDesc
 	{
 		/*
-		 * void Callback(RenderInterface::CommandBuffer& TargetCommandBuffer, const Scene& Scene, bool ResourcesWereChanged)
+		 * void Callback(RenderInterface::CommandBuffer& TargetCommandBuffer, const RenderInterface::RenderPass& PassInstance, const Scene& Scene, bool ResourcesWereChanged)
 		 */
-		using RenderPassCallbackType = TDelegate<void, RenderInterface::CommandBuffer&, const Scene&, bool>;
+		using RenderPassCallbackType = TDelegate<void, RenderInterface::CommandBuffer&, const RenderInterface::RenderPass&, const Scene&, bool>;
 		
 		std::vector<Drain> Drains;
 		std::vector<Source> Sources;

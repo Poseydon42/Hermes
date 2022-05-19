@@ -5,9 +5,7 @@
 #include <unordered_map>
 
 #include "Core/Core.h"
-#include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
-#include "RenderingEngine/Scene/Scene.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderInterface/GenericRenderInterface/Forward.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"

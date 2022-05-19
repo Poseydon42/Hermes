@@ -104,9 +104,8 @@ namespace Hermes
 			}
 		}
 		
-		VulkanPipeline::VulkanPipeline(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<RenderInterface::RenderPass> InRenderPass, const RenderInterface::PipelineDescription& Description)
+		VulkanPipeline::VulkanPipeline(std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::RenderPass& RenderPass, const RenderInterface::PipelineDescription& Description)
 			: Device(std::move(InDevice))
-			, RenderPass(std::reinterpret_pointer_cast<VulkanRenderPass>(InRenderPass)) // TODO : seems like a very dirty hack, maybe there's something better for this?
 			, Pipeline(VK_NULL_HANDLE)
 			, Layout(VK_NULL_HANDLE)
 		{
@@ -215,8 +214,8 @@ namespace Hermes
 
 			VkPipelineColorBlendStateCreateInfo ColorBlendCreateInfo = {};
 			std::vector<VkPipelineColorBlendAttachmentState> AttachmentBlendStates;
-			AttachmentBlendStates.reserve(RenderPass->GetColorAttachmentCount());
-			for (uint32 AttachmentIndex = 0; AttachmentIndex < RenderPass->GetColorAttachmentCount(); AttachmentIndex++)
+			AttachmentBlendStates.reserve(RenderPass.GetColorAttachmentCount());
+			for (uint32 AttachmentIndex = 0; AttachmentIndex < RenderPass.GetColorAttachmentCount(); AttachmentIndex++)
 			{
 				VkPipelineColorBlendAttachmentState NewAttachmentBlendState = {};
 				NewAttachmentBlendState.blendEnable = false;
@@ -241,7 +240,7 @@ namespace Hermes
 			CreateInfo.pColorBlendState = &ColorBlendCreateInfo;
 			CreateInfo.pDynamicState = nullptr; // TODO : implement
 			CreateInfo.layout = Layout;
-			CreateInfo.renderPass = RenderPass->GetRenderPass();
+			CreateInfo.renderPass = static_cast<const VulkanRenderPass&>(RenderPass).GetRenderPass();
 			CreateInfo.subpass = 0;
 			CreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 			CreateInfo.basePipelineIndex = -1;
@@ -263,7 +262,6 @@ namespace Hermes
 		VulkanPipeline& VulkanPipeline::operator=(VulkanPipeline&& Other)
 		{
 			std::swap(Pipeline, Other.Pipeline);
-			std::swap(RenderPass, Other.RenderPass);
 			std::swap(Layout, Other.Layout);
 			std::swap(Device, Other.Device);
 			return *this;

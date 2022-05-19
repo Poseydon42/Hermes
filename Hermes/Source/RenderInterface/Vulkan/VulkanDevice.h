@@ -46,7 +46,7 @@ namespace Hermes
 				const RenderInterface::RenderPassDescription& Description) const override;
 
 			std::shared_ptr<RenderInterface::Pipeline> CreatePipeline(
-				std::shared_ptr<RenderInterface::RenderPass> RenderPass,
+				const RenderInterface::RenderPass& RenderPass,
 				const RenderInterface::PipelineDescription& Description) const override;
 
 			std::shared_ptr<RenderInterface::RenderTarget> CreateRenderTarget(

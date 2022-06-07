@@ -25,9 +25,11 @@ namespace Hermes
 			VulkanDescriptorSetLayout& operator=(VulkanDescriptorSetLayout&& Other);
 
 			VkDescriptorSetLayout GetDescriptorSetLayout() const { return Layout; }
+			VkDescriptorType GetDescriptorType(uint32 BindingIndex) const { return DescriptorTypes[BindingIndex]; }
 
 		private:
 			std::shared_ptr<const VulkanDevice> Device;
+			std::vector<VkDescriptorType> DescriptorTypes;
 			VkDescriptorSetLayout Layout;
 		};
 
@@ -66,13 +68,13 @@ namespace Hermes
 			VulkanDescriptorSet(VulkanDescriptorSet&& Other);
 			VulkanDescriptorSet& operator=(VulkanDescriptorSet&& Other);
 
-			void UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size) override;
+			virtual void UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size) override;
 
-			void UpdateWithSampler(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Sampler& Sampler) override;
+			virtual void UpdateWithSampler(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Sampler& Sampler) override;
 
-			void UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Image& Image, RenderInterface::ImageLayout LayoutAtTimeOfAccess) override;
+			virtual void UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Image& Image, RenderInterface::ImageLayout LayoutAtTimeOfAccess) override;
 
-			void UpdateWithImageAndSampler(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Image& Image, const RenderInterface::Sampler& Sampler, RenderInterface::ImageLayout LayoutAtTimeOfAccess) override;
+			virtual void UpdateWithImageAndSampler(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Image& Image, const RenderInterface::Sampler& Sampler, RenderInterface::ImageLayout LayoutAtTimeOfAccess) override;
 
 			VkDescriptorSet GetDescriptorSet() const { return Set; }
 

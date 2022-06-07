@@ -34,6 +34,7 @@ namespace Hermes
 		{
 			std::vector<VkDescriptorSetLayoutBinding> VulkanBindings(Bindings.size());
 			auto VulkanBinding = VulkanBindings.begin();
+			DescriptorTypes.resize(Bindings.size());
 			for (const auto& Binding : Bindings)
 			{
 				VulkanBinding->binding = Binding.Index;
@@ -41,6 +42,8 @@ namespace Hermes
 				VulkanBinding->descriptorType = DescriptorTypeToVkDescriptorType(Binding.Type);
 				VulkanBinding->pImmutableSamplers = 0;
 				VulkanBinding->stageFlags = ShaderTypeToVkShaderStage(Binding.Shader);
+
+				DescriptorTypes[Binding.Index] = VulkanBinding->descriptorType;
 				++VulkanBinding;
 			}
 
@@ -65,6 +68,7 @@ namespace Hermes
 		VulkanDescriptorSetLayout& VulkanDescriptorSetLayout::operator=(VulkanDescriptorSetLayout&& Other)
 		{
 			std::swap(Device, Other.Device);
+			std::swap(DescriptorTypes, Other.DescriptorTypes);
 			std::swap(Layout, Other.Layout);
 
 			return *this;
@@ -168,8 +172,7 @@ namespace Hermes
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			Write.descriptorCount = 1;
 			Write.dstSet = Set;
-			// TODO : we currently assume it's uniform buffer because we don't implement other types, but sometime in future we will need to change this
-			Write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			Write.descriptorType = Layout->GetDescriptorType(BindingIndex);
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorBufferInfo BufferInfo;
@@ -187,7 +190,7 @@ namespace Hermes
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			Write.descriptorCount = 1;
 			Write.dstSet = Set;
-			Write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER; // TODO : see above
+			Write.descriptorType = Layout->GetDescriptorType(BindingIndex);
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorImageInfo ImageInfo = {};
@@ -203,7 +206,7 @@ namespace Hermes
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			Write.descriptorCount = 1;
 			Write.dstSet = Set;
-			Write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE; // TODO : see above
+			Write.descriptorType = Layout->GetDescriptorType(BindingIndex);
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorImageInfo ImageInfo = {};
@@ -220,7 +223,7 @@ namespace Hermes
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			Write.descriptorCount = 1;
 			Write.dstSet = Set;
-			Write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			Write.descriptorType = Layout->GetDescriptorType(BindingIndex);
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorImageInfo ImageInfo = {};

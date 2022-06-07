@@ -1,4 +1,4 @@
-﻿#include "GraphicsPass.h"
+﻿#include "GBufferPass.h"
 
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
@@ -68,7 +68,7 @@ namespace Hermes
 			DepthBufferDrain.ClearColor[1] =
 			DepthBufferDrain.ClearColor[2] =
 			DepthBufferDrain.ClearColor[3] = 1.0f;
-		DepthBufferDrain.Format = RenderInterface::DataFormat::D24UnsignedNormalizedS8UnsignedInteger;
+		DepthBufferDrain.Format = RenderInterface::DataFormat::D32SignedFloat;
 		DepthBufferDrain.Layout = RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
 		DepthBufferDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		DepthBufferDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
@@ -79,7 +79,11 @@ namespace Hermes
 		GBufferSource.Name = L"GBuffer";
 		GBufferSource.Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
 
-		Descriptor.Sources = { GBufferSource };
+		Source DepthBufferSource = {};
+		DepthBufferSource.Name = L"DepthBuffer";
+		DepthBufferSource.Format = RenderInterface::DataFormat::D32SignedFloat;
+
+		Descriptor.Sources = { GBufferSource, DepthBufferSource };
 	}
 
 	const PassDesc& GBufferPass::GetPassDescription() const
@@ -90,6 +94,7 @@ namespace Hermes
 	void GBufferPass::PassCallback(
 		RenderInterface::CommandBuffer& CommandBuffer,
 		const RenderInterface::RenderPass& PassInstance,
+		const std::vector<const RenderInterface::Image*>&,
 		const Scene& Scene, bool ResourcesWereRecreated)
 	{
 		if (ResourcesWereRecreated || !IsPipelineCreated)

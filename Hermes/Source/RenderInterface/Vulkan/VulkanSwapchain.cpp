@@ -183,7 +183,7 @@ namespace Hermes
 			Images.reserve(ImageCount);
 			for (uint32 Index = 0; Index < ImageCount; Index++)
 			{
-				Images.push_back(std::make_shared<VulkanImage>(Device, ImageHandles[Index], SwapchainFormat, Size));
+				Images.push_back(std::make_shared<VulkanImage>(Device, ImageHandles[Index], SwapchainFormat, Size, RenderInterface::ImageUsageType::ColorAttachment | RenderInterface::ImageUsageType::CopyDestination));
 			}
 		}
 	}

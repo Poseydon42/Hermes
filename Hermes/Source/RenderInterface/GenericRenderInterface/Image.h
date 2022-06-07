@@ -37,6 +37,8 @@ namespace Hermes
 			virtual DataFormat GetDataFormat() const = 0;
 
 			virtual uint32 GetMipLevelsCount() const = 0;
+
+			virtual ImageUsageType GetUsageFlags() const = 0;
 		};
 	}
 }

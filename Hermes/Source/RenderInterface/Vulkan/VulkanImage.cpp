@@ -8,7 +8,7 @@ namespace Hermes
 	namespace Vulkan
 	{
 
-		VulkanImage::VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat, Vec2ui InSize)
+		VulkanImage::VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat, Vec2ui InSize, RenderInterface::ImageUsageType InUsage)
 			: Device(std::move(InDevice))
 			, Handle(InImage)
 			, Size(InSize)
@@ -17,11 +17,12 @@ namespace Hermes
 			, Allocation(VK_NULL_HANDLE)
 			, IsOwned(false)
 			, MipLevelCount(1)
+			, Usage(InUsage)
 		{
 			CreateDefaultView();
 		}
 
-		VulkanImage::VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, Vec2ui InSize, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat InFormat, uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout)
+		VulkanImage::VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, Vec2ui InSize, RenderInterface::ImageUsageType InUsage, RenderInterface::DataFormat InFormat, uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout)
 			: Device(std::move(InDevice))
 			, Handle(VK_NULL_HANDLE)
 			, Size(InSize)
@@ -30,6 +31,7 @@ namespace Hermes
 			, Allocation(VK_NULL_HANDLE)
 			, IsOwned(false)
 			, MipLevelCount(InMipLevels)
+			, Usage(InUsage)
 		{
 			VkImageCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -45,21 +47,21 @@ namespace Hermes
 			CreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL; // TODO
 			CreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-			if (static_cast<bool>(Usage & RenderInterface::ImageUsageType::Sampled))
+			if (static_cast<bool>(InUsage & RenderInterface::ImageUsageType::Sampled))
 				CreateInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
-			if (static_cast<bool>(Usage & RenderInterface::ImageUsageType::ColorAttachment))
+			if (static_cast<bool>(InUsage & RenderInterface::ImageUsageType::ColorAttachment))
 				CreateInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-			if (static_cast<bool>(Usage & RenderInterface::ImageUsageType::DepthStencilAttachment))
+			if (static_cast<bool>(InUsage & RenderInterface::ImageUsageType::DepthStencilAttachment))
 				CreateInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-			if (static_cast<bool>(Usage & RenderInterface::ImageUsageType::InputAttachment))
-				CreateInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-			if (static_cast<bool>(Usage & RenderInterface::ImageUsageType::CopySource))
+			if (static_cast<bool>(InUsage & RenderInterface::ImageUsageType::InputAttachment))
+				CreateInfo.usage |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+			if (static_cast<bool>(InUsage & RenderInterface::ImageUsageType::CopySource))
 				CreateInfo.usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			if (static_cast<bool>(Usage & RenderInterface::ImageUsageType::CopyDestination))
+			if (static_cast<bool>(InUsage & RenderInterface::ImageUsageType::CopyDestination))
 				CreateInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
 			VmaAllocationCreateInfo AllocationInfo = {};
-			if (static_cast<bool>(Usage & RenderInterface::ImageUsageType::CPUAccessible))
+			if (static_cast<bool>(InUsage & RenderInterface::ImageUsageType::CPUAccessible))
 				AllocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 			else
 				AllocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
@@ -93,6 +95,7 @@ namespace Hermes
 			std::swap(DefaultView, Other.DefaultView);
 			std::swap(Allocation, Other.Allocation);
 			std::swap(MipLevelCount, Other.MipLevelCount);
+			std::swap(Usage, Other.Usage);
 			
 			return *this;
 		}
@@ -110,6 +113,11 @@ namespace Hermes
 		uint32 VulkanImage::GetMipLevelsCount() const
 		{
 			return MipLevelCount;
+		}
+
+		RenderInterface::ImageUsageType VulkanImage::GetUsageFlags() const
+		{
+			return Usage;
 		}
 
 		VkImage VulkanImage::GetImage() const

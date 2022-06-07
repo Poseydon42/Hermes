@@ -22,22 +22,24 @@ namespace Hermes
 			/*
 			 * Non-owning constructor
 			 */
-			VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat, Vec2ui InSize);
+			VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat, Vec2ui InSize, RenderInterface::ImageUsageType InUsage);
 
 			/*
 			 * Owning constructor
 			 */
-			VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, Vec2ui InSize, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat InFormat, uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout);
+			VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, Vec2ui InSize, RenderInterface::ImageUsageType InUsage, RenderInterface::DataFormat InFormat, uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout);
 
 			~VulkanImage() override;
 			VulkanImage(VulkanImage&& Other);
 			VulkanImage& operator=(VulkanImage&& Other);
 
-			Vec2ui GetSize() const override;
-			
-			RenderInterface::DataFormat GetDataFormat() const override;
+			virtual Vec2ui GetSize() const override;
 
-			uint32 GetMipLevelsCount() const override;
+			virtual RenderInterface::DataFormat GetDataFormat() const override;
+
+			virtual uint32 GetMipLevelsCount() const override;
+
+			virtual RenderInterface::ImageUsageType GetUsageFlags() const override;
 
 			VkImage GetImage() const;
 
@@ -56,6 +58,7 @@ namespace Hermes
 			VmaAllocation Allocation;
 			bool IsOwned;
 			uint32 MipLevelCount;
+			RenderInterface::ImageUsageType Usage;
 
 			void CreateDefaultView();
 		};

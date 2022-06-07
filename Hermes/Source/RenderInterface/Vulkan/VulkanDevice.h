@@ -43,7 +43,7 @@ namespace Hermes
 				const String& Path, RenderInterface::ShaderType Type) const override;
 			
 			std::shared_ptr<RenderInterface::RenderPass> CreateRenderPass(
-				const RenderInterface::RenderPassDescription& Description) const override;
+				const std::vector<RenderInterface::RenderPassAttachment>& Attachments) const override;
 
 			std::shared_ptr<RenderInterface::Pipeline> CreatePipeline(
 				const RenderInterface::RenderPass& RenderPass,

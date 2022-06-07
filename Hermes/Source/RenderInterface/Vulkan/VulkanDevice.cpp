@@ -215,9 +215,9 @@ namespace Hermes
 			return std::make_shared<VulkanShader>(shared_from_this(), Path, Type);
 		}
 
-		std::shared_ptr<RenderInterface::RenderPass> VulkanDevice::CreateRenderPass(const RenderInterface::RenderPassDescription& Description) const
+		std::shared_ptr<RenderInterface::RenderPass> VulkanDevice::CreateRenderPass(const std::vector<RenderInterface::RenderPassAttachment>& Attachments) const
 		{
-			return std::make_shared<VulkanRenderPass>(shared_from_this(), Description);
+			return std::make_shared<VulkanRenderPass>(shared_from_this(), Attachments);
 		}
 
 		std::shared_ptr<RenderInterface::Pipeline> VulkanDevice::CreatePipeline(const RenderInterface::RenderPass& RenderPass, const RenderInterface::PipelineDescription& Description) const

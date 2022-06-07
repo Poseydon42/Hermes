@@ -27,8 +27,16 @@ namespace Hermes
 			Undefined // Don't care about attachment content, its state is undefined
 		};
 
+		enum class AttachmentType
+		{
+			Color,
+			DepthStencil,
+			Input
+		};
+
 		struct RenderPassAttachment
 		{
+			AttachmentType Type;
 			AttachmentLoadOp LoadOp;
 			AttachmentStoreOp StoreOp;
 			AttachmentLoadOp StencilLoadOp;
@@ -37,13 +45,6 @@ namespace Hermes
 			ImageLayout LayoutAtStart;
 			ImageLayout LayoutAtEnd;
 			// TODO : sample count, flags
-		};
-
-		struct RenderPassDescription
-		{
-			std::vector  <RenderPassAttachment> InputAttachments;
-			std::vector  <RenderPassAttachment> ColorAttachments;
-			std::optional<RenderPassAttachment> DepthAttachment;
 		};
 		
 		class HERMES_API RenderPass

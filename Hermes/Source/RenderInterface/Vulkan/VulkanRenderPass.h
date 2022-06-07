@@ -17,7 +17,7 @@ namespace Hermes
 		public:
 			VulkanRenderPass(
 				std::shared_ptr<const VulkanDevice> InDevice, 
-				const RenderInterface::RenderPassDescription& Description);
+				const std::vector<RenderInterface::RenderPassAttachment>& Attachments);
 			
 			~VulkanRenderPass() override;
 

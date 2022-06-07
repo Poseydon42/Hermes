@@ -38,13 +38,33 @@ namespace Hermes
 		}
 
 		VulkanRenderPass::VulkanRenderPass(
-			std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::RenderPassDescription& Description)
+			std::shared_ptr<const VulkanDevice> InDevice, const std::vector<RenderInterface::RenderPassAttachment>& Attachments)
 			: Device(std::move(InDevice))
 			, RenderPass(VK_NULL_HANDLE)
 			, ColorAttachmentCount(0)
 		{
+			// Check if we have only one depth attachment and calculate number
+			// of color and input attachments
+			bool DepthAttachmentWasFound = false;
+			for (const auto& Attachment : Attachments)
+			{
+				if (Attachment.Type == RenderInterface::AttachmentType::DepthStencil)
+				{
+					if (DepthAttachmentWasFound)
+					{
+						HERMES_ASSERT_LOG(false, L"Trying to create render pass with more than one depth attachment");
+					}
+					else
+					{
+						DepthAttachmentWasFound = true;
+					}
+				}
+				else if (Attachment.Type == RenderInterface::AttachmentType::Color)
+					ColorAttachmentCount++;
+			}
+
 			std::vector<VkAttachmentDescription> VulkanAttachments;
-			VulkanAttachments.reserve(Description.InputAttachments.size() + Description.ColorAttachments.size() + (size_t)Description.DepthAttachment.has_value());
+			VulkanAttachments.reserve(Attachments.size());
 			auto FillVkAttachment = [](const RenderInterface::RenderPassAttachment& Attachment)
 			{
 				VkAttachmentDescription NewAttachment = {};
@@ -58,50 +78,46 @@ namespace Hermes
 				NewAttachment.finalLayout = ImageLayoutToVkImageLayout(Attachment.LayoutAtEnd);
 				return NewAttachment;
 			};
-			// NOTE : keep in following order, VkSubpassDescription generation depends on it
-			for (const auto& Attachment : Description.InputAttachments)
+
+			std::vector<VkAttachmentReference> ColorAttachmentReferences, InputAttachmentReferences;
+			VkAttachmentReference DepthAttachment;
+			for (auto It = Attachments.begin(); It != Attachments.end(); ++It)
+			{
+				const auto& Attachment = *It;
 				VulkanAttachments.push_back(FillVkAttachment(Attachment));
-			for (const auto& Attachment : Description.ColorAttachments)
-				VulkanAttachments.push_back(FillVkAttachment(Attachment));
-			if (Description.DepthAttachment.has_value())
-				VulkanAttachments.push_back(FillVkAttachment(Description.DepthAttachment.value()));
+
+				VkAttachmentReference Reference = {};
+				Reference.attachment = static_cast<uint32>(std::distance(Attachments.begin(), It));
+				Reference.layout = ImageLayoutToVkImageLayout(Attachment.LayoutAtStart);
+				switch (Attachment.Type)
+				{
+				case RenderInterface::AttachmentType::Color:
+					ColorAttachmentReferences.push_back(Reference);
+					break;
+				case RenderInterface::AttachmentType::Input:
+					InputAttachmentReferences.push_back(Reference);
+					break;
+				case RenderInterface::AttachmentType::DepthStencil:
+					DepthAttachment = Reference;
+					break;
+				default:
+					HERMES_ASSERT_LOG(false, L"Unknown render pass attachment type.");
+					break;
+				}
+			}
 
 			VkSubpassDescription Subpass = {};
 			Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-			std::vector<VkAttachmentReference> InputAttachmentReferences;
-			InputAttachmentReferences.reserve(Description.InputAttachments.size());
-			std::vector<VkAttachmentReference> ColorAttachmentReferences;
-			ColorAttachmentReferences.reserve(Description.ColorAttachments.size());
-			VkAttachmentReference DepthAttachment;
-			uint32 Offset = 0;
-			auto FillAttachmentReference = [](const RenderInterface::RenderPassAttachment& Attachment, uint32 Index)
-			{
-				VkAttachmentReference Result;
-				Result.attachment = (uint32)(Index);
-				Result.layout = ImageLayoutToVkImageLayout(Attachment.LayoutAtStart);
-				return Result;
-			};
-			auto FillAttachmentReferenceVector = [&Offset, FillAttachmentReference](const std::vector<RenderInterface::RenderPassAttachment>& From, std::vector<VkAttachmentReference>& To)
-			{
-				for (uint32 Index = 0; Index < (uint32)From.size(); Index++)
-					To.push_back(FillAttachmentReference(From[Index], Index + Offset));
-				Offset += (uint32)From.size();
-			};
-			FillAttachmentReferenceVector(Description.InputAttachments, InputAttachmentReferences);
 			Subpass.pInputAttachments = InputAttachmentReferences.data();
-			Subpass.inputAttachmentCount = (uint32)InputAttachmentReferences.size();
-			FillAttachmentReferenceVector(Description.ColorAttachments, ColorAttachmentReferences);
+			Subpass.inputAttachmentCount = static_cast<uint32>(InputAttachmentReferences.size());
 			Subpass.pColorAttachments = ColorAttachmentReferences.data();
-			Subpass.colorAttachmentCount = (uint32)ColorAttachmentReferences.size();
-			if (Description.DepthAttachment.has_value())
-			{
-				DepthAttachment = FillAttachmentReference(Description.DepthAttachment.value(), Offset);
+			Subpass.colorAttachmentCount = static_cast<uint32>(ColorAttachmentReferences.size());
+			if (DepthAttachmentWasFound)
 				Subpass.pDepthStencilAttachment = &DepthAttachment;
-			}
 			
 			VkRenderPassCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-			CreateInfo.attachmentCount = (uint32)VulkanAttachments.size();
+			CreateInfo.attachmentCount = static_cast<uint32>(VulkanAttachments.size());
 			CreateInfo.pAttachments = VulkanAttachments.data();
 			CreateInfo.subpassCount = 1;
 			CreateInfo.pSubpasses = &Subpass;
@@ -109,7 +125,6 @@ namespace Hermes
 			CreateInfo.pDependencies = nullptr;
 
 			VK_CHECK_RESULT(vkCreateRenderPass(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &RenderPass));
-			ColorAttachmentCount = (uint32)Description.ColorAttachments.size();
 		}
 
 		VulkanRenderPass::~VulkanRenderPass()

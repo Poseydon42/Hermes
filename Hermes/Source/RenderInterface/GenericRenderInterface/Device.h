@@ -29,8 +29,8 @@ namespace Hermes
 		class Image;
 		struct PipelineDescription;
 		class Pipeline;
-		struct RenderPassDescription;
 		class RenderPass;
+		struct RenderPassAttachment;
 		class Fence;
 		class Swapchain;
 		class Buffer;
@@ -60,7 +60,7 @@ namespace Hermes
 
 			virtual std::shared_ptr<Shader> CreateShader(const String& Path, ShaderType Type) const = 0;
 
-			virtual std::shared_ptr<RenderPass> CreateRenderPass(const RenderPassDescription& Description) const = 0;
+			virtual std::shared_ptr<RenderPass> CreateRenderPass(const std::vector<RenderPassAttachment>& Attachments) const = 0;
 
 			virtual std::shared_ptr<Pipeline> CreatePipeline(
 				const RenderPass& RenderPass, const PipelineDescription& Description) const = 0;

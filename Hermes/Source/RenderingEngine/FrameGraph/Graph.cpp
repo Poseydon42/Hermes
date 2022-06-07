@@ -1,5 +1,6 @@
 ﻿#include "Graph.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "RenderingEngine/Renderer.h"
@@ -102,7 +103,7 @@ namespace Hermes
 			CommandBuffer->BeginRenderPass(Pass.second.Pass, Pass.second.RenderTarget, Pass.second.ClearColors);
 
 			bool ResourcesWereRecreatedTmp = ResourcesWereRecreated; // TODO : better way to fix this maybe?
-			Pass.second.Callback(*CommandBuffer, *Pass.second.Pass, Scene, std::move(ResourcesWereRecreatedTmp));
+			Pass.second.Callback(*CommandBuffer, *Pass.second.Pass, Pass.second.Attachments, Scene, std::move(ResourcesWereRecreatedTmp));
 			ResourcesWereRecreated = false;
 
 			CommandBuffer->EndRenderPass();
@@ -215,8 +216,7 @@ namespace Hermes
 
 		for (const auto& Pass : Scheme.Passes)
 		{
-			RenderInterface::RenderPassDescription Description = {};
-
+			std::vector<RenderInterface::RenderPassAttachment> RenderPassAttachments;
 			for (const auto& Drain : Pass.second.Drains)
 			{
 				const auto& CorrespondingSourceIterator = std::find_if(
@@ -229,7 +229,15 @@ namespace Hermes
 				// NOTE : because the moment of layout transition after end of the render pass
 				// is not synchronized we won't use this feature and would rather perform
 				// layout transition ourselves using resource barriers
-				AttachmentDesc.LayoutAtEnd = AttachmentDesc.LayoutAtStart = Drain.Layout;
+				if (Drain.Binding == BindingMode::InputAttachment)
+				{
+					AttachmentDesc.LayoutAtStart = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+					AttachmentDesc.LayoutAtEnd = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+				}
+				else
+				{
+					AttachmentDesc.LayoutAtEnd = AttachmentDesc.LayoutAtStart = Drain.Layout;
+				}
 				AttachmentDesc.LoadOp = Drain.LoadOp;
 				AttachmentDesc.StencilLoadOp = Drain.StencilLoadOp;
 				if (CorrespondingSourceIterator != Pass.second.Sources.end())
@@ -245,15 +253,20 @@ namespace Hermes
 				switch (Drain.Binding)
 				{
 				case BindingMode::ColorAttachment:
-					Description.ColorAttachments.push_back(AttachmentDesc);
+					AttachmentDesc.Type = RenderInterface::AttachmentType::Color;
 					break;
 				case BindingMode::DepthStencilAttachment:
-					Description.DepthAttachment = AttachmentDesc;
+					AttachmentDesc.Type = RenderInterface::AttachmentType::DepthStencil;
+					break;
+				case BindingMode::InputAttachment:
+					AttachmentDesc.Type = RenderInterface::AttachmentType::Input;
 					break;
 				default:
 					HERMES_ASSERT_LOG(false, L"Unknown drain binding type");
 					break;
 				}
+
+				RenderPassAttachments.push_back(AttachmentDesc);
 			}
 
 			for (const auto& Source : Pass.second.Sources)
@@ -269,12 +282,12 @@ namespace Hermes
 
 			const auto& RenderQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Render);
 			PassContainer NewPassContainer = {};
-			NewPassContainer.Pass = Renderer::Get().GetActiveDevice().CreateRenderPass(Description);
+			NewPassContainer.Pass = Renderer::Get().GetActiveDevice().CreateRenderPass(RenderPassAttachments);
 			NewPassContainer.CommandBuffer = RenderQueue.CreateCommandBuffer(true);
 			NewPassContainer.Callback = Pass.second.Callback;
 
-			std::vector<std::shared_ptr<RenderInterface::Image>> Attachments;
-			Attachments.reserve(Pass.second.Drains.size());
+			std::vector<std::shared_ptr<RenderInterface::Image>> RenderTargetAttachments;
+			RenderTargetAttachments.reserve(Pass.second.Drains.size());
 			NewPassContainer.ClearColors.reserve(Pass.second.Drains.size());
 			NewPassContainer.AttachmentLayouts.reserve(Pass.second.Drains.size());
 			for (const auto& Drain : Pass.second.Drains)
@@ -285,7 +298,7 @@ namespace Hermes
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
 
 				const auto& Resource = Resources[ResourceOwnName];
-				Attachments.push_back(Resource.Image);
+				RenderTargetAttachments.push_back(Resource.Image);
 
 				NewPassContainer.ClearColors.emplace_back();
 				NewPassContainer.ClearColors.back().R = Drain.ClearColor[0];
@@ -293,10 +306,12 @@ namespace Hermes
 				NewPassContainer.ClearColors.back().B = Drain.ClearColor[2];
 				NewPassContainer.ClearColors.back().A = Drain.ClearColor[3];
 
+				NewPassContainer.Attachments.push_back(Resource.Image.get());
 				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName, Drain.Layout);
 			}
+
 			NewPassContainer.RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
-				NewPassContainer.Pass, Attachments, Attachments[0]->GetSize());
+				NewPassContainer.Pass, RenderTargetAttachments, RenderTargetAttachments[0]->GetSize());
 
 			Passes[Pass.first] = NewPassContainer;
 		}
@@ -315,7 +330,7 @@ namespace Hermes
 		return CurrentSourceName;
 	}
 
-	RenderInterface::ImageUsageType FrameGraph::TraverseResourceUsageType(const String& ResourceName)
+	RenderInterface::ImageUsageType FrameGraph::TraverseResourceUsageType(const String& ResourceName) const
 	{
 		auto Result = static_cast<RenderInterface::ImageUsageType>(0);
 		String CurrentSourceName = L"$." + ResourceName;
@@ -343,6 +358,9 @@ namespace Hermes
 			{
 			case BindingMode::ColorAttachment:
 				Result |= RenderInterface::ImageUsageType::ColorAttachment;
+				break;
+			case BindingMode::InputAttachment:
+				Result |= RenderInterface::ImageUsageType::InputAttachment;
 				break;
 			case BindingMode::DepthStencilAttachment:
 				Result |= RenderInterface::ImageUsageType::DepthStencilAttachment;

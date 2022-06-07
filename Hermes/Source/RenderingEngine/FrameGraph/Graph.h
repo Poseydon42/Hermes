@@ -35,6 +35,7 @@ namespace Hermes
 		std::unordered_map<String, String> DrainToSourceLinkage;
 		std::unordered_map<String, String> SourceToDrainLinkage;
 
+		// TODO : implement this!
 		bool Validate() const;
 	};
 
@@ -52,7 +53,7 @@ namespace Hermes
 
 		String TraverseResourceName(const String& FullDrainName);
 
-		RenderInterface::ImageUsageType TraverseResourceUsageType(const String& ResourceName);
+		RenderInterface::ImageUsageType TraverseResourceUsageType(const String& ResourceName) const;
 
 		void RecreateResources();
 
@@ -71,6 +72,7 @@ namespace Hermes
 			std::shared_ptr<RenderInterface::RenderPass> Pass;
 			std::shared_ptr<RenderInterface::RenderTarget> RenderTarget;
 			std::shared_ptr<RenderInterface::CommandBuffer> CommandBuffer;
+			std::vector<const RenderInterface::Image*> Attachments;
 			// NOTE : pair<ResourceOwnName, LayoutAtStart>
 			std::vector<std::pair<String, RenderInterface::ImageLayout>> AttachmentLayouts;
 			std::vector<RenderInterface::ClearColor> ClearColors;

@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "Math/Math.h"
+#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 #include "RenderInterface/GenericRenderInterface/Forward.h"
 
 namespace Hermes
@@ -39,16 +40,16 @@ namespace Hermes
 
 	struct ResourceDesc
 	{
-		RenderInterface::DataFormat Format;
+		RenderInterface::DataFormat Format = RenderInterface::DataFormat::Undefined;
 		SwapchainRelativeDimensions Dimensions;
-		uint32 MipLevels;
+		uint32 MipLevels = 0;
 	};
 
-	// TODO : input attachment binding support
-	enum class BindingMode
+	enum class BindingMode : uint32_t
 	{
-		ColorAttachment,
-		DepthStencilAttachment
+		InputAttachment = 0,
+		ColorAttachment = 1,
+		DepthStencilAttachment = 2,
 	};
 
 	struct Drain

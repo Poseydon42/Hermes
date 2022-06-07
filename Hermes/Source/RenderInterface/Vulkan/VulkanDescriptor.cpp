@@ -22,6 +22,8 @@ namespace Hermes
 				return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			case RenderInterface::DescriptorType::CombinedSampler:
 				return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			case RenderInterface::DescriptorType::InputAttachment:
+				return VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
 			default:
 				HERMES_ASSERT(false);
 				return static_cast<VkDescriptorType>(0);

@@ -52,7 +52,8 @@ namespace Hermes
 			UniformBuffer,
 			Sampler,
 			SampledImage,
-			CombinedSampler
+			CombinedSampler,
+			InputAttachment
 		};
 
 		struct DescriptorBinding

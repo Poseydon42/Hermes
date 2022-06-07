@@ -10,6 +10,7 @@
 
 namespace Hermes
 {
+	class SkyboxPass;
 	class GBufferPass;
 	class DescriptorAllocator;
 	class Scene;
@@ -26,6 +27,8 @@ namespace Hermes
 		static Renderer& Get();
 
 		bool Init(const RenderInterface::PhysicalDevice& GPU);
+
+		const GraphicsSettings& GetGraphicsSettings() const;
 
 		void UpdateGraphicsSettings(GraphicsSettings NewSettings);
 
@@ -46,8 +49,9 @@ namespace Hermes
 
 		std::shared_ptr<DescriptorAllocator> DescriptorAllocator;
 		
-		std::unique_ptr<class FrameGraph> FrameGraph;
+		std::unique_ptr<FrameGraph> FrameGraph;
 		std::shared_ptr<GBufferPass> GBufferPass;
+		std::shared_ptr<SkyboxPass> SkyboxPass;
 
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
 		static constexpr RenderInterface::DataFormat ColorAttachmentFormat = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;

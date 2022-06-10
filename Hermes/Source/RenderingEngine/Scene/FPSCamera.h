@@ -24,7 +24,9 @@ namespace Hermes
 
 		virtual void UpdateViewportDimensions(Vec2 NewDimensions) override;
 
-		virtual Mat4 BuildViewProjectionMatrix() const override;
+		virtual Mat4 GetViewMatrix() const override;
+
+		virtual Mat4 GetProjectionMatrix() const override;
 
 		void ApplyMovementInput(Vec2 Input, float DeltaTime);
 

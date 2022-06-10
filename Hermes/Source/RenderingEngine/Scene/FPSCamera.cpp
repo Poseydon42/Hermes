@@ -8,13 +8,13 @@ namespace Hermes
 		float InVFOV, Vec2 ViewportDimensions, bool InIsYInverted)
 
 		: Location(InLocation)
-		, Pitch(InPitch)
-		, Yaw(InYaw)
-		, MovementSpeed(InMovementSpeed)
-		, RotationSpeed(InRotationSpeed)
-		, VerticalFOV(InVFOV)
-		, AspectRatio(ViewportDimensions.X / ViewportDimensions.Y)
-		, IsYInverted(InIsYInverted)
+		  , Pitch(InPitch)
+		  , Yaw(InYaw)
+		  , MovementSpeed(InMovementSpeed)
+		  , RotationSpeed(InRotationSpeed)
+		  , VerticalFOV(InVFOV)
+		  , AspectRatio(ViewportDimensions.X / ViewportDimensions.Y)
+		  , IsYInverted(InIsYInverted)
 	{
 	}
 
@@ -38,14 +38,17 @@ namespace Hermes
 		AspectRatio = NewDimensions.X / NewDimensions.Y;
 	}
 
-	Mat4 FPSCamera::BuildViewProjectionMatrix() const
+	Mat4 FPSCamera::GetViewMatrix() const
 	{
 		auto UpVector = (Direction ^ RightVector).Normalize();
-		auto ViewMatrix = Mat4::LookAt(Location, Direction, UpVector);
-		auto ProjectionMatrix = Mat4::Perspective(VerticalFOV, AspectRatio, NearPlane, FarPlane);
-		return ProjectionMatrix * ViewMatrix;
+		return Mat4::LookAt(Location, Direction, UpVector);
 	}
 
+	Mat4 FPSCamera::GetProjectionMatrix() const
+	{
+		return Mat4::Perspective(VerticalFOV, AspectRatio, NearPlane, FarPlane);;
+	}
+	
 	void FPSCamera::ApplyMovementInput(Vec2 Input, float DeltaTime)
 	{
 		Input *= DeltaTime;
@@ -76,7 +79,7 @@ namespace Hermes
 		Direction.Normalize();
 
 		Vec3 GlobalUp = { 0.0f, 1.0f, 0.0f };
-		RightVector =  (GlobalUp ^ Direction).Normalize();
+		RightVector = (GlobalUp ^ Direction).Normalize();
 	}
 
 	void FPSCamera::UpdateVerticalFOV(float NewFOV)

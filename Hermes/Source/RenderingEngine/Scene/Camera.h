@@ -23,6 +23,8 @@ namespace Hermes
 
 		virtual void UpdateViewportDimensions(Vec2 NewDimensions) = 0;
 
-		virtual Mat4 BuildViewProjectionMatrix() const = 0;
+		virtual Mat4 GetViewMatrix() const = 0;
+
+		virtual Mat4 GetProjectionMatrix() const = 0;
 	};
 }

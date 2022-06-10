@@ -57,7 +57,7 @@ namespace Hermes
 
 		Description.Callback.Bind<SkyboxPass, &SkyboxPass::PassCallback>(this);
 
-		Description.Sources.push_back({ L"Color", RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized });
+		Description.Sources.push_back({ L"ColorBuffer", RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized });
 
 		Description.Drains.resize(2);
 		Description.Drains[0].Name = L"ColorBuffer";
@@ -68,7 +68,7 @@ namespace Hermes
 		Description.Drains[0].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
 		Description.Drains[1].Name = L"DepthBuffer";
-		Description.Drains[1].Binding = BindingMode::InputAttachment;
+		Description.Drains[1].Binding = BindingMode::DepthStencilAttachment;
 		Description.Drains[1].Format = RenderInterface::DataFormat::D32SignedFloat;
 		Description.Drains[1].Layout = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
 		Description.Drains[1].LoadOp = RenderInterface::AttachmentLoadOp::Load;
@@ -116,8 +116,13 @@ namespace Hermes
 		PipelineDescription.Viewport.Origin = { 0, 0 };
 		PipelineDescription.Viewport.Dimensions = Renderer::Get().GetSwapchain().GetSize();
 
-		PipelineDescription.DepthStencilStage.IsDepthTestEnabled = false;
+		PipelineDescription.DepthStencilStage.IsDepthTestEnabled = true;
+		PipelineDescription.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Equal;
 		PipelineDescription.DepthStencilStage.IsDepthWriteEnabled = false;
+
+		PipelineDescription.Rasterizer.Cull = RenderInterface::CullMode::Back;
+		PipelineDescription.Rasterizer.Direction = RenderInterface::FaceDirection::Clockwise;
+		PipelineDescription.Rasterizer.Fill = RenderInterface::FillMode::Fill;
 
 		Pipeline = Device->CreatePipeline(Pass, PipelineDescription);
 	}

@@ -408,6 +408,7 @@ namespace Hermes
 		{
 			std::vector<std::shared_ptr<RenderInterface::Image>> Attachments;
 			Attachments.reserve(Pass.second.Drains.size());
+			Passes[Pass.first].Attachments.clear();
 			for (const auto& Drain : Pass.second.Drains)
 			{
 				String FullResourceName = TraverseResourceName(Pass.first + L"." + Drain.Name);
@@ -417,6 +418,7 @@ namespace Hermes
 
 				const auto& Resource = Resources[ResourceOwnName];
 				Attachments.push_back(Resource.Image);
+				Passes[Pass.first].Attachments.push_back(Resource.Image.get());
 			}
 			Passes[Pass.first].RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
 				Passes[Pass.first].Pass, Attachments, Attachments[0]->GetSize());

@@ -106,7 +106,7 @@ namespace Hermes
 		auto& CurrentCamera = Scene.GetActiveCamera();
 
 		PerFrameSceneUBO SceneUBOData;
-		SceneUBOData.ViewProjection = CurrentCamera.BuildViewProjectionMatrix();
+		SceneUBOData.ViewProjection = CurrentCamera.GetProjectionMatrix() * CurrentCamera.GetViewMatrix();
 
 		auto SceneUBOMemory = SceneDataUniformBuffer->Map();
 		memcpy(SceneUBOMemory, &SceneUBOData, sizeof(SceneUBOData));

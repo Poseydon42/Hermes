@@ -69,7 +69,7 @@ namespace Hermes
 		Yaw += DeltaYaw;
 		Yaw = fmod(Yaw, 2 * Math::Pi);
 		if (Yaw > Math::Pi)
-			Yaw = 2 * Math::Pi - Yaw;
+			Yaw = -(2 * Math::Pi - Yaw);
 		if (Yaw < -Math::Pi)
 			Yaw = 2 * Math::Pi + Yaw;
 

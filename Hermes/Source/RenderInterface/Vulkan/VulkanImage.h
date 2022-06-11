@@ -22,14 +22,17 @@ namespace Hermes
 			/*
 			 * Non-owning constructor
 			 */
-			VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat, Vec2ui InSize, RenderInterface::ImageUsageType InUsage);
+			VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat, Vec2ui InSize,
+			            RenderInterface::ImageUsageType InUsage, bool InIsCubemapCompatible = false);
 
 			/*
 			 * Owning constructor
 			 */
-			VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, Vec2ui InSize, RenderInterface::ImageUsageType InUsage, RenderInterface::DataFormat InFormat, uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout);
+			VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, Vec2ui InSize,
+			            RenderInterface::ImageUsageType InUsage, RenderInterface::DataFormat InFormat,
+			            uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout, bool InIsCubemapCompatible = false);
 
-			~VulkanImage() override;
+			virtual ~VulkanImage() override;
 			VulkanImage(VulkanImage&& Other);
 			VulkanImage& operator=(VulkanImage&& Other);
 
@@ -49,18 +52,36 @@ namespace Hermes
 			 */
 			VkImageView GetDefaultView() const;
 
-		private:
+			bool GetIsCubemapCompatible() const;
+
+		protected:
 			std::shared_ptr<const VulkanDevice> Device;
 			VkImage Handle;
 			Vec2ui Size;
 			VkFormat Format;
-			VkImageView DefaultView;
+			mutable VkImageView DefaultView;
 			VmaAllocation Allocation;
 			bool IsOwned;
 			uint32 MipLevelCount;
+			bool IsCubemapCompatible;
 			RenderInterface::ImageUsageType Usage;
 
-			void CreateDefaultView();
+			virtual void CreateDefaultView() const;
+		};
+
+		class HERMES_API VulkanCubemapImage : public VulkanImage
+		{
+			MAKE_NON_COPYABLE(VulkanCubemapImage);
+
+		public:
+			VulkanCubemapImage(std::shared_ptr<const VulkanDevice> InDevice, Vec2ui InSize,
+			            RenderInterface::ImageUsageType InUsage, RenderInterface::DataFormat InFormat,
+			            uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout);
+
+			virtual ~VulkanCubemapImage() override = default;
+
+		private:
+			virtual void CreateDefaultView() const override;
 		};
 	}
 }

@@ -250,6 +250,13 @@ namespace Hermes
 			return std::make_shared<VulkanImage>(shared_from_this(), Size, Usage, Format, MipLevels, InitialLayout);
 		}
 
+		std::shared_ptr<RenderInterface::Image> VulkanDevice::CreateCubemap(Vec2ui Size,
+			RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, uint32 MipLevels,
+			RenderInterface::ImageLayout InitialLayout) const
+		{
+			return std::make_shared<VulkanCubemapImage>(shared_from_this(), Size, Usage, Format, MipLevels, InitialLayout);
+		}
+
 		void VulkanDevice::WaitForIdle() const
 		{
 			vkDeviceWaitIdle(Device);

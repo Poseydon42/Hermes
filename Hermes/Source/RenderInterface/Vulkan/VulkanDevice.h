@@ -2,7 +2,6 @@
 
 #include "Core/Core.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
-#include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
 #include "Vulkan.h"
 
 namespace Hermes
@@ -35,6 +34,10 @@ namespace Hermes
 
 			std::shared_ptr<RenderInterface::Image> CreateImage(
 				Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, 
+				uint32 MipLevels, RenderInterface::ImageLayout InitialLayout) const override;
+
+			virtual std::shared_ptr<RenderInterface::Image> CreateCubemap(
+				Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format,
 				uint32 MipLevels, RenderInterface::ImageLayout InitialLayout) const override;
 
 			std::shared_ptr<RenderInterface::Fence> CreateFence(bool InitialState) const override;

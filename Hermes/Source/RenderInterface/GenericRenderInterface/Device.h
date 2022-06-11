@@ -53,7 +53,11 @@ namespace Hermes
 			virtual std::shared_ptr<Buffer> CreateBuffer(size_t Size, BufferUsageType Usage) const = 0;
 
 			virtual std::shared_ptr<Image> CreateImage(
-				Vec2ui Size, ImageUsageType Usage, DataFormat Format, 
+				Vec2ui Size, ImageUsageType Usage, DataFormat Format,
+				uint32 MipLevels, ImageLayout InitialLayout) const = 0;
+
+			virtual std::shared_ptr<Image> CreateCubemap(
+				Vec2ui Size, ImageUsageType Usage, DataFormat Format,
 				uint32 MipLevels, ImageLayout InitialLayout) const = 0;
 
 			virtual std::shared_ptr<Fence> CreateFence(bool InitialState = false) const = 0;

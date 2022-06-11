@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "Core/Core.h"
+#include "Math/Math.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
 #include "RenderInterface/GenericRenderInterface/Forward.h"
 
@@ -22,10 +23,10 @@ namespace Hermes
 	private:
 		struct SkyboxPassData
 		{
-			float Pitch = 0.0f;
-			float Yaw = 0.0f;
-			float VerticalFOV = 0.0f;
-			float HorizontalFOV = 0.0f;
+			Mat4 ViewMatrix;
+			Vec2 ViewportDimensions;
+			float HalfVerticalFOV = 0.0f;
+			float AspectRatio = 0.0f;
 		};
 
 		std::shared_ptr<RenderInterface::Device> Device;

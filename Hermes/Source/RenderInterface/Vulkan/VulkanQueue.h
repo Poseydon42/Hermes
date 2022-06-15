@@ -24,8 +24,9 @@ namespace Hermes
 			VulkanQueue& operator=(VulkanQueue&& Other);
 
 			std::shared_ptr<RenderInterface::CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) const override;
-			
-			void SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer, std::optional<std::shared_ptr<RenderInterface::Fence>> Fence) const override;
+
+			virtual void SubmitCommandBuffer(const RenderInterface::CommandBuffer& Buffer,
+			                                 std::optional<RenderInterface::Fence*> Fence) const override;
 
 			void WaitForIdle() const override;
 

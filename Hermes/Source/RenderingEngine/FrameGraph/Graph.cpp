@@ -110,7 +110,7 @@ namespace Hermes
 			CommandBuffer->EndRenderPass();
 			CommandBuffer->EndRecording();
 			
-			RenderQueue.SubmitCommandBuffer(CommandBuffer, {});
+			RenderQueue.SubmitCommandBuffer(*CommandBuffer, {});
 		}
 
 		auto& PresentQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Presentation);
@@ -183,7 +183,7 @@ namespace Hermes
 
 		BlitAndPresentCommandBuffer->EndRecording();
 		auto PresentationFence = Renderer::Get().GetActiveDevice().CreateFence();
-		PresentQueue.SubmitCommandBuffer(BlitAndPresentCommandBuffer, PresentationFence);
+		PresentQueue.SubmitCommandBuffer(*BlitAndPresentCommandBuffer, PresentationFence.get());
 		PresentationFence->Wait(UINT64_MAX);
 
 		Swapchain.Present(SwapchainImageIndex.value(), SwapchainWasRecreated);

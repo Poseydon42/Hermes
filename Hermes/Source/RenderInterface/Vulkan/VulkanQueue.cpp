@@ -45,18 +45,19 @@ namespace Hermes
 			return std::make_shared<VulkanCommandBuffer>(Device, CommandPool, IsPrimaryBuffer);
 		}
 
-		void VulkanQueue::SubmitCommandBuffer(std::shared_ptr<RenderInterface::CommandBuffer> Buffer, std::optional<std::shared_ptr<RenderInterface::Fence>> Fence) const
+		void VulkanQueue::SubmitCommandBuffer(const RenderInterface::CommandBuffer& Buffer,
+		                                      std::optional<RenderInterface::Fence*> Fence) const
 		{
-			auto* VulkanBuffer = (VulkanCommandBuffer*)Buffer.get();
+			const auto& VulkanBuffer = reinterpret_cast<const VulkanCommandBuffer&>(Buffer);
 			VkSubmitInfo SubmitInfo = {};
 			SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 			SubmitInfo.commandBufferCount = 1;
-			VkCommandBuffer TmpBufferCopy = VulkanBuffer->GetBuffer();
+			VkCommandBuffer TmpBufferCopy = VulkanBuffer.GetBuffer();
 			SubmitInfo.pCommandBuffers = &TmpBufferCopy;
 			VkFence VkFenceObject = VK_NULL_HANDLE;
 			if (Fence.has_value())
 			{
-				auto* VulkanFenceObject = (VulkanFence*)Fence->get();
+				auto* VulkanFenceObject = reinterpret_cast<VulkanFence*>(Fence.value());
 				VkFenceObject = VulkanFenceObject->GetFence();
 			}
 			VK_CHECK_RESULT(vkQueueSubmit(Queue, 1, &SubmitInfo, VkFenceObject));

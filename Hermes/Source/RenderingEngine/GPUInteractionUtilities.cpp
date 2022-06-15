@@ -42,7 +42,7 @@ namespace Hermes
 			TransferCommandBuffer->CopyBuffer(CurrentStagingBuffer, Target, { Region });
 			TransferCommandBuffer->EndRecording();
 
-			TransferQueue.SubmitCommandBuffer(TransferCommandBuffer, TransferFinishedFence);
+			TransferQueue.SubmitCommandBuffer(*TransferCommandBuffer, TransferFinishedFence.get());
 			TransferFinishedFence->Wait(UINT64_MAX);
 		}
 	}
@@ -118,7 +118,7 @@ namespace Hermes
 			TransferCommandBuffer->EndRecording();
 
 			TransferFinishedFence->Reset();
-			TransferQueue.SubmitCommandBuffer(TransferCommandBuffer, TransferFinishedFence);
+			TransferQueue.SubmitCommandBuffer(*TransferCommandBuffer, TransferFinishedFence.get());
 			TransferFinishedFence->Wait(UINT64_MAX);
 		}
 	}
@@ -195,7 +195,7 @@ namespace Hermes
 
 		RenderCommandBuffer->EndRecording();
 		auto FinishFence = Device.CreateFence();
-		Device.GetQueue(RenderInterface::QueueType::Render).SubmitCommandBuffer(RenderCommandBuffer, FinishFence);
+		Device.GetQueue(RenderInterface::QueueType::Render).SubmitCommandBuffer(*RenderCommandBuffer, FinishFence.get());
 		FinishFence->Wait(UINT64_MAX);
 	}
 

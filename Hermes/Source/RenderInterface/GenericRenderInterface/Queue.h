@@ -43,7 +43,7 @@ namespace Hermes
 			 * @param Buffer A command buffer to be executed
 			 * @param Fence An optional fence object that needs to be signaled when GPU finishes execution of given command buffer
 			 */
-			virtual void SubmitCommandBuffer(std::shared_ptr<CommandBuffer> Buffer, std::optional<std::shared_ptr<Fence>> Fence) const = 0;
+			virtual void SubmitCommandBuffer(const CommandBuffer& Buffer, std::optional<Fence*> Fence) const = 0;
 
 			/*
 			 * Blocks current thread until all pending operations on this queue are finished

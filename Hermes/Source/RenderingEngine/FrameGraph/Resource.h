@@ -55,7 +55,6 @@ namespace Hermes
 	struct Drain
 	{
 		String Name;
-		RenderInterface::DataFormat Format;
 		RenderInterface::AttachmentLoadOp LoadOp;
 		RenderInterface::AttachmentLoadOp StencilLoadOp;
 		float ClearColor[4];
@@ -66,6 +65,5 @@ namespace Hermes
 	struct Source
 	{
 		String Name;
-		RenderInterface::DataFormat Format;
 	};
 }

@@ -66,19 +66,17 @@ namespace Hermes
 
 		Description.Callback.Bind<SkyboxPass, &SkyboxPass::PassCallback>(this);
 
-		Description.Sources.push_back({ L"ColorBuffer", RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized });
+		Description.Sources.push_back({ L"ColorBuffer" });
 
 		Description.Drains.resize(2);
 		Description.Drains[0].Name = L"ColorBuffer";
 		Description.Drains[0].Binding = BindingMode::ColorAttachment;
-		Description.Drains[0].Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
 		Description.Drains[0].Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		Description.Drains[0].LoadOp = RenderInterface::AttachmentLoadOp::Load;
 		Description.Drains[0].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
 		Description.Drains[1].Name = L"DepthBuffer";
 		Description.Drains[1].Binding = BindingMode::DepthStencilAttachment;
-		Description.Drains[1].Format = RenderInterface::DataFormat::D32SignedFloat;
 		Description.Drains[1].Layout = RenderInterface::ImageLayout::DepthStencilReadOnlyOptimal;
 		Description.Drains[1].LoadOp = RenderInterface::AttachmentLoadOp::Load;
 		Description.Drains[1].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;

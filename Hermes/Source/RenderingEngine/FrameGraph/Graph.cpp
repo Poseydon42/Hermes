@@ -5,6 +5,7 @@
 
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
+#include "RenderingEngine/Scene/Scene.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
 #include "RenderInterface/GenericRenderInterface/Fence.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
@@ -225,7 +226,8 @@ namespace Hermes
 						return Element.Name == Drain.Name;
 					});
 				RenderInterface::RenderPassAttachment AttachmentDesc = {};
-				AttachmentDesc.Format = Drain.Format;
+				auto FullDrainName = Pass.first + L'.' + Drain.Name;
+				AttachmentDesc.Format = TraverseDrainDataFormat(FullDrainName);
 				// NOTE : because the moment of layout transition after end of the render pass
 				// is not synchronized we won't use this feature and would rather perform
 				// layout transition ourselves using resource barriers
@@ -385,6 +387,23 @@ namespace Hermes
 		}
 
 		return Result;
+	}
+
+	RenderInterface::DataFormat FrameGraph::TraverseDrainDataFormat(const String& DrainName) const
+	{
+		auto CurrentSource = Scheme.DrainToSourceLinkage.at(DrainName);
+		while (CurrentSource[0] != L'$')
+		{
+			// NOTE : because drain and source name within same pass have to be the same if they are interconnected
+			CurrentSource = Scheme.DrainToSourceLinkage.at(CurrentSource);
+		}
+
+		String ResourcePassName, ResourceOwnName;
+		SplitResourceName(CurrentSource, ResourcePassName, ResourceOwnName);
+		HERMES_ASSERT(ResourcePassName == L"$");
+
+		const auto& Resource = Resources.at(ResourceOwnName);
+		return Resource.Desc.Format;
 	}
 
 	void FrameGraph::RecreateResources()

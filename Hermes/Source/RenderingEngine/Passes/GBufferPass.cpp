@@ -56,7 +56,6 @@ namespace Hermes
 			GBufferDrain.ClearColor[1] =
 			GBufferDrain.ClearColor[2] =
 			GBufferDrain.ClearColor[3] = 0.0f;
-		GBufferDrain.Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
 		GBufferDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		GBufferDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		GBufferDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
@@ -68,7 +67,6 @@ namespace Hermes
 			DepthBufferDrain.ClearColor[1] =
 			DepthBufferDrain.ClearColor[2] =
 			DepthBufferDrain.ClearColor[3] = 1.0f;
-		DepthBufferDrain.Format = RenderInterface::DataFormat::D32SignedFloat;
 		DepthBufferDrain.Layout = RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
 		DepthBufferDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		DepthBufferDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
@@ -77,11 +75,9 @@ namespace Hermes
 
 		Source GBufferSource = {};
 		GBufferSource.Name = L"GBuffer";
-		GBufferSource.Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
 
 		Source DepthBufferSource = {};
 		DepthBufferSource.Name = L"DepthBuffer";
-		DepthBufferSource.Format = RenderInterface::DataFormat::D32SignedFloat;
 
 		Descriptor.Sources = { GBufferSource, DepthBufferSource };
 	}

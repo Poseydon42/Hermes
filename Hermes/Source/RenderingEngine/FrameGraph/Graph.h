@@ -55,6 +55,8 @@ namespace Hermes
 
 		RenderInterface::ImageUsageType TraverseResourceUsageType(const String& ResourceName) const;
 
+		RenderInterface::DataFormat TraverseDrainDataFormat(const String& DrainName) const;
+
 		void RecreateResources();
 
 		FrameGraphScheme Scheme;
@@ -62,7 +64,7 @@ namespace Hermes
 		struct ResourceContainer
 		{
 			std::shared_ptr<RenderInterface::Image> Image;
-			RenderInterface::ImageLayout CurrentLayout;
+			RenderInterface::ImageLayout CurrentLayout = RenderInterface::ImageLayout::Undefined;
 			ResourceDesc Desc;
 		};
 		std::unordered_map<String, ResourceContainer> Resources;

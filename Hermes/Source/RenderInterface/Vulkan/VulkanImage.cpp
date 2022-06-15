@@ -158,34 +158,7 @@ namespace Hermes
 			CreateInfo.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
 			CreateInfo.subresourceRange.baseMipLevel = 0;
 			CreateInfo.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
-			CreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-
-			VK_CHECK_RESULT(vkCreateImageView(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &DefaultView))
-		}
-
-		VulkanCubemapImage::VulkanCubemapImage(std::shared_ptr<const VulkanDevice> InDevice, Vec2ui InSize,
-			RenderInterface::ImageUsageType InUsage, RenderInterface::DataFormat InFormat, uint32 InMipLevels,
-			RenderInterface::ImageLayout InitialLayout)
-			: VulkanImage(std::move(InDevice), InSize, InUsage, InFormat, InMipLevels, InitialLayout, true)
-		{
-		}
-
-		void VulkanCubemapImage::CreateDefaultView() const
-		{
-			VkImageViewCreateInfo CreateInfo = {};
-			CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			CreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-			CreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-			CreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-			CreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-			CreateInfo.format = Format;
-			CreateInfo.image = Handle;
-			CreateInfo.subresourceRange.aspectMask = VkAspectFlagsFromVkFormat(Format);
-			CreateInfo.subresourceRange.baseArrayLayer = 0;
-			CreateInfo.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
-			CreateInfo.subresourceRange.baseMipLevel = 0;
-			CreateInfo.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
-			CreateInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+			CreateInfo.viewType = IsCubemapCompatible ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
 
 			VK_CHECK_RESULT(vkCreateImageView(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &DefaultView))
 		}

@@ -68,20 +68,5 @@ namespace Hermes
 
 			virtual void CreateDefaultView() const;
 		};
-
-		class HERMES_API VulkanCubemapImage : public VulkanImage
-		{
-			MAKE_NON_COPYABLE(VulkanCubemapImage);
-
-		public:
-			VulkanCubemapImage(std::shared_ptr<const VulkanDevice> InDevice, Vec2ui InSize,
-			            RenderInterface::ImageUsageType InUsage, RenderInterface::DataFormat InFormat,
-			            uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout);
-
-			virtual ~VulkanCubemapImage() override = default;
-
-		private:
-			virtual void CreateDefaultView() const override;
-		};
 	}
 }

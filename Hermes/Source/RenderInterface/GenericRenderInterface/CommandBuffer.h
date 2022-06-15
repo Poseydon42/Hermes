@@ -123,14 +123,14 @@ namespace Hermes
 			 * Begins a given render pass with given render target attached
 			 * @param ClearColors Array of colors with size equal to number of attachments of render pass, filled with color values that will be used to clear attachments
 			 */
-			virtual void BeginRenderPass(const std::shared_ptr<RenderPass>& RenderPass, const std::shared_ptr<RenderTarget>& RenderTarget, const std::vector<ClearColor>& ClearColors) = 0;
+			virtual void BeginRenderPass(const RenderPass& RenderPass, const RenderTarget& RenderTarget, const std::vector<ClearColor>& ClearColors) = 0;
 
 			/**
 			 * Ends currently active render pass
 			 */
 			virtual void EndRenderPass() = 0;
 
-			virtual void BindPipeline(const std::shared_ptr<Pipeline>& Pipeline) = 0;
+			virtual void BindPipeline(const Pipeline& Pipeline) = 0;
 
 			/*
 			 * Makes a non-indexed draw call

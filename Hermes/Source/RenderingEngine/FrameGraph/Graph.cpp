@@ -101,7 +101,7 @@ namespace Hermes
 				Resource.CurrentLayout = Attachment.second;
 			}
 
-			CommandBuffer->BeginRenderPass(Pass.second.Pass, Pass.second.RenderTarget, Pass.second.ClearColors);
+			CommandBuffer->BeginRenderPass(*Pass.second.Pass, *Pass.second.RenderTarget, Pass.second.ClearColors);
 
 			bool ResourcesWereRecreatedTmp = ResourcesWereRecreated; // TODO : better way to fix this maybe?
 			Pass.second.Callback(*CommandBuffer, *Pass.second.Pass, Pass.second.Attachments, Scene, std::move(ResourcesWereRecreatedTmp));

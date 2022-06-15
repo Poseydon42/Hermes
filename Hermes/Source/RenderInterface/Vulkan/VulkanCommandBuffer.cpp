@@ -74,14 +74,14 @@ namespace Hermes
 			VK_CHECK_RESULT(vkEndCommandBuffer(Buffer));
 		}
 
-		void VulkanCommandBuffer::BeginRenderPass(const std::shared_ptr<RenderInterface::RenderPass>& RenderPass, const std::shared_ptr<RenderInterface::RenderTarget>& RenderTarget, const std::vector<RenderInterface::ClearColor>& ClearColors)
+		void VulkanCommandBuffer::BeginRenderPass(const RenderInterface::RenderPass& RenderPass, const RenderInterface::RenderTarget& RenderTarget, const std::vector<RenderInterface::ClearColor>& ClearColors)
 		{
 			VkRenderPassBeginInfo BeginInfo = {};
 			BeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			BeginInfo.renderPass  = std::reinterpret_pointer_cast<VulkanRenderPass>(RenderPass)->GetRenderPass();
-			BeginInfo.framebuffer = std::reinterpret_pointer_cast<VulkanRenderTarget>(RenderTarget)->GetFramebuffer();
+			BeginInfo.renderPass  = static_cast<const VulkanRenderPass&>(RenderPass).GetRenderPass();
+			BeginInfo.framebuffer = static_cast<const VulkanRenderTarget&>(RenderTarget).GetFramebuffer();
 			BeginInfo.renderArea.offset = { 0, 0};
-			BeginInfo.renderArea.extent =  { RenderTarget->GetSize().X, RenderTarget->GetSize().Y };
+			BeginInfo.renderArea.extent =  { RenderTarget.GetSize().X, RenderTarget.GetSize().Y };
 			BeginInfo.clearValueCount = (uint32)ClearColors.size();
 			// TODO : this is a dirty hack that assumes that VkClearColor data layout exactly matches ClearColor
 			//        data layout. We should fix it one day to be 100% sure in its compatibility
@@ -95,10 +95,10 @@ namespace Hermes
 			vkCmdEndRenderPass(Buffer);
 		}
 
-		void VulkanCommandBuffer::BindPipeline(const std::shared_ptr<RenderInterface::Pipeline>& Pipeline)
+		void VulkanCommandBuffer::BindPipeline(const RenderInterface::Pipeline& Pipeline)
 		{
 			// TODO : compute pipelines
-			vkCmdBindPipeline(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, std::reinterpret_pointer_cast<VulkanPipeline>(Pipeline)->GetPipeline());
+			vkCmdBindPipeline(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline&>(Pipeline).GetPipeline());
 		}
 
 		void VulkanCommandBuffer::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 VertexOffset, uint32 InstanceOffset)

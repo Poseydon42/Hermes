@@ -107,7 +107,7 @@ namespace Hermes
 		memcpy(Memory, &Data, sizeof(Data));
 		UniformBuffer->Unmap();
 
-		CommandBuffer.BindPipeline(Pipeline);
+		CommandBuffer.BindPipeline(*Pipeline);
 		CommandBuffer.BindDescriptorSet(*DataDescriptorSet, *Pipeline, 0);
 		// Drawing 6 vertices without bound vertex buffer because their coordinates
 		// are hardcoded in shader code

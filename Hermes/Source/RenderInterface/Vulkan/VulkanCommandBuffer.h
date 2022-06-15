@@ -26,11 +26,11 @@ namespace Hermes
 			
 			void EndRecording() override;
 			
-			void BeginRenderPass(const std::shared_ptr<RenderInterface::RenderPass>& RenderPass, const std::shared_ptr<RenderInterface::RenderTarget>& RenderTarget, const std::vector<RenderInterface::ClearColor>& ClearColors) override;
+			void BeginRenderPass(const RenderInterface::RenderPass& RenderPass, const RenderInterface::RenderTarget& RenderTarget, const std::vector<RenderInterface::ClearColor>& ClearColors) override;
 			
 			void EndRenderPass() override;
 
-			void BindPipeline(const std::shared_ptr<RenderInterface::Pipeline>& Pipeline) override;
+			void BindPipeline(const RenderInterface::Pipeline& Pipeline) override;
 
 			void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 VertexOffset, uint32 InstanceOffset) override;
 			

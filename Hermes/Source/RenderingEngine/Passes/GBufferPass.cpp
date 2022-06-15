@@ -125,7 +125,7 @@ namespace Hermes
 		memcpy(LightingUBOMemory, &LightingUBOData, sizeof(LightingUBOData));
 		LightingDataUniformBuffer->Unmap();
 
-		CommandBuffer.BindPipeline(Pipeline);
+		CommandBuffer.BindPipeline(*Pipeline);
 		CommandBuffer.BindDescriptorSet(*PerFrameDataDescriptor, *Pipeline, 0);
 
 		// TODO : mesh sorting by material

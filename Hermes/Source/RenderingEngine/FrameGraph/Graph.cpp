@@ -191,11 +191,6 @@ namespace Hermes
 			RecreateResources();
 	}
 
-	std::shared_ptr<RenderInterface::RenderPass> FrameGraph::GetRenderPassObject(const String& PassName)
-	{
-		return Passes[PassName].Pass;
-	}
-
 	FrameGraph::FrameGraph(FrameGraphScheme InScheme)
 		: Scheme(std::move(InScheme))
 	{

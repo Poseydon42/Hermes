@@ -44,8 +44,6 @@ namespace Hermes
 	public:
 		void Execute(const Scene& Scene);
 
-		std::shared_ptr<RenderInterface::RenderPass> GetRenderPassObject(const String& PassName);
-
 	private:
 		friend class FrameGraphScheme;
 

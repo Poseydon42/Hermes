@@ -172,9 +172,9 @@ namespace Hermes
 			return *this;
 		}
 
-		std::shared_ptr<RenderInterface::Swapchain> VulkanDevice::CreateSwapchain(uint32 NumFrames) const
+		std::unique_ptr<RenderInterface::Swapchain> VulkanDevice::CreateSwapchain(uint32 NumFrames) const
 		{
-			return std::make_shared<VulkanSwapchain>(shared_from_this(), PhysicalDevice, Surface, Window, NumFrames);
+			return std::make_unique<VulkanSwapchain>(shared_from_this(), PhysicalDevice, Surface, Window, NumFrames);
 		}
 
 		const RenderInterface::Queue& VulkanDevice::GetQueue(RenderInterface::QueueType Type) const
@@ -200,64 +200,63 @@ namespace Hermes
 			return *RenderQueue;
 		}
 
-		std::shared_ptr<RenderInterface::Buffer> VulkanDevice::CreateBuffer(size_t Size, RenderInterface::BufferUsageType Usage)  const
+		std::unique_ptr<RenderInterface::Buffer> VulkanDevice::CreateBuffer(size_t Size, RenderInterface::BufferUsageType Usage)  const
 		{
-			return std::make_shared<VulkanBuffer>(shared_from_this(), Size, Usage);
+			return std::make_unique<VulkanBuffer>(shared_from_this(), Size, Usage);
 		}
 
-		std::shared_ptr<RenderInterface::Fence> VulkanDevice::CreateFence(bool InitialState) const
+		std::unique_ptr<RenderInterface::Fence> VulkanDevice::CreateFence(bool InitialState) const
 		{
-			return std::make_shared<VulkanFence>(shared_from_this(), InitialState);
+			return std::make_unique<VulkanFence>(shared_from_this(), InitialState);
 		}
 
-		std::shared_ptr<RenderInterface::Shader> VulkanDevice::CreateShader(const String& Path, RenderInterface::ShaderType Type) const
+		std::unique_ptr<RenderInterface::Shader> VulkanDevice::CreateShader(const String& Path, RenderInterface::ShaderType Type) const
 		{
-			return std::make_shared<VulkanShader>(shared_from_this(), Path, Type);
+			return std::make_unique<VulkanShader>(shared_from_this(), Path, Type);
 		}
 
-		std::shared_ptr<RenderInterface::RenderPass> VulkanDevice::CreateRenderPass(const std::vector<RenderInterface::RenderPassAttachment>& Attachments) const
+		std::unique_ptr<RenderInterface::RenderPass> VulkanDevice::CreateRenderPass(const std::vector<RenderInterface::RenderPassAttachment>& Attachments) const
 		{
-			return std::make_shared<VulkanRenderPass>(shared_from_this(), Attachments);
+			return std::make_unique<VulkanRenderPass>(shared_from_this(), Attachments);
 		}
 
-		std::shared_ptr<RenderInterface::Pipeline> VulkanDevice::CreatePipeline(const RenderInterface::RenderPass& RenderPass, const RenderInterface::PipelineDescription& Description) const
+		std::unique_ptr<RenderInterface::Pipeline> VulkanDevice::CreatePipeline(const RenderInterface::RenderPass& RenderPass, const RenderInterface::PipelineDescription& Description) const
 		{
-			return std::make_shared<VulkanPipeline>(shared_from_this(), std::move(RenderPass), Description);
+			return std::make_unique<VulkanPipeline>(shared_from_this(), std::move(RenderPass), Description);
 		}
 
-		std::shared_ptr<RenderInterface::RenderTarget> VulkanDevice::CreateRenderTarget(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size) const
+		std::unique_ptr<RenderInterface::RenderTarget> VulkanDevice::CreateRenderTarget(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size) const
 		{
-			return std::make_shared<VulkanRenderTarget>(shared_from_this(), std::move(RenderPass), Attachments, Size);
+			return std::make_unique<VulkanRenderTarget>(shared_from_this(), std::move(RenderPass), Attachments, Size);
 		}
 
-		std::shared_ptr<RenderInterface::DescriptorSetLayout> VulkanDevice::CreateDescriptorSetLayout(const std::vector<RenderInterface::DescriptorBinding>& Bindings) const
+		std::unique_ptr<RenderInterface::DescriptorSetLayout> VulkanDevice::CreateDescriptorSetLayout(const std::vector<RenderInterface::DescriptorBinding>& Bindings) const
 		{
-			return std::make_shared<VulkanDescriptorSetLayout>(shared_from_this(), Bindings);
+			return std::make_unique<VulkanDescriptorSetLayout>(shared_from_this(), Bindings);
 		}
 
-		std::shared_ptr<RenderInterface::DescriptorSetPool> VulkanDevice::CreateDescriptorSetPool(uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools, bool SupportIndividualDeallocations) const
+		std::unique_ptr<RenderInterface::DescriptorSetPool> VulkanDevice::CreateDescriptorSetPool(uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools, bool SupportIndividualDeallocations) const
 		{
-			return std::make_shared<VulkanDescriptorSetPool>(shared_from_this(), NumberOfSets, Subpools, SupportIndividualDeallocations);
+			return std::make_unique<VulkanDescriptorSetPool>(shared_from_this(), NumberOfSets, Subpools, SupportIndividualDeallocations);
 		}
 
-		std::shared_ptr<RenderInterface::Sampler> VulkanDevice::CreateSampler(const RenderInterface::SamplerDescription& Description) const
+		std::unique_ptr<RenderInterface::Sampler> VulkanDevice::CreateSampler(const RenderInterface::SamplerDescription& Description) const
 		{
-			return std::make_shared<VulkanSampler>(shared_from_this(), Description);
+			return std::make_unique<VulkanSampler>(shared_from_this(), Description);
 		}
 
-		std::shared_ptr<RenderInterface::Image> VulkanDevice::CreateImage(Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, uint32 MipLevels, RenderInterface::ImageLayout InitialLayout) const
+		std::unique_ptr<RenderInterface::Image> VulkanDevice::CreateImage(Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, uint32 MipLevels, RenderInterface::ImageLayout InitialLayout) const
 		{
-			return std::make_shared<VulkanImage>(shared_from_this(), Size, Usage, Format, MipLevels, InitialLayout);
+			return std::make_unique<VulkanImage>(shared_from_this(), Size, Usage, Format, MipLevels, InitialLayout);
 		}
 
-		std::shared_ptr<RenderInterface::Image> VulkanDevice::CreateCubemap(Vec2ui Size,
+		std::unique_ptr<RenderInterface::Image> VulkanDevice::CreateCubemap(Vec2ui Size,
 		                                                                    RenderInterface::ImageUsageType Usage,
 		                                                                    RenderInterface::DataFormat Format,
 		                                                                    uint32 MipLevels,
-		                                                                    RenderInterface::ImageLayout InitialLayout)
-		const
+		                                                                    RenderInterface::ImageLayout InitialLayout)	const
 		{
-			return std::make_shared<VulkanImage>(shared_from_this(), Size, Usage, Format, MipLevels, InitialLayout,
+			return std::make_unique<VulkanImage>(shared_from_this(), Size, Usage, Format, MipLevels, InitialLayout,
 			                                     true);
 		}
 

@@ -26,43 +26,43 @@ namespace Hermes
 			VulkanDevice(VulkanDevice&& Other);
 			VulkanDevice& operator=(VulkanDevice&& Other);
 
-			std::shared_ptr<RenderInterface::Swapchain> CreateSwapchain(uint32 NumFrames) const override;
+			std::unique_ptr<RenderInterface::Swapchain> CreateSwapchain(uint32 NumFrames) const override;
 
 			const RenderInterface::Queue& GetQueue(RenderInterface::QueueType Type) const override;
 			
-			std::shared_ptr<RenderInterface::Buffer> CreateBuffer(size_t Size, RenderInterface::BufferUsageType Usage) const override;
+			std::unique_ptr<RenderInterface::Buffer> CreateBuffer(size_t Size, RenderInterface::BufferUsageType Usage) const override;
 
-			std::shared_ptr<RenderInterface::Image> CreateImage(
+			std::unique_ptr<RenderInterface::Image> CreateImage(
 				Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format, 
 				uint32 MipLevels, RenderInterface::ImageLayout InitialLayout) const override;
 
-			virtual std::shared_ptr<RenderInterface::Image> CreateCubemap(
+			virtual std::unique_ptr<RenderInterface::Image> CreateCubemap(
 				Vec2ui Size, RenderInterface::ImageUsageType Usage, RenderInterface::DataFormat Format,
 				uint32 MipLevels, RenderInterface::ImageLayout InitialLayout) const override;
 
-			std::shared_ptr<RenderInterface::Fence> CreateFence(bool InitialState) const override;
+			std::unique_ptr<RenderInterface::Fence> CreateFence(bool InitialState) const override;
 			
-			std::shared_ptr<RenderInterface::Shader> CreateShader(
+			std::unique_ptr<RenderInterface::Shader> CreateShader(
 				const String& Path, RenderInterface::ShaderType Type) const override;
 			
-			std::shared_ptr<RenderInterface::RenderPass> CreateRenderPass(
+			std::unique_ptr<RenderInterface::RenderPass> CreateRenderPass(
 				const std::vector<RenderInterface::RenderPassAttachment>& Attachments) const override;
 
-			std::shared_ptr<RenderInterface::Pipeline> CreatePipeline(
+			std::unique_ptr<RenderInterface::Pipeline> CreatePipeline(
 				const RenderInterface::RenderPass& RenderPass,
 				const RenderInterface::PipelineDescription& Description) const override;
 
-			std::shared_ptr<RenderInterface::RenderTarget> CreateRenderTarget(
+			std::unique_ptr<RenderInterface::RenderTarget> CreateRenderTarget(
 				std::shared_ptr<RenderInterface::RenderPass> RenderPass, 
 				const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size) const override;
 
-			std::shared_ptr<RenderInterface::DescriptorSetLayout> CreateDescriptorSetLayout(
+			std::unique_ptr<RenderInterface::DescriptorSetLayout> CreateDescriptorSetLayout(
 				const std::vector<RenderInterface::DescriptorBinding>& Bindings) const override;
 
-			std::shared_ptr<RenderInterface::DescriptorSetPool> CreateDescriptorSetPool(
+			std::unique_ptr<RenderInterface::DescriptorSetPool> CreateDescriptorSetPool(
 				uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools, bool SupportIndividualDeallocations = false) const override;
 
-			std::shared_ptr<RenderInterface::Sampler> CreateSampler(
+			std::unique_ptr<RenderInterface::Sampler> CreateSampler(
 				const RenderInterface::SamplerDescription& Description) const override;
 			
 			void WaitForIdle() const override;

@@ -10,6 +10,7 @@
 #include "RenderInterface/GenericRenderInterface/Fence.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/RenderPass.h"
+#include "RenderInterface/GenericRenderInterface/RenderTarget.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #include "RenderInterface/GenericRenderInterface/Image.h"
 

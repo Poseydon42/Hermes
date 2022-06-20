@@ -310,7 +310,7 @@ namespace Hermes
 			}
 
 			NewPassContainer.RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
-				NewPassContainer.Pass, RenderTargetAttachments, RenderTargetAttachments[0]->GetSize());
+				*NewPassContainer.Pass, RenderTargetAttachments, RenderTargetAttachments[0]->GetSize());
 
 			Passes[Pass.first] = NewPassContainer;
 		}
@@ -437,7 +437,7 @@ namespace Hermes
 				Passes[Pass.first].Attachments.push_back(Resource.Image.get());
 			}
 			Passes[Pass.first].RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
-				Passes[Pass.first].Pass, Attachments, Attachments[0]->GetSize());
+				*Passes[Pass.first].Pass, Attachments, Attachments[0]->GetSize());
 		}
 
 		ResourcesWereRecreated = true;

@@ -8,9 +8,8 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanRenderTarget::VulkanRenderTarget(std::shared_ptr<const VulkanDevice> InDevice, const std::shared_ptr<RenderInterface::RenderPass>& InRenderPass, std::vector<std::shared_ptr<RenderInterface::Image>> InAttachments, Vec2ui InSize)
+		VulkanRenderTarget::VulkanRenderTarget(std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::RenderPass& InRenderPass, std::vector<std::shared_ptr<RenderInterface::Image>> InAttachments, Vec2ui InSize)
 			: Device(std::move(InDevice))
-			, RenderPass(std::reinterpret_pointer_cast<VulkanRenderPass>(InRenderPass))
 			, Framebuffer(VK_NULL_HANDLE)
 			, Size(InSize)
 		{
@@ -33,7 +32,7 @@ namespace Hermes
 			CreateInfo.width = Size.X;
 			CreateInfo.height = Size.Y;
 			CreateInfo.layers = 1;
-			CreateInfo.renderPass = RenderPass->GetRenderPass();
+			CreateInfo.renderPass = reinterpret_cast<const VulkanRenderPass&>(InRenderPass).GetRenderPass();
 
 			VK_CHECK_RESULT(vkCreateFramebuffer(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Framebuffer));
 		}
@@ -51,7 +50,6 @@ namespace Hermes
 		VulkanRenderTarget& VulkanRenderTarget::operator=(VulkanRenderTarget&& Other)
 		{
 			std::swap(Device, Other.Device);
-			std::swap(RenderPass, Other.RenderPass);
 			std::swap(Attachments, Other.Attachments);
 			std::swap(Framebuffer, Other.Framebuffer);
 			std::swap(Size, Other.Size);

@@ -225,9 +225,9 @@ namespace Hermes
 			return std::make_unique<VulkanPipeline>(shared_from_this(), std::move(RenderPass), Description);
 		}
 
-		std::unique_ptr<RenderInterface::RenderTarget> VulkanDevice::CreateRenderTarget(std::shared_ptr<RenderInterface::RenderPass> RenderPass, const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size) const
+		std::unique_ptr<RenderInterface::RenderTarget> VulkanDevice::CreateRenderTarget(const RenderInterface::RenderPass& RenderPass, const std::vector<std::shared_ptr<RenderInterface::Image>>& Attachments, Vec2ui Size) const
 		{
-			return std::make_unique<VulkanRenderTarget>(shared_from_this(), std::move(RenderPass), Attachments, Size);
+			return std::make_unique<VulkanRenderTarget>(shared_from_this(), RenderPass, Attachments, Size);
 		}
 
 		std::unique_ptr<RenderInterface::DescriptorSetLayout> VulkanDevice::CreateDescriptorSetLayout(const std::vector<RenderInterface::DescriptorBinding>& Bindings) const

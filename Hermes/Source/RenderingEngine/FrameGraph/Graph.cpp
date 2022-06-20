@@ -285,7 +285,7 @@ namespace Hermes
 			NewPassContainer.CommandBuffer = RenderQueue.CreateCommandBuffer(true);
 			NewPassContainer.Callback = Pass.second.Callback;
 
-			std::vector<std::shared_ptr<RenderInterface::Image>> RenderTargetAttachments;
+			std::vector<const RenderInterface::Image*> RenderTargetAttachments;
 			RenderTargetAttachments.reserve(Pass.second.Drains.size());
 			NewPassContainer.ClearColors.reserve(Pass.second.Drains.size());
 			NewPassContainer.AttachmentLayouts.reserve(Pass.second.Drains.size());
@@ -297,7 +297,7 @@ namespace Hermes
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
 
 				const auto& Resource = Resources[ResourceOwnName];
-				RenderTargetAttachments.push_back(Resource.Image);
+				RenderTargetAttachments.push_back(Resource.Image.get());
 
 				NewPassContainer.ClearColors.emplace_back();
 				NewPassContainer.ClearColors.back().R = Drain.ClearColor[0];
@@ -422,7 +422,7 @@ namespace Hermes
 		// TODO : only recreate render targets if their images were recreated
 		for (const auto& Pass : Scheme.Passes)
 		{
-			std::vector<std::shared_ptr<RenderInterface::Image>> Attachments;
+			std::vector<const RenderInterface::Image*> Attachments;
 			Attachments.reserve(Pass.second.Drains.size());
 			Passes[Pass.first].Attachments.clear();
 			for (const auto& Drain : Pass.second.Drains)
@@ -433,7 +433,7 @@ namespace Hermes
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
 
 				const auto& Resource = Resources[ResourceOwnName];
-				Attachments.push_back(Resource.Image);
+				Attachments.push_back(Resource.Image.get());
 				Passes[Pass.first].Attachments.push_back(Resource.Image.get());
 			}
 			Passes[Pass.first].RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(

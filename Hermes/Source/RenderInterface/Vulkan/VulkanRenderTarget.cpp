@@ -8,26 +8,21 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanRenderTarget::VulkanRenderTarget(std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::RenderPass& InRenderPass, std::vector<std::shared_ptr<RenderInterface::Image>> InAttachments, Vec2ui InSize)
+		VulkanRenderTarget::VulkanRenderTarget(std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::RenderPass& InRenderPass, const std::vector<const RenderInterface::Image*>& InAttachments, Vec2ui InSize)
 			: Device(std::move(InDevice))
 			, Framebuffer(VK_NULL_HANDLE)
+			, ImageCount(static_cast<uint32>(InAttachments.size()))
 			, Size(InSize)
 		{
-			Attachments.reserve(InAttachments.size());
-			for (const auto& Attachment : InAttachments)
-			{
-				Attachments.push_back(std::reinterpret_pointer_cast<VulkanImage>(Attachment));
-			}
-
-			std::vector<VkImageView> AttachmentViews(Attachments.size(), VK_NULL_HANDLE);
+			std::vector<VkImageView> AttachmentViews(InAttachments.size(), VK_NULL_HANDLE);
 			for (size_t Index = 0; Index < AttachmentViews.size(); Index++)
 			{
-				AttachmentViews[Index] = Attachments[Index]->GetDefaultView();
+				AttachmentViews[Index] = reinterpret_cast<const VulkanImage*>(InAttachments[Index])->GetDefaultView();
 			}
 
 			VkFramebufferCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			CreateInfo.attachmentCount = (uint32)AttachmentViews.size();
+			CreateInfo.attachmentCount = static_cast<uint32>(AttachmentViews.size());
 			CreateInfo.pAttachments = AttachmentViews.data();
 			CreateInfo.width = Size.X;
 			CreateInfo.height = Size.Y;
@@ -50,8 +45,8 @@ namespace Hermes
 		VulkanRenderTarget& VulkanRenderTarget::operator=(VulkanRenderTarget&& Other)
 		{
 			std::swap(Device, Other.Device);
-			std::swap(Attachments, Other.Attachments);
 			std::swap(Framebuffer, Other.Framebuffer);
+			std::swap(ImageCount, Other.ImageCount);
 			std::swap(Size, Other.Size);
 
 			return *this;
@@ -64,7 +59,7 @@ namespace Hermes
 
 		uint32 VulkanRenderTarget::GetImageCount() const
 		{
-			return (uint32)Attachments.size();
+			return ImageCount;
 		}
 
 		VkFramebuffer VulkanRenderTarget::GetFramebuffer() const

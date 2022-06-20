@@ -1,4 +1,5 @@
 #include "VulkanDescriptor.h"
+#include "VulkanDescriptor.h"
 
 #include "RenderInterface/Vulkan/VulkanBuffer.h"
 #include "RenderInterface/Vulkan/VulkanCommonTypes.h"
@@ -30,7 +31,9 @@ namespace Hermes
 			}
 		}
 
-		VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::shared_ptr<const VulkanDevice> InDevice, const std::vector<RenderInterface::DescriptorBinding>& Bindings)
+		VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::shared_ptr<const VulkanDevice> InDevice,
+		                                                     const std::vector<RenderInterface::DescriptorBinding>&
+		                                                     Bindings)
 			: Device(std::move(InDevice))
 			, Layout(VK_NULL_HANDLE)
 		{
@@ -76,10 +79,12 @@ namespace Hermes
 			return *this;
 		}
 
-		VulkanDescriptorSetPool::VulkanDescriptorSetPool(std::shared_ptr<const VulkanDevice> InDevice, uint32 InNumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools, bool InSupportIndividualDeallocations)
-			: Device(std::move(InDevice))
+		VulkanDescriptorSetPool::VulkanDescriptorSetPool(std::shared_ptr<const VulkanDevice> InDevice,
+		                                                 uint32 InNumberOfSets,
+		                                                 const std::vector<RenderInterface::SubpoolDescription>&
+		                                                 Subpools, bool InSupportIndividualDeallocations)
+			: Holder(std::make_shared<VkDescriptorPoolHolder>(std::move(InDevice), VK_NULL_HANDLE))
 			, NumSets(InNumberOfSets)
-			, Pool(VK_NULL_HANDLE)
 			, SupportIndividualDeallocations(InSupportIndividualDeallocations)
 		{
 			VkDescriptorPoolCreateInfo CreateInfo = {};
@@ -97,58 +102,45 @@ namespace Hermes
 			CreateInfo.poolSizeCount = static_cast<uint32>(VulkanPoolSizes.size());
 			CreateInfo.flags = SupportIndividualDeallocations ? VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT : 0;
 
-			VK_CHECK_RESULT(vkCreateDescriptorPool(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Pool))
+			VK_CHECK_RESULT(vkCreateDescriptorPool(Holder->Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Holder->Pool))
 		}
 
-		VulkanDescriptorSetPool::~VulkanDescriptorSetPool()
-		{
-			vkDestroyDescriptorPool(Device->GetDevice(), Pool, GVulkanAllocator);
-		}
-
-		VulkanDescriptorSetPool::VulkanDescriptorSetPool(VulkanDescriptorSetPool&& Other)
-		{
-			*this = std::move(Other);
-		}
-
-		VulkanDescriptorSetPool& VulkanDescriptorSetPool::operator=(VulkanDescriptorSetPool&& Other)
-		{
-			std::swap(Device, Other.Device);
-			std::swap(NumSets, Other.NumSets);
-			std::swap(Pool, Other.Pool);
-			std::swap(SupportIndividualDeallocations, Other.SupportIndividualDeallocations);
-
-			return *this;
-		}
-
-		std::shared_ptr<RenderInterface::DescriptorSet> VulkanDescriptorSetPool::CreateDescriptorSet(std::shared_ptr<RenderInterface::DescriptorSetLayout> Layout)
+		std::shared_ptr<RenderInterface::DescriptorSet> VulkanDescriptorSetPool::CreateDescriptorSet(
+			std::shared_ptr<RenderInterface::DescriptorSetLayout> Layout)
 		{
 			VkDescriptorSetAllocateInfo AllocateInfo = {};
 			AllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-			AllocateInfo.descriptorPool = Pool;
+			AllocateInfo.descriptorPool = Holder->Pool;
 			AllocateInfo.descriptorSetCount = 1; // TODO : multi-set multi-layout constructor of some kind
-			VkDescriptorSetLayout DescriptorLayout = static_cast<const VulkanDescriptorSetLayout&>(*Layout).GetDescriptorSetLayout();
+			VkDescriptorSetLayout DescriptorLayout = static_cast<const VulkanDescriptorSetLayout&>(*Layout).
+				GetDescriptorSetLayout();
 			AllocateInfo.pSetLayouts = &DescriptorLayout;
 
 			VkDescriptorSet AllocatedSet = VK_NULL_HANDLE;
-			if (vkAllocateDescriptorSets(Device->GetDevice(), &AllocateInfo, &AllocatedSet) != VK_SUCCESS)
+			if (vkAllocateDescriptorSets(Holder->Device->GetDevice(), &AllocateInfo, &AllocatedSet) != VK_SUCCESS)
 				return nullptr;
-			return std::make_shared<VulkanDescriptorSet>(Device, shared_from_this(), std::reinterpret_pointer_cast<VulkanDescriptorSetLayout>(Layout), AllocatedSet, SupportIndividualDeallocations);
+			return std::make_shared<VulkanDescriptorSet>(Holder->Device, Holder,
+			                                             std::reinterpret_pointer_cast<
+				                                             VulkanDescriptorSetLayout>(Layout), AllocatedSet,
+			                                             SupportIndividualDeallocations);
 		}
 
-		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout, VkDescriptorSet InSet, bool InFreeInDescriptor)
+		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice,
+		                                         std::shared_ptr<VulkanDescriptorSetPool::VkDescriptorPoolHolder> InPool,
+		                                         std::shared_ptr<VulkanDescriptorSetLayout> InLayout,
+		                                         VkDescriptorSet InSet, bool InFreeInDescriptor)
 			: Device(std::move(InDevice))
 			, Pool(std::move(InPool))
 			, Layout(std::move(InLayout))
 			, Set(InSet)
 			, FreeInDestructor(InFreeInDescriptor)
 		{
-			
 		}
 
 		VulkanDescriptorSet::~VulkanDescriptorSet()
 		{
 			if (FreeInDestructor)
-				vkFreeDescriptorSets(Device->GetDevice(), Pool->GetDescriptorPool(), 1, &Set);
+				vkFreeDescriptorSets(Device->GetDevice(), Pool->Pool, 1, &Set);
 			Set = VK_NULL_HANDLE;
 		}
 
@@ -167,8 +159,9 @@ namespace Hermes
 
 			return *this;
 		}
-		
-		void VulkanDescriptorSet::UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size)
+
+		void VulkanDescriptorSet::UpdateWithBuffer(uint32 BindingIndex, uint32 ArrayIndex,
+		                                           const RenderInterface::Buffer& Buffer, uint32 Offset, uint32 Size)
 		{
 			VkWriteDescriptorSet Write = {};
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -186,7 +179,8 @@ namespace Hermes
 			vkUpdateDescriptorSets(Device->GetDevice(), 1, &Write, 0, nullptr);
 		}
 
-		void VulkanDescriptorSet::UpdateWithSampler(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Sampler& Sampler)
+		void VulkanDescriptorSet::UpdateWithSampler(uint32 BindingIndex, uint32 ArrayIndex,
+		                                            const RenderInterface::Sampler& Sampler)
 		{
 			VkWriteDescriptorSet Write = {};
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -202,7 +196,9 @@ namespace Hermes
 			vkUpdateDescriptorSets(Device->GetDevice(), 1, &Write, 0, nullptr);
 		}
 
-		void VulkanDescriptorSet::UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex, const RenderInterface::Image& Image, RenderInterface::ImageLayout LayoutAtTimeOfAccess)
+		void VulkanDescriptorSet::UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex,
+		                                          const RenderInterface::Image& Image,
+		                                          RenderInterface::ImageLayout LayoutAtTimeOfAccess)
 		{
 			VkWriteDescriptorSet Write = {};
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -219,7 +215,10 @@ namespace Hermes
 			vkUpdateDescriptorSets(Device->GetDevice(), 1, &Write, 0, nullptr);
 		}
 
-		void VulkanDescriptorSet::UpdateWithImageAndSampler(uint32 BindingIndex, uint32 ArrayIndex,	const RenderInterface::Image& Image, const RenderInterface::Sampler& Sampler, RenderInterface::ImageLayout LayoutAtTimeOfAccess)
+		void VulkanDescriptorSet::UpdateWithImageAndSampler(uint32 BindingIndex, uint32 ArrayIndex,
+		                                                    const RenderInterface::Image& Image,
+		                                                    const RenderInterface::Sampler& Sampler,
+		                                                    RenderInterface::ImageLayout LayoutAtTimeOfAccess)
 		{
 			VkWriteDescriptorSet Write = {};
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

@@ -26,7 +26,8 @@ namespace Hermes
 
 	void DescriptorAllocator::AllocateNewPool()
 	{
-		auto NewPool = Device->CreateDescriptorSetPool(DescriptorSetsPerPool, { Subpools.begin(), Subpools.end() });
-		PoolList.push_back(std::move(NewPool));
+		PoolList.push_back(Device->CreateDescriptorSetPool(DescriptorSetsPerPool, {
+			                                                   Subpools.begin(), Subpools.end()
+		                                                   }));
 	}
 }

@@ -12,6 +12,9 @@ namespace Hermes
 {
 	class HERMES_API DescriptorAllocator
 	{
+		MAKE_NON_COPYABLE(DescriptorAllocator)
+		ADD_DEFAULT_MOVE_CONSTRUCTOR(DescriptorAllocator)
+		ADD_DEFAULT_DESTRUCTOR(DescriptorAllocator)
 	public:
 		DescriptorAllocator(std::shared_ptr<RenderInterface::Device> InDevice);
 
@@ -19,7 +22,7 @@ namespace Hermes
 
 	private:
 		std::shared_ptr<RenderInterface::Device> Device;
-		std::vector<std::shared_ptr<RenderInterface::DescriptorSetPool>> PoolList;
+		std::vector<std::unique_ptr<RenderInterface::DescriptorSetPool>> PoolList;
 
 		static constexpr uint32 DescriptorSetsPerPool = 1024;
 		static constexpr std::array<RenderInterface::SubpoolDescription, 4> Subpools =

@@ -23,7 +23,7 @@ namespace Hermes
 			VulkanQueue(VulkanQueue&& Other);
 			VulkanQueue& operator=(VulkanQueue&& Other);
 
-			std::shared_ptr<RenderInterface::CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) const override;
+			std::unique_ptr<RenderInterface::CommandBuffer> CreateCommandBuffer(bool IsPrimaryBuffer) const override;
 
 			virtual void SubmitCommandBuffer(const RenderInterface::CommandBuffer& Buffer,
 			                                 std::optional<RenderInterface::Fence*> Fence) const override;

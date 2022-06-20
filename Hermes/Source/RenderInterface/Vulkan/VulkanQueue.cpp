@@ -40,9 +40,9 @@ namespace Hermes
 			return *this;
 		}
 
-		std::shared_ptr<RenderInterface::CommandBuffer> VulkanQueue::CreateCommandBuffer(bool IsPrimaryBuffer) const
+		std::unique_ptr<RenderInterface::CommandBuffer> VulkanQueue::CreateCommandBuffer(bool IsPrimaryBuffer) const
 		{
-			return std::make_shared<VulkanCommandBuffer>(Device, CommandPool, IsPrimaryBuffer);
+			return std::make_unique<VulkanCommandBuffer>(Device, CommandPool, IsPrimaryBuffer);
 		}
 
 		void VulkanQueue::SubmitCommandBuffer(const RenderInterface::CommandBuffer& Buffer,

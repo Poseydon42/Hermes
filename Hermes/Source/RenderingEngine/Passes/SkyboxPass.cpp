@@ -8,12 +8,14 @@
 #include "RenderingEngine/Texture.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"
+#include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #include "RenderInterface/GenericRenderInterface/Image.h"
 #include "RenderInterface/GenericRenderInterface/Pipeline.h"
 #include "RenderInterface/GenericRenderInterface/RenderPass.h"
 #include "RenderInterface/GenericRenderInterface/Sampler.h"
+#include "RenderInterface/GenericRenderInterface/Shader.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
 
 namespace Hermes

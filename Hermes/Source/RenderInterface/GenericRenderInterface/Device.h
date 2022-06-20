@@ -6,35 +6,13 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Math/Vector2.h"
-#include "RenderInterface/GenericRenderInterface/Queue.h"
-#include "RenderInterface/GenericRenderInterface/Buffer.h"
-#include "RenderInterface/GenericRenderInterface/Shader.h"
+#include "RenderInterface/GenericRenderInterface/Forward.h"
 
 
 namespace Hermes
 {
 	namespace RenderInterface
-	{
-		struct SubpoolDescription;
-		enum class DescriptorType;
-		struct SamplerDescription;
-		class Sampler;
-		enum class ImageLayout;
-		enum class DataFormat;
-		enum class ImageUsageType;
-		class DescriptorSetPool;
-		struct DescriptorBinding;
-		class DescriptorSetLayout;
-		class RenderTarget;
-		class Image;
-		struct PipelineDescription;
-		class Pipeline;
-		class RenderPass;
-		struct RenderPassAttachment;
-		class Fence;
-		class Swapchain;
-		class Buffer;
-		
+	{		
 		/**
 		 * Represents a 'logical device', basically an interface to all GPU functionality
 		 */

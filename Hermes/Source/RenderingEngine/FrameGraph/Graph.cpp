@@ -13,6 +13,7 @@
 #include "RenderInterface/GenericRenderInterface/RenderTarget.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #include "RenderInterface/GenericRenderInterface/Image.h"
+#include "RenderInterface/GenericRenderInterface/Queue.h"
 
 namespace Hermes
 {

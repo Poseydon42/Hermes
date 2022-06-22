@@ -50,6 +50,7 @@ namespace Hermes
 		enum class AddressingMode;
 		enum class AttachmentLoadOp;
 		enum class AttachmentStoreOp;
+		enum class AttachmentType;
 		enum class BufferUsageType;
 		enum class ComparisonOperator;
 		enum class CoordinateSystem;

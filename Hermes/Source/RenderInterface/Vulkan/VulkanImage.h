@@ -55,13 +55,27 @@ namespace Hermes
 			bool GetIsCubemapCompatible() const;
 
 		protected:
-			std::shared_ptr<const VulkanDevice> Device;
-			VkImage Handle;
+			struct VkImageHolder
+			{
+				MAKE_NON_COPYABLE(VkImageHolder)
+
+				VkImageHolder(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage);
+
+				~VkImageHolder();
+				VkImageHolder(VkImageHolder&& Other);
+				VkImageHolder& operator=(VkImageHolder&& Other);
+
+				std::shared_ptr<const VulkanDevice> Device;
+				VkImage Image;
+				VmaAllocation Allocation = VK_NULL_HANDLE;
+				bool IsOwned = false;
+			};
+
+			std::shared_ptr<VkImageHolder> Holder;
+
 			Vec2ui Size;
 			VkFormat Format;
 			mutable VkImageView DefaultView;
-			VmaAllocation Allocation;
-			bool IsOwned;
 			uint32 MipLevelCount;
 			bool IsCubemapCompatible;
 			RenderInterface::ImageUsageType Usage;

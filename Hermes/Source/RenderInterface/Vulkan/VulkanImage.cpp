@@ -9,13 +9,10 @@ namespace Hermes
 	{
 		VulkanImage::VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat,
 		                         Vec2ui InSize, RenderInterface::ImageUsageType InUsage, bool InIsCubemapCompatible)
-			: Device(std::move(InDevice))
-			, Handle(InImage)
+			: Holder(std::make_shared<VkImageHolder>(std::move(InDevice), InImage))
 			, Size(InSize)
 			, Format(InFormat)
 			, DefaultView(VK_NULL_HANDLE)
-			, Allocation(VK_NULL_HANDLE)
-			, IsOwned(false)
 			, MipLevelCount(1)
 			, IsCubemapCompatible(InIsCubemapCompatible)
 			, Usage(InUsage)
@@ -26,13 +23,10 @@ namespace Hermes
 			RenderInterface::ImageUsageType InUsage, RenderInterface::DataFormat InFormat,
 			uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout,
 			bool InIsCubemapCompatible)
-			: Device(std::move(InDevice))
-			, Handle(VK_NULL_HANDLE)
+			: Holder(std::make_shared<VkImageHolder>(std::move(InDevice), VK_NULL_HANDLE))
 			, Size(InSize)
 			, Format(DataFormatToVkFormat(InFormat))
 			, DefaultView(VK_NULL_HANDLE)
-			, Allocation(VK_NULL_HANDLE)
-			, IsOwned(false)
 			, MipLevelCount(InMipLevels)
 			, IsCubemapCompatible(InIsCubemapCompatible)
 			, Usage(InUsage)
@@ -71,18 +65,14 @@ namespace Hermes
 				AllocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 			else
 				AllocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-			VK_CHECK_RESULT(vmaCreateImage(Device->GetAllocator(), &CreateInfo, &AllocationInfo, &Handle, &Allocation, nullptr))
+			VK_CHECK_RESULT(vmaCreateImage(Holder->Device->GetAllocator(), &CreateInfo, &AllocationInfo, &Holder->Image, &Holder->Allocation, nullptr))
 
-			IsOwned = true;
+			Holder->IsOwned = true;
 		}
 
 		VulkanImage::~VulkanImage()
 		{
-			if (IsOwned)
-			{
-				vmaDestroyImage(Device->GetAllocator(), Handle, Allocation);
-			}
-			vkDestroyImageView(Device->GetDevice(), DefaultView, GVulkanAllocator);
+			vkDestroyImageView(Holder->Device->GetDevice(), DefaultView, GVulkanAllocator);
 		}
 
 		VulkanImage::VulkanImage(VulkanImage&& Other)
@@ -92,13 +82,10 @@ namespace Hermes
 
 		VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
 		{
-			std::swap(Device, Other.Device);
-			std::swap(Handle, Other.Handle);
+			std::swap(Holder, Other.Holder);
 			std::swap(Size, Other.Size);
 			std::swap(Format, Other.Format);
-			std::swap(IsOwned, Other.IsOwned);
 			std::swap(DefaultView, Other.DefaultView);
-			std::swap(Allocation, Other.Allocation);
 			std::swap(MipLevelCount, Other.MipLevelCount);
 			std::swap(IsCubemapCompatible, Other.IsCubemapCompatible);
 			std::swap(Usage, Other.Usage);
@@ -128,7 +115,7 @@ namespace Hermes
 
 		VkImage VulkanImage::GetImage() const
 		{
-			return Handle;
+			return Holder->Image;
 		}
 
 		VkImageView VulkanImage::GetDefaultView() const
@@ -143,6 +130,37 @@ namespace Hermes
 			return IsCubemapCompatible;
 		}
 
+		VulkanImage::VkImageHolder::VkImageHolder(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage)
+			: Device(std::move(InDevice))
+			, Image(InImage)
+		{
+		}
+
+		VulkanImage::VkImageHolder::~VkImageHolder()
+		{
+			if (IsOwned)
+			{
+				vmaDestroyImage(Device->GetAllocator(), Image, Allocation);
+			}
+		}
+
+		VulkanImage::VkImageHolder::VkImageHolder(VkImageHolder&& Other)
+		{
+			*this = std::move(Other);
+		}
+
+		VulkanImage::VkImageHolder& VulkanImage::VkImageHolder::operator=(VkImageHolder&& Other)
+		{
+			if (this != &Other)
+			{
+				std::swap(Device, Other.Device);
+				std::swap(Image, Other.Image);
+				std::swap(Allocation, Other.Allocation);
+				std::swap(IsOwned, Other.IsOwned);
+			}
+			return *this;
+		}
+
 		void VulkanImage::CreateDefaultView() const
 		{
 			VkImageViewCreateInfo CreateInfo = {};
@@ -152,7 +170,7 @@ namespace Hermes
 			CreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
 			CreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 			CreateInfo.format = Format;
-			CreateInfo.image = Handle;
+			CreateInfo.image = Holder->Image;
 			CreateInfo.subresourceRange.aspectMask = VkAspectFlagsFromVkFormat(Format);
 			CreateInfo.subresourceRange.baseArrayLayer = 0;
 			CreateInfo.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
@@ -160,7 +178,7 @@ namespace Hermes
 			CreateInfo.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
 			CreateInfo.viewType = IsCubemapCompatible ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
 
-			VK_CHECK_RESULT(vkCreateImageView(Device->GetDevice(), &CreateInfo, GVulkanAllocator, &DefaultView))
+			VK_CHECK_RESULT(vkCreateImageView(Holder->Device->GetDevice(), &CreateInfo, GVulkanAllocator, &DefaultView))
 		}
 	}
 }

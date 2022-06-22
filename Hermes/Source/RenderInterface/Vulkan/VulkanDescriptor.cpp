@@ -125,6 +125,32 @@ namespace Hermes
 			                                             SupportIndividualDeallocations);
 		}
 
+		VulkanDescriptorSetPool::VkDescriptorPoolHolder::VkDescriptorPoolHolder(
+			std::shared_ptr<const VulkanDevice> InDevice,
+			VkDescriptorPool InPool)
+			: Device(std::move(InDevice))
+			, Pool(InPool)
+		{
+		}
+
+		VulkanDescriptorSetPool::VkDescriptorPoolHolder::~VkDescriptorPoolHolder()
+		{
+			vkDestroyDescriptorPool(Device->GetDevice(), Pool, GVulkanAllocator);
+		}
+
+		VulkanDescriptorSetPool::VkDescriptorPoolHolder::VkDescriptorPoolHolder(VkDescriptorPoolHolder&& Other)
+		{
+			*this = std::move(Other);
+		}
+
+		VulkanDescriptorSetPool::VkDescriptorPoolHolder& VulkanDescriptorSetPool::VkDescriptorPoolHolder::operator=(VkDescriptorPoolHolder&& Other)
+		{
+			std::swap(Device, Other.Device);
+			std::swap(Pool, Other.Pool);
+
+			return *this;
+		}
+
 		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice,
 		                                         std::shared_ptr<VulkanDescriptorSetPool::VkDescriptorPoolHolder> InPool,
 		                                         std::shared_ptr<VulkanDescriptorSetLayout> InLayout,

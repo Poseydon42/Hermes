@@ -55,6 +55,14 @@ namespace Hermes
 			//        a shared_ptr, which I do not want to enforce
 			struct VkDescriptorPoolHolder
 			{
+				MAKE_NON_COPYABLE(VkDescriptorPoolHolder)
+
+				VkDescriptorPoolHolder(std::shared_ptr<const VulkanDevice> InDevice, VkDescriptorPool InPool);
+
+				~VkDescriptorPoolHolder();
+				VkDescriptorPoolHolder(VkDescriptorPoolHolder&& Other);
+				VkDescriptorPoolHolder& operator=(VkDescriptorPoolHolder&& Other);
+
 				std::shared_ptr<const VulkanDevice> Device;
 				VkDescriptorPool Pool;
 			};

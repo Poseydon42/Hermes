@@ -209,7 +209,7 @@ namespace Hermes
 			Container.CurrentLayout = RenderInterface::ImageLayout::Undefined;
 			Container.Desc = Resource.second;
 
-			Resources[Resource.first] = Container;
+			Resources[Resource.first] = std::move(Container);
 		}
 
 		for (const auto& Pass : Scheme.Passes)
@@ -312,7 +312,7 @@ namespace Hermes
 			NewPassContainer.RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
 				*NewPassContainer.Pass, RenderTargetAttachments, RenderTargetAttachments[0]->GetSize());
 
-			Passes[Pass.first] = NewPassContainer;
+			Passes[Pass.first] = std::move(NewPassContainer);
 		}
 	}
 

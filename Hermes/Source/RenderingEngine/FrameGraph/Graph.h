@@ -1,19 +1,18 @@
 ﻿#pragma once
 
 #include <memory>
-#include <array>
 #include <unordered_map>
 
 #include "Core/Core.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
-#include "RenderInterface/GenericRenderInterface/Forward.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
+#include "RenderInterface/GenericRenderInterface/Image.h"
+#include "RenderInterface/GenericRenderInterface/RenderPass.h"
+#include "RenderInterface/GenericRenderInterface/RenderTarget.h"
 
 namespace Hermes
 {
-	struct PassDesc;
-
 	class FrameGraph;
 
 	class HERMES_API FrameGraphScheme
@@ -41,6 +40,9 @@ namespace Hermes
 
 	class HERMES_API FrameGraph
 	{
+		MAKE_NON_COPYABLE(FrameGraph)
+		ADD_DEFAULT_MOVE_CONSTRUCTOR(FrameGraph)
+		ADD_DEFAULT_DESTRUCTOR(FrameGraph)
 	public:
 		void Execute(const Scene& Scene);
 
@@ -61,7 +63,7 @@ namespace Hermes
 
 		struct ResourceContainer
 		{
-			std::shared_ptr<RenderInterface::Image> Image;
+			std::unique_ptr<RenderInterface::Image> Image;
 			RenderInterface::ImageLayout CurrentLayout = RenderInterface::ImageLayout::Undefined;
 			ResourceDesc Desc;
 		};
@@ -69,9 +71,9 @@ namespace Hermes
 
 		struct PassContainer
 		{
-			std::shared_ptr<RenderInterface::RenderPass> Pass;
-			std::shared_ptr<RenderInterface::RenderTarget> RenderTarget;
-			std::shared_ptr<RenderInterface::CommandBuffer> CommandBuffer;
+			std::unique_ptr<RenderInterface::RenderPass> Pass;
+			std::unique_ptr<RenderInterface::RenderTarget> RenderTarget;
+			std::unique_ptr<RenderInterface::CommandBuffer> CommandBuffer;
 			std::vector<const RenderInterface::Image*> Attachments;
 			// NOTE : pair<ResourceOwnName, LayoutAtStart>
 			std::vector<std::pair<String, RenderInterface::ImageLayout>> AttachmentLayouts;

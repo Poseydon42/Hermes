@@ -8,7 +8,10 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		VulkanRenderTarget::VulkanRenderTarget(std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::RenderPass& InRenderPass, const std::vector<const RenderInterface::Image*>& InAttachments, Vec2ui InSize)
+		VulkanRenderTarget::VulkanRenderTarget(std::shared_ptr<const VulkanDevice> InDevice,
+		                                       const RenderInterface::RenderPass& InRenderPass,
+		                                       const std::vector<const RenderInterface::ImageView*>& InAttachments,
+		                                       Vec2ui InSize)
 			: Device(std::move(InDevice))
 			, Framebuffer(VK_NULL_HANDLE)
 			, ImageCount(static_cast<uint32>(InAttachments.size()))
@@ -17,7 +20,7 @@ namespace Hermes
 			std::vector<VkImageView> AttachmentViews(InAttachments.size(), VK_NULL_HANDLE);
 			for (size_t Index = 0; Index < AttachmentViews.size(); Index++)
 			{
-				AttachmentViews[Index] = reinterpret_cast<const VulkanImage*>(InAttachments[Index])->GetDefaultView();
+				AttachmentViews[Index] = reinterpret_cast<const VulkanImageView*>(InAttachments[Index])->GetImageView();
 			}
 
 			VkFramebufferCreateInfo CreateInfo = {};

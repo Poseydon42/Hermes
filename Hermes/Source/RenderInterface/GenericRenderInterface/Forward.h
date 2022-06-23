@@ -12,6 +12,7 @@ namespace Hermes
 		class Device;
 		class Fence;
 		class Image;
+		class ImageView;
 		class Instance;
 		class PhysicalDevice;
 		class Pipeline;
@@ -34,6 +35,7 @@ namespace Hermes
 		struct ImageBlitRegion;
 		struct ImageCopyRegion;
 		struct ImageMemoryBarrier;
+		struct ImageViewDescription;
 		struct InputAssemblerDescription;
 		struct PipelineDescription;
 		struct PushConstantRange;

@@ -1,5 +1,4 @@
 #include "VulkanDescriptor.h"
-#include "VulkanDescriptor.h"
 
 #include "RenderInterface/Vulkan/VulkanBuffer.h"
 #include "RenderInterface/Vulkan/VulkanCommonTypes.h"
@@ -223,7 +222,7 @@ namespace Hermes
 		}
 
 		void VulkanDescriptorSet::UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex,
-		                                          const RenderInterface::Image& Image,
+		                                          const RenderInterface::ImageView& Image,
 		                                          RenderInterface::ImageLayout LayoutAtTimeOfAccess)
 		{
 			VkWriteDescriptorSet Write = {};
@@ -234,7 +233,7 @@ namespace Hermes
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorImageInfo ImageInfo = {};
-			ImageInfo.imageView = static_cast<const VulkanImage&>(Image).GetDefaultView();
+			ImageInfo.imageView = static_cast<const VulkanImageView&>(Image).GetImageView();
 			ImageInfo.imageLayout = ImageLayoutToVkImageLayout(LayoutAtTimeOfAccess);
 			Write.pImageInfo = &ImageInfo;
 
@@ -242,7 +241,7 @@ namespace Hermes
 		}
 
 		void VulkanDescriptorSet::UpdateWithImageAndSampler(uint32 BindingIndex, uint32 ArrayIndex,
-		                                                    const RenderInterface::Image& Image,
+		                                                    const RenderInterface::ImageView& Image,
 		                                                    const RenderInterface::Sampler& Sampler,
 		                                                    RenderInterface::ImageLayout LayoutAtTimeOfAccess)
 		{
@@ -254,7 +253,7 @@ namespace Hermes
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorImageInfo ImageInfo = {};
-			ImageInfo.imageView = static_cast<const VulkanImage&>(Image).GetDefaultView();
+			ImageInfo.imageView = static_cast<const VulkanImageView&>(Image).GetImageView();
 			ImageInfo.imageLayout = ImageLayoutToVkImageLayout(LayoutAtTimeOfAccess);
 			ImageInfo.sampler = static_cast<const VulkanSampler&>(Sampler).GetSampler();
 			Write.pImageInfo = &ImageInfo;

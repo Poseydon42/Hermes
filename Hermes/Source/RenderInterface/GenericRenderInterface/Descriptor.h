@@ -5,17 +5,12 @@
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
+#include "RenderInterface/GenericRenderInterface/Forward.h"
 
 namespace Hermes
 {
 	namespace RenderInterface
 	{
-		enum class ShaderType;
-		enum class ImageLayout;
-		class Buffer;
-		class Sampler;
-		class Image;
-
 		class HERMES_API DescriptorSet
 		{
 			MAKE_NON_COPYABLE(DescriptorSet)
@@ -38,12 +33,12 @@ namespace Hermes
 			/*
 			 * For DescriptorType::SampledImage
 			 */
-			virtual void UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex, const Image& Image, ImageLayout LayoutAtTimeOfAccess) = 0;
+			virtual void UpdateWithImage(uint32 BindingIndex, uint32 ArrayIndex, const ImageView& Image, ImageLayout LayoutAtTimeOfAccess) = 0;
 
 			/*
 			 * For DescriptorType::CombinedSampler
 			 */
-			virtual void UpdateWithImageAndSampler(uint32 BindingIndex, uint32 ArrayIndex, const Image& Image, const Sampler& Sampler, ImageLayout LayoutAtTimeOfAccess) = 0;
+			virtual void UpdateWithImageAndSampler(uint32 BindingIndex, uint32 ArrayIndex, const ImageView& Image, const Sampler& Sampler, ImageLayout LayoutAtTimeOfAccess) = 0;
 		};
 
 		// TODO : other types

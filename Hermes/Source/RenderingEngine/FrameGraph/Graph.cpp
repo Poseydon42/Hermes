@@ -206,6 +206,7 @@ namespace Hermes
 
 			ResourceContainer Container = {};
 			Container.Image = std::move(Image);
+			Container.View = Container.Image->CreateDefaultImageView();
 			Container.CurrentLayout = RenderInterface::ImageLayout::Undefined;
 			Container.Desc = Resource.second;
 
@@ -285,7 +286,8 @@ namespace Hermes
 			NewPassContainer.CommandBuffer = RenderQueue.CreateCommandBuffer(true);
 			NewPassContainer.Callback = Pass.second.Callback;
 
-			std::vector<const RenderInterface::Image*> RenderTargetAttachments;
+			std::vector<const RenderInterface::ImageView*> RenderTargetAttachments;
+			Vec2ui RenderTargetDimensions;
 			RenderTargetAttachments.reserve(Pass.second.Drains.size());
 			NewPassContainer.ClearColors.reserve(Pass.second.Drains.size());
 			NewPassContainer.AttachmentLayouts.reserve(Pass.second.Drains.size());
@@ -297,7 +299,9 @@ namespace Hermes
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
 
 				const auto& Resource = Resources[ResourceOwnName];
-				RenderTargetAttachments.push_back(Resource.Image.get());
+				RenderTargetAttachments.push_back(Resource.View.get());
+				HERMES_ASSERT(RenderTargetDimensions == Vec2ui{} || RenderTargetDimensions == Resource.Image->GetSize());
+				RenderTargetDimensions = Resource.Image->GetSize();
 
 				NewPassContainer.ClearColors.emplace_back();
 				NewPassContainer.ClearColors.back().R = Drain.ClearColor[0];
@@ -310,7 +314,7 @@ namespace Hermes
 			}
 
 			NewPassContainer.RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
-				*NewPassContainer.Pass, RenderTargetAttachments, RenderTargetAttachments[0]->GetSize());
+				*NewPassContainer.Pass, RenderTargetAttachments, RenderTargetDimensions);
 
 			Passes[Pass.first] = std::move(NewPassContainer);
 		}
@@ -422,7 +426,8 @@ namespace Hermes
 		// TODO : only recreate render targets if their images were recreated
 		for (const auto& Pass : Scheme.Passes)
 		{
-			std::vector<const RenderInterface::Image*> Attachments;
+			std::vector<const RenderInterface::ImageView*> Attachments;
+			Vec2ui RenderTargetDimensions = {};
 			Attachments.reserve(Pass.second.Drains.size());
 			Passes[Pass.first].Attachments.clear();
 			for (const auto& Drain : Pass.second.Drains)
@@ -433,11 +438,13 @@ namespace Hermes
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
 
 				const auto& Resource = Resources[ResourceOwnName];
-				Attachments.push_back(Resource.Image.get());
+				Attachments.push_back(Resource.View.get());
+				HERMES_ASSERT(RenderTargetDimensions == Vec2ui{} || RenderTargetDimensions == Resource.Image->GetSize());
+				RenderTargetDimensions = Resource.Image->GetSize();
 				Passes[Pass.first].Attachments.push_back(Resource.Image.get());
 			}
 			Passes[Pass.first].RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
-				*Passes[Pass.first].Pass, Attachments, Attachments[0]->GetSize());
+				*Passes[Pass.first].Pass, Attachments, RenderTargetDimensions);
 		}
 
 		ResourcesWereRecreated = true;

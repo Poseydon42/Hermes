@@ -38,7 +38,7 @@ namespace Hermes
 		{
 			if (Textures[ImageIndex]->IsReady())
 			{
-				Descriptor->UpdateWithImage(ImageIndex + 1, 0, Textures[ImageIndex]->GetRawImage(), RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+				Descriptor->UpdateWithImage(ImageIndex + 1, 0, Textures[ImageIndex]->GetDefaultView(), RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 			}
 			else
 			{

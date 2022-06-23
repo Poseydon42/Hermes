@@ -54,7 +54,7 @@ namespace Hermes
 
 			std::unique_ptr<RenderInterface::RenderTarget> CreateRenderTarget(
 				const RenderInterface::RenderPass& RenderPass, 
-				const std::vector<const RenderInterface::Image*>& Attachments, Vec2ui Size) const override;
+				const std::vector<const RenderInterface::ImageView*>& Attachments, Vec2ui Size) const override;
 
 			std::unique_ptr<RenderInterface::DescriptorSetLayout> CreateDescriptorSetLayout(
 				const std::vector<RenderInterface::DescriptorBinding>& Bindings) const override;

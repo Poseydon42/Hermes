@@ -48,7 +48,7 @@ namespace Hermes
 				const RenderPass& RenderPass, const PipelineDescription& Description) const = 0;
 
 			virtual std::unique_ptr<RenderTarget> CreateRenderTarget(
-				const RenderPass& RenderPass, const std::vector<const Image*>& Attachments,
+				const RenderPass& RenderPass, const std::vector<const ImageView*>& Attachments,
 				Vec2ui Size) const = 0;
 
 			virtual std::unique_ptr<DescriptorSetLayout> CreateDescriptorSetLayout(const std::vector<DescriptorBinding>& Bindings) const = 0;

@@ -63,7 +63,7 @@ namespace Hermes
 		EnvmapSampler = Device->CreateSampler(SamplerDesc);
 
 		DataDescriptorSet->UpdateWithBuffer(0, 0, *UniformBuffer, 0, sizeof(SkyboxPassData));
-		DataDescriptorSet->UpdateWithImageAndSampler(1, 0, EnvmapTexture->GetRawImage(), *EnvmapSampler,
+		DataDescriptorSet->UpdateWithImageAndSampler(1, 0, EnvmapTexture->GetDefaultView(), *EnvmapSampler,
 		                                             RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
 		Description.Callback.Bind<SkyboxPass, &SkyboxPass::PassCallback>(this);

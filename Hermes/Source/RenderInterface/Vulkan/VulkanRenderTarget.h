@@ -25,7 +25,7 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanRenderTarget)
 
 		public:
-			VulkanRenderTarget(std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::RenderPass& InRenderPass, const std::vector<const RenderInterface::Image*>& InAttachments, Vec2ui InSize);
+			VulkanRenderTarget(std::shared_ptr<const VulkanDevice> InDevice, const RenderInterface::RenderPass& InRenderPass, const std::vector<const RenderInterface::ImageView*>& InAttachments, Vec2ui InSize);
 
 			~VulkanRenderTarget() override;
 			VulkanRenderTarget(VulkanRenderTarget&& Other);

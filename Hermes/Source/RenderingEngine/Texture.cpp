@@ -44,6 +44,11 @@ namespace Hermes
 		return *Image;
 	}
 
+	const RenderInterface::ImageView& Texture::GetDefaultView() const
+	{
+		return *DefaultView;
+	}
+
 	Vec2ui Texture::GetDimensions() const
 	{
 		return Dimensions;
@@ -104,5 +109,7 @@ namespace Hermes
 		}
 
 		DataUploadFinished = true;
+
+		DefaultView = Image->CreateDefaultImageView();
 	}
 }

@@ -3,8 +3,10 @@
 #include <memory>
 
 #include "Core/Core.h"
+#include "Core/Misc/NonCopyableMovable.h"
+#include "Core/Misc/DefaultConstructors.h"
 #include "Math/Math.h"
-#include "RenderInterface/GenericRenderInterface/Forward.h"
+#include "RenderInterface/GenericRenderInterface/Image.h"
 
 namespace Hermes
 {
@@ -12,10 +14,16 @@ namespace Hermes
 
 	class HERMES_API Texture
 	{
+		MAKE_NON_COPYABLE(Texture)
+		ADD_DEFAULT_MOVE_CONSTRUCTOR(Texture)
+		ADD_DEFAULT_DESTRUCTOR(Texture)
+
 	public:
 		static std::shared_ptr<Texture> CreateFromAsset(const ImageAsset& Source, bool EnableMipMaps = true);
 
 		const RenderInterface::Image& GetRawImage() const;
+
+		const RenderInterface::ImageView& GetDefaultView() const;
 
 		Vec2ui GetDimensions() const;
 
@@ -26,7 +34,8 @@ namespace Hermes
 		explicit Texture(const ImageAsset& Source, bool EnableMipMaps = true);
 
 		bool DataUploadFinished;
-		std::shared_ptr<RenderInterface::Image> Image;
+		std::unique_ptr<RenderInterface::Image> Image;
+		std::unique_ptr<RenderInterface::ImageView> DefaultView;
 		Vec2ui Dimensions;
 	};
 }

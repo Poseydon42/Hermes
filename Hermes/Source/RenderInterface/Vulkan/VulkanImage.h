@@ -36,6 +36,11 @@ namespace Hermes
 			VulkanImage(VulkanImage&& Other);
 			VulkanImage& operator=(VulkanImage&& Other);
 
+			virtual std::unique_ptr<RenderInterface::ImageView> CreateImageView(
+				const RenderInterface::ImageViewDescription& Description) const override;
+
+			virtual std::unique_ptr<RenderInterface::ImageView> CreateDefaultImageView() const override;
+
 			virtual Vec2ui GetSize() const override;
 
 			virtual RenderInterface::DataFormat GetDataFormat() const override;
@@ -69,18 +74,40 @@ namespace Hermes
 				VkImage Image;
 				VmaAllocation Allocation = VK_NULL_HANDLE;
 				bool IsOwned = false;
+				VkFormat Format = VK_FORMAT_UNDEFINED;
 			};
 
 			std::shared_ptr<VkImageHolder> Holder;
 
 			Vec2ui Size;
-			VkFormat Format;
 			mutable VkImageView DefaultView;
 			uint32 MipLevelCount;
 			bool IsCubemapCompatible;
 			RenderInterface::ImageUsageType Usage;
 
 			virtual void CreateDefaultView() const;
+
+			friend class VulkanImageView;
+		};
+
+		class HERMES_API VulkanImageView : public RenderInterface::ImageView
+		{
+			MAKE_NON_COPYABLE(VulkanImageView);
+
+		public:
+			VulkanImageView(std::shared_ptr<VulkanImage::VkImageHolder> InImage,
+			                const RenderInterface::ImageViewDescription& Description, bool IsCubemap);
+
+			virtual ~VulkanImageView() override;
+
+			VulkanImageView(VulkanImageView&& Other);
+			VulkanImageView& operator=(VulkanImageView&& Other);
+
+			VkImageView GetImageView() const;
+
+		private:
+			std::shared_ptr<VulkanImage::VkImageHolder> Image;
+			VkImageView View = VK_NULL_HANDLE;
 		};
 	}
 }

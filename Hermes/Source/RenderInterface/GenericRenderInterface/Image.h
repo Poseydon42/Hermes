@@ -24,6 +24,21 @@ namespace Hermes
 
 		ENUM_CLASS_OPERATORS(ImageUsageType)
 
+		struct ImageViewDescription
+		{
+			ImageAspect Aspects;
+			uint32 BaseMipLevel;
+			uint32 MipLevelCount;
+		};
+
+		class HERMES_API ImageView
+		{
+			ADD_DEFAULT_CONSTRUCTOR(ImageView);
+			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(ImageView);
+			ADD_DEFAULT_MOVE_CONSTRUCTOR(ImageView);
+			MAKE_NON_COPYABLE(ImageView);
+		};
+
 		class HERMES_API Image
 		{
 			ADD_DEFAULT_CONSTRUCTOR(Image);
@@ -32,6 +47,10 @@ namespace Hermes
 			MAKE_NON_COPYABLE(Image);
 
 		public:
+			virtual std::unique_ptr<ImageView> CreateImageView(const ImageViewDescription& Description) const = 0;
+
+			virtual std::unique_ptr<ImageView> CreateDefaultImageView() const = 0;
+
 			virtual Vec2ui GetSize() const = 0;
 
 			virtual DataFormat GetDataFormat() const = 0;

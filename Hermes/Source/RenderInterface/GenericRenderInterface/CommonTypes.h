@@ -218,5 +218,150 @@ namespace Hermes
 		};
 
 		ENUM_CLASS_OPERATORS(ImageAspect)
+
+		inline ImageAspect ImageAspectFromDataFormat(DataFormat Format)
+		{
+			switch (Format)
+			{
+			case DataFormat::R4G4UnsignedNormalizedPack8:
+			case DataFormat::R4G4B4A4UnsignedNormalizedPack16:
+			case DataFormat::B4G4R4A4UnsignedNormalizedPack16:
+			case DataFormat::R5G6B5UnsignedNormalizedPack16:
+			case DataFormat::B5G6R5UnsignedNormalizedPack16:
+			case DataFormat::R5G5B5A1UnsignedNormalizedPack16:
+			case DataFormat::B5G5R5A1UnsignedNormalizedPack16:
+			case DataFormat::A1R5G5B5UnsignedNormalizedPack16:
+			case DataFormat::R8UnsignedNormalized:
+			case DataFormat::R8SignedNormalized:
+			case DataFormat::R8UnsignedScaled:
+			case DataFormat::R8SignedScaled:
+			case DataFormat::R8UnsignedInteger:
+			case DataFormat::R8SignedInteger:
+			case DataFormat::R8SRGB:
+			case DataFormat::R8G8UnsignedNormalized:
+			case DataFormat::R8G8SignedNormalized:
+			case DataFormat::R8G8UnsignedScaled:
+			case DataFormat::R8G8SignedScaled:
+			case DataFormat::R8G8UnsignedInteger:
+			case DataFormat::R8G8SignedInteger:
+			case DataFormat::R8G8SRGB:
+			case DataFormat::R8G8B8UnsignedNormalized:
+			case DataFormat::R8G8B8SignedNormalized:
+			case DataFormat::R8G8B8UnsignedScaled:
+			case DataFormat::R8G8B8SignedScaled:
+			case DataFormat::R8G8B8UnsignedInteger:
+			case DataFormat::R8G8B8SignedInteger:
+			case DataFormat::R8G8B8SRGB:
+			case DataFormat::B8G8R8UnsignedNormalized:
+			case DataFormat::B8G8R8SignedNormalized:
+			case DataFormat::B8G8R8UnsignedScaled:
+			case DataFormat::B8G8R8SignedScaled:
+			case DataFormat::B8G8R8UnsignedInteger:
+			case DataFormat::B8G8R8SignedInteger:
+			case DataFormat::B8G8R8SRGB:
+			case DataFormat::R8G8B8A8UnsignedNormalized:
+			case DataFormat::R8G8B8A8SignedNormalized:
+			case DataFormat::R8G8B8A8UnsignedScaled:
+			case DataFormat::R8G8B8A8SignedScaled:
+			case DataFormat::R8G8B8A8UnsignedInteger:
+			case DataFormat::R8G8B8A8SignedInteger:
+			case DataFormat::R8G8B8A8SRGB:
+			case DataFormat::B8G8R8A8UnsignedNormalized:
+			case DataFormat::B8G8R8A8SignedNormalized:
+			case DataFormat::B8G8R8A8UnsignedScaled:
+			case DataFormat::B8G8R8A8SignedScaled:
+			case DataFormat::B8G8R8A8UnsignedInteger:
+			case DataFormat::B8G8R8A8SignedInteger:
+			case DataFormat::B8G8R8A8SRGB:
+			case DataFormat::A8B8G8R8UnsignedNormalizedPack32:
+			case DataFormat::A8B8G8R8SignedNormalizedPack32:
+			case DataFormat::A8B8G8R8UnsignedScaledPack32:
+			case DataFormat::A8B8G8R8SignedScaledPack32:
+			case DataFormat::A8B8G8R8UnsignedIntegerPack32:
+			case DataFormat::A8B8G8R8SignedIntegerPack32:
+			case DataFormat::A8B8G8R8SRGBPack32:
+			case DataFormat::A2R10G10B10UnsignedNormalizedPack32:
+			case DataFormat::A2R10G10B10SignedNormalizedPack32:
+			case DataFormat::A2R10G10B10UnsignedScaledPack32:
+			case DataFormat::A2R10G10B10SignedScaledPack32:
+			case DataFormat::A2R10G10B10UnsignedIntegerPack32:
+			case DataFormat::A2R10G10B10SignedIntegerPack32:
+			case DataFormat::A2B10G10R10UnsignedNormalizedPack32:
+			case DataFormat::A2B10G10R10SignedNormalizedPack32:
+			case DataFormat::A2B10G10R10UnsignedScaledPack32:
+			case DataFormat::A2B10G10R10SignedScaledPack32:
+			case DataFormat::A2B10G10R10UnsignedIntegerPack32:
+			case DataFormat::A2B10G10R10SignedIntegerPack32:
+			case DataFormat::R16UnsignedNormalized:
+			case DataFormat::R16SignedNormalized:
+			case DataFormat::R16UnsignedScaled:
+			case DataFormat::R16SignedScaled:
+			case DataFormat::R16UnsignedInteger:
+			case DataFormat::R16SignedInteger:
+			case DataFormat::R16SignedFloat:
+			case DataFormat::R16G16UnsignedNormalized:
+			case DataFormat::R16G16SignedNormalized:
+			case DataFormat::R16G16UnsignedScaled:
+			case DataFormat::R16G16SignedScaled:
+			case DataFormat::R16G16UnsignedInteger:
+			case DataFormat::R16G16SignedInteger:
+			case DataFormat::R16G16SignedFloat:
+			case DataFormat::R16G16B16UnsignedNormalized:
+			case DataFormat::R16G16B16SignedNormalized:
+			case DataFormat::R16G16B16UnsignedScaled:
+			case DataFormat::R16G16B16SignedScaled:
+			case DataFormat::R16G16B16UnsignedInteger:
+			case DataFormat::R16G16B16SignedInteger:
+			case DataFormat::R16G16B16SignedFloat:
+			case DataFormat::R16G16B16A16UnsignedNormalized:
+			case DataFormat::R16G16B16A16SignedNormalized:
+			case DataFormat::R16G16B16A16UnsignedScaled:
+			case DataFormat::R16G16B16A16SignedScaled:
+			case DataFormat::R16G16B16A16UnsignedInteger:
+			case DataFormat::R16G16B16A16SignedInteger:
+			case DataFormat::R16G16B16A16SignedFloat:
+			case DataFormat::R32UnsignedInteger:
+			case DataFormat::R32SignedInteger:
+			case DataFormat::R32SignedFloat:
+			case DataFormat::R32G32UnsignedInteger:
+			case DataFormat::R32G32SignedInteger:
+			case DataFormat::R32G32SignedFloat:
+			case DataFormat::R32G32B32UnsignedInteger:
+			case DataFormat::R32G32B32SignedInteger:
+			case DataFormat::R32G32B32SignedFloat:
+			case DataFormat::R32G32B32A32UnsignedInteger:
+			case DataFormat::R32G32B32A32SignedInteger:
+			case DataFormat::R32G32B32A32SignedFloat:
+			case DataFormat::R64UnsignedInteger:
+			case DataFormat::R64SignedInteger:
+			case DataFormat::R64SignedFloat:
+			case DataFormat::R64G64UnsignedInteger:
+			case DataFormat::R64G64SignedInteger:
+			case DataFormat::R64G64SignedFloat:
+			case DataFormat::R64G64B64UnsignedInteger:
+			case DataFormat::R64G64B64SignedInteger:
+			case DataFormat::R64G64B64SignedFloat:
+			case DataFormat::R64G64B64A64UnsignedInteger:
+			case DataFormat::R64G64B64A64SignedInteger:
+			case DataFormat::R64G64B64A64SignedFloat:
+			case DataFormat::B10G11R11UnsignedFloatPack32:
+			case DataFormat::E5B9G9R9UnsignedFloatPack32:
+				return ImageAspect::Color;
+			case DataFormat::D16UnsignedNormalized:
+			case DataFormat::X8D24UnsignedNormalizedPack32:
+			case DataFormat::D32SignedFloat:
+				return ImageAspect::Depth;
+			case DataFormat::S8UnsignedInteger:
+				return ImageAspect::Stencil;
+			case DataFormat::D16UnsignedNormalizedS8UnsignedInteger:
+			case DataFormat::D24UnsignedNormalizedS8UnsignedInteger:
+			case DataFormat::D32SignedFloatS8UnsignedInteger:
+				return ImageAspect::Depth | ImageAspect::Stencil;
+
+			case DataFormat::Undefined:
+			default:
+				return static_cast<ImageAspect>(0);
+			}
+		}
 	}
 }

@@ -17,6 +17,8 @@ namespace Hermes
 		class HERMES_API VulkanImage : public RenderInterface::Image
 		{
 			MAKE_NON_COPYABLE(VulkanImage);
+			ADD_DEFAULT_MOVE_CONSTRUCTOR(VulkanImage);
+			ADD_DEFAULT_VIRTUAL_DESTRUCTOR(VulkanImage);
 
 		public:
 			/*
@@ -32,10 +34,6 @@ namespace Hermes
 			            RenderInterface::ImageUsageType InUsage, RenderInterface::DataFormat InFormat,
 			            uint32 InMipLevels, RenderInterface::ImageLayout InitialLayout, bool InIsCubemapCompatible = false);
 
-			virtual ~VulkanImage() override;
-			VulkanImage(VulkanImage&& Other);
-			VulkanImage& operator=(VulkanImage&& Other);
-
 			virtual std::unique_ptr<RenderInterface::ImageView> CreateImageView(
 				const RenderInterface::ImageViewDescription& Description) const override;
 
@@ -50,12 +48,6 @@ namespace Hermes
 			virtual RenderInterface::ImageUsageType GetUsageFlags() const override;
 
 			VkImage GetImage() const;
-
-			/**
-			 * \brief Returns 'default'(e.g. all mips, all layers, initial format) image view of this image
-			 * \return VkImageView that covers whole image with its initial format
-			 */
-			VkImageView GetDefaultView() const;
 
 			bool GetIsCubemapCompatible() const;
 
@@ -80,12 +72,9 @@ namespace Hermes
 			std::shared_ptr<VkImageHolder> Holder;
 
 			Vec2ui Size;
-			mutable VkImageView DefaultView;
 			uint32 MipLevelCount;
 			bool IsCubemapCompatible;
 			RenderInterface::ImageUsageType Usage;
-
-			virtual void CreateDefaultView() const;
 
 			friend class VulkanImageView;
 		};

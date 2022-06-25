@@ -180,8 +180,29 @@ namespace Hermes
 			NewBarrier.image = static_cast<const VulkanImage&>(Image).GetImage();
 			NewBarrier.subresourceRange.baseMipLevel = Barrier.BaseMipLevel;
 			NewBarrier.subresourceRange.levelCount = Barrier.MipLevelCount;
-			NewBarrier.subresourceRange.baseArrayLayer = 0;
-			NewBarrier.subresourceRange.layerCount = 1;
+			if (Image.IsCubemap())
+			{
+				HERMES_ASSERT_LOG(Barrier.Side.has_value(),
+				              L"Cubemap side was not specified while trying to insert image memory barrier with cubemap image.");
+				auto Side = Barrier.Side.value();
+				if (Side == RenderInterface::CubemapSide::All)
+				{
+					NewBarrier.subresourceRange.baseArrayLayer = 0;
+					NewBarrier.subresourceRange.layerCount = 6;
+				}
+				else
+				{
+					NewBarrier.subresourceRange.baseArrayLayer = CubemapSideToArrayLayer(Side);
+					NewBarrier.subresourceRange.layerCount = 1;
+				}
+			}
+			else
+			{
+				if (Barrier.Side.has_value())
+					HERMES_LOG_WARNING(L"Cubemap side specified for image memory barrier with non-cubemap image will be ignored.");
+				NewBarrier.subresourceRange.baseArrayLayer = 0;
+				NewBarrier.subresourceRange.layerCount = 1;
+			}
 			NewBarrier.subresourceRange.aspectMask = VkAspectFlagsFromVkFormat(DataFormatToVkFormat(Image.GetDataFormat()));
 
 
@@ -226,8 +247,20 @@ namespace Hermes
 				VulkanCopyRegion.imageOffset.y = static_cast<int32>(CopyRegion.ImageOffset.Y);
 				VulkanCopyRegion.imageOffset.z = 0;
 				VulkanCopyRegion.imageSubresource.aspectMask = VkAspectFlagsFromVkFormat(DataFormatToVkFormat(DestinationImage.GetDataFormat()));
-				VulkanCopyRegion.imageSubresource.baseArrayLayer = 0;
-				VulkanCopyRegion.imageSubresource.layerCount = 1;
+				if (DestinationImage.IsCubemap())
+				{
+					HERMES_ASSERT_LOG(CopyRegion.Side.has_value() && CopyRegion.Side.value() != RenderInterface::CubemapSide::All,
+				              L"Cubemap side was not specified or it was CubemapSide::All while trying to copy buffer to image");
+					VulkanCopyRegion.imageSubresource.baseArrayLayer = CubemapSideToArrayLayer(CopyRegion.Side.value());
+					VulkanCopyRegion.imageSubresource.layerCount = 1;
+				}
+				else
+				{
+					if (CopyRegion.Side.has_value())
+						HERMES_LOG_WARNING(L"Cubemap side specified for non-cubemap image copy region will be ignored.");
+					VulkanCopyRegion.imageSubresource.baseArrayLayer = 0;
+					VulkanCopyRegion.imageSubresource.layerCount = 1;
+				}
 				VulkanCopyRegion.imageSubresource.mipLevel = CopyRegion.MipLevel;
 				++It;
 			}
@@ -253,17 +286,60 @@ namespace Hermes
 				NewRegion.srcOffset.y = CopyRegion.SourceOffset.Y;
 				NewRegion.srcOffset.z = 0;
 				NewRegion.srcSubresource.aspectMask = VkAspectFlagsFromVkFormat(DataFormatToVkFormat(VulkanSourceImage.GetDataFormat()));
-				NewRegion.srcSubresource.baseArrayLayer = 0;
-				NewRegion.srcSubresource.layerCount = 1;
 				NewRegion.srcSubresource.mipLevel = CopyRegion.SourceMipLayer;
 
 				NewRegion.dstOffset.x = CopyRegion.DestinationOffset.X;
 				NewRegion.dstOffset.y = CopyRegion.DestinationOffset.Y;
 				NewRegion.dstOffset.z = 0;
 				NewRegion.dstSubresource.aspectMask = VkAspectFlagsFromVkFormat(DataFormatToVkFormat(VulkanDestinationImage.GetDataFormat()));
-				NewRegion.dstSubresource.baseArrayLayer = 0;
-				NewRegion.dstSubresource.layerCount = 1;
 				NewRegion.dstSubresource.mipLevel = CopyRegion.DestinationMipLayer;
+
+				if (Source.IsCubemap())
+				{
+					HERMES_ASSERT_LOG(CopyRegion.SourceSide.has_value(), L"Unspecified cubemap side for source image");
+					if (CopyRegion.SourceSide.value() == RenderInterface::CubemapSide::All)
+					{
+						NewRegion.srcSubresource.baseArrayLayer = 0;
+						NewRegion.srcSubresource.layerCount = 6;
+					}
+					else
+					{
+						NewRegion.srcSubresource.baseArrayLayer =
+							CubemapSideToArrayLayer(CopyRegion.SourceSide.value());
+						NewRegion.srcSubresource.layerCount = 1;
+					}
+				}
+				else
+				{
+					if (CopyRegion.SourceSide.has_value())
+						HERMES_LOG_WARNING(L"Cubemap side specified for copy from non-cubemap source image will be ignored");
+					NewRegion.srcSubresource.baseArrayLayer = 0;
+					NewRegion.srcSubresource.layerCount = 1;
+				}
+
+				if (Destination.IsCubemap())
+				{
+					HERMES_ASSERT_LOG(CopyRegion.DestinationSide.has_value(),
+					                  L"Unspecified cubemap side for destination image");
+					if (CopyRegion.DestinationSide.value() == RenderInterface::CubemapSide::All)
+					{
+						NewRegion.dstSubresource.baseArrayLayer = 0;
+						NewRegion.dstSubresource.layerCount = 6;
+					}
+					else
+					{
+						NewRegion.dstSubresource.baseArrayLayer =
+							CubemapSideToArrayLayer(CopyRegion.DestinationSide.value());
+						NewRegion.dstSubresource.layerCount = 1;
+					}
+				}
+				else
+				{
+					if (CopyRegion.DestinationSide.has_value())
+						HERMES_LOG_WARNING(L"Cubemap side specified for copy from non-cubemap destination image will be ignored");
+					NewRegion.dstSubresource.baseArrayLayer = 0;
+					NewRegion.dstSubresource.layerCount = 1;
+				}
 
 				Regions.push_back(NewRegion);
 			}
@@ -296,8 +372,6 @@ namespace Hermes
 				VulkanRegion.srcOffsets[1].z = 1;
 				VulkanRegion.srcSubresource.aspectMask = ImageAspectToVkImageAspectFlags(Region.SourceRegion.AspectMask);
 				VulkanRegion.srcSubresource.mipLevel = Region.SourceRegion.MipLevel;
-				VulkanRegion.srcSubresource.baseArrayLayer = 0;
-				VulkanRegion.srcSubresource.layerCount = 1;
 
 				VulkanRegion.dstOffsets[0].x = static_cast<int32>(Region.DestinationRegion.RectMin.X);
 				VulkanRegion.dstOffsets[0].y = static_cast<int32>(Region.DestinationRegion.RectMin.Y);
@@ -306,8 +380,54 @@ namespace Hermes
 				VulkanRegion.dstOffsets[1].z = 1;
 				VulkanRegion.dstSubresource.aspectMask = ImageAspectToVkImageAspectFlags(Region.DestinationRegion.AspectMask);
 				VulkanRegion.dstSubresource.mipLevel = Region.DestinationRegion.MipLevel;
-				VulkanRegion.dstSubresource.baseArrayLayer = 0;
-				VulkanRegion.dstSubresource.layerCount = 1;
+
+				if (Source.IsCubemap())
+				{
+					HERMES_ASSERT_LOG(Region.SourceRegion.Side.has_value(),
+					                  L"Unspecified cubemap side for source image");
+					if (Region.SourceRegion.Side.value() == RenderInterface::CubemapSide::All)
+					{
+						VulkanRegion.srcSubresource.baseArrayLayer = 0;
+						VulkanRegion.srcSubresource.layerCount = 6;
+					}
+					else
+					{
+						VulkanRegion.srcSubresource.baseArrayLayer =
+							CubemapSideToArrayLayer(Region.SourceRegion.Side.value());
+						VulkanRegion.srcSubresource.layerCount = 1;
+					}
+				}
+				else
+				{
+					if (Region.SourceRegion.Side.has_value())
+						HERMES_LOG_WARNING(L"Cubemap side specified for copy from non-cubemap source image will be ignored");
+					VulkanRegion.srcSubresource.baseArrayLayer = 0;
+					VulkanRegion.srcSubresource.layerCount = 1;
+				}
+
+				if (Destination.IsCubemap())
+				{
+					HERMES_ASSERT_LOG(Region.DestinationRegion.Side.has_value(),
+					                  L"Unspecified cubemap side for destination image");
+					if (Region.DestinationRegion.Side.value() == RenderInterface::CubemapSide::All)
+					{
+						VulkanRegion.dstSubresource.baseArrayLayer = 0;
+						VulkanRegion.dstSubresource.layerCount = 6;
+					}
+					else
+					{
+						VulkanRegion.dstSubresource.baseArrayLayer =
+							CubemapSideToArrayLayer(Region.DestinationRegion.Side.value());
+						VulkanRegion.dstSubresource.layerCount = 1;
+					}
+				}
+				else
+				{
+					if (Region.DestinationRegion.Side.has_value())
+						HERMES_LOG_WARNING(L"Cubemap side specified for copy from non-cubemap destination image will be ignored");
+					VulkanRegion.dstSubresource.baseArrayLayer = 0;
+					VulkanRegion.dstSubresource.layerCount = 1;
+				}
 
 				VulkanRegions.push_back(VulkanRegion);
 			}

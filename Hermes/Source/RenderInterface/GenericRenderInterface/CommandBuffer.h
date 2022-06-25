@@ -33,8 +33,9 @@ namespace Hermes
 			std::optional<const Queue*> NewOwnerQueue {};
 			AccessType OperationsThatHaveToEndBefore { AccessType::None };
 			AccessType OperationsThatCanStartAfter { AccessType::None };
-			uint32 BaseMipLevel;
-			uint32 MipLevelCount;
+			uint32 BaseMipLevel = 0;
+			uint32 MipLevelCount = 0;
+			std::optional<CubemapSide> Side;
 		};
 
 		struct BufferMemoryBarrier
@@ -61,14 +62,17 @@ namespace Hermes
 			Vec2ui ImageOffset;
 			Vec2ui ImageDimensions;
 			uint32 MipLevel;
+			std::optional<CubemapSide> Side;
 		};
 
 		struct ImageCopyRegion
 		{
 			Vec2i SourceOffset;
 			uint32 SourceMipLayer;
+			std::optional<CubemapSide> SourceSide;
 			Vec2i DestinationOffset;
 			uint32 DestinationMipLayer;
+			std::optional<CubemapSide> DestinationSide;
 			Vec2ui Dimensions;
 		};
 
@@ -80,6 +84,7 @@ namespace Hermes
 				uint32 MipLevel;
 				Vec2ui RectMin;
 				Vec2ui RectMax;
+				std::optional<CubemapSide> Side;
 			} SourceRegion, DestinationRegion;
 		};
 

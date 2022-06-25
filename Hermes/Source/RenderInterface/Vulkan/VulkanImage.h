@@ -37,6 +37,10 @@ namespace Hermes
 			virtual std::unique_ptr<RenderInterface::ImageView> CreateImageView(
 				const RenderInterface::ImageViewDescription& Description) const override;
 
+			virtual std::unique_ptr<RenderInterface::ImageView> CreateCubemapImageView(
+				const RenderInterface::ImageViewDescription& Description,
+				RenderInterface::CubemapSide Side) const override;
+
 			virtual std::unique_ptr<RenderInterface::ImageView> CreateDefaultImageView() const override;
 
 			virtual Vec2ui GetSize() const override;
@@ -84,8 +88,14 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanImageView);
 
 		public:
+			/* Simple image view constructor */
 			VulkanImageView(std::shared_ptr<VulkanImage::VkImageHolder> InImage,
-			                const RenderInterface::ImageViewDescription& Description, bool IsCubemap);
+			                const RenderInterface::ImageViewDescription& Description);
+
+			/* Cubemap image view constructor */
+			VulkanImageView(std::shared_ptr<VulkanImage::VkImageHolder> InImage,
+			                const RenderInterface::ImageViewDescription& Description,
+			                RenderInterface::CubemapSide Side);
 
 			virtual ~VulkanImageView() override;
 

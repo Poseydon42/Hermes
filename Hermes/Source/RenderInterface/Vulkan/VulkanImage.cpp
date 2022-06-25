@@ -8,6 +8,28 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
+		static uint32 CubemapSideToArrayLayer(RenderInterface::CubemapSide Side)
+		{
+			switch (Side)
+			{
+			case RenderInterface::CubemapSide::PositiveX:
+				return 4;
+			case RenderInterface::CubemapSide::NegativeX:
+				return 5;
+			case RenderInterface::CubemapSide::PositiveY:
+				return 2;
+			case RenderInterface::CubemapSide::NegativeY:
+				return 3;
+			case RenderInterface::CubemapSide::PositiveZ:
+				return 1;
+			case RenderInterface::CubemapSide::NegativeZ:
+				return 0;
+			default:
+				HERMES_ASSERT(false);
+				return 0;
+			}
+		}
+
 		VulkanImage::VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat,
 		                         Vec2ui InSize, RenderInterface::ImageUsageType InUsage, bool InIsCubemapCompatible)
 			: Holder(std::make_shared<VkImageHolder>(std::move(InDevice), InImage))
@@ -72,7 +94,13 @@ namespace Hermes
 		std::unique_ptr<RenderInterface::ImageView> VulkanImage::CreateImageView(
 			const RenderInterface::ImageViewDescription& Description) const
 		{
-			return std::make_unique<VulkanImageView>(Holder, Description, IsCubemapCompatible);
+			return std::make_unique<VulkanImageView>(Holder, Description);
+		}
+
+		std::unique_ptr<RenderInterface::ImageView> VulkanImage::CreateCubemapImageView(
+			const RenderInterface::ImageViewDescription& Description, RenderInterface::CubemapSide Side) const
+		{
+			return std::make_unique<VulkanImageView>(Holder, Description, Side);
 		}
 
 		std::unique_ptr<RenderInterface::ImageView> VulkanImage::CreateDefaultImageView() const
@@ -82,7 +110,10 @@ namespace Hermes
 			Description.BaseMipLevel = 0;
 			Description.MipLevelCount = MipLevelCount;
 
-			return std::make_unique<VulkanImageView>(Holder, Description, IsCubemapCompatible);
+			if (IsCubemapCompatible)
+				return std::make_unique<VulkanImageView>(Holder, Description, RenderInterface::CubemapSide::All);
+			else
+				return std::make_unique<VulkanImageView>(Holder, Description);
 		}
 
 		Vec2ui VulkanImage::GetSize() const
@@ -147,14 +178,13 @@ namespace Hermes
 		}
 
 		VulkanImageView::VulkanImageView(std::shared_ptr<VulkanImage::VkImageHolder> InImage,
-		                                 const RenderInterface::ImageViewDescription& Description,
-		                                 bool IsCubemap)
+		                                 const RenderInterface::ImageViewDescription& Description)
 			: Image(std::move(InImage))
 		{
 			VkImageViewCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			CreateInfo.image = Image->Image;
-			CreateInfo.viewType = IsCubemap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+			CreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			CreateInfo.format = Image->Format;
 			CreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 			CreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -162,7 +192,37 @@ namespace Hermes
 			CreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 			CreateInfo.subresourceRange.aspectMask = ImageAspectToVkImageAspectFlags(Description.Aspects);
 			CreateInfo.subresourceRange.baseArrayLayer = 0;
-			CreateInfo.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+			CreateInfo.subresourceRange.layerCount = 1;
+			CreateInfo.subresourceRange.baseMipLevel = Description.BaseMipLevel;
+			CreateInfo.subresourceRange.levelCount = Description.MipLevelCount;
+
+			VK_CHECK_RESULT(vkCreateImageView(Image->Device->GetDevice(), &CreateInfo, GVulkanAllocator, &View));
+		}
+
+		VulkanImageView::VulkanImageView(std::shared_ptr<VulkanImage::VkImageHolder> InImage,
+			const RenderInterface::ImageViewDescription& Description, RenderInterface::CubemapSide Side)
+			: Image(std::move(InImage))
+		{
+			VkImageViewCreateInfo CreateInfo = {};
+			CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			CreateInfo.image = Image->Image;
+			CreateInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+			CreateInfo.format = Image->Format;
+			CreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+			CreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+			CreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+			CreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+			CreateInfo.subresourceRange.aspectMask = ImageAspectToVkImageAspectFlags(Description.Aspects);
+			if (Side == RenderInterface::CubemapSide::All)
+			{
+				CreateInfo.subresourceRange.baseArrayLayer = 0;
+				CreateInfo.subresourceRange.layerCount = 6;
+			}
+			else
+			{
+				CreateInfo.subresourceRange.baseArrayLayer = CubemapSideToArrayLayer(Side);
+				CreateInfo.subresourceRange.layerCount = 1;
+			}
 			CreateInfo.subresourceRange.baseMipLevel = Description.BaseMipLevel;
 			CreateInfo.subresourceRange.levelCount = Description.MipLevelCount;
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
@@ -48,6 +50,9 @@ namespace Hermes
 
 		public:
 			virtual std::unique_ptr<ImageView> CreateImageView(const ImageViewDescription& Description) const = 0;
+
+			virtual std::unique_ptr<ImageView> CreateCubemapImageView(const ImageViewDescription& Description,
+			                                                          CubemapSide Side) const = 0;
 
 			virtual std::unique_ptr<ImageView> CreateDefaultImageView() const = 0;
 

@@ -948,6 +948,28 @@ namespace Hermes
 #undef CORRESPONDING_BIT
 			return Result;
 		}
+
+		inline uint32 CubemapSideToArrayLayer(RenderInterface::CubemapSide Side)
+		{
+			switch (Side)
+			{
+			case RenderInterface::CubemapSide::PositiveX:
+				return 4;
+			case RenderInterface::CubemapSide::NegativeX:
+				return 5;
+			case RenderInterface::CubemapSide::PositiveY:
+				return 2;
+			case RenderInterface::CubemapSide::NegativeY:
+				return 3;
+			case RenderInterface::CubemapSide::PositiveZ:
+				return 1;
+			case RenderInterface::CubemapSide::NegativeZ:
+				return 0;
+			default:
+				HERMES_ASSERT(false);
+				return 0;
+			}
+		}
 	}
 }
 

@@ -51,9 +51,9 @@ namespace Hermes
 
 			virtual RenderInterface::ImageUsageType GetUsageFlags() const override;
 
-			VkImage GetImage() const;
+			virtual bool IsCubemap() const override;
 
-			bool GetIsCubemapCompatible() const;
+			VkImage GetImage() const;
 
 		protected:
 			struct VkImageHolder

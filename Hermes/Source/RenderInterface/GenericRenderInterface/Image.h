@@ -63,6 +63,8 @@ namespace Hermes
 			virtual uint32 GetMipLevelsCount() const = 0;
 
 			virtual ImageUsageType GetUsageFlags() const = 0;
+
+			virtual bool IsCubemap() const = 0;
 		};
 	}
 }

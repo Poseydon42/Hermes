@@ -8,28 +8,6 @@ namespace Hermes
 {
 	namespace Vulkan
 	{
-		static uint32 CubemapSideToArrayLayer(RenderInterface::CubemapSide Side)
-		{
-			switch (Side)
-			{
-			case RenderInterface::CubemapSide::PositiveX:
-				return 4;
-			case RenderInterface::CubemapSide::NegativeX:
-				return 5;
-			case RenderInterface::CubemapSide::PositiveY:
-				return 2;
-			case RenderInterface::CubemapSide::NegativeY:
-				return 3;
-			case RenderInterface::CubemapSide::PositiveZ:
-				return 1;
-			case RenderInterface::CubemapSide::NegativeZ:
-				return 0;
-			default:
-				HERMES_ASSERT(false);
-				return 0;
-			}
-		}
-
 		VulkanImage::VulkanImage(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage, VkFormat InFormat,
 		                         Vec2ui InSize, RenderInterface::ImageUsageType InUsage, bool InIsCubemapCompatible)
 			: Holder(std::make_shared<VkImageHolder>(std::move(InDevice), InImage))
@@ -136,14 +114,14 @@ namespace Hermes
 			return Usage;
 		}
 
+		bool VulkanImage::IsCubemap() const
+		{
+			return IsCubemapCompatible;
+		}
+
 		VkImage VulkanImage::GetImage() const
 		{
 			return Holder->Image;
-		}
-
-		bool VulkanImage::GetIsCubemapCompatible() const
-		{
-			return IsCubemapCompatible;
 		}
 
 		VulkanImage::VkImageHolder::VkImageHolder(std::shared_ptr<const VulkanDevice> InDevice, VkImage InImage)

@@ -219,6 +219,17 @@ namespace Hermes
 
 		ENUM_CLASS_OPERATORS(ImageAspect)
 
+		enum class CubemapSide
+		{
+			PositiveX,
+			NegativeX,
+			PositiveY,
+			NegativeY,
+			PositiveZ,
+			NegativeZ,
+			All
+		};
+
 		inline ImageAspect ImageAspectFromDataFormat(DataFormat Format)
 		{
 			switch (Format)

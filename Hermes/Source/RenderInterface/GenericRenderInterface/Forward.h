@@ -56,6 +56,7 @@ namespace Hermes
 		enum class BufferUsageType;
 		enum class ComparisonOperator;
 		enum class CoordinateSystem;
+		enum class CubemapSide;
 		enum class CullMode;
 		enum class DataFormat;
 		enum class DescriptorType;

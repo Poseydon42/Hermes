@@ -48,10 +48,12 @@ namespace Hermes
 		}
 	}
 
-	void GPUInteractionUtilities::UploadDataToGPUImage(
-		const void* Data, Vec2ui Offset, Vec2ui Dimensions, size_t BytesPerPixel,
-		uint32 MipLevel, RenderInterface::Image& Destination,
-		RenderInterface::ImageLayout CurrentLayout, RenderInterface::ImageLayout LayoutToTransitionTo)
+	void GPUInteractionUtilities::UploadDataToGPUImage(const void* Data, Vec2ui Offset, Vec2ui Dimensions,
+	                                                   size_t BytesPerPixel,
+	                                                   uint32 MipLevel, RenderInterface::Image& Destination,
+	                                                   RenderInterface::ImageLayout CurrentLayout,
+	                                                   RenderInterface::ImageLayout LayoutToTransitionTo,
+	                                                   std::optional<RenderInterface::CubemapSide> Side)
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
 
@@ -89,6 +91,7 @@ namespace Hermes
 				Barrier.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
 				Barrier.BaseMipLevel = 0;
 				Barrier.MipLevelCount = Destination.GetMipLevelsCount();
+				Barrier.Side = Side;
 				TransferCommandBuffer->InsertImageMemoryBarrier(
 					Destination, Barrier,
 					RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
@@ -98,6 +101,7 @@ namespace Hermes
 			Region.ImageDimensions = { Dimensions.X, RowsToCopy };
 			Region.ImageOffset = { Offset.X, Offset.Y + Row };
 			Region.MipLevel = MipLevel;
+			Region.Side = Side;
 			TransferCommandBuffer->CopyBufferToImage(
 				CurrentStagingBuffer, Destination, RenderInterface::ImageLayout::TransferDestinationOptimal,
 				{ Region });
@@ -111,6 +115,7 @@ namespace Hermes
 				Barrier.NewLayout = LayoutToTransitionTo;
 				Barrier.BaseMipLevel = 0;
 				Barrier.MipLevelCount = Destination.GetMipLevelsCount();
+				Barrier.Side = Side;
 				TransferCommandBuffer->InsertImageMemoryBarrier(
 					Destination, Barrier,
 					RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);
@@ -124,9 +129,10 @@ namespace Hermes
 		}
 	}
 
-	void GPUInteractionUtilities::GenerateMipMaps(
-		RenderInterface::Image& Image,
-		RenderInterface::ImageLayout CurrentLayout, RenderInterface::ImageLayout LayoutToTransitionTo)
+	void GPUInteractionUtilities::GenerateMipMaps(RenderInterface::Image& Image,
+	                                              RenderInterface::ImageLayout CurrentLayout,
+	                                              RenderInterface::ImageLayout LayoutToTransitionTo,
+	                                              std::optional<RenderInterface::CubemapSide> Side)
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
 		
@@ -149,6 +155,7 @@ namespace Hermes
 			SourceMipLevelBarrier.NewLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
 			SourceMipLevelBarrier.BaseMipLevel = CurrentMipLevel - 1;
 			SourceMipLevelBarrier.MipLevelCount = 1;
+			SourceMipLevelBarrier.Side = Side;
 
 			RenderInterface::ImageMemoryBarrier DestinationMipLevelBarrier = {};
 			DestinationMipLevelBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryRead;
@@ -157,6 +164,7 @@ namespace Hermes
 			DestinationMipLevelBarrier.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
 			DestinationMipLevelBarrier.BaseMipLevel = CurrentMipLevel;
 			DestinationMipLevelBarrier.MipLevelCount = 1;
+			DestinationMipLevelBarrier.Side = Side;
 
 			RenderCommandBuffer->InsertImageMemoryBarrier(
 				Image, SourceMipLevelBarrier,
@@ -172,10 +180,12 @@ namespace Hermes
 			BlitInfo.SourceRegion.RectMax = SourceMipLevelDimensions;
 			BlitInfo.SourceRegion.MipLevel = CurrentMipLevel - 1;
 			BlitInfo.SourceRegion.AspectMask = RenderInterface::ImageAspect::Color; // TODO : fix
+			BlitInfo.SourceRegion.Side = Side;
 			BlitInfo.DestinationRegion.RectMin = { 0, 0 };
 			BlitInfo.DestinationRegion.RectMax = DestinationMipLevelDimensions;
 			BlitInfo.DestinationRegion.MipLevel = CurrentMipLevel;
 			BlitInfo.DestinationRegion.AspectMask = RenderInterface::ImageAspect::Color;
+			BlitInfo.DestinationRegion.Side = Side;
 			RenderCommandBuffer->BlitImage(
 				Image, RenderInterface::ImageLayout::TransferSourceOptimal,
 				Image, RenderInterface::ImageLayout::TransferDestinationOptimal,
@@ -191,6 +201,7 @@ namespace Hermes
 		FinalBarrier.NewLayout = LayoutToTransitionTo;
 		FinalBarrier.BaseMipLevel = 0;
 		FinalBarrier.MipLevelCount = Image.GetMipLevelsCount();
+		FinalBarrier.Side = Side;
 		RenderCommandBuffer->InsertImageMemoryBarrier(
 			Image, FinalBarrier, RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);
 

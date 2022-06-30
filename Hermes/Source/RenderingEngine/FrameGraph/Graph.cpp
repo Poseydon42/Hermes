@@ -44,9 +44,14 @@ namespace Hermes
 
 	void FrameGraphScheme::AddResource(const String& Name, const ResourceDesc& Description)
 	{
-		Resources.emplace_back(Name, Description, std::nullopt);
+		Resources.emplace_back(Name, Description, false);
 	}
 
+	void FrameGraphScheme::DeclareExternalResource(const String& Name, const ResourceDesc& Description)
+	{
+		Resources.emplace_back(Name, Description, true);
+	}
+	
 	std::unique_ptr<FrameGraph> FrameGraphScheme::Compile() const
 	{
 		if (!Validate())

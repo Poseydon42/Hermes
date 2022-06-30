@@ -24,6 +24,8 @@ namespace Hermes
 
 		void AddResource(const String& Name, const ResourceDesc& Description);
 
+		void DeclareExternalResource(const String& Name, const ResourceDesc& Description);
+
 		std::unique_ptr<FrameGraph> Compile() const;
 
 	private:
@@ -35,7 +37,8 @@ namespace Hermes
 		{
 			String Name;
 			ResourceDesc Desc;
-			std::optional<std::shared_ptr<RenderInterface::Image>> Handle;
+
+			bool IsExternal = false;
 		};
 		std::vector<ResourceContainer> Resources;
 		std::unordered_map<String, String> DrainToSourceLinkage;

@@ -30,7 +30,14 @@ namespace Hermes
 		friend class FrameGraph;
 
 		std::unordered_map<String, PassDesc> Passes;
-		std::vector<std::pair<String, ResourceDesc>> Resources;
+
+		struct ResourceContainer
+		{
+			String Name;
+			ResourceDesc Desc;
+			std::optional<std::shared_ptr<RenderInterface::Image>> Handle;
+		};
+		std::vector<ResourceContainer> Resources;
 		std::unordered_map<String, String> DrainToSourceLinkage;
 		std::unordered_map<String, String> SourceToDrainLinkage;
 

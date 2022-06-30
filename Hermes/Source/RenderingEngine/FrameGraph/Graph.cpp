@@ -44,7 +44,7 @@ namespace Hermes
 
 	void FrameGraphScheme::AddResource(const String& Name, const ResourceDesc& Description)
 	{
-		Resources.emplace_back(Name, Description);
+		Resources.emplace_back(Name, Description, std::nullopt);
 	}
 
 	std::unique_ptr<FrameGraph> FrameGraphScheme::Compile() const
@@ -200,17 +200,17 @@ namespace Hermes
 		for (const auto& Resource : Scheme.Resources)
 		{
 			auto Image = Renderer::Get().GetActiveDevice().CreateImage(
-				Resource.second.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
-				TraverseResourceUsageType(Resource.first), Resource.second.Format,
-				Resource.second.MipLevels, RenderInterface::ImageLayout::Undefined);
+				Resource.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
+				TraverseResourceUsageType(Resource.Name), Resource.Desc.Format,
+				Resource.Desc.MipLevels, RenderInterface::ImageLayout::Undefined);
 
 			ResourceContainer Container = {};
 			Container.Image = std::move(Image);
 			Container.View = Container.Image->CreateDefaultImageView();
 			Container.CurrentLayout = RenderInterface::ImageLayout::Undefined;
-			Container.Desc = Resource.second;
+			Container.Desc = Resource.Desc;
 
-			Resources[Resource.first] = std::move(Container);
+			Resources[Resource.Name] = std::move(Container);
 		}
 
 		for (const auto& Pass : Scheme.Passes)

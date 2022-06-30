@@ -74,10 +74,12 @@ namespace Hermes
 
 		struct ResourceContainer
 		{
-			std::unique_ptr<RenderInterface::Image> Image;
-			std::unique_ptr<RenderInterface::ImageView> View;
+			std::shared_ptr<RenderInterface::Image> Image;
+			std::shared_ptr<RenderInterface::ImageView> View;
 			RenderInterface::ImageLayout CurrentLayout = RenderInterface::ImageLayout::Undefined;
 			ResourceDesc Desc;
+
+			bool IsExternal = false;
 		};
 		std::unordered_map<String, ResourceContainer> Resources;
 

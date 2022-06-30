@@ -210,16 +210,21 @@ namespace Hermes
 		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetSize();
 		for (const auto& Resource : Scheme.Resources)
 		{
-			auto Image = Renderer::Get().GetActiveDevice().CreateImage(
-				Resource.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
-				TraverseResourceUsageType(Resource.Name), Resource.Desc.Format,
-				Resource.Desc.MipLevels, RenderInterface::ImageLayout::Undefined);
-
 			ResourceContainer Container = {};
-			Container.Image = std::move(Image);
-			Container.View = Container.Image->CreateDefaultImageView();
+			if (!Resource.IsExternal)
+			{
+				auto Image = Renderer::Get().GetActiveDevice().CreateImage(
+					Resource.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
+					TraverseResourceUsageType(Resource.Name), Resource.Desc.Format,
+					Resource.Desc.MipLevels, RenderInterface::ImageLayout::Undefined);
+				
+				Container.Image = std::move(Image);
+				Container.View = Container.Image->CreateDefaultImageView();
+			}
+			
 			Container.CurrentLayout = RenderInterface::ImageLayout::Undefined;
 			Container.Desc = Resource.Desc;
+			Container.IsExternal = Resource.IsExternal;
 
 			Resources[Resource.Name] = std::move(Container);
 		}

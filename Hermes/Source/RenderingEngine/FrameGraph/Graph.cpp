@@ -76,7 +76,10 @@ namespace Hermes
 		bool SwapchainWasRecreated = false;
 		auto SwapchainImageIndex = Swapchain.AcquireImage(UINT64_MAX, *SwapchainImageAcquiredFence, SwapchainWasRecreated);
 		if (SwapchainWasRecreated)
+		{
 			RecreateResources();
+			RecreateRenderTargets();
+		}
 
 		auto& RenderQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Render);
 		
@@ -195,7 +198,10 @@ namespace Hermes
 
 		Swapchain.Present(SwapchainImageIndex.value(), SwapchainWasRecreated);
 		if (SwapchainWasRecreated)
+		{
 			RecreateResources();
+			RecreateRenderTargets();
+		}
 	}
 
 	FrameGraph::FrameGraph(FrameGraphScheme InScheme)
@@ -423,11 +429,17 @@ namespace Hermes
 					Resource.second.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
 					TraverseResourceUsageType(Resource.first), Resource.second.Desc.Format,
 					Resource.second.Desc.MipLevels, RenderInterface::ImageLayout::Undefined);
+				Resource.second.View = Resource.second.Image->CreateDefaultImageView();
 
 				Resource.second.CurrentLayout = RenderInterface::ImageLayout::Undefined;
 			}
 		}
 
+		ResourcesWereRecreated = true;
+	}
+
+	void FrameGraph::RecreateRenderTargets()
+	{
 		// TODO : only recreate render targets if their images were recreated
 		for (const auto& Pass : Scheme.Passes)
 		{

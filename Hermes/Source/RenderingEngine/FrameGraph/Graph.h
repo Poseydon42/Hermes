@@ -68,6 +68,7 @@ namespace Hermes
 		RenderInterface::DataFormat TraverseDrainDataFormat(const String& DrainName) const;
 
 		void RecreateResources();
+		void RecreateRenderTargets();
 
 		FrameGraphScheme Scheme;
 

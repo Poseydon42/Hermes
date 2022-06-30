@@ -67,8 +67,31 @@ namespace Hermes
 		return true;
 	}
 
+	void FrameGraph::BindExternalResource(const String& Name, std::shared_ptr<RenderInterface::Image> Image,
+	                                      std::shared_ptr<RenderInterface::ImageView> View,
+	                                      RenderInterface::ImageLayout CurrentLayout)
+	{
+		auto& Resource = Resources.at(Name);
+		HERMES_ASSERT_LOG(Resource.IsExternal, L"Trying to rebind non-external frame graph resource");
+
+		Resource.Image  = std::move(Image);
+		Resource.View = std::move(View);
+		Resource.CurrentLayout = CurrentLayout;
+
+		// TODO : recreate render targets that were using this resource instead of all
+		// TODO : recreate render targets in Execute() on flag so that we do not recreate them multiple times
+		//        in the same frame if multiple resources were changed
+		RecreateRenderTargets();
+	}
+
 	void FrameGraph::Execute(const Scene& Scene)
 	{
+		if (RenderTargetsNeedsInitialization)
+		{
+			RecreateRenderTargets();
+			RenderTargetsNeedsInitialization = false;
+		}
+
 		auto& Swapchain = Renderer::Get().GetSwapchain();
 
 		auto SwapchainImageAcquiredFence = Renderer::Get().GetActiveDevice().CreateFence();
@@ -208,8 +231,12 @@ namespace Hermes
 		: Scheme(std::move(InScheme))
 	{
 		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetSize();
+
+		bool ContainsExternalResources = false;
 		for (const auto& Resource : Scheme.Resources)
 		{
+			ContainsExternalResources |= Resource.IsExternal;
+
 			ResourceContainer Container = {};
 			if (!Resource.IsExternal)
 			{
@@ -302,6 +329,7 @@ namespace Hermes
 			NewPassContainer.CommandBuffer = RenderQueue.CreateCommandBuffer(true);
 			NewPassContainer.Callback = Pass.second.Callback;
 
+			// TODO : clean this code up
 			std::vector<const RenderInterface::ImageView*> RenderTargetAttachments;
 			Vec2ui RenderTargetDimensions;
 			RenderTargetAttachments.reserve(Pass.second.Drains.size());
@@ -316,8 +344,11 @@ namespace Hermes
 
 				const auto& Resource = Resources[ResourceOwnName];
 				RenderTargetAttachments.push_back(Resource.View.get());
-				HERMES_ASSERT(RenderTargetDimensions == Vec2ui{} || RenderTargetDimensions == Resource.Image->GetSize());
-				RenderTargetDimensions = Resource.Image->GetSize();
+				if (!Resource.IsExternal)
+				{
+					HERMES_ASSERT(RenderTargetDimensions == Vec2ui{} || RenderTargetDimensions == Resource.Image->GetSize());
+					RenderTargetDimensions = Resource.Image->GetSize();
+				}
 
 				NewPassContainer.ClearColors.emplace_back();
 				NewPassContainer.ClearColors.back().R = Drain.ClearColor[0];
@@ -329,8 +360,15 @@ namespace Hermes
 				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName, Drain.Layout);
 			}
 
-			NewPassContainer.RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
-				*NewPassContainer.Pass, RenderTargetAttachments, RenderTargetDimensions);
+			if (!ContainsExternalResources)
+			{
+				NewPassContainer.RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
+					*NewPassContainer.Pass, RenderTargetAttachments, RenderTargetDimensions);
+			}
+			else
+			{
+				RenderTargetsNeedsInitialization = true;
+			}
 
 			Passes[Pass.first] = std::move(NewPassContainer);
 		}
@@ -428,7 +466,7 @@ namespace Hermes
 		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetSize();
 		for (auto& Resource : Resources)
 		{
-			if (Resource.second.Desc.Dimensions.IsRelative())
+			if (Resource.second.Desc.Dimensions.IsRelative() && !Resource.second.IsExternal)
 			{
 				Resource.second.Image = Renderer::Get().GetActiveDevice().CreateImage(
 					Resource.second.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
@@ -461,8 +499,11 @@ namespace Hermes
 
 				const auto& Resource = Resources[ResourceOwnName];
 				Attachments.push_back(Resource.View.get());
-				HERMES_ASSERT(RenderTargetDimensions == Vec2ui{} || RenderTargetDimensions == Resource.Image->GetSize());
-				RenderTargetDimensions = Resource.Image->GetSize();
+				if (!Resource.IsExternal)
+				{
+					HERMES_ASSERT(RenderTargetDimensions == Vec2ui{} || RenderTargetDimensions == Resource.Image->GetSize());
+					RenderTargetDimensions = Resource.Image->GetSize();
+				}
 				Passes[Pass.first].Attachments.push_back(Resource.Image.get());
 			}
 			Passes[Pass.first].RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(

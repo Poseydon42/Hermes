@@ -54,6 +54,10 @@ namespace Hermes
 		ADD_DEFAULT_MOVE_CONSTRUCTOR(FrameGraph)
 		ADD_DEFAULT_DESTRUCTOR(FrameGraph)
 	public:
+		void BindExternalResource(const String& Name, std::shared_ptr<RenderInterface::Image> Image,
+		                          std::shared_ptr<RenderInterface::ImageView> View,
+		                          RenderInterface::ImageLayout CurrentLayout);
+
 		void Execute(const Scene& Scene);
 
 	private:
@@ -99,5 +103,6 @@ namespace Hermes
 		String BlitToSwapchainResourceOwnName;
 
 		bool ResourcesWereRecreated = false;
+		bool RenderTargetsNeedsInitialization = false;
 	};
 }

@@ -184,7 +184,10 @@ namespace Hermes
 			VkImageViewCreateInfo CreateInfo = {};
 			CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			CreateInfo.image = Image->Image;
-			CreateInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+			if (Side == RenderInterface::CubemapSide::All)
+				CreateInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+			else
+				CreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			CreateInfo.format = Image->Format;
 			CreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 			CreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;

@@ -46,7 +46,7 @@ namespace Hermes
 
 	Mat4 FPSCamera::GetProjectionMatrix() const
 	{
-		return Mat4::Perspective(VerticalFOV, AspectRatio, NearPlane, FarPlane);;
+		return Mat4::Perspective(Math::Radians(VerticalFOV), AspectRatio, NearPlane, FarPlane);;
 	}
 	
 	void FPSCamera::ApplyMovementInput(Vec2 Input, float DeltaTime)

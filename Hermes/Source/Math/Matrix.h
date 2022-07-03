@@ -311,7 +311,7 @@ namespace Hermes
 	{
 		Mat4 Result = { 0.0f };
 
-		T CotanHalfFOV = Math::Cotan(Math::Radians(VerticalFOV) / static_cast<T>(2));
+		T CotanHalfFOV = Math::Cotan(VerticalFOV / static_cast<T>(2));
 
 		Result[0][0] = CotanHalfFOV / AspectRatio;
 		Result[1][1] = -CotanHalfFOV;

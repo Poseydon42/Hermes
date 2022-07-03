@@ -16,7 +16,7 @@ namespace Hermes
 	{
 		MAKE_NON_COPYABLE(Texture)
 		ADD_DEFAULT_MOVE_CONSTRUCTOR(Texture)
-		ADD_DEFAULT_DESTRUCTOR(Texture)
+		ADD_DEFAULT_VIRTUAL_DESTRUCTOR(Texture)
 
 	public:
 		static std::shared_ptr<Texture> CreateFromAsset(const ImageAsset& Source, bool EnableMipMaps = true);
@@ -29,13 +29,33 @@ namespace Hermes
 
 		uint32 GetMipLevelsCount() const;
 
+		RenderInterface::DataFormat GetDataFormat() const;
+
 		bool IsReady() const;
+
 	private:
 		explicit Texture(const ImageAsset& Source, bool EnableMipMaps = true);
 
-		bool DataUploadFinished;
-		std::unique_ptr<RenderInterface::Image> Image;
+	protected:
+		Texture() = default;
+
+		bool DataUploadFinished = false;
+		std::unique_ptr<RenderInterface::Image> Cubemap;
 		std::unique_ptr<RenderInterface::ImageView> DefaultView;
 		Vec2ui Dimensions;
+	};
+
+	class HERMES_API CubemapTexture : public Texture
+	{
+		MAKE_NON_COPYABLE(CubemapTexture)
+		ADD_DEFAULT_MOVE_CONSTRUCTOR(CubemapTexture)
+		ADD_DEFAULT_VIRTUAL_DESTRUCTOR(CubemapTexture)
+
+	public:
+		static std::unique_ptr<CubemapTexture> CreateFromEquirectangularTexture(
+			const Texture& EquirectangularTexture, bool EnableMipMaps = true);
+
+	private:
+		explicit CubemapTexture(const Texture& EquirectangularTexture, bool EnableMipMaps);
 	};
 }

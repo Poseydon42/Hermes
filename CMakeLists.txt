@@ -19,9 +19,6 @@ else()
 endif()
 
 # Copy Sandbox.dll into the folder with Hermes.exe
-add_custom_target(CopyGameDLL ALL)
-
-add_custom_command(TARGET CopyGameDLL POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-    $<TARGET_FILE:Sandbox> $<TARGET_FILE_DIR:Hermes>
+add_custom_target(CopyGameDLL ALL 
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Sandbox> $<TARGET_FILE_DIR:Hermes>
     DEPENDS Sandbox)

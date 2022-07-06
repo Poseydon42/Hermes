@@ -40,7 +40,7 @@ namespace Hermes
 		Texture() = default;
 
 		bool DataUploadFinished = false;
-		std::unique_ptr<RenderInterface::Image> Cubemap;
+		std::unique_ptr<RenderInterface::Image> Image;
 		std::unique_ptr<RenderInterface::ImageView> DefaultView;
 		Vec2ui Dimensions;
 	};

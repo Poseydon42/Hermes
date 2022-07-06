@@ -48,7 +48,7 @@ namespace Hermes
 	const RenderInterface::Image& Texture::GetRawImage() const
 	{
 		HERMES_ASSERT(IsReady());
-		return *Cubemap;
+		return *Image;
 	}
 
 	const RenderInterface::ImageView& Texture::GetDefaultView() const
@@ -63,19 +63,19 @@ namespace Hermes
 
 	uint32 Texture::GetMipLevelsCount() const
 	{
-		return Cubemap->GetMipLevelsCount();
+		return Image->GetMipLevelsCount();
 	}
 
 	RenderInterface::DataFormat Texture::GetDataFormat() const
 	{
-		if (!Cubemap)
+		if (!Image)
 			return RenderInterface::DataFormat::Undefined;
-		return Cubemap->GetDataFormat();
+		return Image->GetDataFormat();
 	}
 
 	bool Texture::IsReady() const
 	{
-		return DataUploadFinished && Cubemap != nullptr && Dimensions.LengthSq() > 0;
+		return DataUploadFinished && Image != nullptr && Dimensions.LengthSq() > 0;
 	}
 
 	Texture::Texture(const ImageAsset& Source, bool EnableMipMaps)
@@ -94,7 +94,7 @@ namespace Hermes
 			MipLevelCount = 0;
 		}
 
-		Cubemap = Renderer::Get().GetActiveDevice().CreateImage(
+		Image = Renderer::Get().GetActiveDevice().CreateImage(
 		                                                        Dimensions,
 		                                                        RenderInterface::ImageUsageType::Sampled |
 		                                                        RenderInterface::ImageUsageType::CopyDestination |
@@ -116,19 +116,19 @@ namespace Hermes
 
 		GPUInteractionUtilities::UploadDataToGPUImage(
 		                                              Source.GetRawData(), { 0, 0 }, Dimensions,
-		                                              Source.GetBitsPerPixel() / 8, 0, *Cubemap,
+		                                              Source.GetBitsPerPixel() / 8, 0, *Image,
 		                                              RenderInterface::ImageLayout::Undefined, LayoutAfterLoad);
 
 		if (EnableMipMaps)
 		{
 			GPUInteractionUtilities::GenerateMipMaps(
-			                                         *Cubemap, RenderInterface::ImageLayout::TransferSourceOptimal,
+			                                         *Image, RenderInterface::ImageLayout::TransferSourceOptimal,
 			                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 		}
 
 		DataUploadFinished = true;
 
-		DefaultView = Cubemap->CreateDefaultImageView();
+		DefaultView = Image->CreateDefaultImageView();
 	}
 
 	std::unique_ptr<CubemapTexture> CubemapTexture::CreateFromEquirectangularTexture(
@@ -154,7 +154,7 @@ namespace Hermes
 			MipMapCount = Math::FloorLog2(Math::Max(CubemapDimensions.X, CubemapDimensions.Y)) + 1;
 
 		auto& Device = Renderer::Get().GetActiveDevice();
-		Cubemap = Device.CreateCubemap(CubemapDimensions,
+		Image = Device.CreateCubemap(CubemapDimensions,
 		                               RenderInterface::ImageUsageType::Sampled |
 		                               RenderInterface::ImageUsageType::CopySource |
 		                               RenderInterface::ImageUsageType::CopyDestination |
@@ -205,7 +205,7 @@ namespace Hermes
 		PipelineDescription.ShaderStages = { VertexShader, FragmentShader };
 		PipelineDescription.DescriptorLayouts = { DescriptorLayout };
 		PipelineDescription.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
-		PipelineDescription.Viewport.Dimensions = Cubemap->GetSize();
+		PipelineDescription.Viewport.Dimensions = Image->GetSize();
 		PipelineDescription.Viewport.Origin = { 0, 0 };
 		PipelineDescription.Rasterizer.Cull = RenderInterface::CullMode::Back;
 		PipelineDescription.Rasterizer.Direction = RenderInterface::FaceDirection::CounterClockwise;
@@ -229,10 +229,10 @@ namespace Hermes
 			ViewDescription.Aspects = RenderInterface::ImageAspect::Color;
 			ViewDescription.BaseMipLevel = 0;
 			ViewDescription.MipLevelCount = 1;
-			auto CubemapView = Cubemap->CreateCubemapImageView(ViewDescription, Side);
+			auto CubemapView = Image->CreateCubemapImageView(ViewDescription, Side);
 
 			std::vector<const RenderInterface::ImageView*> RenderTargetAttachments = { CubemapView.get() };
-			auto RenderTarget = Device.CreateRenderTarget(*RenderPass, RenderTargetAttachments, Cubemap->GetSize());
+			auto RenderTarget = Device.CreateRenderTarget(*RenderPass, RenderTargetAttachments, Image->GetSize());
 			CommandBuffer->BeginRecording();
 
 			RenderInterface::ImageMemoryBarrier CubemapBarrier = {};
@@ -242,9 +242,9 @@ namespace Hermes
 			CubemapBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::ColorAttachmentRead |
 				RenderInterface::AccessType::ColorAttachmentWrite;
 			CubemapBarrier.BaseMipLevel = 0;
-			CubemapBarrier.MipLevelCount = Cubemap->GetMipLevelsCount();
+			CubemapBarrier.MipLevelCount = Image->GetMipLevelsCount();
 			CubemapBarrier.Side = Side;
-			CommandBuffer->InsertImageMemoryBarrier(*Cubemap, CubemapBarrier,
+			CommandBuffer->InsertImageMemoryBarrier(*Image, CubemapBarrier,
 			                                        RenderInterface::PipelineStage::BottomOfPipe,
 			                                        RenderInterface::PipelineStage::ColorAttachmentOutput);
 
@@ -298,8 +298,8 @@ namespace Hermes
 				Barrier.BaseMipLevel = 0;
 				Barrier.MipLevelCount = 1;
 				Barrier.Side = Side;
-				CommandBuffer->InsertImageMemoryBarrier(*Cubemap, Barrier,
-				                                        RenderInterface::PipelineStage::FragmentShader,
+				CommandBuffer->InsertImageMemoryBarrier(*Image, Barrier,
+				                                        RenderInterface::PipelineStage::ColorAttachmentOutput,
 				                                        RenderInterface::PipelineStage::TopOfPipe);
 			}
 
@@ -312,9 +312,11 @@ namespace Hermes
 
 			if (EnableMipMaps)
 			{
-				GPUInteractionUtilities::GenerateMipMaps(*Cubemap, RenderInterface::ImageLayout::ColorAttachmentOptimal,
+				GPUInteractionUtilities::GenerateMipMaps(*Image, RenderInterface::ImageLayout::ColorAttachmentOptimal,
 				                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal, Side);
 			}
 		}
+
+		DefaultView = Image->CreateDefaultImageView();
 	}
 }

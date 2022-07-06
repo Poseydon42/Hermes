@@ -2,13 +2,11 @@
 
 #include "AssetSystem/Asset.h"
 #include "AssetSystem/AssetLoader.h"
-#include "Math/Common.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Texture.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"
-#include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #include "RenderInterface/GenericRenderInterface/Image.h"
@@ -25,19 +23,12 @@ namespace Hermes
 	{
 		auto& DescriptorAllocator = Renderer::Get().GetDescriptorAllocator();
 
-		RenderInterface::DescriptorBinding UniformBufferBinding = {};
-		UniformBufferBinding.Index = 0;
-		UniformBufferBinding.DescriptorCount = 1;
-		UniformBufferBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		UniformBufferBinding.Type = RenderInterface::DescriptorType::UniformBuffer;
-		RenderInterface::DescriptorBinding SkyboxTextureBinding = {};
-		SkyboxTextureBinding.Index = 1;
-		SkyboxTextureBinding.DescriptorCount = 1;
-		SkyboxTextureBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		SkyboxTextureBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
-		DataDescriptorLayout = Device->CreateDescriptorSetLayout({
-			UniformBufferBinding, SkyboxTextureBinding
-		});
+		RenderInterface::DescriptorBinding CubemapTextureBinding = {};
+		CubemapTextureBinding.Index = 0;
+		CubemapTextureBinding.DescriptorCount = 1;
+		CubemapTextureBinding.Shader = RenderInterface::ShaderType::FragmentShader;
+		CubemapTextureBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
+		DataDescriptorLayout = Device->CreateDescriptorSetLayout({ CubemapTextureBinding });
 
 		DataDescriptorSet = DescriptorAllocator.Allocate(DataDescriptorLayout);
 
@@ -49,21 +40,22 @@ namespace Hermes
 		EnvmapAsset = Asset::As<ImageAsset>(AssetLoader::Load(L"Textures/default_envmap_reflection"));
 		HERMES_ASSERT_LOG(EnvmapAsset, L"Failed to load reflection envmap.");
 
-		UniformBuffer = Device->CreateBuffer(sizeof(SkyboxPassData),
-		                                     RenderInterface::BufferUsageType::UniformBuffer |
-		                                     RenderInterface::BufferUsageType::CPUAccessible);
 		EnvmapTexture = Texture::CreateFromAsset(*EnvmapAsset, false);
+		EnvmapCubemap = CubemapTexture::CreateFromEquirectangularTexture(*EnvmapTexture, false);
 
 		RenderInterface::SamplerDescription SamplerDesc = {};
 		SamplerDesc.AddressingModeU = RenderInterface::AddressingMode::Repeat;
 		SamplerDesc.AddressingModeV = RenderInterface::AddressingMode::Repeat;
+		// TODO : recreate when graphics settings change
 		SamplerDesc.AnisotropyLevel = Renderer::Get().GetGraphicsSettings().AnisotropyLevel;
 		SamplerDesc.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
-		SamplerDesc.MagnificationFilteringMode = RenderInterface::FilteringMode::Nearest;
+		SamplerDesc.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
+		SamplerDesc.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
+		SamplerDesc.MipMode = RenderInterface::MipmappingMode::Linear;
+		SamplerDesc.MaxMipLevel = static_cast<float>(EnvmapCubemap->GetMipLevelsCount());
 		EnvmapSampler = Device->CreateSampler(SamplerDesc);
 
-		DataDescriptorSet->UpdateWithBuffer(0, 0, *UniformBuffer, 0, sizeof(SkyboxPassData));
-		DataDescriptorSet->UpdateWithImageAndSampler(1, 0, EnvmapTexture->GetDefaultView(), *EnvmapSampler,
+		DataDescriptorSet->UpdateWithImageAndSampler(0, 0, EnvmapCubemap->GetDefaultView(), *EnvmapSampler,
 		                                             RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
 		Description.Callback.Bind<SkyboxPass, &SkyboxPass::PassCallback>(this);
@@ -100,25 +92,29 @@ namespace Hermes
 			IsPipelineCreated = true;
 		}
 
-		SkyboxPassData Data;
-		Data.ViewMatrix = Scene.GetActiveCamera().GetViewMatrix();
-		Data.ViewportDimensions = Vec2(Renderer::Get().GetSwapchain().GetSize());
-		Data.HalfVerticalFOV = Math::Radians(Scene.GetActiveCamera().GetVerticalFOV() / 2.0f);
-		Data.AspectRatio = static_cast<float>(Drains[0]->GetSize().X) / static_cast<float>(Drains[0]->GetSize().Y);
-		auto* Memory = UniformBuffer->Map();
-		memcpy(Memory, &Data, sizeof(Data));
-		UniformBuffer->Unmap();
+		const auto& Camera = Scene.GetActiveCamera();
+		auto FullViewMatrix = Camera.GetViewMatrix();
+		auto ViewMatrixWithoutTranslation = Mat3(FullViewMatrix);
+		auto ViewMatrix = Mat4(ViewMatrixWithoutTranslation);
+		ViewMatrix[3][3] = 1.0f;
+		auto ProjectionMatrix = Camera.GetProjectionMatrix();
+
+		auto ViewProjectionMatrix = ProjectionMatrix * ViewMatrix;
 
 		CommandBuffer.BindPipeline(*Pipeline);
 		CommandBuffer.BindDescriptorSet(*DataDescriptorSet, *Pipeline, 0);
-		// Drawing 6 vertices without bound vertex buffer because their coordinates
+		CommandBuffer.UploadPushConstants(*Pipeline, RenderInterface::ShaderType::VertexShader, &ViewProjectionMatrix,
+		                                  sizeof(ViewProjectionMatrix), 0);
+		// Drawing 36 vertices without bound vertex buffer because their coordinates
 		// are hardcoded in shader code
-		CommandBuffer.Draw(6, 1, 0, 0);
+		CommandBuffer.Draw(36, 1, 0, 0);
 	}
 
 	void SkyboxPass::RecreatePipeline(const RenderInterface::RenderPass& Pass)
 	{
 		RenderInterface::PipelineDescription PipelineDescription = {};
+
+		PipelineDescription.PushConstants = { { RenderInterface::ShaderType::VertexShader, 0, sizeof(Mat4) } };
 
 		PipelineDescription.ShaderStages = { VertexShader, FragmentShader };
 
@@ -133,11 +129,11 @@ namespace Hermes
 		PipelineDescription.Viewport.Dimensions = Renderer::Get().GetSwapchain().GetSize();
 
 		PipelineDescription.DepthStencilStage.IsDepthTestEnabled = true;
-		PipelineDescription.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Equal;
+		PipelineDescription.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::LessOrEqual;
 		PipelineDescription.DepthStencilStage.IsDepthWriteEnabled = false;
 
 		PipelineDescription.Rasterizer.Cull = RenderInterface::CullMode::Back;
-		PipelineDescription.Rasterizer.Direction = RenderInterface::FaceDirection::Clockwise;
+		PipelineDescription.Rasterizer.Direction = RenderInterface::FaceDirection::CounterClockwise;
 		PipelineDescription.Rasterizer.Fill = RenderInterface::FillMode::Fill;
 
 		Pipeline = Device->CreatePipeline(Pass, PipelineDescription);

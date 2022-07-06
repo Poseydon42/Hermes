@@ -9,6 +9,7 @@
 
 namespace Hermes
 {
+	class CubemapTexture;
 	class ImageAsset;
 	struct PassDesc;
 	class Scene;
@@ -21,29 +22,19 @@ namespace Hermes
 
 		const PassDesc& GetPassDescription() const;
 	private:
-		struct SkyboxPassData
-		{
-			Mat4 ViewMatrix;
-			Vec2 ViewportDimensions;
-			float HalfVerticalFOV = 0.0f;
-			float AspectRatio = 0.0f;
-		};
-
 		std::shared_ptr<RenderInterface::Device> Device;
 
 		std::shared_ptr<RenderInterface::DescriptorSetLayout> DataDescriptorLayout;
 		std::shared_ptr<RenderInterface::DescriptorSet> DataDescriptorSet;
 
-		std::shared_ptr<RenderInterface::Buffer> UniformBuffer;
 		std::shared_ptr<ImageAsset> EnvmapAsset;
 		std::shared_ptr<Texture> EnvmapTexture;
+		std::shared_ptr<CubemapTexture> EnvmapCubemap;
 		std::shared_ptr<RenderInterface::Sampler> EnvmapSampler;
 
 		std::shared_ptr<RenderInterface::Shader> VertexShader, FragmentShader;
 		std::shared_ptr<RenderInterface::Pipeline> Pipeline;
 		bool IsPipelineCreated = false;
-
-		std::shared_ptr<Texture> SkyboxTexture;
 
 		PassDesc Description;
 

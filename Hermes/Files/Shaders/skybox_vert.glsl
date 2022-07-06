@@ -1,27 +1,20 @@
 #version 450
 #pragma shader_stage(vertex)
 
-struct Vertex
-{
-    vec3 Position;
-    vec2 TextureCoordinates;
-} Vertices[6] = 
-{
-    // Right bottom - left bottom - right top
-    { vec3(1.0, 1.0, 1.0), vec2(1.0, 0.0) },
-    { vec3(-1.0, 1.0, 1.0), vec2(0.0, 0.0) },
-    { vec3(1.0, -1.0, 1.0), vec2(1.0, 1.0) },
-    
-    //Left top - right top - left bottom
-    { vec3(-1.0, -1.0, 1.0), vec2(0.0, 1.0) },
-    { vec3(1.0, -1.0, 1.0), vec2(1.0, 1.0) },
-    { vec3(-1.0, 1.0, 1.0), vec2(0.0, 0.0) }
-};
+#include "uniform_cube.glsl"
 
-layout(location = 0) out vec2 TextureCoordinates;
+layout(push_constant, row_major) uniform PushConstantsStruct
+{
+    mat4 ViewProjection;
+} PushConstants;
+
+layout(location = 0) out vec3 o_Pos;
 
 void main()
 {
-    gl_Position = vec4(Vertices[gl_VertexIndex].Position, 1.0);
-    TextureCoordinates = Vertices[gl_VertexIndex].TextureCoordinates;
+    vec3 LocalVertexPosition = UniformCubeVertices[gl_VertexIndex];
+    vec4 ProjectedVertexPosition = PushConstants.ViewProjection * vec4(LocalVertexPosition, 1.0);
+
+    o_Pos = LocalVertexPosition;
+    gl_Position = ProjectedVertexPosition.xyww;
 }

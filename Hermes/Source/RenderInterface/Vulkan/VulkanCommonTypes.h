@@ -954,17 +954,17 @@ namespace Hermes
 			switch (Side)
 			{
 			case RenderInterface::CubemapSide::PositiveX:
-				return 4;
+				return 0;
 			case RenderInterface::CubemapSide::NegativeX:
-				return 5;
+				return 1;
 			case RenderInterface::CubemapSide::PositiveY:
 				return 2;
 			case RenderInterface::CubemapSide::NegativeY:
 				return 3;
 			case RenderInterface::CubemapSide::PositiveZ:
-				return 1;
+				return 4;
 			case RenderInterface::CubemapSide::NegativeZ:
-				return 0;
+				return 5;
 			default:
 				HERMES_ASSERT(false);
 				return 0;

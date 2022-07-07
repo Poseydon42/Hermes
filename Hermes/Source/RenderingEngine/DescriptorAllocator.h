@@ -25,12 +25,13 @@ namespace Hermes
 		std::vector<std::unique_ptr<RenderInterface::DescriptorSetPool>> PoolList;
 
 		static constexpr uint32 DescriptorSetsPerPool = 1024;
-		static constexpr std::array<RenderInterface::SubpoolDescription, 4> Subpools =
+		static constexpr std::array<RenderInterface::SubpoolDescription, 5> Subpools =
 		{
 			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::UniformBuffer, 2 * DescriptorSetsPerPool },
 			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::SampledImage, 4 * DescriptorSetsPerPool },
 			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::CombinedSampler, 2 * DescriptorSetsPerPool },
-			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::Sampler, 2 * DescriptorSetsPerPool }
+			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::Sampler, 2 * DescriptorSetsPerPool },
+			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::InputAttachment, 2 * DescriptorSetsPerPool }
 		};
 
 		void AllocateNewPool();

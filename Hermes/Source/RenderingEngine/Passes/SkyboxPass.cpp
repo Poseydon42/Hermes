@@ -30,7 +30,7 @@ namespace Hermes
 		CubemapTextureBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
 		DataDescriptorLayout = Device->CreateDescriptorSetLayout({ CubemapTextureBinding });
 
-		DataDescriptorSet = DescriptorAllocator.Allocate(DataDescriptorLayout);
+		DataDescriptorSet = DescriptorAllocator.Allocate(*DataDescriptorLayout);
 
 		VertexShader = Device->CreateShader(L"Shaders/Bin/skybox_vert.glsl.spv",
 		                                    RenderInterface::ShaderType::VertexShader);

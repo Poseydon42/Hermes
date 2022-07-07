@@ -104,23 +104,22 @@ namespace Hermes
 			VK_CHECK_RESULT(vkCreateDescriptorPool(Holder->Device->GetDevice(), &CreateInfo, GVulkanAllocator, &Holder->Pool))
 		}
 
-		std::shared_ptr<RenderInterface::DescriptorSet> VulkanDescriptorSetPool::CreateDescriptorSet(
-			std::shared_ptr<RenderInterface::DescriptorSetLayout> Layout)
+		std::unique_ptr<RenderInterface::DescriptorSet> VulkanDescriptorSetPool::CreateDescriptorSet(
+			const RenderInterface::DescriptorSetLayout& Layout)
 		{
+			const auto& VulkanDescriptorLayout = static_cast<const VulkanDescriptorSetLayout&>(Layout);
+
 			VkDescriptorSetAllocateInfo AllocateInfo = {};
 			AllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 			AllocateInfo.descriptorPool = Holder->Pool;
 			AllocateInfo.descriptorSetCount = 1; // TODO : multi-set multi-layout constructor of some kind
-			VkDescriptorSetLayout DescriptorLayout = static_cast<const VulkanDescriptorSetLayout&>(*Layout).
-				GetDescriptorSetLayout();
+			VkDescriptorSetLayout DescriptorLayout = VulkanDescriptorLayout.GetDescriptorSetLayout();
 			AllocateInfo.pSetLayouts = &DescriptorLayout;
 
 			VkDescriptorSet AllocatedSet = VK_NULL_HANDLE;
 			if (vkAllocateDescriptorSets(Holder->Device->GetDevice(), &AllocateInfo, &AllocatedSet) != VK_SUCCESS)
 				return nullptr;
-			return std::make_shared<VulkanDescriptorSet>(Holder->Device, Holder,
-			                                             std::reinterpret_pointer_cast<
-				                                             VulkanDescriptorSetLayout>(Layout), AllocatedSet,
+			return std::make_unique<VulkanDescriptorSet>(Holder->Device, Holder, VulkanDescriptorLayout, AllocatedSet,
 			                                             SupportIndividualDeallocations);
 		}
 
@@ -151,12 +150,12 @@ namespace Hermes
 		}
 
 		VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice,
-		                                         std::shared_ptr<VulkanDescriptorSetPool::VkDescriptorPoolHolder> InPool,
-		                                         std::shared_ptr<VulkanDescriptorSetLayout> InLayout,
-		                                         VkDescriptorSet InSet, bool InFreeInDescriptor)
+		                                         std::shared_ptr<VulkanDescriptorSetPool::VkDescriptorPoolHolder>
+		                                         InPool, const VulkanDescriptorSetLayout& Layout, VkDescriptorSet InSet,
+		                                         bool InFreeInDescriptor)
 			: Device(std::move(InDevice))
 			, Pool(std::move(InPool))
-			, Layout(std::move(InLayout))
+			, DescriptorTypes(Layout.DescriptorTypes)
 			, Set(InSet)
 			, FreeInDestructor(InFreeInDescriptor)
 		{
@@ -178,7 +177,7 @@ namespace Hermes
 		{
 			std::swap(Device, Other.Device);
 			std::swap(Pool, Other.Pool);
-			std::swap(Layout, Other.Layout);
+			std::swap(DescriptorTypes, Other.DescriptorTypes);
 			std::swap(Set, Other.Set);
 			std::swap(FreeInDestructor, Other.FreeInDestructor);
 
@@ -192,7 +191,7 @@ namespace Hermes
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			Write.descriptorCount = 1;
 			Write.dstSet = Set;
-			Write.descriptorType = Layout->GetDescriptorType(BindingIndex);
+			Write.descriptorType = DescriptorTypes[BindingIndex];
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorBufferInfo BufferInfo;
@@ -211,7 +210,7 @@ namespace Hermes
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			Write.descriptorCount = 1;
 			Write.dstSet = Set;
-			Write.descriptorType = Layout->GetDescriptorType(BindingIndex);
+			Write.descriptorType = DescriptorTypes[BindingIndex];
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorImageInfo ImageInfo = {};
@@ -229,7 +228,7 @@ namespace Hermes
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			Write.descriptorCount = 1;
 			Write.dstSet = Set;
-			Write.descriptorType = Layout->GetDescriptorType(BindingIndex);
+			Write.descriptorType = DescriptorTypes[BindingIndex];
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorImageInfo ImageInfo = {};
@@ -249,7 +248,7 @@ namespace Hermes
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			Write.descriptorCount = 1;
 			Write.dstSet = Set;
-			Write.descriptorType = Layout->GetDescriptorType(BindingIndex);
+			Write.descriptorType = DescriptorTypes[BindingIndex];\
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorImageInfo ImageInfo = {};

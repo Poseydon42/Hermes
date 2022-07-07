@@ -94,7 +94,7 @@ namespace Hermes
 		{
 			CreateDescriptorSetLayout();
 		}
-		return Renderer::Get().GetDescriptorAllocator().Allocate(MaterialDescriptorLayout);
+		return Renderer::Get().GetDescriptorAllocator().Allocate(*MaterialDescriptorLayout);
 	}
 
 	void Material::CreateDescriptorSetLayout()

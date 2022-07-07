@@ -10,7 +10,7 @@ namespace Hermes
 		AllocateNewPool();
 	}
 
-	std::shared_ptr<RenderInterface::DescriptorSet> DescriptorAllocator::Allocate(std::shared_ptr<RenderInterface::DescriptorSetLayout> Layout)
+	std::unique_ptr<RenderInterface::DescriptorSet> DescriptorAllocator::Allocate(const RenderInterface::DescriptorSetLayout& Layout)
 	{
 		for (const auto& Pool : PoolList)
 		{

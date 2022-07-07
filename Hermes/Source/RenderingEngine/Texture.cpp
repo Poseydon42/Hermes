@@ -195,7 +195,7 @@ namespace Hermes
 		TextureBinding.Shader = RenderInterface::ShaderType::FragmentShader;
 		TextureBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
 		std::shared_ptr DescriptorLayout = Device.CreateDescriptorSetLayout({ TextureBinding });
-		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(DescriptorLayout);
+		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
 		DescriptorSet->UpdateWithImageAndSampler(0, 0, EquirectangularTexture.GetDefaultView(),
 		                                         *EquirectangularTextureSampler,
 		                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);

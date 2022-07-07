@@ -81,7 +81,7 @@ namespace Hermes
 			ADD_DEFAULT_MOVE_CONSTRUCTOR(DescriptorSetPool)
 
 		public:
-			virtual std::shared_ptr<DescriptorSet> CreateDescriptorSet(std::shared_ptr<DescriptorSetLayout> Layout) = 0;
+			virtual std::unique_ptr<DescriptorSet> CreateDescriptorSet(const DescriptorSetLayout& Layout) = 0;
 
 			virtual uint32 GetNumberOfSets() const = 0;
 		};

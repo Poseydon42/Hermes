@@ -31,6 +31,8 @@ namespace Hermes
 			std::shared_ptr<const VulkanDevice> Device;
 			std::vector<VkDescriptorType> DescriptorTypes;
 			VkDescriptorSetLayout Layout;
+
+			friend class VulkanDescriptorSet;
 		};
 
 		class HERMES_API VulkanDescriptorSetPool : public RenderInterface::DescriptorSetPool
@@ -42,7 +44,7 @@ namespace Hermes
 		public:
 			VulkanDescriptorSetPool(std::shared_ptr<const VulkanDevice> InDevice, uint32 NumberOfSets, const std::vector<RenderInterface::SubpoolDescription>& Subpools, bool InSupportIndividualDeallocations);
 
-			std::shared_ptr<RenderInterface::DescriptorSet> CreateDescriptorSet(std::shared_ptr<RenderInterface::DescriptorSetLayout> Layout) override;
+			virtual std::unique_ptr<RenderInterface::DescriptorSet> CreateDescriptorSet(const RenderInterface::DescriptorSetLayout& Layout) override;
 
 			VkDescriptorPool GetDescriptorPool() const { return Holder->Pool; }
 
@@ -78,7 +80,10 @@ namespace Hermes
 			MAKE_NON_COPYABLE(VulkanDescriptorSet)
 
 		public:
-			VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice, std::shared_ptr<VulkanDescriptorSetPool::VkDescriptorPoolHolder> InPool, std::shared_ptr<VulkanDescriptorSetLayout> InLayout, VkDescriptorSet InSet, bool InFreeInDestructor);
+			VulkanDescriptorSet(std::shared_ptr<const VulkanDevice> InDevice,
+			                    std::shared_ptr<VulkanDescriptorSetPool::VkDescriptorPoolHolder> InPool,
+			                    const VulkanDescriptorSetLayout& Layout,
+			                    VkDescriptorSet InSet, bool InFreeInDestructor);
 
 			~VulkanDescriptorSet() override;
 			VulkanDescriptorSet(VulkanDescriptorSet&& Other);
@@ -97,7 +102,7 @@ namespace Hermes
 		private:
 			std::shared_ptr<const VulkanDevice> Device;
 			std::shared_ptr<VulkanDescriptorSetPool::VkDescriptorPoolHolder> Pool;
-			std::shared_ptr<VulkanDescriptorSetLayout> Layout;
+			std::vector<VkDescriptorType> DescriptorTypes;
 			VkDescriptorSet Set;
 			bool FreeInDestructor;
 		};

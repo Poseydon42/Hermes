@@ -18,7 +18,7 @@ namespace Hermes
 	public:
 		DescriptorAllocator(std::shared_ptr<RenderInterface::Device> InDevice);
 
-		std::shared_ptr<RenderInterface::DescriptorSet> Allocate(std::shared_ptr<RenderInterface::DescriptorSetLayout> Layout);
+		std::unique_ptr<RenderInterface::DescriptorSet> Allocate(const RenderInterface::DescriptorSetLayout& Layout);
 
 	private:
 		std::shared_ptr<RenderInterface::Device> Device;

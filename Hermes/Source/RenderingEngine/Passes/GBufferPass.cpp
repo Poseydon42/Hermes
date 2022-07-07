@@ -41,7 +41,7 @@ namespace Hermes
 		LightingDataUniformBuffer = Device->CreateBuffer(
 			sizeof(PerFrameLightingUBO),
 			RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::UniformBuffer);
-		PerFrameDataDescriptor = DescriptorAllocator.Allocate(PerFrameUBODescriptorLayout);
+		PerFrameDataDescriptor = DescriptorAllocator.Allocate(*PerFrameUBODescriptorLayout);
 		HERMES_ASSERT_LOG(PerFrameDataDescriptor, L"Failed to allocate per frame data descriptor set");
 		PerFrameDataDescriptor->UpdateWithBuffer(0, 0, *SceneDataUniformBuffer, 0, sizeof(PerFrameSceneUBO));
 		PerFrameDataDescriptor->UpdateWithBuffer(1, 0, *LightingDataUniformBuffer, 0, sizeof(PerFrameLightingUBO));

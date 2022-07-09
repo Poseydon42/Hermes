@@ -1,16 +1,15 @@
 #version 450
 #pragma shader_stage(fragment)
 
-#extension GL_ARB_separate_shader_objects : enable
-
 // NOTE : keep in sync with engine's code
 #define MAX_POINT_LIGHT_COUNT 256
 #define Pi 3.14159265359
 
-layout(set = 1, binding = 0) uniform sampler DefaultSampler;
-layout(set = 1, binding = 1) uniform texture2D AlbedoTexture;
-layout(set = 1, binding = 2) uniform texture2D RoughnessTexture;
-layout(set = 1, binding = 3) uniform texture2D MetallicTexture;
+layout(input_attachment_index = 0, set = 0, binding = 0) uniform subpassInput i_Albedo;
+layout(input_attachment_index = 1, set = 0, binding = 1) uniform subpassInput i_PositionRoughness;
+layout(input_attachment_index = 2, set = 0, binding = 2) uniform subpassInput i_NormalMetallic;
+
+layout(location = 0) out vec4 o_Color;
 
 struct PointLight
 {
@@ -21,19 +20,13 @@ struct PointLight
     vec4 AttenuationCoefficients;
 };
 
-layout(set = 0, binding = 1) uniform LightingData
+layout(set = 0, binding = 3) uniform LightingData
 {
     PointLight PointLights[MAX_POINT_LIGHT_COUNT];
     vec4 CameraPosition;
     uint PointLightCount;
     float AmbientLightingCoefficient;
-} Lights;
-
-layout(location = 0) in vec2 TextureCoordinates;
-layout(location = 1) in vec3 FragmentPosition;
-layout(location = 2) in vec3 FragmentNormal;
-
-layout(location = 0) out vec4 OutputColor;
+} u_Lights;
 
 float NormalDistribution(vec3 Normal, vec3 MedianVector, float Roughness)
 {
@@ -74,22 +67,22 @@ vec3 FresnelSchlick(vec3 AlbedoColor, float Metalness, float CosAngle)
     return F0 + (1.0 - F0) * pow(1.0 - CosAngle, 5.0);
 }
 
-vec4 CalculateLighting(vec3 Normal, vec3 ViewVector)
+vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
 {
     vec3 Result = vec3(0.0);
 
-    vec3 AlbedoColor = texture(sampler2D(AlbedoTexture, DefaultSampler), TextureCoordinates).rgb;
-    float Metallic = texture(sampler2D(MetallicTexture, DefaultSampler), TextureCoordinates).r;
-    float Roughness = texture(sampler2D(RoughnessTexture, DefaultSampler), TextureCoordinates).r;
+    vec3 AlbedoColor = subpassLoad(i_Albedo).rgb;
+    float Roughness = subpassLoad(i_PositionRoughness).a;
+    float Metallic = subpassLoad(i_NormalMetallic).a;
 
-    for (int LightIndex = 0;  LightIndex < Lights.PointLightCount; LightIndex++)
+    for (int LightIndex = 0;  LightIndex < u_Lights.PointLightCount; LightIndex++)
     {
-        PointLight Light = Lights.PointLights[LightIndex];
+        PointLight Light = u_Lights.PointLights[LightIndex];
 
-        vec3 LightDirection = normalize(Light.WorldPosition.xyz - FragmentPosition);
+        vec3 LightDirection = normalize(Light.WorldPosition.xyz - Position);
         vec3 MedianVector = normalize(LightDirection + ViewVector);
 
-        float Distance = length(Light.WorldPosition.xyz - FragmentPosition);
+        float Distance = length(Light.WorldPosition.xyz - Position);
         float Attenuation = 1.0 / (Distance * Distance);
         vec3 Radiance = Light.Color.rgb * Attenuation * Light.Color.w;
         float AngleCoefficient = max(dot(Normal, LightDirection), 0.0);
@@ -106,17 +99,16 @@ vec4 CalculateLighting(vec3 Normal, vec3 ViewVector)
         DiffuseCoef *= 1.0 - Metallic;
 
         Result += (DiffuseCoef * AlbedoColor / Pi + Specular) * Radiance * max(dot(Normal, LightDirection), 0.0);
-        //Result = vec3(NDF);
     }
     
     Result = clamp(Result, vec3(0.0), vec3(1.0));
-    //Result = vec3(Roughness);
     return vec4(Result, 1.0);
 }
 
 void main()
 {
-    vec3 Normal = normalize(FragmentNormal);
-    vec3 ViewVector = normalize(Lights.CameraPosition.xyz - FragmentPosition);
-    OutputColor = CalculateLighting(Normal, ViewVector);
+    vec3 Position = subpassLoad(i_PositionRoughness).xyz;
+    vec3 Normal = subpassLoad(i_NormalMetallic).xyz;
+    vec3 ViewVector = normalize(u_Lights.CameraPosition.xyz - Position);
+    o_Color = CalculateLighting(Position, Normal, ViewVector);
 }

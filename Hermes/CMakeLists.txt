@@ -69,6 +69,8 @@ set(SOURCES
     Source/RenderingEngine/MeshBuffer.h
     Source/RenderingEngine/Passes/GBufferPass.cpp
     Source/RenderingEngine/Passes/GBufferPass.h
+    Source/RenderingEngine/Passes/PBRPass.cpp
+    Source/RenderingEngine/Passes/PBRPass.h
     Source/RenderingEngine/Passes/SkyboxPass.cpp
     Source/RenderingEngine/Passes/SkyboxPass.h
     Source/RenderingEngine/Renderer.cpp

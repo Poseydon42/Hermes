@@ -1,0 +1,29 @@
+#version 450
+#pragma shader_stage(fragment)
+
+//#extension GL_ARB_separate_shader_objects : enable
+
+layout(set = 1, binding = 0) uniform sampler u_DefaultSampler;
+layout(set = 1, binding = 1) uniform texture2D u_AlbedoTexture;
+layout(set = 1, binding = 2) uniform texture2D u_RoughnessTexture;
+layout(set = 1, binding = 3) uniform texture2D u_MetallicTexture;
+
+layout(location = 0) in vec2 i_TextureCoordinates;
+layout(location = 1) in vec3 i_FragmentPosition;
+layout(location = 2) in vec3 i_FragmentNormal;
+
+layout(location = 0) out vec4 o_Albedo;
+layout(location = 1) out vec4 o_PositionRoughness; // NOTE : 4-th component is roughness
+layout(location = 2) out vec4 o_NormalMetallic; // NOTE : 4-th component is metallic
+
+void main()
+{
+    vec4 AlbedoColor = texture(sampler2D(u_AlbedoTexture, u_DefaultSampler), i_TextureCoordinates);
+    float Metallic = texture(sampler2D(u_MetallicTexture, u_DefaultSampler), i_TextureCoordinates).r;
+    float Roughness = texture(sampler2D(u_RoughnessTexture, u_DefaultSampler), i_TextureCoordinates).r;
+    vec3 Normal = normalize(i_FragmentNormal);
+
+    o_Albedo = AlbedoColor;
+    o_PositionRoughness = vec4(i_FragmentPosition, Roughness);
+    o_NormalMetallic = vec4(Normal, Metallic);
+}

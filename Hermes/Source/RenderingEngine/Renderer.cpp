@@ -1,5 +1,6 @@
 #include "Renderer.h"
 
+#include "RenderingEngine/Passes/PBRPass.h"
 #include "RenderingEngine/Passes/GBufferPass.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/DescriptorAllocator.h"
@@ -32,29 +33,56 @@ namespace Hermes
 		DescriptorAllocator = std::make_shared<class DescriptorAllocator>(RenderingDevice);
 
 		GBufferPass = std::make_shared<class GBufferPass>(RenderingDevice);
+		PBRPass = std::make_unique<class PBRPass>();
 		SkyboxPass = std::make_shared<class SkyboxPass>(RenderingDevice);
 
 		FrameGraphScheme Scheme;		
-		Scheme.AddPass(L"GraphicsPass", GBufferPass->GetPassDescription());
+		Scheme.AddPass(L"GBufferPass", GBufferPass->GetPassDescription());
+		Scheme.AddPass(L"PBRPass", PBRPass->GetPassDescription());
 		Scheme.AddPass(L"SkyboxPass", SkyboxPass->GetPassDescription());
 
-		ResourceDesc BackbufferResource = {};
-		BackbufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		BackbufferResource.Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
-		BackbufferResource.MipLevels = 1;
-		Scheme.AddResource(L"Backbuffer", BackbufferResource);
+		ResourceDesc ColorBufferResource = {};
+		ColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
+		ColorBufferResource.Format = RenderInterface::DataFormat::R32G32B32A32SignedFloat;
+		ColorBufferResource.MipLevels = 1;
+		Scheme.AddResource(L"ColorBuffer", ColorBufferResource);
+
+		ResourceDesc AlbedoResource = {};
+		AlbedoResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
+		AlbedoResource.Format = RenderInterface::DataFormat::R32G32B32A32SignedFloat;
+		AlbedoResource.MipLevels = 1;
+		Scheme.AddResource(L"Albedo", AlbedoResource);
+
+		ResourceDesc PositionRoughnessResource = {};
+		PositionRoughnessResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
+		PositionRoughnessResource.Format = RenderInterface::DataFormat::R32G32B32A32SignedFloat;
+		PositionRoughnessResource.MipLevels = 1;
+		Scheme.AddResource(L"PositionRoughness", PositionRoughnessResource);
+
+		ResourceDesc NormalMetallicResource = {};
+		NormalMetallicResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
+		NormalMetallicResource.Format = RenderInterface::DataFormat::R32G32B32A32SignedFloat;
+		NormalMetallicResource.MipLevels = 1;
+		Scheme.AddResource(L"NormalMetallic", NormalMetallicResource);
 
 		ResourceDesc DepthBufferResource = {};
-		DepthBufferResource.Format = RenderInterface::DataFormat::D32SignedFloat;
 		DepthBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
+		DepthBufferResource.Format = RenderInterface::DataFormat::D32SignedFloat;
 		DepthBufferResource.MipLevels = 1;
 		Scheme.AddResource(L"DepthBuffer", DepthBufferResource);
 
-		Scheme.AddLink(L"$.Backbuffer", L"GraphicsPass.GBuffer");
-		Scheme.AddLink(L"$.DepthBuffer", L"GraphicsPass.DepthBuffer");
+		Scheme.AddLink(L"$.Albedo", L"GBufferPass.Albedo");
+		Scheme.AddLink(L"$.PositionRoughness", L"GBufferPass.PositionRoughness");
+		Scheme.AddLink(L"$.NormalMetallic", L"GBufferPass.NormalMetallic");
+		Scheme.AddLink(L"$.DepthBuffer", L"GBufferPass.Depth");
 
-		Scheme.AddLink(L"GraphicsPass.GBuffer", L"SkyboxPass.ColorBuffer");
-		Scheme.AddLink(L"GraphicsPass.DepthBuffer", L"SkyboxPass.DepthBuffer");
+		Scheme.AddLink(L"GBufferPass.Albedo", L"PBRPass.Albedo");
+		Scheme.AddLink(L"GBufferPass.PositionRoughness", L"PBRPass.PositionRoughness");
+		Scheme.AddLink(L"GBufferPass.NormalMetallic", L"PBRPass.NormalMetallic");
+		Scheme.AddLink(L"$.ColorBuffer", L"PBRPass.ColorBuffer");
+
+		Scheme.AddLink(L"GBufferPass.Depth", L"SkyboxPass.DepthBuffer");
+		Scheme.AddLink(L"PBRPass.ColorBuffer", L"SkyboxPass.ColorBuffer");
 
 		Scheme.AddLink(L"SkyboxPass.ColorBuffer", L"$.BLIT_TO_SWAPCHAIN");
 

@@ -57,7 +57,7 @@ namespace Hermes
 		/*
 		 * DEBUG ONLY
 		 */
-		Scene GameScene;
+		std::unique_ptr<Scene> GameScene;
 		void KeyEventHandler(const IEvent& Event);
 		bool IsFullscreen = false;
 	};

@@ -59,6 +59,8 @@ namespace Hermes
 		auto GPU = RenderInterfaceInstance->GetPhysicalDevice(0);
 		Renderer::Get().Init(*GPU);
 
+		GameScene = std::make_unique<Scene>();
+
 		if (!Application->Init())
 		{
 			HERMES_LOG_FATAL(L"Application::Init() returned false. Exiting");
@@ -84,7 +86,7 @@ namespace Hermes
 				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
 
 				auto& Renderer = Renderer::Get();
-				Renderer.RunFrame(GameScene);
+				Renderer.RunFrame(*GameScene);
 
 				PrevFrameEndTimestamp = CurrentTimestamp;
 			}
@@ -116,7 +118,7 @@ namespace Hermes
 
 	Scene& GameLoop::GetScene()
 	{
-		return GameScene;
+		return *GameScene;
 	}
 
 	void GameLoop::WindowCloseEventHandler(const IEvent& Event)

@@ -132,22 +132,20 @@ namespace Hermes
 	}
 
 	std::unique_ptr<CubemapTexture> CubemapTexture::CreateFromEquirectangularTexture(
-		const Texture& EquirectangularTexture, bool EnableMipMaps)
+		const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat, bool EnableMipMaps)
 	{
-		return std::unique_ptr<CubemapTexture>(new CubemapTexture(EquirectangularTexture, EnableMipMaps));
+		return std::unique_ptr<CubemapTexture>(new CubemapTexture(EquirectangularTexture, PreferredFormat, EnableMipMaps));
 	}
 
-	CubemapTexture::CubemapTexture(const Texture& EquirectangularTexture, bool EnableMipMaps)
+	CubemapTexture::CubemapTexture(const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat,
+	                               bool EnableMipMaps)
 	{
 		auto EquirectangularTextureDimensions = EquirectangularTexture.GetDimensions();
 
 		// NOTE : cubemap is 4 times narrower and 2 times shorter
 		auto CubemapDimensions = EquirectangularTextureDimensions / Vec2ui { 4, 2 };
-
-		// TODO : R32G32B32SignedFloat was not supported on my GPU, so I hardcoded R32G32B32A32SignedFloat
-		//        to make it work. Change it to something more robust ASAP!
-		//auto CubemapFormat = EquirectangularTexture.GetDataFormat();
-		auto CubemapFormat = RenderInterface::DataFormat::R32G32B32A32SignedFloat;
+		
+		auto CubemapFormat = PreferredFormat;
 
 		uint32 MipMapCount = 1;
 		if (EnableMipMaps)

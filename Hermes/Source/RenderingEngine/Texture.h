@@ -53,9 +53,10 @@ namespace Hermes
 
 	public:
 		static std::unique_ptr<CubemapTexture> CreateFromEquirectangularTexture(
-			const Texture& EquirectangularTexture, bool EnableMipMaps = true);
+			const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat,
+			bool EnableMipMaps = true);
 
 	private:
-		explicit CubemapTexture(const Texture& EquirectangularTexture, bool EnableMipMaps);
+		explicit CubemapTexture(const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat, bool EnableMipMaps);
 	};
 }

@@ -11,7 +11,9 @@ namespace Hermes
 			AssetLoader::Load(L"Textures/default_envmap_reflection"));
 		HERMES_ASSERT_LOG(RawReflectionEnvmapAsset, L"Failed to load reflection envmap.");
 		auto RawReflectionEnvmapTexture = Texture::CreateFromAsset(*RawReflectionEnvmapAsset, false);
-		ReflectionEnvmap = CubemapTexture::CreateFromEquirectangularTexture(*RawReflectionEnvmapTexture, false);
+		ReflectionEnvmap = CubemapTexture::CreateFromEquirectangularTexture(*RawReflectionEnvmapTexture,
+		                                                                    RenderInterface::DataFormat::R16G16B16A16SignedFloat,
+		                                                                    false);
 	}
 
 	void Scene::AddMesh(MeshProxy Proxy)

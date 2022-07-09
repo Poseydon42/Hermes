@@ -393,6 +393,8 @@ namespace Hermes
 		String CurrentSourceName = L"$." + ResourceName;
 		while (true)
 		{
+			if (!Scheme.SourceToDrainLinkage.contains(CurrentSourceName))
+				break;
 			auto CurrentDrainName = Scheme.SourceToDrainLinkage.at(CurrentSourceName);
 			String CurrentDrainRenderPassName, CurrentDrainOwnName;
 			SplitResourceName(CurrentDrainName, CurrentDrainRenderPassName, CurrentDrainOwnName);

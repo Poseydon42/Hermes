@@ -37,12 +37,6 @@ namespace Hermes
 		FragmentShader = Device->CreateShader(L"Shaders/Bin/skybox_frag.glsl.spv",
 		                                      RenderInterface::ShaderType::FragmentShader);
 
-		EnvmapAsset = Asset::As<ImageAsset>(AssetLoader::Load(L"Textures/default_envmap_reflection"));
-		HERMES_ASSERT_LOG(EnvmapAsset, L"Failed to load reflection envmap.");
-
-		EnvmapTexture = Texture::CreateFromAsset(*EnvmapAsset, false);
-		EnvmapCubemap = CubemapTexture::CreateFromEquirectangularTexture(*EnvmapTexture, false);
-
 		RenderInterface::SamplerDescription SamplerDesc = {};
 		SamplerDesc.AddressingModeU = RenderInterface::AddressingMode::Repeat;
 		SamplerDesc.AddressingModeV = RenderInterface::AddressingMode::Repeat;
@@ -52,11 +46,7 @@ namespace Hermes
 		SamplerDesc.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
 		SamplerDesc.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
 		SamplerDesc.MipMode = RenderInterface::MipmappingMode::Linear;
-		SamplerDesc.MaxMipLevel = static_cast<float>(EnvmapCubemap->GetMipLevelsCount());
 		EnvmapSampler = Device->CreateSampler(SamplerDesc);
-
-		DataDescriptorSet->UpdateWithImageAndSampler(0, 0, EnvmapCubemap->GetDefaultView(), *EnvmapSampler,
-		                                             RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
 		Description.Callback.Bind<SkyboxPass, &SkyboxPass::PassCallback>(this);
 
@@ -101,6 +91,10 @@ namespace Hermes
 		auto ProjectionMatrix = Camera.GetProjectionMatrix();
 
 		auto ViewProjectionMatrix = ProjectionMatrix * ViewMatrix;
+
+		const auto& ReflectionEnvmap = Scene.GetReflectionEnvmap();
+		DataDescriptorSet->UpdateWithImageAndSampler(0, 0, ReflectionEnvmap.GetDefaultView(), *EnvmapSampler,
+		                                             RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
 		CommandBuffer.BindPipeline(*Pipeline);
 		CommandBuffer.BindDescriptorSet(*DataDescriptorSet, *Pipeline, 0);

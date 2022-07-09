@@ -26,10 +26,6 @@ namespace Hermes
 
 		std::shared_ptr<RenderInterface::DescriptorSetLayout> DataDescriptorLayout;
 		std::shared_ptr<RenderInterface::DescriptorSet> DataDescriptorSet;
-
-		std::shared_ptr<ImageAsset> EnvmapAsset;
-		std::shared_ptr<Texture> EnvmapTexture;
-		std::shared_ptr<CubemapTexture> EnvmapCubemap;
 		std::shared_ptr<RenderInterface::Sampler> EnvmapSampler;
 
 		std::shared_ptr<RenderInterface::Shader> VertexShader, FragmentShader;

@@ -1,11 +1,14 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Core/Misc/DefaultConstructors.h"
+#include "Core/Misc/NonCopyableMovable.h"
 #include "RenderingEngine/Scene/SceneProxies.h"
 
 namespace Hermes
 {
 	class Camera;
+	class CubemapTexture;
 
 	/*
 	 * NOTE : this all is 'the beginning' of a long looong journey
@@ -17,7 +20,13 @@ namespace Hermes
 	 */
 	class HERMES_API Scene
 	{
+		MAKE_NON_COPYABLE(Scene)
+		ADD_DEFAULT_MOVE_CONSTRUCTOR(Scene)
+		ADD_DEFAULT_DESTRUCTOR(Scene)
+
 	public:
+		Scene();
+
 		void AddMesh(MeshProxy Proxy);
 
 		void AddPointLight(PointLightProxy Proxy);
@@ -30,9 +39,13 @@ namespace Hermes
 
 		const std::vector<PointLightProxy>& GetPointLights() const;
 
+		const CubemapTexture& GetReflectionEnvmap() const;
+
 	private:
 		std::vector<MeshProxy> Meshes;
 		std::vector<PointLightProxy> PointLights;
+
+		std::unique_ptr<CubemapTexture> ReflectionEnvmap;
 
 		std::shared_ptr<Camera> ActiveCamera;
 	};

@@ -38,11 +38,10 @@ namespace Hermes
 
 		PassDesc Description;
 
-		void PassCallback(
-			RenderInterface::CommandBuffer& CommandBuffer,
-			const RenderInterface::RenderPass& PassInstance,
-			const std::vector<const RenderInterface::Image*>&,
-			const Scene& Scene, bool ResourcesWereRecreated);
+		void PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
+		                  const RenderInterface::RenderPass& PassInstance,
+		                  const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
+		                  const Scene& Scene, bool ResourcesWereRecreated);
 
 		void RecreatePipeline(const RenderInterface::RenderPass& Pass);
 	};

@@ -93,6 +93,7 @@ namespace Hermes
 			std::unique_ptr<RenderInterface::RenderTarget> RenderTarget;
 			std::unique_ptr<RenderInterface::CommandBuffer> CommandBuffer;
 			std::vector<const RenderInterface::Image*> Attachments;
+			std::vector<const RenderInterface::ImageView*> Views;
 			// NOTE : pair<ResourceOwnName, LayoutAtStart>
 			std::vector<std::pair<String, RenderInterface::ImageLayout>> AttachmentLayouts;
 			std::vector<RenderInterface::ClearColor> ClearColors;

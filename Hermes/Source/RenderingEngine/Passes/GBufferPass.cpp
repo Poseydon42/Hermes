@@ -24,63 +24,74 @@ namespace Hermes
 		PerFrameVertexShaderUBOBinging.Index = 0;
 		PerFrameVertexShaderUBOBinging.Type = RenderInterface::DescriptorType::UniformBuffer;
 		PerFrameVertexShaderUBOBinging.Shader = RenderInterface::ShaderType::VertexShader;
-
-		RenderInterface::DescriptorBinding PerFrameLightingDataUBOBinding = {};
-		PerFrameLightingDataUBOBinding.DescriptorCount = 1;
-		PerFrameLightingDataUBOBinding.Index = 1;
-		PerFrameLightingDataUBOBinding.Type = RenderInterface::DescriptorType::UniformBuffer;
-		PerFrameLightingDataUBOBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		PerFrameUBODescriptorLayout = Device->CreateDescriptorSetLayout({ PerFrameVertexShaderUBOBinging, PerFrameLightingDataUBOBinding });
+		PerFrameUBODescriptorLayout = Device->CreateDescriptorSetLayout({ PerFrameVertexShaderUBOBinging });
 		
-		VertexShader = Device->CreateShader(L"Shaders/Bin/basic_vert.glsl.spv", RenderInterface::ShaderType::VertexShader);
-		FragmentShader = Device->CreateShader(L"Shaders/Bin/basic_frag.glsl.spv", RenderInterface::ShaderType::FragmentShader);
+		VertexShader = Device->CreateShader(L"Shaders/Bin/gbuffer_vert.glsl.spv", RenderInterface::ShaderType::VertexShader);
+		FragmentShader = Device->CreateShader(L"Shaders/Bin/gbuffer_frag.glsl.spv", RenderInterface::ShaderType::FragmentShader);
 
 		SceneDataUniformBuffer = Device->CreateBuffer(
 			sizeof(PerFrameSceneUBO),
 			RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::UniformBuffer);
-		LightingDataUniformBuffer = Device->CreateBuffer(
-			sizeof(PerFrameLightingUBO),
-			RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::UniformBuffer);
 		PerFrameDataDescriptor = DescriptorAllocator.Allocate(*PerFrameUBODescriptorLayout);
 		HERMES_ASSERT_LOG(PerFrameDataDescriptor, L"Failed to allocate per frame data descriptor set");
 		PerFrameDataDescriptor->UpdateWithBuffer(0, 0, *SceneDataUniformBuffer, 0, sizeof(PerFrameSceneUBO));
-		PerFrameDataDescriptor->UpdateWithBuffer(1, 0, *LightingDataUniformBuffer, 0, sizeof(PerFrameLightingUBO));
 
 		PassDesc::RenderPassCallbackType PassCallback;
 		PassCallback.Bind<GBufferPass, &GBufferPass::PassCallback>(this);
 		Descriptor.Callback = PassCallback;
 
-		Drain GBufferDrain = {};
-		GBufferDrain.Name = L"GBuffer";
-		GBufferDrain.Binding = BindingMode::ColorAttachment;
-		GBufferDrain.ClearColor[0] =
-			GBufferDrain.ClearColor[1] =
-			GBufferDrain.ClearColor[2] =
-			GBufferDrain.ClearColor[3] = 0.0f;
-		GBufferDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
-		GBufferDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		GBufferDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Drain AlbedoDrain = {};
+		AlbedoDrain.Name = L"Albedo";
+		AlbedoDrain.Binding = BindingMode::ColorAttachment;
+		AlbedoDrain.ClearColor[0] =
+			AlbedoDrain.ClearColor[1] =
+			AlbedoDrain.ClearColor[2] =
+			AlbedoDrain.ClearColor[3] = 0.0f;
+		AlbedoDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
+		AlbedoDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		AlbedoDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Drain DepthBufferDrain = {};
-		DepthBufferDrain.Name = L"DepthBuffer";
-		DepthBufferDrain.Binding = BindingMode::DepthStencilAttachment;
-		DepthBufferDrain.ClearColor[0] =
-			DepthBufferDrain.ClearColor[1] =
-			DepthBufferDrain.ClearColor[2] =
-			DepthBufferDrain.ClearColor[3] = 1.0f;
-		DepthBufferDrain.Layout = RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
-		DepthBufferDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		DepthBufferDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Drain PositionRoughnessDrain = {};
+		PositionRoughnessDrain.Name = L"PositionRoughness";
+		PositionRoughnessDrain.Binding = BindingMode::ColorAttachment;
+		PositionRoughnessDrain.ClearColor[0] =
+			PositionRoughnessDrain.ClearColor[1] =
+			PositionRoughnessDrain.ClearColor[2] =
+			PositionRoughnessDrain.ClearColor[3] = 0.0f;
+		PositionRoughnessDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
+		PositionRoughnessDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		PositionRoughnessDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Descriptor.Drains = { GBufferDrain, DepthBufferDrain };
+		Drain NormalMetallicDrain = {};
+		NormalMetallicDrain.Name = L"NormalMetallic";
+		NormalMetallicDrain.Binding = BindingMode::ColorAttachment;
+		NormalMetallicDrain.ClearColor[0] =
+			NormalMetallicDrain.ClearColor[1] =
+			NormalMetallicDrain.ClearColor[2] =
+			NormalMetallicDrain.ClearColor[3] = 0.0f;
+		NormalMetallicDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
+		NormalMetallicDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		NormalMetallicDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Source GBufferSource = {};
-		GBufferSource.Name = L"GBuffer";
+		Drain DepthDrain = {};
+		DepthDrain.Name = L"Depth";
+		DepthDrain.Binding = BindingMode::DepthStencilAttachment;
+		DepthDrain.ClearColor[0] =
+			DepthDrain.ClearColor[0] =
+			DepthDrain.ClearColor[0] =
+			DepthDrain.ClearColor[0] = 1.0f;
+		DepthDrain.Layout = RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
+		DepthDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		DepthDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Clear;
 
-		Source DepthBufferSource = {};
-		DepthBufferSource.Name = L"DepthBuffer";
+		Descriptor.Drains = { AlbedoDrain, PositionRoughnessDrain, NormalMetallicDrain, DepthDrain };
 
-		Descriptor.Sources = { GBufferSource, DepthBufferSource };
+		Source AlbedoSource = { L"Albedo" };
+		Source PositionRoughnessSource = { L"PositionRoughness" };
+		Source NormalMetallicSource = { L"NormalMetallic" };
+		Source DepthSource = { L"Depth" };
+
+		Descriptor.Sources = { AlbedoSource, PositionRoughnessSource, NormalMetallicSource, DepthSource };
 	}
 
 	const PassDesc& GBufferPass::GetPassDescription() const
@@ -88,11 +99,11 @@ namespace Hermes
 		return Descriptor;
 	}
 
-	void GBufferPass::PassCallback(
-		RenderInterface::CommandBuffer& CommandBuffer,
-		const RenderInterface::RenderPass& PassInstance,
-		const std::vector<const RenderInterface::Image*>&,
-		const Scene& Scene, bool ResourcesWereRecreated)
+	void GBufferPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
+	                               const RenderInterface::RenderPass& PassInstance,
+	                               const std::vector<std::pair<
+		                               const RenderInterface::Image*, const RenderInterface::ImageView*>>& Drains,
+	                               const Scene& Scene, bool ResourcesWereRecreated)
 	{
 		if (ResourcesWereRecreated || !IsPipelineCreated)
 		{
@@ -108,23 +119,6 @@ namespace Hermes
 		auto SceneUBOMemory = SceneDataUniformBuffer->Map();
 		memcpy(SceneUBOMemory, &SceneUBOData, sizeof(SceneUBOData));
 		SceneDataUniformBuffer->Unmap();
-
-		PerFrameLightingUBO LightingUBOData;
-		LightingUBOData.CameraPosition = Vec4(CurrentCamera.GetLocation(), 1.0f);
-		LightingUBOData.PointLightCount = static_cast<uint32>(Scene.GetPointLights().size());
-		LightingUBOData.AmbientLightingCoefficient = DefaultAmbientLightingCoefficient;
-		if (Scene.GetPointLights().size() > MaxPointLightCount)
-			HERMES_LOG_WARNING(L"Scene has %zu point lights, but at most %u are supported.", Scene.GetPointLights().size(), MaxPointLightCount);
-		for (uint32 LightIndex = 0;
-			LightIndex < Math::Min(MaxPointLightCount, static_cast<uint32>(Scene.GetPointLights().size()));
-			LightIndex++)
-		{
-			LightingUBOData.PointLights[LightIndex] = Scene.GetPointLights()[LightIndex];
-		}
-
-		auto LightingUBOMemory = LightingDataUniformBuffer->Map();
-		memcpy(LightingUBOMemory, &LightingUBOData, sizeof(LightingUBOData));
-		LightingDataUniformBuffer->Unmap();
 
 		CommandBuffer.BindPipeline(*Pipeline);
 		CommandBuffer.BindDescriptorSet(*PerFrameDataDescriptor, *Pipeline, 0);

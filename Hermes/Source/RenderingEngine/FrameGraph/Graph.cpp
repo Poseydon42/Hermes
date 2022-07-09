@@ -136,8 +136,16 @@ namespace Hermes
 
 			CommandBuffer->BeginRenderPass(*Pass.second.Pass, *Pass.second.RenderTarget, Pass.second.ClearColors);
 
+			std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>> DrainAttachments(Pass.second.Attachments.size());
+			for (size_t AttachmentIndex = 0; AttachmentIndex < DrainAttachments.size(); AttachmentIndex++)
+			{
+				DrainAttachments[AttachmentIndex] = {
+					Pass.second.Attachments[AttachmentIndex], Pass.second.Views[AttachmentIndex]
+				};
+			}
+
 			bool ResourcesWereRecreatedTmp = ResourcesWereRecreated; // TODO : better way to fix this maybe?
-			Pass.second.Callback(*CommandBuffer, *Pass.second.Pass, Pass.second.Attachments, Scene, std::move(ResourcesWereRecreatedTmp));
+			Pass.second.Callback(*CommandBuffer, *Pass.second.Pass, DrainAttachments, Scene, std::move(ResourcesWereRecreatedTmp));
 			ResourcesWereRecreated = false;
 
 			CommandBuffer->EndRenderPass();
@@ -357,6 +365,7 @@ namespace Hermes
 				NewPassContainer.ClearColors.back().A = Drain.ClearColor[3];
 
 				NewPassContainer.Attachments.push_back(Resource.Image.get());
+				NewPassContainer.Views.push_back(Resource.View.get());
 				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName, Drain.Layout);
 			}
 
@@ -492,6 +501,7 @@ namespace Hermes
 			Vec2ui RenderTargetDimensions = {};
 			Attachments.reserve(Pass.second.Drains.size());
 			Passes[Pass.first].Attachments.clear();
+			Passes[Pass.first].Views.clear();
 			for (const auto& Drain : Pass.second.Drains)
 			{
 				String FullResourceName = TraverseResourceName(Pass.first + L"." + Drain.Name);
@@ -507,6 +517,7 @@ namespace Hermes
 					RenderTargetDimensions = Resource.Image->GetSize();
 				}
 				Passes[Pass.first].Attachments.push_back(Resource.Image.get());
+				Passes[Pass.first].Views.push_back(Resource.View.get());
 			}
 			Passes[Pass.first].RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
 				*Passes[Pass.first].Pass, Attachments, RenderTargetDimensions);

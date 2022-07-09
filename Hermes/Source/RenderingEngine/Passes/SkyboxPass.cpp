@@ -83,7 +83,8 @@ namespace Hermes
 
 	void SkyboxPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
 	                              const RenderInterface::RenderPass& PassInstance,
-	                              const std::vector<const RenderInterface::Image*>& Drains,
+	                              const std::vector<std::pair<
+		                              const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
 	                              const Scene& Scene, bool ResourcesWereRecreated)
 	{
 		if (ResourcesWereRecreated || !IsPipelineCreated)

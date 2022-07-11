@@ -1,16 +1,7 @@
 #version 450
 #pragma shader_stage(vertex)
 
-vec2 FullScreenQuadVertices[6] = 
-{
-    { -1.0, -1.0 },
-    { -1.0,  1.0 },
-    {  1.0,  1.0 },
-
-    {  1.0,  1.0 },
-    {  1.0, -1.0 },
-    { -1.0, -1.0 }
-};
+#include "fs_quad.glsl"
 
 void main()
 {

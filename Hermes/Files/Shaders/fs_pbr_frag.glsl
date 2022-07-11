@@ -100,8 +100,7 @@ vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
 
         Result += (DiffuseCoef * AlbedoColor / Pi + Specular) * Radiance * max(dot(Normal, LightDirection), 0.0);
     }
-    
-    Result = clamp(Result, vec3(0.0), vec3(1.0));
+
     return vec4(Result, 1.0);
 }
 

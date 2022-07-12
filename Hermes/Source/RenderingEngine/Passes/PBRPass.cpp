@@ -41,7 +41,7 @@ namespace Hermes
 		                                                RenderInterface::BufferUsageType::CPUAccessible);
 		DescriptorSet->UpdateWithBuffer(3, 0, *LightingDataUniformBuffer, 0, sizeof(LightingData));
 
-		VertexShader = Device.CreateShader(L"Shaders/Bin/fs_pbr_vert.glsl.spv",
+		VertexShader = Device.CreateShader(L"Shaders/Bin/fs_vert.glsl.spv",
 		                                   RenderInterface::ShaderType::VertexShader);
 		FragmentShader = Device.CreateShader(L"Shaders/Bin/fs_pbr_frag.glsl.spv",
 		                                   RenderInterface::ShaderType::FragmentShader);

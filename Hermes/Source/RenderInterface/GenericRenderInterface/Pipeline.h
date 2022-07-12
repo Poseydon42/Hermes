@@ -122,8 +122,8 @@ namespace Hermes
 		struct PipelineDescription
 		{
 			std::vector<PushConstantRange> PushConstants;
-			std::vector<std::shared_ptr<Shader>> ShaderStages;
-			std::vector<std::shared_ptr<DescriptorSetLayout>> DescriptorLayouts;
+			std::vector<const Shader*> ShaderStages;
+			std::vector<const DescriptorSetLayout*> DescriptorLayouts;
 			VertexInputDescription VertexInput;
 			InputAssemblerDescription InputAssembler;
 			// TODO : tessellation stage

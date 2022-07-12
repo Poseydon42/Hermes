@@ -109,5 +109,6 @@ void main()
     vec3 Position = subpassLoad(i_PositionRoughness).xyz;
     vec3 Normal = subpassLoad(i_NormalMetallic).xyz;
     vec3 ViewVector = normalize(u_Lights.CameraPosition.xyz - Position);
+
     o_Color = CalculateLighting(Position, Normal, ViewVector);
 }

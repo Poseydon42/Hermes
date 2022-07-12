@@ -200,8 +200,8 @@ namespace Hermes
 
 		RenderInterface::PipelineDescription PipelineDescription = {};
 		PipelineDescription.PushConstants = { { RenderInterface::ShaderType::VertexShader, 0, sizeof(Mat4) } };
-		PipelineDescription.ShaderStages = { VertexShader, FragmentShader };
-		PipelineDescription.DescriptorLayouts = { DescriptorLayout };
+		PipelineDescription.ShaderStages = { VertexShader.get(), FragmentShader.get() };
+		PipelineDescription.DescriptorLayouts = { DescriptorLayout.get() };
 		PipelineDescription.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
 		PipelineDescription.Viewport.Dimensions = Image->GetSize();
 		PipelineDescription.Viewport.Origin = { 0, 0 };

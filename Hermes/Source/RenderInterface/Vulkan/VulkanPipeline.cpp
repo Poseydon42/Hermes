@@ -117,7 +117,7 @@ namespace Hermes
 			PushConstantRanges.reserve(Description.PushConstants.size());
 			for (const auto& CurrentLayout : Description.DescriptorLayouts)
 			{
-				Layouts.push_back(std::reinterpret_pointer_cast<VulkanDescriptorSetLayout>(CurrentLayout)->GetDescriptorSetLayout());
+				Layouts.push_back(static_cast<const VulkanDescriptorSetLayout*>(CurrentLayout)->GetDescriptorSetLayout());
 			}
 			for (const auto& PushConstantRange : Description.PushConstants)
 			{
@@ -137,7 +137,7 @@ namespace Hermes
 			for (size_t Index = 0; Index < Description.ShaderStages.size(); Index++)
 			{
 				ShaderCreateInfos[Index].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-				ShaderCreateInfos[Index].module = ((VulkanShader*)Description.ShaderStages[Index].get())->GetShader();
+				ShaderCreateInfos[Index].module = static_cast<const VulkanShader*>(Description.ShaderStages[Index])->GetShader();
 				ShaderCreateInfos[Index].pName = "main"; // TODO : allow user to choice or decide using reflection
 				ShaderCreateInfos[Index].stage = static_cast<VkShaderStageFlagBits>(ShaderTypeToVkShaderStage(Description.ShaderStages[Index]->GetType()));
 			}

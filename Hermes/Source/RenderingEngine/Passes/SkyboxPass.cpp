@@ -111,9 +111,9 @@ namespace Hermes
 
 		PipelineDescription.PushConstants = { { RenderInterface::ShaderType::VertexShader, 0, sizeof(Mat4) } };
 
-		PipelineDescription.ShaderStages = { VertexShader, FragmentShader };
+		PipelineDescription.ShaderStages = { VertexShader.get(), FragmentShader.get() };
 
-		PipelineDescription.DescriptorLayouts = { DataDescriptorLayout };
+		PipelineDescription.DescriptorLayouts = { DataDescriptorLayout.get() };
 
 		PipelineDescription.VertexInput.VertexAttributes = {};
 		PipelineDescription.VertexInput.VertexBindings = {};

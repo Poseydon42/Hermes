@@ -11,6 +11,7 @@
 #include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Pipeline.h"
+#include "RenderInterface/GenericRenderInterface/Shader.h"
 
 namespace Hermes
 {
@@ -27,7 +28,7 @@ namespace Hermes
 
 	private:
 		std::unique_ptr<RenderInterface::Buffer> LightingDataUniformBuffer;
-		std::shared_ptr<RenderInterface::DescriptorSetLayout> DescriptorLayout;
+		std::unique_ptr<RenderInterface::DescriptorSetLayout> DescriptorLayout;
 		std::unique_ptr<RenderInterface::DescriptorSet> DescriptorSet;
 
 		bool IsPipelineCreated = false;
@@ -45,7 +46,7 @@ namespace Hermes
 		};
 
 		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
-		std::shared_ptr<RenderInterface::Shader> VertexShader, FragmentShader;
+		std::unique_ptr<RenderInterface::Shader> VertexShader, FragmentShader;
 
 		PassDesc Description;
 

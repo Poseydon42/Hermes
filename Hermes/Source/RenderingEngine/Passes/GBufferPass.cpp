@@ -151,9 +151,9 @@ namespace Hermes
 		ModelMatrixRange.ShadersThatAccess = RenderInterface::ShaderType::VertexShader;
 		PipelineDesc.PushConstants.push_back(ModelMatrixRange);
 
-		PipelineDesc.ShaderStages = { VertexShader, FragmentShader };
+		PipelineDesc.ShaderStages = { VertexShader.get(), FragmentShader.get() };
 
-		PipelineDesc.DescriptorLayouts = { PerFrameUBODescriptorLayout, Material::GetDescriptorSetLayout() };
+		PipelineDesc.DescriptorLayouts = { PerFrameUBODescriptorLayout.get(), Material::GetDescriptorSetLayout().get() };
 
 		RenderInterface::VertexBinding VertexInput = {};
 		VertexInput.Index = 0;

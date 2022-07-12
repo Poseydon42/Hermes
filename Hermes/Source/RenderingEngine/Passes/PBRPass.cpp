@@ -129,8 +129,8 @@ namespace Hermes
 	{
 		RenderInterface::PipelineDescription PipelineDescription = {};
 
-		PipelineDescription.ShaderStages = { VertexShader, FragmentShader };
-		PipelineDescription.DescriptorLayouts = { DescriptorLayout };
+		PipelineDescription.ShaderStages = { VertexShader.get(), FragmentShader.get() };
+		PipelineDescription.DescriptorLayouts = { DescriptorLayout.get() };
 		PipelineDescription.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
 		PipelineDescription.Viewport.Origin = { 0, 0 };
 		PipelineDescription.Viewport.Dimensions = Renderer::Get().GetSwapchain().GetSize();

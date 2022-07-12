@@ -43,25 +43,25 @@ namespace Hermes
 
 		ResourceDesc ColorBufferResource = {};
 		ColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		ColorBufferResource.Format = RenderInterface::DataFormat::R32G32B32A32SignedFloat;
+		ColorBufferResource.Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
 		ColorBufferResource.MipLevels = 1;
 		Scheme.AddResource(L"ColorBuffer", ColorBufferResource);
 
 		ResourceDesc AlbedoResource = {};
 		AlbedoResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		AlbedoResource.Format = RenderInterface::DataFormat::R32G32B32A32SignedFloat;
+		AlbedoResource.Format = RenderInterface::DataFormat::R16G16B16A16SignedFloat;
 		AlbedoResource.MipLevels = 1;
 		Scheme.AddResource(L"Albedo", AlbedoResource);
 
 		ResourceDesc PositionRoughnessResource = {};
 		PositionRoughnessResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		PositionRoughnessResource.Format = RenderInterface::DataFormat::R32G32B32A32SignedFloat;
+		PositionRoughnessResource.Format = RenderInterface::DataFormat::R16G16B16A16SignedFloat;
 		PositionRoughnessResource.MipLevels = 1;
 		Scheme.AddResource(L"PositionRoughness", PositionRoughnessResource);
 
 		ResourceDesc NormalMetallicResource = {};
 		NormalMetallicResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		NormalMetallicResource.Format = RenderInterface::DataFormat::R32G32B32A32SignedFloat;
+		NormalMetallicResource.Format = RenderInterface::DataFormat::R16G16B16A16SignedFloat;
 		NormalMetallicResource.MipLevels = 1;
 		Scheme.AddResource(L"NormalMetallic", NormalMetallicResource);
 

@@ -35,15 +35,23 @@ namespace Hermes
 		GBufferPass = std::make_shared<class GBufferPass>(RenderingDevice);
 		PBRPass = std::make_unique<class PBRPass>();
 		SkyboxPass = std::make_shared<class SkyboxPass>(RenderingDevice);
+		PostProcessingPass = std::make_unique<class PostProcessingPass>();
 
 		FrameGraphScheme Scheme;		
 		Scheme.AddPass(L"GBufferPass", GBufferPass->GetPassDescription());
 		Scheme.AddPass(L"PBRPass", PBRPass->GetPassDescription());
 		Scheme.AddPass(L"SkyboxPass", SkyboxPass->GetPassDescription());
+		Scheme.AddPass(L"PostProcessingPass", PostProcessingPass->GetPassDescription());
+
+		ResourceDesc HDRColorBufferResource = {};
+		HDRColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
+		HDRColorBufferResource.Format = RenderInterface::DataFormat::R16G16B16A16SignedFloat;
+		HDRColorBufferResource.MipLevels = 1;
+		Scheme.AddResource(L"HDRColorBuffer", HDRColorBufferResource);
 
 		ResourceDesc ColorBufferResource = {};
 		ColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		ColorBufferResource.Format = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
+		ColorBufferResource.Format = RenderInterface::DataFormat::B8G8R8A8SRGB;
 		ColorBufferResource.MipLevels = 1;
 		Scheme.AddResource(L"ColorBuffer", ColorBufferResource);
 
@@ -79,12 +87,15 @@ namespace Hermes
 		Scheme.AddLink(L"GBufferPass.Albedo", L"PBRPass.Albedo");
 		Scheme.AddLink(L"GBufferPass.PositionRoughness", L"PBRPass.PositionRoughness");
 		Scheme.AddLink(L"GBufferPass.NormalMetallic", L"PBRPass.NormalMetallic");
-		Scheme.AddLink(L"$.ColorBuffer", L"PBRPass.ColorBuffer");
+		Scheme.AddLink(L"$.HDRColorBuffer", L"PBRPass.ColorBuffer");
 
 		Scheme.AddLink(L"GBufferPass.Depth", L"SkyboxPass.DepthBuffer");
 		Scheme.AddLink(L"PBRPass.ColorBuffer", L"SkyboxPass.ColorBuffer");
 
-		Scheme.AddLink(L"SkyboxPass.ColorBuffer", L"$.BLIT_TO_SWAPCHAIN");
+		Scheme.AddLink(L"SkyboxPass.ColorBuffer", L"PostProcessingPass.InputColor");
+		Scheme.AddLink(L"$.ColorBuffer", L"PostProcessingPass.OutputColor");
+
+		Scheme.AddLink(L"PostProcessingPass.OutputColor", L"$.BLIT_TO_SWAPCHAIN");
 
 		FrameGraph = Scheme.Compile();
 

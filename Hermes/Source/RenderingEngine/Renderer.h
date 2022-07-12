@@ -7,6 +7,7 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Passes/PBRPass.h"
+#include "RenderingEngine/Passes/PostProcessingPass.h"
 #include "RenderInterface/GenericRenderInterface/Forward.h"
 #include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
 #include "RenderInterface/GenericRenderInterface/CommonTypes.h"
@@ -61,6 +62,7 @@ namespace Hermes
 		std::shared_ptr<GBufferPass> GBufferPass;
 		std::unique_ptr<PBRPass> PBRPass;
 		std::shared_ptr<SkyboxPass> SkyboxPass;
+		std::unique_ptr<PostProcessingPass> PostProcessingPass;
 
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
 		static constexpr RenderInterface::DataFormat ColorAttachmentFormat = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;

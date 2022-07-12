@@ -71,6 +71,8 @@ set(SOURCES
     Source/RenderingEngine/Passes/GBufferPass.h
     Source/RenderingEngine/Passes/PBRPass.cpp
     Source/RenderingEngine/Passes/PBRPass.h
+    Source/RenderingEngine/Passes/PostProcessingPass.cpp
+    Source/RenderingEngine/Passes/PostProcessingPass.h
     Source/RenderingEngine/Passes/SkyboxPass.cpp
     Source/RenderingEngine/Passes/SkyboxPass.h
     Source/RenderingEngine/Renderer.cpp

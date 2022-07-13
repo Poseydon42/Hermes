@@ -7,13 +7,18 @@ namespace Hermes
 {
 	Scene::Scene()
 	{
-		auto RawReflectionEnvmapAsset = Asset::As<ImageAsset>(
-			AssetLoader::Load(L"Textures/default_envmap_reflection"));
-		HERMES_ASSERT_LOG(RawReflectionEnvmapAsset, L"Failed to load reflection envmap.");
-		auto RawReflectionEnvmapTexture = Texture::CreateFromAsset(*RawReflectionEnvmapAsset, false);
-		ReflectionEnvmap = CubemapTexture::CreateFromEquirectangularTexture(*RawReflectionEnvmapTexture,
-		                                                                    RenderInterface::DataFormat::R16G16B16A16SignedFloat,
-		                                                                    false);
+		auto LoadCubemap = [](const String& Name)
+		{
+			auto RawReflectionEnvmapAsset = Asset::As<ImageAsset>(AssetLoader::Load(Name));
+			HERMES_ASSERT_LOG(RawReflectionEnvmapAsset, L"Failed to load cubemap %s.", Name.c_str());
+			auto RawReflectionEnvmapTexture = Texture::CreateFromAsset(*RawReflectionEnvmapAsset, false);
+			return CubemapTexture::CreateFromEquirectangularTexture(*RawReflectionEnvmapTexture,
+			                                                        RenderInterface::DataFormat::R16G16B16A16SignedFloat,
+			                                                        false);
+		};
+
+		ReflectionEnvmap = LoadCubemap(L"Textures/default_envmap_reflection");
+		IrradianceEnvmap = LoadCubemap(L"Textures/default_envmap_light");
 	}
 
 	void Scene::AddMesh(MeshProxy Proxy)
@@ -29,6 +34,11 @@ namespace Hermes
 	const CubemapTexture& Scene::GetReflectionEnvmap() const
 	{
 		return *ReflectionEnvmap;
+	}
+
+	const CubemapTexture& Scene::GetIrradianceEnvmap() const
+	{
+		return *IrradianceEnvmap;
 	}
 
 	const std::vector<MeshProxy>& Scene::GetMeshes() const

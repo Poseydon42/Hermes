@@ -11,6 +11,7 @@
 #include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Pipeline.h"
+#include "RenderInterface/GenericRenderInterface/Sampler.h"
 #include "RenderInterface/GenericRenderInterface/Shader.h"
 
 namespace Hermes
@@ -47,6 +48,7 @@ namespace Hermes
 
 		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
 		std::unique_ptr<RenderInterface::Shader> VertexShader, FragmentShader;
+		std::unique_ptr<RenderInterface::Sampler> IrradianceMapSampler;
 
 		PassDesc Description;
 

@@ -28,6 +28,8 @@ layout(set = 0, binding = 3) uniform LightingData
     float AmbientLightingCoefficient;
 } u_Lights;
 
+layout(set = 0, binding = 4) uniform samplerCube u_IrradianceMap;
+
 float NormalDistribution(vec3 Normal, vec3 MedianVector, float Roughness)
 {
     float CosAngle = max(dot(Normal, MedianVector), 0.0);
@@ -100,6 +102,11 @@ vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
 
         Result += (DiffuseCoef * AlbedoColor / Pi + Specular) * Radiance * max(dot(Normal, LightDirection), 0.0);
     }
+
+    vec3 IrradianceValue = texture(u_IrradianceMap, Normal).rgb;
+    vec3 DiffuseCoef = 1.0 - FresnelSchlick(AlbedoColor, Metallic, max(dot(Normal, ViewVector), 0.0));
+    vec3 Ambient = DiffuseCoef * IrradianceValue * AlbedoColor;
+    Result += Ambient;
 
     return vec4(Result, 1.0);
 }

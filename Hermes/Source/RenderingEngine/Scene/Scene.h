@@ -40,12 +40,14 @@ namespace Hermes
 		const std::vector<PointLightProxy>& GetPointLights() const;
 
 		const CubemapTexture& GetReflectionEnvmap() const;
+		const CubemapTexture& GetIrradianceEnvmap() const;
 
 	private:
 		std::vector<MeshProxy> Meshes;
 		std::vector<PointLightProxy> PointLights;
 
 		std::unique_ptr<CubemapTexture> ReflectionEnvmap;
+		std::unique_ptr<CubemapTexture> IrradianceEnvmap;
 
 		std::shared_ptr<Camera> ActiveCamera;
 	};

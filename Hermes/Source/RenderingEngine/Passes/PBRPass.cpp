@@ -30,9 +30,12 @@ namespace Hermes
 		RenderInterface::DescriptorBinding UBOBinding = {
 			3, 1, RenderInterface::ShaderType::FragmentShader, RenderInterface::DescriptorType::UniformBuffer
 		};
+		RenderInterface::DescriptorBinding IrradianceMapBinding = {
+			4, 1, RenderInterface::ShaderType::FragmentShader, RenderInterface::DescriptorType::CombinedSampler
+		};
 		DescriptorLayout = Device.CreateDescriptorSetLayout({
 			                                                    AlbedoAttachmentBinding, PositionRoughnessBinding,
-			                                                    NormalMetallicBinding, UBOBinding
+			                                                    NormalMetallicBinding, UBOBinding, IrradianceMapBinding
 		                                                    });
 		DescriptorSet = DescriptorAllocator.Allocate(*DescriptorLayout);
 
@@ -45,6 +48,14 @@ namespace Hermes
 		                                   RenderInterface::ShaderType::VertexShader);
 		FragmentShader = Device.CreateShader(L"Shaders/Bin/fs_pbr_frag.glsl.spv",
 		                                   RenderInterface::ShaderType::FragmentShader);
+
+		RenderInterface::SamplerDescription SamplerDescription = {};
+		SamplerDescription.AddressingModeU = SamplerDescription.AddressingModeV =
+			RenderInterface::AddressingMode::Repeat;
+		SamplerDescription.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
+		SamplerDescription.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
+		SamplerDescription.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
+		IrradianceMapSampler = Device.CreateSampler(SamplerDescription);
 
 		Drain AlbedoDrain = {};
 		AlbedoDrain.Name = L"Albedo";
@@ -109,6 +120,10 @@ namespace Hermes
 			DescriptorSet->UpdateWithImage(AttachmentIndex, 0, *Drains[AttachmentIndex].second,
 			                               RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 		}
+
+		DescriptorSet->UpdateWithImageAndSampler(4, 0, Scene.GetIrradianceEnvmap().GetDefaultView(),
+		                                         *IrradianceMapSampler,
+		                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
 		LightingData Lighting = {};
 		Lighting.PointLightCount = static_cast<uint32>(Scene.GetPointLights().size());

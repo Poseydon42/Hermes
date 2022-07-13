@@ -248,7 +248,7 @@ namespace Hermes
 			Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			Write.descriptorCount = 1;
 			Write.dstSet = Set;
-			Write.descriptorType = DescriptorTypes[BindingIndex];\
+			Write.descriptorType = DescriptorTypes[BindingIndex];
 			Write.dstBinding = BindingIndex;
 			Write.dstArrayElement = ArrayIndex;
 			VkDescriptorImageInfo ImageInfo = {};

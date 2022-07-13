@@ -81,7 +81,10 @@ public:
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::ArrowDown))
 			DeltaLightPower -= 1.0f;
 		DeltaLightPower *= DeltaTime * 200.0f;
-		const_cast<Hermes::PointLightProxy&>(Hermes::GGameLoop->GetScene().GetPointLights()[0]).Color.W += DeltaLightPower;
+		auto& Light = const_cast<Hermes::PointLightProxy&>(Hermes::GGameLoop->GetScene().GetPointLights()[0]);
+		Light.Color.W += DeltaLightPower;
+		Light.Color.W = Hermes::Math::Max(Light.Color.W, 0.0f);
+
 
 		/* OBJECT ROTATION DEBUG */
 		float DeltaAngle = 0.0f;

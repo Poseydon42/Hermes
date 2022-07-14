@@ -11,7 +11,7 @@ namespace Hermes
 		{
 			auto RawReflectionEnvmapAsset = Asset::As<ImageAsset>(AssetLoader::Load(Name));
 			HERMES_ASSERT_LOG(RawReflectionEnvmapAsset, L"Failed to load cubemap %s.", Name.c_str());
-			auto RawReflectionEnvmapTexture = Texture::CreateFromAsset(*RawReflectionEnvmapAsset, false);
+			auto RawReflectionEnvmapTexture = Texture::CreateFromAsset(*RawReflectionEnvmapAsset, false, false);
 			return CubemapTexture::CreateFromEquirectangularTexture(*RawReflectionEnvmapTexture,
 			                                                        RenderInterface::DataFormat::R16G16B16A16SignedFloat,
 			                                                        false);

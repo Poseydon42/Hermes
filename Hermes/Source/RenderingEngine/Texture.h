@@ -19,7 +19,7 @@ namespace Hermes
 		ADD_DEFAULT_VIRTUAL_DESTRUCTOR(Texture)
 
 	public:
-		static std::shared_ptr<Texture> CreateFromAsset(const ImageAsset& Source, bool EnableMipMaps = true);
+		static std::shared_ptr<Texture> CreateFromAsset(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps = true);
 
 		const RenderInterface::Image& GetRawImage() const;
 
@@ -34,7 +34,7 @@ namespace Hermes
 		bool IsReady() const;
 
 	private:
-		explicit Texture(const ImageAsset& Source, bool EnableMipMaps = true);
+		explicit Texture(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps = true);
 
 	protected:
 		Texture() = default;

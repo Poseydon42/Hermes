@@ -15,24 +15,34 @@
 
 namespace Hermes
 {
-	static RenderInterface::DataFormat ChooseFormatFromImageType(ImageFormat Format)
+	static RenderInterface::DataFormat ChooseFormatFromImageType(ImageFormat Format, bool IsSRGB)
 	{
 		switch (Format)
 		{
 		case ImageFormat::R8:
+			if (IsSRGB)
+				return RenderInterface::DataFormat::R8SRGB;
 			return RenderInterface::DataFormat::R8UnsignedNormalized;
 		case ImageFormat::R16:
+			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::R16 as SRGB");
 			return RenderInterface::DataFormat::R16UnsignedNormalized;
 		case ImageFormat::R32:
+			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::R32 as SRGB");
 			return RenderInterface::DataFormat::R32UnsignedInteger;
 		case ImageFormat::R8G8:
+			if (IsSRGB)
+				return RenderInterface::DataFormat::R8G8SRGB;
 			return RenderInterface::DataFormat::R8G8UnsignedNormalized;
 		case ImageFormat::R16G16:
+			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::R16G16 as SRGB");
 			return RenderInterface::DataFormat::R16G16UnsignedNormalized;
 		case ImageFormat::B8G8R8A8:
 		case ImageFormat::B8G8R8X8:
+			if (IsSRGB)
+				return RenderInterface::DataFormat::B8G8R8A8SRGB;
 			return RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
 		case ImageFormat::HDR96:
+			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::HDR96 as SRGB");
 			return RenderInterface::DataFormat::R32G32B32SignedFloat;
 		default:
 			HERMES_ASSERT(false);
@@ -40,9 +50,9 @@ namespace Hermes
 		}
 	}
 
-	std::shared_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source, bool EnableMipMaps)
+	std::shared_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps)
 	{
-		return std::shared_ptr<Texture>(new Texture(Source, EnableMipMaps));
+		return std::shared_ptr<Texture>(new Texture(Source, UseAsSRGB, EnableMipMaps));
 	}
 
 	const RenderInterface::Image& Texture::GetRawImage() const
@@ -78,7 +88,7 @@ namespace Hermes
 		return DataUploadFinished && Image != nullptr && Dimensions.LengthSq() > 0;
 	}
 
-	Texture::Texture(const ImageAsset& Source, bool EnableMipMaps)
+	Texture::Texture(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps)
 		: Dimensions(Source.GetDimensions())
 	{
 		uint32 BiggestDimension = Math::Max(Dimensions.X, Dimensions.Y);
@@ -94,14 +104,14 @@ namespace Hermes
 			MipLevelCount = 0;
 		}
 
-		Image = Renderer::Get().GetActiveDevice().CreateImage(
-		                                                        Dimensions,
-		                                                        RenderInterface::ImageUsageType::Sampled |
-		                                                        RenderInterface::ImageUsageType::CopyDestination |
-		                                                        RenderInterface::ImageUsageType::CopySource,
-		                                                        ChooseFormatFromImageType(Source.GetImageFormat()),
-		                                                        MipLevelCount + 1,
-		                                                        RenderInterface::ImageLayout::Undefined);
+		Image = Renderer::Get().GetActiveDevice().CreateImage(Dimensions,
+		                                                      RenderInterface::ImageUsageType::Sampled |
+		                                                      RenderInterface::ImageUsageType::CopyDestination |
+		                                                      RenderInterface::ImageUsageType::CopySource,
+		                                                      ChooseFormatFromImageType(Source.GetImageFormat(),
+			                                                      UseAsSRGB),
+		                                                      MipLevelCount + 1,
+		                                                      RenderInterface::ImageLayout::Undefined);
 
 		// NOTE : normally, after loading image we will move it into
 		// transfer source layout for further blitting to generate mip

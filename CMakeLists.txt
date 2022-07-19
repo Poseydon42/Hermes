@@ -1,8 +1,14 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.24)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Meta)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
+
+if (WIN32)
+    set(ZLIB_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/zlib)
+endif()
+set(ZLIB_USE_STATIC_LIBS ON)
+find_package(ZLIB REQUIRED)
 
 project(HermesWorkspace)
 

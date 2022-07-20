@@ -20,6 +20,9 @@ namespace Hermes
 		case ImageFormat::R16G16:
 		case ImageFormat::R32:
 			return 4;
+		case ImageFormat::R16G16B16A16:
+		case ImageFormat::R16G16B16X16:
+			return 8;
 		case ImageFormat::HDR96:
 			return 12;
 		default:

@@ -36,6 +36,8 @@ enum class ImageFormat : uint8_t
 	R16G16 = 0x0A,
 	B8G8R8X8 = 0x54,
 	B8G8R8A8 = 0x55,
+	R16G16B16X16 = 0xA8,
+	R16G16B16A16 = 0xAA,
 	HDR96 = 0xFC
 };
 
@@ -80,24 +82,45 @@ std::vector<uint8_t> ReadAllFile(const std::string& Path)
 	return Result;
 }
 
-int WriteAssetFile(
-	const char* Data, size_t DataSize,
-	uint16_t Width, uint16_t Height,
-	bool IsAlphaChannelAvailable, bool IsMonochrome,
-	bool IsHDR, const std::string& Filename)
+int WriteAssetFile(const char* Data, size_t DataSize, uint16_t Width, uint16_t Height, uint8_t BitsPerChannel,
+                   bool IsAlphaChannelAvailable, bool IsMonochrome, bool IsHDR, const std::string& Filename)
 {
+	if (BitsPerChannel != 8 && BitsPerChannel != 16 && !IsHDR)
+	{
+		std::cerr << "Channel bit depth other than 8 or 16 is not supported yet" << std::endl;
+		return 4;
+	}
 	ImageFormat Format;
 	if (IsMonochrome)
 	{
-		Format = ImageFormat::R8;
+		if (BitsPerChannel == 8)
+		{
+			if (IsAlphaChannelAvailable)
+				Format = ImageFormat::R8G8; // NOTE : on a bit level, R8A8 and R8G8 are encoded in the same way
+			else
+				Format = ImageFormat::R8;
+		}
+		else if (BitsPerChannel == 16)
+		{
+			if (IsAlphaChannelAvailable)
+				Format = ImageFormat::R16G16;
+			else
+				Format = ImageFormat::R16;
+		}
 	}
 	else if (IsAlphaChannelAvailable)
 	{
-		Format = ImageFormat::B8G8R8A8;
+		if (BitsPerChannel == 8)
+			Format = ImageFormat::B8G8R8A8;
+		else
+			Format = ImageFormat::R16G16B16A16;
 	}
 	else
 	{
-		Format = ImageFormat::B8G8R8X8;
+		if (BitsPerChannel == 8)
+			Format = ImageFormat::B8G8R8X8;
+		else
+			Format = ImageFormat::R16G16B16X16;
 	}
 
 	if (IsHDR)
@@ -115,7 +138,7 @@ int WriteAssetFile(
 
 	try
 	{
-		std::ofstream OutputFile(Filename, std::ios::binary | std::ios::out);
+		std::ofstream OutputFile(Filename, std::ios::binary);
 
 		OutputFile.write(reinterpret_cast<const char*>(&AssetHeader), sizeof(AssetHeader));
 		OutputFile.write(reinterpret_cast<const char*>(&ImageHeader), sizeof(ImageHeader));
@@ -233,7 +256,6 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 			uint8_t R = SourceImagePixel[2];
 			uint8_t G = SourceImagePixel[1];
 			uint8_t B = SourceImagePixel[0];
-			uint8_t A = SourceImagePixel[3];
 
 			size_t ActualX, ActualY;
 			if (IsLeftToRight)
@@ -256,18 +278,25 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 				IntermediateImagePixel[0] = B;
 				IntermediateImagePixel[1] = G;
 				IntermediateImagePixel[2] = R;
-				IntermediateImagePixel[3] = IsAlphaChannelAvailable ? A : 0xFF;
+				if (IsAlphaChannelAvailable)
+				{
+					uint8_t A = SourceImagePixel[3];
+					IntermediateImagePixel[3] = A;
+				}
+				else
+				{
+					IntermediateImagePixel[3] = 0xFF;
+				}
 			}
 
 			SourceImagePixel += SourceBytesPerPixel;
 		}
 	}
 
-	return WriteAssetFile(
-		reinterpret_cast<const char*>(IntermediateImage), TotalBytesUsed,
-		InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height,
-		IsAlphaChannelAvailable, IsMonochrome, false,
-		OutputFilename);
+	return WriteAssetFile(reinterpret_cast<const char*>(IntermediateImage), TotalBytesUsed,
+	                      InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height,
+	                      8, IsAlphaChannelAvailable, IsMonochrome, false,
+	                      OutputFilename);
 }
 
 int ConvertFromHDR(const std::string& Path, const std::string& OutputFilename)
@@ -300,12 +329,11 @@ int ConvertFromHDR(const std::string& Path, const std::string& OutputFilename)
 	}
 	else
 	{
-		Result = WriteAssetFile(
-			reinterpret_cast<const char*>(ImageData),
-			static_cast<size_t>(Width) * Height * NumChannels * sizeof(ImageData[0]),
-			static_cast<uint16_t>(Width), static_cast<uint16_t>(Height),
-			false, false, true,
-			OutputFilename);
+		Result = WriteAssetFile(reinterpret_cast<const char*>(ImageData),
+		                        static_cast<size_t>(Width) * Height * NumChannels * sizeof(ImageData[0]),
+		                        static_cast<uint16_t>(Width), static_cast<uint16_t>(Height),
+		                        32, false, false, true,
+		                        OutputFilename);
 	}
 
 	stbi_image_free(ImageData);

@@ -41,6 +41,10 @@ namespace Hermes
 			if (IsSRGB)
 				return RenderInterface::DataFormat::B8G8R8A8SRGB;
 			return RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
+		case ImageFormat::R16G16B16A16:
+		case ImageFormat::R16G16B16X16:
+			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::R16G16 as SRGB");
+			return RenderInterface::DataFormat::R16G16B16A16UnsignedNormalized;
 		case ImageFormat::HDR96:
 			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::HDR96 as SRGB");
 			return RenderInterface::DataFormat::R32G32B32SignedFloat;

@@ -3,6 +3,7 @@
 #include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "PNGLoader.h"
 #include "stb_image.h"
 
 /*
@@ -299,6 +300,109 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 	                      OutputFilename);
 }
 
+int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
+{
+	PNGLoader Image(Path);
+	if (!Image.IsValid())
+	{
+		std::cerr << "Image decompression and/or decoding failed" << std::endl;
+		return 3;
+	}
+
+	auto Width = Image.GetWidth();
+	auto Height = Image.GetHeight();
+	size_t PixelCount = static_cast<size_t>(Width) * Height;
+
+	std::cout << "Width: " << Width << std::endl;
+	std::cout << "Height: " << Height << std::endl;
+	std::cout << "Bits per pixel: " << Image.GetBytesPerPixel() * 8 << std::endl;
+	std::cout << "Is monochrome: " << (Image.IsMonochrome() ? "true" : "false") << std::endl;
+	std::cout << "Has alpha channel: " << (Image.HasAlphaChannel() ? "true" : "false") << std::endl;
+
+	// NOTE : we need to add alpha channel if necessary and swap B and R channels
+	size_t DestBytesPerPixel = Image.GetBytesPerPixel();
+	if (!Image.IsMonochrome() && !Image.HasAlphaChannel())
+	{
+		// NOTE : non-grayscale(e.g. RGB) image must have alpha channel
+		DestBytesPerPixel += static_cast<size_t>(Image.GetBitsPerChannel() / 8);
+	}
+
+	size_t DestBufferSize = DestBytesPerPixel * PixelCount;
+	auto* DestBuffer = static_cast<uint8_t*>(malloc(DestBufferSize));
+	if (!DestBuffer)
+	{
+		std::cerr << "Failed to allocate buffer for image" << std::endl;
+		return 4;
+	}
+
+	auto* Source = Image.GetPixels();
+	auto* Dest = DestBuffer;
+	for (auto Scanline = 0; Scanline < Height; Scanline++)
+	{
+		for (auto X = 0; X < Width; X++)
+		{
+			if (Image.GetBitsPerChannel() == 8)
+			{
+				if (Image.IsMonochrome())
+				{
+					*Dest++ = *Source++;
+					if (Image.HasAlphaChannel())
+						*Dest++ = *Source++;
+				}
+				else
+				{
+					auto R = *Source++;
+					auto G = *Source++;
+					auto B = *Source++;
+					*Dest++ = B;
+					*Dest++ = G;
+					*Dest++ = R;
+					if (Image.HasAlphaChannel())
+						*Dest++ = *Source++;
+					else
+						*Dest++ = 0xFF;
+				}
+			}
+			else
+			{
+				// NOTE : 16 bits per pixel
+				const auto* WordSource = reinterpret_cast<const uint16_t*>(Source);
+				auto* WordDest = reinterpret_cast<uint16_t*>(Dest);
+				if (Image.IsMonochrome())
+				{
+					*WordDest++ = *WordSource++;
+					if (Image.HasAlphaChannel())
+						*WordDest++ = *WordSource++;
+				}
+				else
+				{
+					// NOTE : no need for R-B swap in this case
+					*WordDest++ = *WordSource++;
+					*WordDest++ = *WordSource++;
+					*WordDest++ = *WordSource++;
+					// Advance original pointers
+					Source += 3 * sizeof(*WordSource);
+					Dest += 3 * sizeof(*WordDest);
+					if (Image.HasAlphaChannel())
+					{
+						*WordDest++ = *WordSource++;
+						Source += sizeof(*WordSource);
+					}
+					else
+					{
+						*WordDest++ = 0xFFFF;
+					}
+					// Advance further for alpha channel
+					Dest += sizeof(*WordDest);
+				}
+			}
+		}
+	}
+	return WriteAssetFile(reinterpret_cast<const char*>(DestBuffer), DestBufferSize, Width, Height,
+	                      Image.GetBitsPerChannel(), Image.HasAlphaChannel(), Image.IsMonochrome(), false,
+	                      OutputFilename);
+}
+
 int ConvertFromHDR(const std::string& Path, const std::string& OutputFilename)
 {
 	auto FileContents = ReadAllFile(Path);
@@ -345,9 +449,11 @@ int ConvertFromHDR(const std::string& Path, const std::string& OutputFilename)
  * imgtoasset <input file> [options]
  * Possible options:
  *  --tga: override file extension and parse it as TGA image
+ *	--png: override file extension and parse it as PNG image
  *	--hdr: override file extension and parse it as HDR image
  * Currently supported image formats:
  *  - TGA
+ *	- PNG
  *	- HDR(Radiance format)
  */
 int main(int argc, char** argv)
@@ -362,6 +468,7 @@ int main(int argc, char** argv)
 	{
 		Undefined,
 		TGA,
+		PNG,
 		HDR
 	} FileType = FileType::Undefined;
 
@@ -371,12 +478,19 @@ int main(int argc, char** argv)
 	{
 		if (strcmp(argv[ArgumentIndex], "--tga") == 0)
 			FileType = FileType::TGA;
+		if (strcmp(argv[ArgumentIndex], "--png") == 0)
+			FileType = FileType::PNG;
 		if (strcmp(argv[ArgumentIndex], "--hdr") == 0)
 			FileType = FileType::HDR;
 	}
 	if (InputFilename.substr(InputFilename.find_last_of('.'), InputFilename.length() - InputFilename.find_last_of('.') + 1) == ".tga")
 	{
 		FileType = FileType::TGA;
+	}
+	if (InputFilename.substr(InputFilename.find_last_of('.'),
+	                         InputFilename.length() - InputFilename.find_last_of('.') + 1) == ".png")
+	{
+		FileType = FileType::PNG;
 	}
 	if (InputFilename.substr(InputFilename.find_last_of('.'), InputFilename.length() - InputFilename.find_last_of('.') + 1) == ".hdr")
 	{
@@ -389,6 +503,8 @@ int main(int argc, char** argv)
 	{
 	case FileType::TGA:
 		return ConvertFromTGA(InputFilename, OutputFileName);
+	case FileType::PNG:
+		return ConvertFromPNG(InputFilename, OutputFileName);
 	case FileType::HDR:
 		return ConvertFromHDR(InputFilename, OutputFileName);
 	case FileType::Undefined:

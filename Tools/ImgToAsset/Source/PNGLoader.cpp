@@ -275,7 +275,11 @@ uint32_t PNGLoader::ReadBigEndianNumber(const uint8_t* Memory) const
 
 void PNGLoader::ApplyFilterRecovery()
 {
-	size_t Stride = (Width * BitsPerChannel + 7) / 8;
+	size_t Stride;
+	if (BitsPerChannel < 8)
+		Stride = (Width * BitsPerChannel + 7) / 8;
+	else
+		Stride = static_cast<size_t>(Width) * GetBytesPerPixel();
 	size_t DestArraySize = Stride * Height;
 	FilteredData.resize(DestArraySize);
 	
@@ -359,27 +363,27 @@ void PNGLoader::UnpackPixels()
 
 	const auto* Source = FilteredData.data();
 	auto* Dest = Pixels.data();
-	
-	uint16_t PixelsPerPackedValue = 8 / BitsPerChannel;
-	for (size_t Y = 0; Y < Height; Y++)
+
+	if (BitsPerChannel == 16)
 	{
-		auto PixelsLeftInCurrentScanline = Width;
-		size_t BytesInCurrentScanline = 0;
-		if (BitsPerChannel < 8)
-			BytesInCurrentScanline = (Width + PixelsPerPackedValue - 1) / PixelsPerPackedValue;
-		else
-			BytesInCurrentScanline = static_cast<size_t>(Width) * GetBytesPerPixel();
-		for (size_t X = 0; X < std::min<size_t>(BytesInCurrentScanline, Width); X++)
+		// NOTE : in this case the only thing we need to do is swap endianness of PixelArraySize / 2 values
+		for (size_t Index = 0; Index < PixelArraySize / 2; Index++)
 		{
-			if (BitsPerChannel == 16)
-			{
-				uint8_t High = *Source++;
-				uint8_t Low = *Source++;
-				*Dest++ = Low;
-				*Dest++ = High;
-				PixelsLeftInCurrentScanline--;
-			}
-			else
+			uint8_t High = *Source++;
+			uint8_t Low = *Source++;
+			*Dest++ = Low;
+			*Dest++ = High;
+		}
+	}
+	else
+	{
+		uint16_t PixelsPerPackedValue = 8 / BitsPerChannel;
+		for (size_t Y = 0; Y < Height; Y++)
+		{
+			auto PixelsLeftInCurrentScanline = Width;
+			size_t BytesInCurrentScanline = (static_cast<size_t>(Width) + PixelsPerPackedValue - 1) /
+				PixelsPerPackedValue * GetBytesPerPixel();
+			for (size_t X = 0; X < std::min<size_t>(BytesInCurrentScanline, Width); X++)
 			{
 				uint8_t Value = *Source++;
 
@@ -389,7 +393,25 @@ void PNGLoader::UnpackPixels()
 					uint8_t Mask = 0;
 					for (auto Bit = 0; Bit < BitsPerChannel; Bit++)
 						Mask += 1 << Bit;
-					uint8_t UnpackedValue = ((Value >> Shift) & Mask) << (8 - BitsPerChannel);
+					uint8_t UnpackedValue = ((Value >> Shift) & Mask);
+
+					// NOTE : unpacked value is stored in lower bits of the variable and needs to be
+					//        repeatedly copied to keep values proportional
+					if (BitsPerChannel == 1)
+					{
+						UnpackedValue = static_cast<uint8_t>(UnpackedValue | (UnpackedValue << 1) | (UnpackedValue << 2)
+							| (UnpackedValue << 3) | (UnpackedValue << 4) | (UnpackedValue << 5) | (UnpackedValue << 6)
+							| (UnpackedValue << 7));
+					}
+					else if (BitsPerChannel == 2)
+					{
+						UnpackedValue = static_cast<uint8_t>(UnpackedValue | (UnpackedValue << 2) | (UnpackedValue << 4)
+							| (UnpackedValue << 6));
+					}
+					else if (BitsPerChannel == 4)
+					{
+						UnpackedValue = static_cast<uint8_t>(UnpackedValue | (UnpackedValue << 4));
+					}
 					*Dest++ = UnpackedValue;
 				}
 				PixelsLeftInCurrentScanline -= PixelsPerPackedValue;

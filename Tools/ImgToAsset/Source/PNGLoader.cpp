@@ -365,9 +365,11 @@ void PNGLoader::UnpackPixels()
 	{
 		auto PixelsLeftInCurrentScanline = Width;
 		size_t BytesInCurrentScanline = 0;
-		if (BitsPerChannel <= 8)
+		if (BitsPerChannel < 8)
 			BytesInCurrentScanline = (Width + PixelsPerPackedValue - 1) / PixelsPerPackedValue;
-		for (size_t X = 0; X < BytesInCurrentScanline; X++)
+		else
+			BytesInCurrentScanline = static_cast<size_t>(Width) * GetBytesPerPixel();
+		for (size_t X = 0; X < std::min<size_t>(BytesInCurrentScanline, Width); X++)
 		{
 			if (BitsPerChannel == 16)
 			{

@@ -11,6 +11,7 @@ namespace Hermes
 		Vec3 Position;
 		Vec2 TextureCoordinates;
 		Vec3 Normal;
+		Vec3 Tangent;
 	};
 
 	/*

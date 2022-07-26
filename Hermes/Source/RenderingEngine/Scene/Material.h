@@ -12,6 +12,7 @@ namespace Hermes
 		Albedo = 0,
 		Roughness = 1,
 		Metallic = 2,
+		Normal = 3,
 		Count_
 	};
 

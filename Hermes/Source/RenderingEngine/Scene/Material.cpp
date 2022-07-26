@@ -133,7 +133,15 @@ namespace Hermes
 				/*DescriptorCount*/ 1,
 				/*Shader*/ RenderInterface::ShaderType::FragmentShader,
 				/*Type*/ RenderInterface::DescriptorType::SampledImage,
-			}
+			},
+
+			/* Normal texture */
+			{
+				/*Index*/ 4,
+				/*DescriptorCount*/ 1,
+				/*Shader*/ RenderInterface::ShaderType::FragmentShader,
+				/*Type*/ RenderInterface::DescriptorType::SampledImage,
+			},
 		};
 		MaterialDescriptorLayout = RenderingDevice.CreateDescriptorSetLayout(PerMaterialDataBindings);
 	}

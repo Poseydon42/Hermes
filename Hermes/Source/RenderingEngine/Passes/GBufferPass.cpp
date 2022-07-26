@@ -161,7 +161,7 @@ namespace Hermes
 		VertexInput.IsPerInstance = false;
 		PipelineDesc.VertexInput.VertexBindings.push_back(VertexInput);
 
-		RenderInterface::VertexAttribute PositionAttribute = {}, TextureCoordinatesAttribute = {}, NormalAttribute = {};
+		RenderInterface::VertexAttribute PositionAttribute = {}, TextureCoordinatesAttribute = {}, NormalAttribute = {}, TangentAttribute = {};
 		PositionAttribute.BindingIndex = 0;
 		PositionAttribute.Location = 0;
 		PositionAttribute.Offset = offsetof(Vertex, Position);
@@ -179,6 +179,12 @@ namespace Hermes
 		NormalAttribute.Offset = offsetof(Vertex, Normal);
 		NormalAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
 		PipelineDesc.VertexInput.VertexAttributes.push_back(NormalAttribute);
+
+		TangentAttribute.BindingIndex = 0;
+		TangentAttribute.Location = 3;
+		TangentAttribute.Offset = offsetof(Vertex, Tangent);
+		TangentAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
+		PipelineDesc.VertexInput.VertexAttributes.push_back(TangentAttribute);
 
 		PipelineDesc.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
 

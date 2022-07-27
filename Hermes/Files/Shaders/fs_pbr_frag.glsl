@@ -63,10 +63,21 @@ float GeometrySmithFunction(vec3 Normal, vec3 View, vec3 Light, float Roughness)
     return GGXView * GGXLight;
 }
 
+vec3 ComputeF0(vec3 AlbedoColor, float Metalness)
+{
+    return mix(vec3(0.04), AlbedoColor, Metalness);
+}
+
 vec3 FresnelSchlick(vec3 AlbedoColor, float Metalness, float CosAngle)
 {
-    vec3 F0 = mix(vec3(0.04), AlbedoColor, Metalness);
+    vec3 F0 = ComputeF0(AlbedoColor, Metalness);
     return F0 + (1.0 - F0) * pow(1.0 - CosAngle, 5.0);
+}
+
+vec3 FresnelSchlickRoughness(vec3 AlbedoColor, float Metalness, float Roughness, float CosAngle)
+{
+    vec3 F0 = ComputeF0(AlbedoColor, Metalness);
+    return F0 + (max(vec3(1.0 - Roughness), F0) - F0) * pow(1.0 - CosAngle, 5.0);
 }
 
 vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
@@ -104,7 +115,7 @@ vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
     }
 
     vec3 IrradianceValue = texture(u_IrradianceMap, Normal).rgb;
-    vec3 DiffuseCoef = 1.0 - FresnelSchlick(AlbedoColor, Metallic, max(dot(Normal, ViewVector), 0.0));
+    vec3 DiffuseCoef = 1.0 - FresnelSchlickRoughness(AlbedoColor, Metallic, Roughness, max(dot(Normal, ViewVector), 0.0));
     vec3 Ambient = DiffuseCoef * IrradianceValue * AlbedoColor;
     Result += Ambient;
 

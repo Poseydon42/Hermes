@@ -34,6 +34,8 @@ void main()
     o_FragmentNormal = Normal;
 
     vec3 Tangent = normalize(NormalMatrix * i_Tangent);
+    // Reorthogonalize tangent
+    Tangent = normalize(Tangent - dot(Tangent, Normal) * Normal);
     vec3 Bitangent = normalize(cross(Normal, Tangent));
     mat3 TBN = mat3(Tangent, Bitangent, Normal);
     o_TBNMatrix = TBN;

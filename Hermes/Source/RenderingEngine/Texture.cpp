@@ -135,8 +135,7 @@ namespace Hermes
 
 		if (EnableMipMaps)
 		{
-			GPUInteractionUtilities::GenerateMipMaps(
-			                                         *Image, RenderInterface::ImageLayout::TransferSourceOptimal,
+			GPUInteractionUtilities::GenerateMipMaps(*Image, RenderInterface::ImageLayout::TransferSourceOptimal,
 			                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 		}
 
@@ -187,7 +186,7 @@ namespace Hermes
 		OutputAttachment.LayoutAtEnd = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		auto RenderPass = Device.CreateRenderPass({ OutputAttachment });
 
-		std::shared_ptr VertexShader = Device.CreateShader(L"Shaders/Bin/load_equirectangular_vert.glsl.spv",
+		std::shared_ptr VertexShader = Device.CreateShader(L"Shaders/Bin/render_uniform_cube.glsl.spv",
 		                                                   RenderInterface::ShaderType::VertexShader);
 		std::shared_ptr FragmentShader = Device.CreateShader(L"Shaders/Bin/load_equirectangular_frag.glsl.spv",
 		                                                     RenderInterface::ShaderType::FragmentShader);

@@ -157,6 +157,7 @@ namespace Hermes
 
 		// NOTE : cubemap is 4 times narrower and 2 times shorter
 		auto CubemapDimensions = EquirectangularTextureDimensions / Vec2ui { 4, 2 };
+		Dimensions = CubemapDimensions;
 		
 		auto CubemapFormat = PreferredFormat;
 
@@ -328,6 +329,7 @@ namespace Hermes
 			}
 		}
 
+		DataUploadFinished = true;
 		DefaultView = Image->CreateDefaultImageView();
 	}
 }

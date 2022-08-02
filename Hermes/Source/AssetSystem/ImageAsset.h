@@ -13,6 +13,7 @@ namespace Hermes
 	// TODO : maybe add more?
 	enum class ImageFormat : uint8
 	{
+		Undefined = 0x00,
 		R8 = 0x01,
 		R16 = 0x02,
 		R32 = 0x03,

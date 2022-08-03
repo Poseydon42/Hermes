@@ -14,8 +14,8 @@ static size_t BytesPerPixelForFormat(ImageFormat Format)
 		return 2;
 	case ImageFormat::R32:
 	case ImageFormat::R16G16:
-	case ImageFormat::B8G8R8X8:
-	case ImageFormat::B8G8R8A8:
+	case ImageFormat::R8G8B8X8:
+	case ImageFormat::R8G8B8A8:
 		return 4;
 	case ImageFormat::R16G16B16X16:
 	case ImageFormat::R16G16B16A16:

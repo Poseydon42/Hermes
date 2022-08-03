@@ -185,9 +185,9 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 	else
 	{
 		if (IsAlphaChannelAvailable)
-			Format = ImageFormat::B8G8R8A8;
+			Format = ImageFormat::R8G8B8A8;
 		else
-			Format = ImageFormat::B8G8R8X8;
+			Format = ImageFormat::R8G8B8X8;
 	}
 
 	Image Image(InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height, Format);
@@ -223,9 +223,9 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 			}
 			else
 			{
-				IntermediateImagePixel[0] = B;
+				IntermediateImagePixel[0] = R;
 				IntermediateImagePixel[1] = G;
-				IntermediateImagePixel[2] = R;
+				IntermediateImagePixel[2] = B;
 				if (IsAlphaChannelAvailable)
 				{
 					uint8_t A = SourceImagePixel[3];
@@ -255,7 +255,6 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 
 	auto Width = PNGImage.GetWidth();
 	auto Height = PNGImage.GetHeight();
-	size_t PixelCount = static_cast<size_t>(Width) * Height;
 
 	std::cout << "Width: " << Width << std::endl;
 	std::cout << "Height: " << Height << std::endl;
@@ -263,7 +262,7 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 	std::cout << "Is monochrome: " << (PNGImage.IsMonochrome() ? "true" : "false") << std::endl;
 	std::cout << "Has alpha channel: " << (PNGImage.HasAlphaChannel() ? "true" : "false") << std::endl;
 
-	// NOTE : we need to add alpha channel if necessary and swap B and R channels
+	// NOTE : we need to add alpha channel if necessary
 	ImageFormat DestFormat = ImageFormat::Undefined;
 	if (PNGImage.IsMonochrome())
 	{
@@ -287,14 +286,14 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 		if (PNGImage.HasAlphaChannel())
 		{
 			if (PNGImage.GetBitsPerChannel() <= 8)
-				DestFormat = ImageFormat::B8G8R8A8;
+				DestFormat = ImageFormat::R8G8B8A8;
 			else
 				DestFormat = ImageFormat::R16G16B16A16;
 		}
 		else
 		{
 			if (PNGImage.GetBitsPerChannel() <= 8)
-				DestFormat = ImageFormat::B8G8R8X8;
+				DestFormat = ImageFormat::R8G8B8X8;
 			else
 				DestFormat = ImageFormat::R16G16B16X16;
 		}
@@ -317,12 +316,10 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 				}
 				else
 				{
-					auto R = *Source++;
-					auto G = *Source++;
-					auto B = *Source++;
-					*Dest++ = B;
-					*Dest++ = G;
-					*Dest++ = R;
+					// NOTE : copying red, green and blue channels
+					*Dest++ = *Source++;
+					*Dest++ = *Source++;
+					*Dest++ = *Source++;
 					if (PNGImage.HasAlphaChannel())
 						*Dest++ = *Source++;
 					else
@@ -342,7 +339,6 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 				}
 				else
 				{
-					// NOTE : no need for R-B swap in this case
 					*WordDest++ = *WordSource++;
 					*WordDest++ = *WordSource++;
 					*WordDest++ = *WordSource++;

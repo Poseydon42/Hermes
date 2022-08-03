@@ -15,8 +15,8 @@ namespace Hermes
 		case ImageFormat::R16:
 		case ImageFormat::R8G8:
 			return 2;
-		case ImageFormat::B8G8R8X8:
-		case ImageFormat::B8G8R8A8:
+		case ImageFormat::R8G8B8X8:
+		case ImageFormat::R8G8B8A8:
 		case ImageFormat::R16G16:
 		case ImageFormat::R32:
 			return 4;

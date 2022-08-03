@@ -36,11 +36,11 @@ namespace Hermes
 		case ImageFormat::R16G16:
 			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::R16G16 as SRGB");
 			return RenderInterface::DataFormat::R16G16UnsignedNormalized;
-		case ImageFormat::B8G8R8A8:
-		case ImageFormat::B8G8R8X8:
+		case ImageFormat::R8G8B8A8:
+		case ImageFormat::R8G8B8X8:
 			if (IsSRGB)
-				return RenderInterface::DataFormat::B8G8R8A8SRGB;
-			return RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
+				return RenderInterface::DataFormat::R8G8B8A8SRGB;
+			return RenderInterface::DataFormat::R8G8B8A8UnsignedNormalized;
 		case ImageFormat::R16G16B16A16:
 		case ImageFormat::R16G16B16X16:
 			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::R16G16 as SRGB");

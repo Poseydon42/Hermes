@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.22)
 project(ImgToAsset)
 
 set(SOURCES
+    Source/Image.cpp
+    Source/Image.h
     Source/main.cpp
     Source/PNGLoader.cpp
     Source/PNGLoader.h

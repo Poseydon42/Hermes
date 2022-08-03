@@ -3,6 +3,7 @@
 #include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "Image.h"
 #include "PNGLoader.h"
 #include "stb_image.h"
 
@@ -26,20 +27,6 @@ enum class AssetType : uint8_t
 {
 	Image = 1,
 	Mesh = 2
-};
-
-enum class ImageFormat : uint8_t
-{
-	R8 = 0x01,
-	R16 = 0x02,
-	R32 = 0x03,
-	R8G8 = 0x05,
-	R16G16 = 0x0A,
-	B8G8R8X8 = 0x54,
-	B8G8R8A8 = 0x55,
-	R16G16B16X16 = 0xA8,
-	R16G16B16A16 = 0xAA,
-	HDR96 = 0xFC
 };
 
 PACKED_STRUCT_BEGIN
@@ -83,59 +70,15 @@ std::vector<uint8_t> ReadAllFile(const std::string& Path)
 	return Result;
 }
 
-int WriteAssetFile(const char* Data, size_t DataSize, uint16_t Width, uint16_t Height, uint8_t BitsPerChannel,
-                   bool IsAlphaChannelAvailable, bool IsMonochrome, bool IsHDR, const std::string& Filename)
+int WriteAssetFile(const Image& Image, const std::string& Filename)
 {
-	if (BitsPerChannel != 8 && BitsPerChannel != 16 && !IsHDR)
-	{
-		std::cerr << "Channel bit depth other than 8 or 16 is not supported yet" << std::endl;
-		return 4;
-	}
-	ImageFormat Format;
-	if (IsMonochrome)
-	{
-		if (BitsPerChannel == 8)
-		{
-			if (IsAlphaChannelAvailable)
-				Format = ImageFormat::R8G8; // NOTE : on a bit level, R8A8 and R8G8 are encoded in the same way
-			else
-				Format = ImageFormat::R8;
-		}
-		else if (BitsPerChannel == 16)
-		{
-			if (IsAlphaChannelAvailable)
-				Format = ImageFormat::R16G16;
-			else
-				Format = ImageFormat::R16;
-		}
-	}
-	else if (IsAlphaChannelAvailable)
-	{
-		if (BitsPerChannel == 8)
-			Format = ImageFormat::B8G8R8A8;
-		else
-			Format = ImageFormat::R16G16B16A16;
-	}
-	else
-	{
-		if (BitsPerChannel == 8)
-			Format = ImageFormat::B8G8R8X8;
-		else
-			Format = ImageFormat::R16G16B16X16;
-	}
-
-	if (IsHDR)
-	{
-		Format = ImageFormat::HDR96;
-	}
-
-	AssetHeader AssetHeader;
+	AssetHeader AssetHeader = {};
 	AssetHeader.Type = AssetType::Image;
 
-	ImageHeader ImageHeader;
-	ImageHeader.Width = Width;
-	ImageHeader.Height = Height;
-	ImageHeader.Format = Format;
+	ImageHeader ImageHeader = {};
+	ImageHeader.Width = Image.GetWidth();
+	ImageHeader.Height = Image.GetHeight();
+	ImageHeader.Format = Image.GetFormat();
 
 	try
 	{
@@ -143,7 +86,7 @@ int WriteAssetFile(const char* Data, size_t DataSize, uint16_t Width, uint16_t H
 
 		OutputFile.write(reinterpret_cast<const char*>(&AssetHeader), sizeof(AssetHeader));
 		OutputFile.write(reinterpret_cast<const char*>(&ImageHeader), sizeof(ImageHeader));
-		OutputFile.write(Data, static_cast<std::streamsize>(DataSize));
+		OutputFile.write(static_cast<const char*>(Image.GetData()), static_cast<std::streamsize>(Image.GetDataSize()));
 	}
 	catch (const std::exception& Error)
 	{
@@ -231,23 +174,26 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 		return 3;
 	}
 
-	size_t IntermediateBytesPerPixel;
+	ImageFormat Format = ImageFormat::Undefined;
 	if (IsMonochrome)
-		IntermediateBytesPerPixel = 1;
-	else
-		IntermediateBytesPerPixel = 4;
-	size_t SourceBytesPerPixel = InputTGAHeader->Specification.PixelDepth / 8;
-
-	size_t TotalBytesUsed = static_cast<size_t>(InputTGAHeader->Specification.Width) * InputTGAHeader->Specification.Height * IntermediateBytesPerPixel;
-
-	auto* IntermediateImage = reinterpret_cast<uint8_t*>(malloc(TotalBytesUsed));
-	if (!IntermediateImage)
 	{
-		std::cerr << "Failed to allocate memory for intermediate image representation" << std::endl;
-		return 3;
+		if (IsAlphaChannelAvailable)
+			Format = ImageFormat::R8G8; // NOTE : R8G8 and R8A8 are encoded in the same way
+		else
+			Format = ImageFormat::R8;
+	}
+	else
+	{
+		if (IsAlphaChannelAvailable)
+			Format = ImageFormat::B8G8R8A8;
+		else
+			Format = ImageFormat::B8G8R8X8;
 	}
 
+	Image Image(InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height, Format);
+
 	uint8_t* SourceImagePixel = FileContents.data() + sizeof(TGAHeader) + InputTGAHeader->IDLength;
+	size_t SourceBytesPerPixel = InputTGAHeader->Specification.PixelDepth / 8;
 	// NOTE : Hermes always uses top-to-bottom left-to-right images,
 	// so we have to apply flipping if necessary while converting
 	for (size_t Y = 0; Y < InputTGAHeader->Specification.Height; Y++)
@@ -268,7 +214,8 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 			else
 				ActualY = InputTGAHeader->Specification.Height - 1 - Y;
 
-			uint8_t* IntermediateImagePixel = IntermediateImage + (ActualY * InputTGAHeader->Specification.Width + ActualX) * IntermediateBytesPerPixel;
+			uint8_t* IntermediateImagePixel = static_cast<uint8_t*>(Image.GetData()) + (ActualY * InputTGAHeader->
+				Specification.Width + ActualX) * Image.GetBytesPerPixel();
 
 			if (IsMonochrome)
 			{
@@ -294,59 +241,78 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 		}
 	}
 
-	return WriteAssetFile(reinterpret_cast<const char*>(IntermediateImage), TotalBytesUsed,
-	                      InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height,
-	                      8, IsAlphaChannelAvailable, IsMonochrome, false,
-	                      OutputFilename);
+	return WriteAssetFile(Image, OutputFilename);
 }
 
 int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 {
-	PNGLoader Image(Path);
-	if (!Image.IsValid())
+	PNGLoader PNGImage(Path);
+	if (!PNGImage.IsValid())
 	{
 		std::cerr << "Image decompression and/or decoding failed" << std::endl;
 		return 3;
 	}
 
-	auto Width = Image.GetWidth();
-	auto Height = Image.GetHeight();
+	auto Width = PNGImage.GetWidth();
+	auto Height = PNGImage.GetHeight();
 	size_t PixelCount = static_cast<size_t>(Width) * Height;
 
 	std::cout << "Width: " << Width << std::endl;
 	std::cout << "Height: " << Height << std::endl;
-	std::cout << "Bits per pixel: " << Image.GetBytesPerPixel() * 8 << std::endl;
-	std::cout << "Is monochrome: " << (Image.IsMonochrome() ? "true" : "false") << std::endl;
-	std::cout << "Has alpha channel: " << (Image.HasAlphaChannel() ? "true" : "false") << std::endl;
+	std::cout << "Bits per pixel: " << PNGImage.GetBytesPerPixel() * 8 << std::endl;
+	std::cout << "Is monochrome: " << (PNGImage.IsMonochrome() ? "true" : "false") << std::endl;
+	std::cout << "Has alpha channel: " << (PNGImage.HasAlphaChannel() ? "true" : "false") << std::endl;
 
 	// NOTE : we need to add alpha channel if necessary and swap B and R channels
-	size_t DestBytesPerPixel = Image.GetBytesPerPixel();
-	if (!Image.IsMonochrome() && !Image.HasAlphaChannel())
+	ImageFormat DestFormat = ImageFormat::Undefined;
+	if (PNGImage.IsMonochrome())
 	{
-		// NOTE : non-grayscale(e.g. RGB) image must have alpha channel
-		DestBytesPerPixel += static_cast<size_t>(Image.GetBitsPerChannel() / 8);
+		if (PNGImage.HasAlphaChannel())
+		{
+			if (PNGImage.GetBitsPerChannel() <= 8)
+				DestFormat = ImageFormat::R8G8;
+			else
+				DestFormat = ImageFormat::R16G16;
+		}
+		else
+		{
+			if (PNGImage.GetBitsPerChannel() <= 8)
+				DestFormat = ImageFormat::R8;
+			else
+				DestFormat = ImageFormat::R16;
+		}
+	}
+	else
+	{
+		if (PNGImage.HasAlphaChannel())
+		{
+			if (PNGImage.GetBitsPerChannel() <= 8)
+				DestFormat = ImageFormat::B8G8R8A8;
+			else
+				DestFormat = ImageFormat::R16G16B16A16;
+		}
+		else
+		{
+			if (PNGImage.GetBitsPerChannel() <= 8)
+				DestFormat = ImageFormat::B8G8R8X8;
+			else
+				DestFormat = ImageFormat::R16G16B16X16;
+		}
 	}
 
-	size_t DestBufferSize = DestBytesPerPixel * PixelCount;
-	auto* DestBuffer = static_cast<uint8_t*>(malloc(DestBufferSize));
-	if (!DestBuffer)
-	{
-		std::cerr << "Failed to allocate buffer for image" << std::endl;
-		return 4;
-	}
-
-	auto* Source = Image.GetPixels();
-	auto* Dest = DestBuffer;
+	Image ResultImage(PNGImage.GetWidth(), PNGImage.GetHeight(), DestFormat);
+	auto* Source = PNGImage.GetPixels();
+	auto* Dest = static_cast<uint8_t*>(ResultImage.GetData());
 	for (auto Scanline = 0; Scanline < Height; Scanline++)
 	{
 		for (auto X = 0; X < Width; X++)
 		{
-			if (Image.GetBitsPerChannel() == 8)
+			if (PNGImage.GetBitsPerChannel() == 8)
 			{
-				if (Image.IsMonochrome())
+				if (PNGImage.IsMonochrome())
 				{
 					*Dest++ = *Source++;
-					if (Image.HasAlphaChannel())
+					if (PNGImage.HasAlphaChannel())
 						*Dest++ = *Source++;
 				}
 				else
@@ -357,7 +323,7 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 					*Dest++ = B;
 					*Dest++ = G;
 					*Dest++ = R;
-					if (Image.HasAlphaChannel())
+					if (PNGImage.HasAlphaChannel())
 						*Dest++ = *Source++;
 					else
 						*Dest++ = 0xFF;
@@ -368,10 +334,10 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 				// NOTE : 16 bits per pixel
 				const auto* WordSource = reinterpret_cast<const uint16_t*>(Source);
 				auto* WordDest = reinterpret_cast<uint16_t*>(Dest);
-				if (Image.IsMonochrome())
+				if (PNGImage.IsMonochrome())
 				{
 					*WordDest++ = *WordSource++;
-					if (Image.HasAlphaChannel())
+					if (PNGImage.HasAlphaChannel())
 						*WordDest++ = *WordSource++;
 				}
 				else
@@ -383,7 +349,7 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 					// Advance original pointers
 					Source += 3 * sizeof(*WordSource);
 					Dest += 3 * sizeof(*WordDest);
-					if (Image.HasAlphaChannel())
+					if (PNGImage.HasAlphaChannel())
 					{
 						*WordDest++ = *WordSource++;
 						Source += sizeof(*WordSource);
@@ -398,9 +364,7 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 			}
 		}
 	}
-	return WriteAssetFile(reinterpret_cast<const char*>(DestBuffer), DestBufferSize, Width, Height,
-	                      Image.GetBitsPerChannel(), Image.HasAlphaChannel(), Image.IsMonochrome(), false,
-	                      OutputFilename);
+	return WriteAssetFile(ResultImage, OutputFilename);
 }
 
 int ConvertFromHDR(const std::string& Path, const std::string& OutputFilename)
@@ -433,11 +397,10 @@ int ConvertFromHDR(const std::string& Path, const std::string& OutputFilename)
 	}
 	else
 	{
-		Result = WriteAssetFile(reinterpret_cast<const char*>(ImageData),
-		                        static_cast<size_t>(Width) * Height * NumChannels * sizeof(ImageData[0]),
-		                        static_cast<uint16_t>(Width), static_cast<uint16_t>(Height),
-		                        32, false, false, true,
-		                        OutputFilename);
+		// NOTE : unfortunately, STB does not allow to load image into a preallocated buffer,
+		//        so we'll have to do one more copy here
+		Image Image(static_cast<uint16_t>(Width), static_cast<uint16_t>(Height), ImageFormat::HDR96, ImageData);
+		Result = WriteAssetFile(Image, OutputFilename);
 	}
 
 	stbi_image_free(ImageData);

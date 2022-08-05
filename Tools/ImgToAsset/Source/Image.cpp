@@ -1,36 +1,33 @@
 #include "Image.h"
 
-static size_t BytesPerPixelForFormat(ImageFormat Format)
+static size_t ChannelsPerFormat(ImageFormat Format)
 {
 	switch (Format)
 	{
 	default:
 	case ImageFormat::Undefined:
 		return 0;
-	case ImageFormat::R8:
+	case ImageFormat::R:
 		return 1;
-	case ImageFormat::R16:
-	case ImageFormat::R8G8:
+	case ImageFormat::RG:
+	case ImageFormat::RA:
 		return 2;
-	case ImageFormat::R32:
-	case ImageFormat::R16G16:
-	case ImageFormat::R8G8B8X8:
-	case ImageFormat::R8G8B8A8:
+	case ImageFormat::HDR:
+		return 3;
+	case ImageFormat::RGBA:
+	case ImageFormat::RGBX:
 		return 4;
-	case ImageFormat::R16G16B16X16:
-	case ImageFormat::R16G16B16A16:
-		return 8;
-	case ImageFormat::HDR96:
-		return 12;
 	}
 }
 
-Image::Image(uint16_t InWidth, uint16_t InHeight, ImageFormat InFormat, std::optional<void*> InData)
+Image::Image(uint16_t InWidth, uint16_t InHeight, ImageFormat InFormat, size_t InBytesPerChannel,
+             std::optional<void*> InData)
 	: Width(InWidth)
 	, Height(InHeight)
+	, BytesPerChannel(InBytesPerChannel)
 	, Format(InFormat)
 {
-	size_t TotalNumberOfBytes = static_cast<size_t>(Width) * Height * BytesPerPixelForFormat(Format);
+	size_t TotalNumberOfBytes = static_cast<size_t>(Width) * Height * BytesPerChannel * ChannelsPerFormat(Format);
 	Data.resize(TotalNumberOfBytes);
 	if (InData.has_value())
 	{
@@ -53,9 +50,19 @@ ImageFormat Image::GetFormat() const
 	return Format;
 }
 
+size_t Image::GetChannelCount() const
+{
+	return ChannelsPerFormat(Format);
+}
+
+size_t Image::GetBytesPerChannel() const
+{
+	return BytesPerChannel;
+}
+
 size_t Image::GetBytesPerPixel() const
 {
-	return BytesPerPixelForFormat(Format);
+	return BytesPerChannel * ChannelsPerFormat(Format);
 }
 
 const void* Image::GetData() const

@@ -6,43 +6,41 @@ namespace Hermes
 {
 	DEFINE_ASSET_TYPE(Image)
 
-	uint8 BytesPerPixelForImageFormat(ImageFormat Format)
+	size_t NumberOfChannelInImageFormat(ImageFormat Format)
 	{
 		switch (Format)
 		{
-		case ImageFormat::R8:
+		case ImageFormat::R:
 			return 1;
-		case ImageFormat::R16:
-		case ImageFormat::R8G8:
+		case ImageFormat::RG:
+		case ImageFormat::RA:
 			return 2;
-		case ImageFormat::R8G8B8X8:
-		case ImageFormat::R8G8B8A8:
-		case ImageFormat::R16G16:
-		case ImageFormat::R32:
+		case ImageFormat::HDR:
+			return 3;
+		case ImageFormat::RGBA:
+		case ImageFormat::RGBX:
 			return 4;
-		case ImageFormat::R16G16B16A16:
-		case ImageFormat::R16G16B16X16:
-			return 8;
-		case ImageFormat::HDR96:
-			return 12;
 		default:
 			HERMES_ASSERT(false);
 		}
 		return 0;
 	}
 
-	ImageAsset::ImageAsset(const String& Name, Vec2ui InDimensions, ImageFormat InFormat)
+	ImageAsset::ImageAsset(const String& Name, Vec2ui InDimensions, ImageFormat InFormat, size_t InBytesPerChannel)
 		: Asset(Name, AssetType::Image)
 		, Dimensions(InDimensions)
 		, Format(InFormat)
+		, BytesPerChannel(InBytesPerChannel)
 	{
 		Data.resize(GetMemorySize(), 0x00);
 	}
 
-	ImageAsset::ImageAsset(const String& Name, Vec2ui InDimensions, ImageFormat InFormat, const uint8* InData)
+	ImageAsset::ImageAsset(const String& Name, Vec2ui InDimensions, ImageFormat InFormat, size_t InBytesPerChannel,
+	                       const uint8* InData)
 		: Asset(Name, AssetType::Image)
 		, Dimensions(InDimensions)
 		, Format(InFormat)
+		, BytesPerChannel(InBytesPerChannel)
 	{
 		Data.resize(GetMemorySize(), 0x00);
 		std::copy_n(InData, GetMemorySize(), Data.data());
@@ -50,12 +48,12 @@ namespace Hermes
 
 	bool ImageAsset::IsValid() const
 	{
-		return (Data.size() == Dimensions.X * Dimensions.Y * GetBitsPerPixel() / 8);
+		return (Data.size() == GetMemorySize());
 	}
 
 	size_t ImageAsset::GetMemorySize() const
 	{
-		return static_cast<size_t>(Dimensions.X) * Dimensions.Y * GetBitsPerPixel() / 8;
+		return static_cast<size_t>(Dimensions.X) * Dimensions.Y * GetBytesPerPixel();
 	}
 
 	const uint8* ImageAsset::GetRawData() const
@@ -80,8 +78,13 @@ namespace Hermes
 		return Format;
 	}
 
-	uint8 ImageAsset::GetBitsPerPixel() const
+	size_t ImageAsset::GetBytesPerChannel() const
 	{
-		return BytesPerPixelForImageFormat(Format) * 8;
+		return BytesPerChannel;
+	}
+
+	size_t ImageAsset::GetBytesPerPixel() const
+	{
+		return BytesPerChannel * NumberOfChannelInImageFormat(Format);
 	}
 }

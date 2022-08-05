@@ -7,16 +7,12 @@
 enum class ImageFormat : uint8_t
 {
 	Undefined = 0x00,
-	R8 = 0x01,
-	R16 = 0x02,
-	R32 = 0x03,
-	R8G8 = 0x05,
-	R16G16 = 0x0A,
-	R8G8B8X8 = 0x54,
-	R8G8B8A8 = 0x55,
-	R16G16B16X16 = 0xA8,
-	R16G16B16A16 = 0xAA,
-	HDR96 = 0xFC
+	R = 0x01,
+	RA = 0x09,
+	RG = 0x03,
+	RGBX = 0x07,
+	RGBA = 0x0F,
+	HDR = 0x10
 };
 
 /*
@@ -26,7 +22,8 @@ enum class ImageFormat : uint8_t
 class Image
 {
 public:
-	Image(uint16_t InWidth, uint16_t InHeight, ImageFormat InFormat, std::optional<void*> InData = {});
+	Image(uint16_t InWidth, uint16_t InHeight, ImageFormat InFormat, size_t InBytesPerChannel,
+	      std::optional<void*> InData = {});
 
 	Image(const Image&) = delete;
 	Image& operator=(const Image&) = delete;
@@ -48,6 +45,8 @@ public:
 	uint16_t GetHeight() const;
 
 	ImageFormat GetFormat() const;
+	size_t GetChannelCount() const;
+	size_t GetBytesPerChannel() const;
 	size_t GetBytesPerPixel() const;
 
 	const void* GetData() const;
@@ -58,6 +57,7 @@ public:
 private:
 	uint16_t Width = 0;
 	uint16_t Height = 0;
+	size_t BytesPerChannel = 0;
 
 	ImageFormat Format = ImageFormat::Undefined;
 

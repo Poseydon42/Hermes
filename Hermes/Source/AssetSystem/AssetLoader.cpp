@@ -44,6 +44,7 @@ namespace Hermes
 			uint16 Width;
 			uint16 Height;
 			ImageFormat Format;
+			uint8 BytesPerChannel;
 		};
 		PACKED_STRUCT_END
 
@@ -54,7 +55,7 @@ namespace Hermes
 			return nullptr;
 		}
 
-		uint32 BytesPerPixel = BytesPerPixelForImageFormat(Header.Format);
+		uint32 BytesPerPixel = NumberOfChannelInImageFormat(Header.Format) * Header.BytesPerChannel;
 		size_t TotalBytes = static_cast<size_t>(Header.Width) * Header.Height * BytesPerPixel;
 		std::vector<uint8> ImageData(TotalBytes, 0x00);
 		if (!File.Read(ImageData.data(), TotalBytes))
@@ -63,7 +64,9 @@ namespace Hermes
 			return nullptr;
 		}
 
-		auto Result = std::shared_ptr<ImageAsset>(new ImageAsset(Name, Vec2ui{ Header.Width, Header.Height }, Header.Format, ImageData.data()));
+		auto Result = std::shared_ptr<ImageAsset>(new ImageAsset(Name, Vec2ui { Header.Width, Header.Height },
+		                                                         Header.Format, Header.BytesPerChannel,
+		                                                         ImageData.data()));
 
 		return Result;
 	}

@@ -15,43 +15,48 @@
 
 namespace Hermes
 {
-	static RenderInterface::DataFormat ChooseFormatFromImageType(ImageFormat Format, bool IsSRGB)
+	static RenderInterface::DataFormat ChooseFormatFromImageType(ImageFormat Format, size_t BytesPerChannel, bool IsSRGB)
 	{
-		switch (Format)
+		using FormatCombinationHashType = size_t;
+		constexpr auto ComputeHashForFormat = [](ImageFormat Format, uint8 BytesPerChannel,
+		                               bool IsSRGB) -> FormatCombinationHashType
 		{
-		case ImageFormat::R8:
-			if (IsSRGB)
-				return RenderInterface::DataFormat::R8SRGB;
-			return RenderInterface::DataFormat::R8UnsignedNormalized;
-		case ImageFormat::R16:
-			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::R16 as SRGB");
-			return RenderInterface::DataFormat::R16UnsignedNormalized;
-		case ImageFormat::R32:
-			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::R32 as SRGB");
-			return RenderInterface::DataFormat::R32UnsignedInteger;
-		case ImageFormat::R8G8:
-			if (IsSRGB)
-				return RenderInterface::DataFormat::R8G8SRGB;
-			return RenderInterface::DataFormat::R8G8UnsignedNormalized;
-		case ImageFormat::R16G16:
-			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::R16G16 as SRGB");
-			return RenderInterface::DataFormat::R16G16UnsignedNormalized;
-		case ImageFormat::R8G8B8A8:
-		case ImageFormat::R8G8B8X8:
-			if (IsSRGB)
-				return RenderInterface::DataFormat::R8G8B8A8SRGB;
-			return RenderInterface::DataFormat::R8G8B8A8UnsignedNormalized;
-		case ImageFormat::R16G16B16A16:
-		case ImageFormat::R16G16B16X16:
-			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::R16G16 as SRGB");
-			return RenderInterface::DataFormat::R16G16B16A16UnsignedNormalized;
-		case ImageFormat::HDR96:
-			HERMES_ASSERT_LOG(!IsSRGB, L"No data format could be found for ImageFormat::HDR96 as SRGB");
-			return RenderInterface::DataFormat::R32G32B32SignedFloat;
-		default:
-			HERMES_ASSERT(false);
-			return static_cast<RenderInterface::DataFormat>(0);
+			return (static_cast<uint8>(Format) << 16) | (BytesPerChannel << 8) | static_cast<uint8>(IsSRGB);
+		};
+
+		static const std::unordered_map<FormatCombinationHashType, RenderInterface::DataFormat> FormatCombinations =
+		{
+			{ ComputeHashForFormat(ImageFormat::R, 1, true), RenderInterface::DataFormat::R8SRGB },
+			{ ComputeHashForFormat(ImageFormat::R, 1, false), RenderInterface::DataFormat::R8UnsignedNormalized },
+			{ ComputeHashForFormat(ImageFormat::R, 2, false), RenderInterface::DataFormat::R16UnsignedNormalized },
+
+			{ ComputeHashForFormat(ImageFormat::RG, 1, true), RenderInterface::DataFormat::R8G8SRGB },
+			{ ComputeHashForFormat(ImageFormat::RG, 1, false), RenderInterface::DataFormat::R8G8UnsignedNormalized },
+			{ ComputeHashForFormat(ImageFormat::RG, 2, false), RenderInterface::DataFormat::R16G16UnsignedNormalized },
+
+			{ ComputeHashForFormat(ImageFormat::RA, 1, true), RenderInterface::DataFormat::R8G8SRGB },
+			{ ComputeHashForFormat(ImageFormat::RA, 1, false), RenderInterface::DataFormat::R8G8UnsignedInteger },
+			{ ComputeHashForFormat(ImageFormat::RA, 2, false), RenderInterface::DataFormat::R16G16UnsignedNormalized },
+
+			{ ComputeHashForFormat(ImageFormat::RGBA, 1, true), RenderInterface::DataFormat::R8G8B8A8SRGB },
+			{ ComputeHashForFormat(ImageFormat::RGBA, 1, false), RenderInterface::DataFormat::R8G8B8A8UnsignedNormalized },
+			{ ComputeHashForFormat(ImageFormat::RGBA, 2, false), RenderInterface::DataFormat::R16G16B16A16UnsignedNormalized },
+
+			{ ComputeHashForFormat(ImageFormat::RGBX, 1, true), RenderInterface::DataFormat::R8G8B8A8SRGB },
+			{ ComputeHashForFormat(ImageFormat::RGBX, 1, false), RenderInterface::DataFormat::R8G8B8A8UnsignedNormalized },
+			{ ComputeHashForFormat(ImageFormat::RGBX, 2, false), RenderInterface::DataFormat::R16G16B16A16UnsignedNormalized },
+
+			{ ComputeHashForFormat(ImageFormat::HDR, 4, false), RenderInterface::DataFormat::R32G32B32SignedFloat }
+		};
+
+		auto It = FormatCombinations.find(ComputeHashForFormat(Format, static_cast<uint8>(BytesPerChannel), IsSRGB));
+		if (It == FormatCombinations.end())
+		{
+			HERMES_LOG_ERROR(L"Cannot choose data format for the folowing image properties: image format %hhu; %llu bytes per channel; %s color space",
+			                 static_cast<uint8>(Format), BytesPerChannel, (IsSRGB ? L"sRGB" : L"linear"));
+			return RenderInterface::DataFormat::Undefined;
 		}
+		return It->second;
 	}
 
 	std::shared_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps)
@@ -113,7 +118,7 @@ namespace Hermes
 		                                                      RenderInterface::ImageUsageType::CopyDestination |
 		                                                      RenderInterface::ImageUsageType::CopySource,
 		                                                      ChooseFormatFromImageType(Source.GetImageFormat(),
-			                                                      UseAsSRGB),
+			                                                      Source.GetBytesPerChannel(), UseAsSRGB),
 		                                                      MipLevelCount + 1,
 		                                                      RenderInterface::ImageLayout::Undefined);
 
@@ -128,9 +133,8 @@ namespace Hermes
 			                                               ? RenderInterface::ImageLayout::TransferSourceOptimal
 			                                               : RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
 
-		GPUInteractionUtilities::UploadDataToGPUImage(
-		                                              Source.GetRawData(), { 0, 0 }, Dimensions,
-		                                              Source.GetBitsPerPixel() / 8, 0, *Image,
+		GPUInteractionUtilities::UploadDataToGPUImage(Source.GetRawData(), { 0, 0 }, Dimensions,
+		                                              Source.GetBytesPerPixel(), 0, *Image,
 		                                              RenderInterface::ImageLayout::Undefined, LayoutAfterLoad);
 
 		if (EnableMipMaps)

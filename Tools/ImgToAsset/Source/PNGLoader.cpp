@@ -280,6 +280,7 @@ void PNGLoader::ApplyFilterRecovery()
 		Stride = (Width * BitsPerChannel + 7) / 8;
 	else
 		Stride = static_cast<size_t>(Width) * GetBytesPerPixel();
+	ptrdiff_t NegativeStride = -static_cast<ptrdiff_t>(Stride);
 	size_t DestArraySize = Stride * Height;
 	FilteredData.resize(DestArraySize);
 	
@@ -305,17 +306,17 @@ void PNGLoader::ApplyFilterRecovery()
 			}
 			uint8_t ValueOfCorrespondingByteInPreviousScanline = 0;
 			if (Scanline > 0)
-				ValueOfCorrespondingByteInPreviousScanline = Dest[-Stride];
+				ValueOfCorrespondingByteInPreviousScanline = Dest[NegativeStride];
 			uint8_t ValueOfPreviousCorrespondingByteInPreviousScanline = 0;
 			if (BitsPerChannel >= 8)
 			{
 				if (Scanline > 0 && ByteIndex >= GetBytesPerPixel())
-					ValueOfPreviousCorrespondingByteInPreviousScanline = Dest[-Stride - GetBytesPerPixel()];
+					ValueOfPreviousCorrespondingByteInPreviousScanline = Dest[NegativeStride - GetBytesPerPixel()];
 			}
 			else
 			{
 				if (Scanline > 0 && ByteIndex > 0)
-					ValueOfPreviousCorrespondingByteInPreviousScanline = Dest[-Stride - 1];
+					ValueOfPreviousCorrespondingByteInPreviousScanline = Dest[NegativeStride - 1];
 			}
 					
 			switch (Method)

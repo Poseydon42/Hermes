@@ -33,9 +33,9 @@ public:
 
 	/*
 	 * Creates a copy of source image with the same dimensions and format and applies callback
-	 * to every pixel of source image to compute pixel of the result image
+	 * to compute pixels of the result image
 	 * Callback should have following signature:
-	 * void Callback(uint8_t* Dest, const uint8_t* Source, ImageFormat Format);
+	 * void Callback(uint8_t* Dest, const Image& Source);
 	 * Callback should write exactly bytes per pixel of the source image bytes on each call
 	 */
 	template<typename FuncType>
@@ -54,6 +54,28 @@ public:
 
 	size_t GetDataSize() const;
 
+	/*
+	 * Floating point manipulations
+	 * All the following functions convert the underlying image data to and from
+	 * floating point pixel representation. If any of the R, G, B and A channels are not
+	 * present in the image, the value of their floating point representation after read
+	 * operation is undefined and they are ignored during write operations
+	 */
+	union Pixel
+	{
+		struct
+		{
+			float R;
+			float G;
+			float B;
+			float A;
+		};
+		float E[4] = {};
+	};
+	
+	Pixel Sample(uint16_t X, uint16_t Y) const;
+	void Store(uint16_t X, uint16_t Y, const Pixel& Value);
+
 private:
 	uint16_t Width = 0;
 	uint16_t Height = 0;
@@ -62,22 +84,23 @@ private:
 	ImageFormat Format = ImageFormat::Undefined;
 
 	std::vector<uint8_t> Data;
+
+	uint8_t* GetPointerToFirstByteOfPixel(uint16_t X, uint16_t Y);
+	const uint8_t* GetPointerToFirstByteOfPixel(uint16_t X, uint16_t Y) const;
 };
 
 template<typename FuncType>
 Image Image::CopyAndApplyCallbackPerPixel(const Image& Source, FuncType Callback)
 {
-	Image Result(Source.GetWidth(), Source.GetHeight(), Source.GetFormat());
+	Image Result(Source.GetWidth(), Source.GetHeight(), Source.GetFormat(), Source.GetBytesPerChannel());
 
 	size_t BytesPerPixel = Source.GetBytesPerPixel();
 	size_t PixelCount = Source.GetWidth() * Source.GetHeight();
-
-	const auto* SourcePixel = static_cast<const uint8_t*>(Source.GetData());
+	
 	uint8_t* DestPixel = static_cast<uint8_t*>(Result.GetData());
 	for (size_t PixelIndex = 0; PixelIndex < PixelCount; PixelIndex++)
 	{
-		Callback(DestPixel, SourcePixel, Source.GetFormat());
-		SourcePixel += BytesPerPixel;
+		Callback(DestPixel, Source);
 		DestPixel += BytesPerPixel;
 	}
 

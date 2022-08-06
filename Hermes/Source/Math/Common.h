@@ -36,25 +36,25 @@ namespace Hermes
 		template<typename T>
 		float Sin(T Value)
 		{
-			return sin(Value);
+			return static_cast<T>(sin(Value));
 		}
 
 		template<typename T>
 		float Cos(T Value)
 		{
-			return cos(Value);
+			return static_cast<T>(cos(Value));
 		}
 
 		template<typename T>
 		float Tan(T Value)
 		{
-			return tan(Value);
+			return static_cast<T>(tan(Value));
 		}
 
 		template<typename T>
 		float Cotan(T Value)
 		{
-			return tan(HalfPi - Value);
+			return static_cast<T>(tan(HalfPi - Value));
 		}
 
 		template<typename T>

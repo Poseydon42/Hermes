@@ -55,7 +55,7 @@ namespace Hermes
 			return nullptr;
 		}
 
-		uint32 BytesPerPixel = NumberOfChannelInImageFormat(Header.Format) * Header.BytesPerChannel;
+		size_t BytesPerPixel = NumberOfChannelInImageFormat(Header.Format) * Header.BytesPerChannel;
 		size_t TotalBytes = static_cast<size_t>(Header.Width) * Header.Height * BytesPerPixel;
 		std::vector<uint8> ImageData(TotalBytes, 0x00);
 		if (!File.Read(ImageData.data(), TotalBytes))

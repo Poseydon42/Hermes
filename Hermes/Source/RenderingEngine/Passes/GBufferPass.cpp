@@ -102,7 +102,7 @@ namespace Hermes
 	void GBufferPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
 	                               const RenderInterface::RenderPass& PassInstance,
 	                               const std::vector<std::pair<
-		                               const RenderInterface::Image*, const RenderInterface::ImageView*>>& Drains,
+		                               const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
 	                               const Scene& Scene, bool ResourcesWereRecreated)
 	{
 		if (ResourcesWereRecreated || !IsPipelineCreated)

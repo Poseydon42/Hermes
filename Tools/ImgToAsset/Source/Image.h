@@ -61,16 +61,12 @@ public:
 	 * present in the image, the value of their floating point representation after read
 	 * operation is undefined and they are ignored during write operations
 	 */
-	union Pixel
+	struct Pixel
 	{
-		struct
-		{
-			float R;
-			float G;
-			float B;
-			float A;
-		};
-		float E[4] = {};
+		float R;
+		float G;
+		float B;
+		float A;
 	};
 	
 	Pixel Sample(uint16_t X, uint16_t Y) const;

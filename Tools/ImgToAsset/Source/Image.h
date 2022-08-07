@@ -23,7 +23,7 @@ class Image
 {
 public:
 	Image(uint16_t InWidth, uint16_t InHeight, ImageFormat InFormat, size_t InBytesPerChannel,
-	      std::optional<void*> InData = {});
+	      std::optional<const void*> InData = {});
 
 	Image(const Image&) = delete;
 	Image& operator=(const Image&) = delete;

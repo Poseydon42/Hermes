@@ -96,7 +96,7 @@ static void WriteBytesFromDecomposedInteger(uint8_t* Location, size_t NumberOfBy
 }
 
 Image::Image(uint16_t InWidth, uint16_t InHeight, ImageFormat InFormat, size_t InBytesPerChannel,
-             std::optional<void*> InData)
+             std::optional<const void*> InData)
 	: Width(InWidth)
 	, Height(InHeight)
 	, BytesPerChannel(InBytesPerChannel)

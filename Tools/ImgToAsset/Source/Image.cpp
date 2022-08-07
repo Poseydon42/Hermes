@@ -56,6 +56,12 @@ static bool HasPaddingAlphaChannel(ImageFormat Format)
 	return Format == ImageFormat::RGBX;
 }
 
+template<typename T>
+T Clamp(T Min, T Value, T Max)
+{
+	return std::max(Min, std::min(Value, Max));
+}
+
 /*
  * Reads N bytes from the specified location and returns integer of type specified by template value
  * that is creates using at most sizeof(ReturnType) first bytes, filling unread bytes with zero.
@@ -80,7 +86,7 @@ static ResultType ReadBytesAndComposeInteger(const uint8_t* Data, size_t NumberO
 /*
  * Writes N least significant bytes of the input integer to the location specified in little-endian order(LSB first)
  */
-void WriteBytesFromDecomposedInteger(uint8_t* Location, size_t NumberOfBytes, std::integral auto Value)
+static void WriteBytesFromDecomposedInteger(uint8_t* Location, size_t NumberOfBytes, std::integral auto Value)
 {
 	while (NumberOfBytes--)
 	{
@@ -149,6 +155,16 @@ size_t Image::GetDataSize() const
 	return Data.size();
 }
 
+Image::Pixel Image::Pixel::operator+(const Pixel& Right) const
+{
+	return { R + Right.R, G + Right.G, B + Right.B, A + Right.A };
+}
+
+Image::Pixel Image::Pixel::operator*(float Value) const
+{
+	return { R * Value, G * Value, B * Value, A * Value };
+}
+
 Image::Pixel Image::Sample(uint16_t X, uint16_t Y) const
 {
 	Pixel Result = {};
@@ -205,6 +221,38 @@ Image::Pixel Image::Sample(uint16_t X, uint16_t Y) const
 
 		PixelData += BytesPerChannel;
 	}
+
+	return Result;
+}
+
+Image::Pixel Image::Sample(float X, float Y) const
+{
+	float ScaledX = X * static_cast<float>(Width);
+	float ScaledY = Y * static_cast<float>(Height);
+	
+	auto X00 = static_cast<uint16_t>(Clamp(0.0f, roundf(ScaledX - 1.0f), static_cast<float>(Width - 1)));
+	auto Y00 = static_cast<uint16_t>(Clamp(0.0f, roundf(ScaledY - 1.0f), static_cast<float>(Height - 1)));
+	auto X01 = static_cast<uint16_t>(Clamp(0.0f, roundf(ScaledX - 1.0f), static_cast<float>(Width - 1)));
+	auto Y01 = static_cast<uint16_t>(Clamp(0.0f, roundf(ScaledY), static_cast<float>(Height - 1)));
+	auto X10 = static_cast<uint16_t>(Clamp(0.0f, roundf(ScaledX), static_cast<float>(Width - 1)));
+	auto Y10 = static_cast<uint16_t>(Clamp(0.0f, roundf(ScaledY - 1.0f), static_cast<float>(Height - 1)));
+	auto X11 = static_cast<uint16_t>(Clamp(0.0f, roundf(ScaledX), static_cast<float>(Width - 1)));
+	auto Y11 = static_cast<uint16_t>(Clamp(0.0f, roundf(ScaledY), static_cast<float>(Height - 1)));
+	
+	auto P00 = Sample(X00, Y00);
+	auto P01 = Sample(X01, Y01);
+	auto P10 = Sample(X10, Y10);
+	auto P11 = Sample(X11, Y11);
+
+	float XCoefficient = std::max(0.0f, ScaledX - 0.5f) - static_cast<float>(X00);
+	float YCoefficient = std::max(0.0f, ScaledY - 0.5f) - static_cast<float>(Y00);
+
+	// NOTE : linear interpolation on X and Y
+	Pixel Result = 
+		P00 * (1.0f - XCoefficient) * (1.0f - YCoefficient) +
+		P10 *         XCoefficient  * (1.0f - YCoefficient) +
+		P01 * (1.0f - XCoefficient) *         YCoefficient  +
+		P11 *         XCoefficient  *         YCoefficient;
 
 	return Result;
 }

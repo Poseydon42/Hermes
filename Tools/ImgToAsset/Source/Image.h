@@ -67,9 +67,21 @@ public:
 		float G;
 		float B;
 		float A;
+
+		Pixel operator+(const Pixel& Right) const;
+		Pixel operator*(float Value) const;
 	};
-	
+
+	/*
+	 * Returns value of texel with given coordinates
+	 */
 	Pixel Sample(uint16_t X, uint16_t Y) const;
+
+	/*
+	 * Returns result of linear filtering of four texels closest to the given normalized coordinates
+	 */
+	Pixel Sample(float X, float Y) const;
+
 	void Store(uint16_t X, uint16_t Y, const Pixel& Value);
 
 private:

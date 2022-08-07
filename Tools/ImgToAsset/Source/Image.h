@@ -31,16 +31,6 @@ public:
 	Image& operator=(Image&&) = default;
 	~Image() = default;
 
-	/*
-	 * Creates a copy of source image with the same dimensions and format and applies callback
-	 * to compute pixels of the result image
-	 * Callback should have following signature:
-	 * void Callback(uint8_t* Dest, const Image& Source);
-	 * Callback should write exactly bytes per pixel of the source image bytes on each call
-	 */
-	template<typename FuncType>
-	Image CopyAndApplyCallbackPerPixel(const Image& Source, FuncType Callback);
-
 	uint16_t GetWidth() const;
 	uint16_t GetHeight() const;
 
@@ -96,21 +86,3 @@ private:
 	uint8_t* GetPointerToFirstByteOfPixel(uint16_t X, uint16_t Y);
 	const uint8_t* GetPointerToFirstByteOfPixel(uint16_t X, uint16_t Y) const;
 };
-
-template<typename FuncType>
-Image Image::CopyAndApplyCallbackPerPixel(const Image& Source, FuncType Callback)
-{
-	Image Result(Source.GetWidth(), Source.GetHeight(), Source.GetFormat(), Source.GetBytesPerChannel());
-
-	size_t BytesPerPixel = Source.GetBytesPerPixel();
-	size_t PixelCount = Source.GetWidth() * Source.GetHeight();
-	
-	uint8_t* DestPixel = static_cast<uint8_t*>(Result.GetData());
-	for (size_t PixelIndex = 0; PixelIndex < PixelCount; PixelIndex++)
-	{
-		Callback(DestPixel, Source);
-		DestPixel += BytesPerPixel;
-	}
-
-	return Result;
-}

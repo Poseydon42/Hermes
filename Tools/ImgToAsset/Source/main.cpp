@@ -118,7 +118,7 @@ int WriteAssetFile(const Image& Image, const std::string& Filename)
 	return 0;
 }
 
-int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
+std::unique_ptr<Image> ReadTGA(const std::string& Path)
 {
 	auto FileContents = ReadAllFile(Path);
 
@@ -181,22 +181,23 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 	if (InputTGAHeader->Specification.XOrigin != 0 || InputTGAHeader->Specification.YOrigin != 0)
 	{
 		std::cerr << "X and Y origin must be zero" << std::endl;
-		return 3;
+		return nullptr;
 	}
 	if ((InputTGAHeader->ImageType & 0x03) == 1)
 	{
 		std::cerr << "TGA files with color map are currently not supported" << std::endl;
-		return 3;
+		return nullptr;
 	}
 	if (InputTGAHeader->ImageType & 0x08)
 	{
 		std::cerr << "Compressed TGA files are currently not supported" << std::endl;
-		return 3;
+		return nullptr;
 	}
 
 	ImageFormat Format = ChooseImageFormat(IsMonochrome, IsAlphaChannelAvailable);
 	// NOTE : TGAs are always 1 byte per channel
-	Image Image(InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height, Format, 1);
+	auto Result = std::make_unique<Image>(InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height,
+	                                      Format, 1);
 
 	uint8_t* SourceImagePixel = FileContents.data() + sizeof(TGAHeader) + InputTGAHeader->IDLength;
 	size_t SourceBytesPerPixel = InputTGAHeader->Specification.PixelDepth / 8;
@@ -220,8 +221,8 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 			else
 				ActualY = InputTGAHeader->Specification.Height - 1 - Y;
 
-			uint8_t* IntermediateImagePixel = static_cast<uint8_t*>(Image.GetData()) + (ActualY * InputTGAHeader->
-				Specification.Width + ActualX) * Image.GetBytesPerPixel();
+			uint8_t* IntermediateImagePixel = static_cast<uint8_t*>(Result->GetData()) + (ActualY * InputTGAHeader->
+				Specification.Width + ActualX) * Result->GetBytesPerPixel();
 
 			if (IsMonochrome)
 			{
@@ -247,16 +248,16 @@ int ConvertFromTGA(const std::string& Path, const std::string& OutputFilename)
 		}
 	}
 
-	return WriteAssetFile(Image, OutputFilename);
+	return Result;
 }
 
-int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
+std::unique_ptr<Image> ReadPNG(const std::string& Path)
 {
 	PNGLoader PNGImage(Path);
 	if (!PNGImage.IsValid())
 	{
 		std::cerr << "Image decompression and/or decoding failed" << std::endl;
-		return 3;
+		return nullptr;
 	}
 
 	auto Width = PNGImage.GetWidth();
@@ -271,9 +272,9 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 	// NOTE : we need to add alpha channel if necessary
 	ImageFormat DestFormat = ChooseImageFormat(PNGImage.IsMonochrome(), PNGImage.HasAlphaChannel());
 	size_t BytesPerChannel = (PNGImage.GetBitsPerChannel() == 16 ? 2 : 1);
-	Image ResultImage(PNGImage.GetWidth(), PNGImage.GetHeight(), DestFormat, BytesPerChannel);
+	auto Result = std::make_unique<Image>(PNGImage.GetWidth(), PNGImage.GetHeight(), DestFormat, BytesPerChannel);
 	auto* Source = PNGImage.GetPixels();
-	auto* Dest = static_cast<uint8_t*>(ResultImage.GetData());
+	auto* Dest = static_cast<uint8_t*>(Result->GetData());
 	for (auto Scanline = 0; Scanline < Height; Scanline++)
 	{
 		for (auto X = 0; X < Width; X++)
@@ -332,10 +333,10 @@ int ConvertFromPNG(const std::string& Path, const std::string& OutputFilename)
 			}
 		}
 	}
-	return WriteAssetFile(ResultImage, OutputFilename);
+	return Result;
 }
 
-int ConvertFromHDR(const std::string& Path, const std::string& OutputFilename)
+std::unique_ptr<Image> ReadHDR(const std::string& Path)
 {
 	auto FileContents = ReadAllFile(Path);
 
@@ -343,7 +344,7 @@ int ConvertFromHDR(const std::string& Path, const std::string& OutputFilename)
 		static_cast<int>(FileContents.size())))
 	{
 		std::cerr << "File " << Path << " is not a valid HDR Radiance file" << std::endl;
-		return 3;
+		return nullptr;
 	}
 
 	int Width, Height, NumChannels;
@@ -354,23 +355,19 @@ int ConvertFromHDR(const std::string& Path, const std::string& OutputFilename)
 	if (ImageData == nullptr)
 	{
 		std::cerr << "Failed to load image from file " << Path << std::endl;
-		return 3;
+		return nullptr;
 	}
-
-	int Result = 0;
+	
 	if (NumChannels != 3)
 	{
 		std::cerr << "File " << Path << " has number of channels " << NumChannels << " other than 3. Loading of this type of file is not supported." << std::endl;
-		Result = 3;
-	}
-	else
-	{
-		// NOTE : unfortunately, STB does not allow to load image into a preallocated buffer,
-		//        so we'll have to do one more copy here
-		Image Image(static_cast<uint16_t>(Width), static_cast<uint16_t>(Height), ImageFormat::HDR, 4, ImageData);
-		Result = WriteAssetFile(Image, OutputFilename);
+		return nullptr;
 	}
 
+	// NOTE : unfortunately, STB does not allow to load image into a preallocated buffer,
+	//        so we'll have to do one more copy here
+	auto Result = std::make_unique<Image>(static_cast<uint16_t>(Width), static_cast<uint16_t>(Height), ImageFormat::HDR,
+	                                      4, ImageData);
 	stbi_image_free(ImageData);
 	return Result;
 }
@@ -430,17 +427,28 @@ int main(int argc, char** argv)
 
 	std::string OutputFileName = InputFileNameWithoutExtension + ".hac";
 
+	std::unique_ptr<Image> LoadedImage;
 	switch (FileType)
 	{
 	case FileType::TGA:
-		return ConvertFromTGA(InputFilename, OutputFileName);
+		LoadedImage = ReadTGA(InputFilename);
+		break;
 	case FileType::PNG:
-		return ConvertFromPNG(InputFilename, OutputFileName);
+		LoadedImage = ReadPNG(InputFilename);
+		break;
 	case FileType::HDR:
-		return ConvertFromHDR(InputFilename, OutputFileName);
+		LoadedImage = ReadHDR(InputFilename);
+		break;
 	case FileType::Undefined:
 	default:
 		std::cerr << "Unknown file format" << std::endl;
 		return 2;
 	}
+
+	if (!LoadedImage)
+	{
+		std::cerr << "Cannot read input file " << InputFilename << std::endl;
+		return 3;
+	}
+	WriteAssetFile(*LoadedImage, OutputFileName);
 }

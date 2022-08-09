@@ -22,7 +22,6 @@ set(SOURCES
     Source/Core/Compiler/CompilerMSVC.h
     Source/Core/Core.h
     Source/Core/Delegate/Delegate.h
-    Source/Core/Launch/LaunchWindows.cpp
     Source/Core/Log/DebugLogDevice.h
     Source/Core/Log/FileLogDevice.cpp
     Source/Core/Log/FileLogDevice.h
@@ -34,6 +33,7 @@ set(SOURCES
     Source/Core/Misc/NonCopyableMovable.h
     Source/Core/Misc/StringUtils.cpp
     Source/Core/Misc/StringUtils.h
+    Source/Launch/LaunchWindows.cpp
     Source/Math/Common.h
     Source/Math/Math.h
     Source/Math/Matrix.h

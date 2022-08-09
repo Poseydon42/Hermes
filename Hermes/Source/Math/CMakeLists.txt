@@ -13,7 +13,7 @@ set(SOURCES
 
 include(CMakeCommon)
 
-add_library(${HERMES_SUBLIB_NAME} INTERFACE)
+add_library(${HERMES_SUBLIB_NAME} INTERFACE ${SOURCES})
 
 target_include_directories(${HERMES_SUBLIB_NAME} INTERFACE ${HERMES_SOURCE_DIR})
 

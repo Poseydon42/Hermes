@@ -11,6 +11,9 @@
 #elif defined(HERMES_BUILD_APPLICATION)
 #define HERMES_API API_IMPORT
 #define APP_API API_EXPORT
+#elif defined(HERMES_BUILD_TOOLS)
+#define HERMES_API
+#define APP_API
 #endif
 
 namespace Hermes

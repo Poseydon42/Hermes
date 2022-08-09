@@ -1,7 +1,7 @@
 #include "GameLoop.h"
 
-#include "Core/Application/EventQueue.h"
-#include "Core/Application/InputEngine.h"
+#include "ApplicationCore/EventQueue.h"
+#include "ApplicationCore/InputEngine.h"
 #include "Core/Log/Logger.h"
 #include "Core/Log/DebugLogDevice.h"
 #include "Core/Log/FileLogDevice.h"
@@ -11,7 +11,7 @@
 
 namespace Hermes
 {
-	GameLoop* GGameLoop = 0;
+	GameLoop* GGameLoop = nullptr;
 	
 	GameLoop::GameLoop(IApplication* App)
 		: RequestedExit(false)

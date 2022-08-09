@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "Core/Core.h"
-#include "Core/Application/Application.h"
+#include "ApplicationCore/Application.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
 #include "RenderingEngine/Renderer.h"

@@ -1,6 +1,6 @@
 ﻿#include "VulkanDevice.h"
 
-#include "Core/Application/GameLoop.h"
+#include "ApplicationCore/GameLoop.h"
 #include "RenderInterface/Vulkan/VulkanInstance.h"
 #include "RenderInterface/Vulkan/VulkanPipeline.h"
 #include "RenderInterface/Vulkan/VulkanRenderPass.h"

@@ -1,12 +1,12 @@
 #ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
-#include "Core/Application/Application.h"
-#include "Core/Application/GameLoop.h"
+#include "ApplicationCore/Application.h"
+#include "ApplicationCore/GameLoop.h"
 #include "AssetSystem/AssetLoader.h"
 #include "AssetSystem/MeshAsset.h"
-#include "Core/Application/InputEngine.h"
-#include "Core/Application/Event.h"
+#include "ApplicationCore/InputEngine.h"
+#include "ApplicationCore/Event.h"
 #include "Math/Vector.h"
 #include "RenderingEngine/Scene/FPSCamera.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"

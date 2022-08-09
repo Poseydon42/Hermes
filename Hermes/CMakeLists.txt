@@ -3,6 +3,14 @@ cmake_minimum_required(VERSION 3.22)
 project(Hermes)
 
 set(SOURCES
+    Source/ApplicationCore/Application.h
+    Source/ApplicationCore/Event.h
+    Source/ApplicationCore/EventQueue.cpp
+    Source/ApplicationCore/EventQueue.h
+    Source/ApplicationCore/GameLoop.cpp
+    Source/ApplicationCore/GameLoop.h
+    Source/ApplicationCore/InputEngine.cpp
+    Source/ApplicationCore/InputEngine.h
     Source/AssetSystem/Asset.cpp
     Source/AssetSystem/Asset.h
     Source/AssetSystem/AssetLoader.cpp
@@ -11,14 +19,6 @@ set(SOURCES
     Source/AssetSystem/ImageAsset.h
     Source/AssetSystem/MeshAsset.cpp
     Source/AssetSystem/MeshAsset.h
-    Source/Core/Application/Application.h
-    Source/Core/Application/Event.h
-    Source/Core/Application/EventQueue.cpp
-    Source/Core/Application/EventQueue.h
-    Source/Core/Application/GameLoop.cpp
-    Source/Core/Application/GameLoop.h
-    Source/Core/Application/InputEngine.cpp
-    Source/Core/Application/InputEngine.h
     Source/Core/Compiler/CompilerMSVC.h
     Source/Core/Core.h
     Source/Core/Delegate/Delegate.h

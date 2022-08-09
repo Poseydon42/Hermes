@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <queue>
 
-#include "Core/Application/Event.h"
+#include "ApplicationCore/Event.h"
 #include "Core/Delegate/Delegate.h"
 
 namespace Hermes

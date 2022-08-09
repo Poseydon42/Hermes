@@ -6,7 +6,7 @@
 
 #include "Core/Core.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
-#include "Core/Application/EventQueue.h"
+#include "ApplicationCore/EventQueue.h"
 
 namespace Hermes
 {

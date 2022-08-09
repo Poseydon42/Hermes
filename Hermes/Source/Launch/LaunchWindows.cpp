@@ -4,8 +4,8 @@
 #include <string>
 
 #include "Core/Core.h"
-#include "Core/Application/Application.h"
-#include "Core/Application/GameLoop.h"
+#include "ApplicationCore/Application.h"
+#include "ApplicationCore/GameLoop.h"
 
 int WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 {

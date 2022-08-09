@@ -1,7 +1,7 @@
 ﻿#include "WindowsWindow.h"
 
-#include "Core/Application/GameLoop.h"
-#include "Core/Application/InputEngine.h"
+#include "ApplicationCore/GameLoop.h"
+#include "ApplicationCore/InputEngine.h"
 
 #ifdef HERMES_PLATFORM_WINDOWS
 

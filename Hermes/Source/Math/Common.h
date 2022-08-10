@@ -58,6 +58,30 @@ namespace Hermes
 		}
 
 		template<typename T>
+		float Asin(T Value)
+		{
+			return asinf(static_cast<float>(Value));
+		}
+
+		template<typename T>
+		float Acos(T Value)
+		{
+			return acosf(static_cast<float>(Value));
+		}
+
+		template<typename T>
+		float Atan(T Fraction)
+		{
+			return atanf(static_cast<float>(Fraction));
+		}
+
+		template<typename T>
+		float Atan(T Numerator, T Denominator)
+		{
+			return atan2f(static_cast<float>(Numerator), static_cast<float>(Denominator));
+		}
+
+		template<typename T>
 		T Radians(T Degrees)
 		{
 			return static_cast<T>(Pi) / static_cast<T>(180) * Degrees;

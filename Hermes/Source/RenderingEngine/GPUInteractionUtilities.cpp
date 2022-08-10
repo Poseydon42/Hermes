@@ -40,7 +40,7 @@ namespace Hermes
 			RenderInterface::BufferCopyRegion Region;
 			Region.NumBytes = NumBytesToCopy;
 			Region.SourceOffset = 0;
-			Region.DestinationOffset = DataOffset;
+			Region.DestinationOffset = TargetOffset + DataOffset;
 			TransferCommandBuffer->CopyBuffer(CurrentStagingBuffer, Target, { Region });
 			TransferCommandBuffer->EndRecording();
 

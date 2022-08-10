@@ -3,6 +3,7 @@
 #include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "Convolution.h"
 #include "Image.h"
 #include "PNGLoader.h"
 #include "stb_image.h"
@@ -379,6 +380,7 @@ std::unique_ptr<Image> ReadHDR(const std::string& Path)
  *  --tga: override file extension and parse it as TGA image
  *	--png: override file extension and parse it as PNG image
  *	--hdr: override file extension and parse it as HDR image
+ *	--convolution=<type>: generate a <type> cubemap convolution; supported types are: diffuse(used for diffuse IBL)
  * Currently supported image formats:
  *  - TGA
  *	- PNG
@@ -400,6 +402,12 @@ int main(int argc, char** argv)
 		HDR
 	} FileType = FileType::Undefined;
 
+	enum class ConvolutionType
+	{
+		Undefined,
+		Diffuse
+	} ConvolutionType = ConvolutionType::Undefined;
+
 	std::string InputFilename = std::string(argv[1]);
 	std::string InputFileNameWithoutExtension = InputFilename.substr(0, InputFilename.find_last_of('.'));
 	for (int ArgumentIndex = 2; ArgumentIndex < argc; ArgumentIndex++)
@@ -410,6 +418,13 @@ int main(int argc, char** argv)
 			FileType = FileType::PNG;
 		if (strcmp(argv[ArgumentIndex], "--hdr") == 0)
 			FileType = FileType::HDR;
+		// NOTE : -1 so that we don't compare null character with whatever there is in the other string
+		if (strncmp(argv[ArgumentIndex], "--convolution=", sizeof("--convolution=") - 1) == 0)
+		{
+			auto ConvolutionTypeString = std::string(argv[ArgumentIndex] + sizeof("--convolution"));
+			if (ConvolutionTypeString == "diffuse")
+				ConvolutionType = ConvolutionType::Diffuse;
+		}
 	}
 	if (InputFilename.substr(InputFilename.find_last_of('.'), InputFilename.length() - InputFilename.find_last_of('.') + 1) == ".tga")
 	{
@@ -450,5 +465,17 @@ int main(int argc, char** argv)
 		std::cerr << "Cannot read input file " << InputFilename << std::endl;
 		return 3;
 	}
+
+	switch (ConvolutionType)
+	{
+	case ConvolutionType::Diffuse:
+		LoadedImage = GenerateDiffuseConvolution(*LoadedImage);
+		break;
+	case ConvolutionType::Undefined:
+	default:
+		// Do nothing, but IDE still wanted me to write this explicitly
+		break;
+	}
+
 	WriteAssetFile(*LoadedImage, OutputFileName);
 }

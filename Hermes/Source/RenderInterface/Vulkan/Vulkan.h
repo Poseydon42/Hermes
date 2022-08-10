@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Logging/Logger.h"
 #include "Platform/GenericPlatform/PlatformMisc.h"
 
 #ifdef HERMES_PLATFORM_WINDOWS

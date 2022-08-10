@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
-#include "Core/Log/Logger.h"
+#include "Logging/Logger.h"
 #include "Core/Misc/NonCopyableMovable.h"
 
 namespace Hermes

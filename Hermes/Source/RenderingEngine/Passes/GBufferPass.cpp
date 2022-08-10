@@ -1,5 +1,6 @@
 ﻿#include "GBufferPass.h"
 
+#include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"

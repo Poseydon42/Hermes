@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
-#include "Core/Log/ILogDevice.h"
+#include "Logging/ILogDevice.h"
 #include "Platform/GenericPlatform/PlatformDebug.h"
 
 namespace Hermes

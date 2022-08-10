@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "Core/Core.h"
 #include "Math/Vector2.h"
 #include "Core/Misc/NonCopyableMovable.h"

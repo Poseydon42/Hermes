@@ -1,5 +1,6 @@
 ﻿#include "Material.h"
 
+#include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderInterface/GenericRenderInterface/Sampler.h"

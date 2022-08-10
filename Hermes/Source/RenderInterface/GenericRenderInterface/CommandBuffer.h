@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <memory>
+#include <vector>
 
 #include "Core/Core.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"

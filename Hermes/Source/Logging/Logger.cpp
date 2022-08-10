@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <cwchar>
 
-#include "Core/Log/ILogDevice.h"
+#include "Logging/ILogDevice.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
 
 namespace Hermes

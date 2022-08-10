@@ -8,6 +8,7 @@
 #include "Math/Common.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderInterface/GenericRenderInterface/Image.h"
+#include "Logging/Logger.h"
 
 namespace Hermes
 {

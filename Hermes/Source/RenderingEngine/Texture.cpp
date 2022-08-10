@@ -1,6 +1,7 @@
 ﻿#include "Texture.h"
 
-#include "DescriptorAllocator.h"
+#include "Logging/Logger.h"
+#include "RenderingEngine/DescriptorAllocator.h"
 #include "AssetSystem/ImageAsset.h"
 #include "RenderingEngine/GPUInteractionUtilities.h"
 #include "RenderingEngine/Renderer.h"

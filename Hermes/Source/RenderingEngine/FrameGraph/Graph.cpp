@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "Logging/Logger.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Scene/Scene.h"

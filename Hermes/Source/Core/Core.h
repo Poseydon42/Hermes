@@ -37,8 +37,6 @@ namespace Hermes
 	typedef size_t uint64;
 }
 
-#include "Core/Log/Logger.h"
-
 #ifndef HERMES_RELEASE
 #define HERMES_ASSERT(Expression) {if(!(Expression)) DEBUG_BREAK(); }
 #else

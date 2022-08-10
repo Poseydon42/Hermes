@@ -2,6 +2,8 @@
 
 #include "WindowsFile.h"
 
+#include "Logging/Logger.h"
+
 namespace Hermes
 {
 	WindowsFile::~WindowsFile()

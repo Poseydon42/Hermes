@@ -1,16 +1,14 @@
 cmake_minimum_required(VERSION 3.24)
 
-set(HERMES_SUBLIB_NAME Hermes_Core)
+set(HERMES_SUBLIB_NAME Hermes_Logging)
 
 set(SOURCES
-    Compiler/CompilerMSVC.h
-    Core.h
-    Delegate/Delegate.h
-    Misc/DefaultConstructors.h
-    Misc/EnumClassOperators.h
-    Misc/NonCopyableMovable.h
-    Misc/StringUtils.cpp
-    Misc/StringUtils.h
+    DebugLogDevice.h
+    FileLogDevice.cpp
+    FileLogDevice.h
+    ILogDevice.h
+    Logger.cpp
+    Logger.h
 )
 
 include(CMakeCommon)

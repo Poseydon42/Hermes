@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "Core/Core.h"
 
 namespace Hermes

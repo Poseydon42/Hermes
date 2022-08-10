@@ -1,5 +1,7 @@
 ﻿#include "MeshAsset.h"
 
+#include "Logging/Logger.h"
+
 namespace Hermes
 {
 	DEFINE_ASSET_TYPE(Mesh)

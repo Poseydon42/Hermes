@@ -2,6 +2,7 @@
 
 #include "AssetSystem/AssetLoader.h"
 #include "AssetSystem/ImageAsset.h"
+#include "Logging/Logger.h"
 
 namespace Hermes
 {

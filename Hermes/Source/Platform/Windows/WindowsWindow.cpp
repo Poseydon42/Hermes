@@ -2,6 +2,7 @@
 
 #include "ApplicationCore/GameLoop.h"
 #include "ApplicationCore/InputEngine.h"
+#include "Logging/Logger.h"
 
 #ifdef HERMES_PLATFORM_WINDOWS
 

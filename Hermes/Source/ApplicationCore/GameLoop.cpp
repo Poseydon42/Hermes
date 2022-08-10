@@ -2,9 +2,9 @@
 
 #include "ApplicationCore/EventQueue.h"
 #include "ApplicationCore/InputEngine.h"
-#include "Core/Log/Logger.h"
-#include "Core/Log/DebugLogDevice.h"
-#include "Core/Log/FileLogDevice.h"
+#include "Logging/Logger.h"
+#include "Logging/DebugLogDevice.h"
+#include "Logging/FileLogDevice.h"
 #include "Core/Misc/StringUtils.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"

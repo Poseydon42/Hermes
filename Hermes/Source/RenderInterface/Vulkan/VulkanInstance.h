@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "Core/Core.h"
 #include "RenderInterface/GenericRenderInterface/Instance.h"
 #include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"

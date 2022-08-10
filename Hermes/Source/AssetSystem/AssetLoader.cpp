@@ -3,6 +3,7 @@
 #include "Platform/GenericPlatform/PlatformFile.h"
 #include "AssetSystem/ImageAsset.h"
 #include "AssetSystem/MeshAsset.h"
+#include "Logging/Logger.h"
 
 namespace Hermes
 {

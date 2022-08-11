@@ -9,6 +9,8 @@ set(SOURCES
     Misc/DefaultConstructors.h
     Misc/EnumClassOperators.h
     Misc/NonCopyableMovable.h
+    Misc/ArgsParser.cpp
+    Misc/ArgsParser.h
     Misc/StringUtils.cpp
     Misc/StringUtils.h
 )

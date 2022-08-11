@@ -370,16 +370,17 @@ namespace Hermes
 		return DefWindowProcW(Window, Message, WParam, LParam);
 	}
 
-	LRESULT WindowsWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	LRESULT WindowsWindow::WindowProc(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 	{
-		if (uMsg == WM_CREATE)
+		if (Message == WM_CREATE)
 		{
-			SetWindowLongPtrW(hwnd, 0, (LONG_PTR)((CREATESTRUCTW*)(lParam))->lpCreateParams);
+			SetWindowLongPtrW(Window, 0,
+			                  reinterpret_cast<LONG_PTR>(reinterpret_cast<CREATESTRUCTW*>(LParam)->lpCreateParams));
 		}
-		auto Instance = (WindowsWindow*)GetWindowLongPtrW(hwnd, 0);
+		auto Instance = reinterpret_cast<WindowsWindow*>(GetWindowLongPtrW(Window, 0));
 		if (!Instance) // This means we still haven't got WM_CREATE
-			return DefWindowProcW(hwnd, uMsg, wParam, lParam);
-		return Instance->MessageHandler(hwnd, uMsg, wParam, lParam);
+			return DefWindowProcW(Window, Message, WParam, LParam);
+		return Instance->MessageHandler(Window, Message, WParam, LParam);
 	}
 
 	std::shared_ptr<IPlatformWindow> IPlatformWindow::CreatePlatformWindow(const String& Name, Vec2ui Size)

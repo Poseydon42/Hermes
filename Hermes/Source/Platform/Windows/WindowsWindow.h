@@ -2,7 +2,7 @@
 
 #ifdef HERMES_PLATFORM_WINDOWS
 
-#include <windows.h>
+#include <Windows.h>
 
 #include "Core/Core.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
@@ -15,36 +15,36 @@ namespace Hermes
 		MAKE_NON_COPYABLE(WindowsWindow)
 	public:
 		WindowsWindow(const String& Name, Vec2ui Size);
-		
-		~WindowsWindow() override;
+
+		virtual ~WindowsWindow() override;
 		
 		WindowsWindow(WindowsWindow&& Other);
 		
 		WindowsWindow& operator=(WindowsWindow&& Other);
-		
-		void UpdateName(const String& NewName) override;
-		
-		const String& GetName() const override;
-		
-		bool ToggleFullscreen(bool Enabled) override;
-		
-		bool UpdateVisibility(bool Visible) override;
-		
-		bool Resize(Vec2ui NewSize) override;
-		
-		Vec2ui GetSize() const override;
-		
-		bool IsValid() const override;
 
-		std::weak_ptr<EventQueue> WindowQueue() const override;
+		virtual void UpdateName(const String& NewName) override;
 
-		void Run() const override;
-		
-		void* GetNativeHandle() const override;
-		
-		void SetInputEngine(std::weak_ptr<class InputEngine> InInputEngine) override;
+		virtual const String& GetName() const override;
 
-		void SetCursorVisibility(bool IsVisible) override;
+		virtual bool ToggleFullscreen(bool Enabled) override;
+
+		virtual bool UpdateVisibility(bool Visible) override;
+
+		virtual bool Resize(Vec2ui NewSize) override;
+
+		virtual Vec2ui GetSize() const override;
+
+		virtual bool IsValid() const override;
+
+		virtual std::weak_ptr<EventQueue> WindowQueue() const override;
+
+		virtual void Run() const override;
+
+		virtual void* GetNativeHandle() const override;
+
+		virtual void SetInputEngine(std::weak_ptr<class InputEngine> InInputEngine) override;
+
+		virtual void SetCursorVisibility(bool IsVisible) override;
 	
 	private:
 		HWND WindowHandle;
@@ -71,7 +71,7 @@ namespace Hermes
 
 		LRESULT MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam);
 		
-		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam);
 	};
 }
 

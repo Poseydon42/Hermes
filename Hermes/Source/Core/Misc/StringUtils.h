@@ -12,6 +12,7 @@ namespace Hermes
 	{
 	public:
 		static String ANSIToString(const ANSIString& In);
+		static String ANSIToString(const char* In);
 
 		static ANSIString StringToANSI(const String& In);
 	};

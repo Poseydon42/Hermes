@@ -6,6 +6,9 @@ set(SOURCES
     Compiler/CompilerMSVC.h
     Core.h
     Delegate/Delegate.h
+    Event/Event.h
+    Event/EventQueue.cpp
+    Event/EventQueue.h
     Misc/DefaultConstructors.h
     Misc/EnumClassOperators.h
     Misc/NonCopyableMovable.h

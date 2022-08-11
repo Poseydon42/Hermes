@@ -5,7 +5,7 @@
 #include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Math/Vector2.h"
-#include "ApplicationCore/Event.h"
+#include "Core/Event/Event.h"
 
 namespace Hermes
 {

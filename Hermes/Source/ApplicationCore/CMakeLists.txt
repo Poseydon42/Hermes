@@ -4,9 +4,6 @@ set(HERMES_SUBLIB_NAME Hermes_ApplicationCore)
 
 set(SOURCES
     Application.h
-    Event.h
-    EventQueue.cpp
-    EventQueue.h
     GameLoop.cpp
     GameLoop.h
     InputEngine.cpp

@@ -3,8 +3,8 @@
 #include <optional>
 
 #include "Core/Core.h"
-#include "ApplicationCore/Event.h"
-#include "ApplicationCore/EventQueue.h"
+#include "Core/Event/Event.h"
+#include "Core/Event/EventQueue.h"
 #include "Math/Vector2.h"
 
 namespace Hermes

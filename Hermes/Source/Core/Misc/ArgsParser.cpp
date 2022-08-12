@@ -14,9 +14,9 @@ namespace Hermes
 		OptionalArguments.emplace_back(Name, ShortName, ValueType::String, Value);
 	}
 
-	void ArgsParser::AddPositional(String* Value)
+	void ArgsParser::AddPositional(bool IsRequired, String* Value)
 	{
-		PositionalArguments.push_back(Value);
+		PositionalArguments.emplace_back(IsRequired, Value);
 	}
 
 	bool ArgsParser::Parse(int ArgCount, const char** ArgValues) const
@@ -118,17 +118,18 @@ namespace Hermes
 					continue; // But there still might be some optional arguments that we should parse
 				}
 
-				*PositionalArguments[NextPositionalArgumentIndex++] = StringUtils::ANSIToString(Argument);
+				*PositionalArguments[NextPositionalArgumentIndex++].second = StringUtils::ANSIToString(Argument);
 			}
 		}
-
-		// If user did not provide enough positional arguments then set return value to false
-		if (NextPositionalArgumentIndex < PositionalArguments.size())
-			ReturnValue = false;
+		
 		// And clear untouched positional argument value pointers
 		for (; NextPositionalArgumentIndex < PositionalArguments.size(); NextPositionalArgumentIndex++)
 		{
-			*PositionalArguments[NextPositionalArgumentIndex] = String {};
+			*PositionalArguments[NextPositionalArgumentIndex].second = String {};
+			if (PositionalArguments[NextPositionalArgumentIndex].first) // And if this argument is required then return failure
+			{
+				ReturnValue = false;
+			}
 		}
 
 		return ReturnValue;

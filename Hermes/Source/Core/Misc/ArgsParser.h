@@ -26,8 +26,10 @@ namespace Hermes
 		 * Adds positional argument. Values to the positional arguments are assigned in the order of
 		 * AddPositionalArgument() calls. If there is not enough arguments passed then the untouched
 		 * pointers will be assigned to their default value(empty string)
+		 * IsRequired sets whether Parse() will result in failure or success if user did not provide
+		 * argument
 		 */
-		void AddPositional(String* Value);
+		void AddPositional(bool IsRequired, String* Value);
 
 		/*
 		 * Parses passed arguments and assigns values to previously passed pointers correspondingly.
@@ -51,6 +53,6 @@ namespace Hermes
 		};
 
 		std::vector<OptionalArgument> OptionalArguments;
-		std::vector<String*> PositionalArguments;
+		std::vector<std::pair<bool, String*>> PositionalArguments; // pair<IsRequired, Ptr>
 	};
 }

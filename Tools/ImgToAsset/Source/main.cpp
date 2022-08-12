@@ -2,11 +2,14 @@
 #include <fstream>
 #include <vector>
 
+#include "Core/Misc/ArgsParser.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "Convolution.h"
 #include "Image.h"
 #include "PNGLoader.h"
 #include "stb_image.h"
+#include "Core/Misc/StringUtils.h"
 
 /*
  * TODO : setup our build so that we can use our own platform layer
@@ -373,24 +376,48 @@ std::unique_ptr<Image> ReadHDR(const std::string& Path)
 	return Result;
 }
 
-/*
- * Usage:
- * imgtoasset <input file> [options]
- * Possible options:
- *  --tga: override file extension and parse it as TGA image
- *	--png: override file extension and parse it as PNG image
- *	--hdr: override file extension and parse it as HDR image
- *	--convolution=<type>: generate a <type> cubemap convolution; supported types are: diffuse(used for diffuse IBL)
- * Currently supported image formats:
- *  - TGA
- *	- PNG
- *	- HDR(Radiance format)
- */
-int main(int argc, char** argv)
+void DisplayHelpMessage()
 {
-	if (argc < 2)
+	constexpr char UsageMessage[] = 
+		"Usage:\n"
+		"    imgtoasset <input file> [options]\n"
+		"Possible options:\n"
+		"    -h, --help: display this help message\n"
+		"    --convolution=<type>: generate a <type> cubemap convolution; supported types are: diffuse(used for diffuse IBL)\n"
+		"Currently supported image formats:\n"
+		"    - TGA\n"
+		"    - PNG\n"
+		"    - HDR(Radiance format)";
+
+	std::cout << UsageMessage << std::endl;
+}
+
+int main(int ArgCount, const char** ArgValues)
+{
+	if (ArgCount < 2)
 	{
-		std::cerr << "You need to specify input file" << std::endl;
+		std::cerr << "Missing input file; use --help option for more information" << std::endl;
+		return 1;
+	}
+
+	bool DisplayHelp = false;
+	Hermes::String ConvolutionTypeString;
+	Hermes::String InputFileNameArg;
+
+	Hermes::ArgsParser Args;
+	Args.AddOption("help", 'h', &DisplayHelp);
+	Args.AddOption("convolution", {}, &ConvolutionTypeString);
+	Args.AddPositional(true, &InputFileNameArg);
+
+	bool ParsingSuccess = Args.Parse(ArgCount - 1, ArgValues + 1); // Skipping first argument as it's the name of the application
+	if (DisplayHelp)
+	{
+		DisplayHelpMessage();
+		return 0;
+	}
+	if (!ParsingSuccess || InputFileNameArg.empty())
+	{
+		std::cerr << "Invalid usage; use --help option for more information" << std::endl;
 		return 1;
 	}
 
@@ -408,51 +435,51 @@ int main(int argc, char** argv)
 		Diffuse
 	} ConvolutionType = ConvolutionType::Undefined;
 
-	std::string InputFilename = std::string(argv[1]);
-	std::string InputFileNameWithoutExtension = InputFilename.substr(0, InputFilename.find_last_of('.'));
-	for (int ArgumentIndex = 2; ArgumentIndex < argc; ArgumentIndex++)
-	{
-		if (strcmp(argv[ArgumentIndex], "--tga") == 0)
-			FileType = FileType::TGA;
-		if (strcmp(argv[ArgumentIndex], "--png") == 0)
-			FileType = FileType::PNG;
-		if (strcmp(argv[ArgumentIndex], "--hdr") == 0)
-			FileType = FileType::HDR;
-		// NOTE : -1 so that we don't compare null character with whatever there is in the other string
-		if (strncmp(argv[ArgumentIndex], "--convolution=", sizeof("--convolution=") - 1) == 0)
-		{
-			auto ConvolutionTypeString = std::string(argv[ArgumentIndex] + sizeof("--convolution"));
-			if (ConvolutionTypeString == "diffuse")
-				ConvolutionType = ConvolutionType::Diffuse;
-		}
-	}
-	if (InputFilename.substr(InputFilename.find_last_of('.'), InputFilename.length() - InputFilename.find_last_of('.') + 1) == ".tga")
+	Hermes::ANSIString InputFileName = Hermes::StringUtils::StringToANSI(InputFileNameArg);
+	std::string InputFileNameWithoutExtension = InputFileName.substr(0, InputFileName.find_last_of('.'));
+	if (InputFileName.substr(InputFileName.find_last_of('.'),
+	                         InputFileName.length() - InputFileName.find_last_of('.') + 1) == ".tga")
 	{
 		FileType = FileType::TGA;
 	}
-	if (InputFilename.substr(InputFilename.find_last_of('.'),
-	                         InputFilename.length() - InputFilename.find_last_of('.') + 1) == ".png")
+	if (InputFileName.substr(InputFileName.find_last_of('.'),
+	                         InputFileName.length() - InputFileName.find_last_of('.') + 1) == ".png")
 	{
 		FileType = FileType::PNG;
 	}
-	if (InputFilename.substr(InputFilename.find_last_of('.'), InputFilename.length() - InputFilename.find_last_of('.') + 1) == ".hdr")
+	if (InputFileName.substr(InputFileName.find_last_of('.'),
+	                         InputFileName.length() - InputFileName.find_last_of('.') + 1) == ".hdr")
 	{
 		FileType = FileType::HDR;
 	}
 
-	std::string OutputFileName = InputFileNameWithoutExtension + ".hac";
+	if (ConvolutionTypeString == L"diffuse")
+	{
+		ConvolutionType = ConvolutionType::Diffuse;
+	}
+	else
+	{
+		if (!ConvolutionTypeString.empty())
+		{
+			std::wcerr << "Unknown convolution type " << ConvolutionTypeString <<
+				"; use --help option for more information" << std::endl;
+			return 1;
+		}
+	}
+
+	Hermes::ANSIString OutputFileName = InputFileNameWithoutExtension + ".hac";
 
 	std::unique_ptr<Image> LoadedImage;
 	switch (FileType)
 	{
 	case FileType::TGA:
-		LoadedImage = ReadTGA(InputFilename);
+		LoadedImage = ReadTGA(InputFileName);
 		break;
 	case FileType::PNG:
-		LoadedImage = ReadPNG(InputFilename);
+		LoadedImage = ReadPNG(InputFileName);
 		break;
 	case FileType::HDR:
-		LoadedImage = ReadHDR(InputFilename);
+		LoadedImage = ReadHDR(InputFileName);
 		break;
 	case FileType::Undefined:
 	default:
@@ -462,7 +489,7 @@ int main(int argc, char** argv)
 
 	if (!LoadedImage)
 	{
-		std::cerr << "Cannot read input file " << InputFilename << std::endl;
+		std::cerr << "Cannot read input file " << InputFileName << std::endl;
 		return 3;
 	}
 

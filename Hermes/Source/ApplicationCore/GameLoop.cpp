@@ -1,6 +1,6 @@
 #include "GameLoop.h"
 
-#include "ApplicationCore/EventQueue.h"
+#include "Core/Event/EventQueue.h"
 #include "ApplicationCore/InputEngine.h"
 #include "Logging/Logger.h"
 #include "Logging/DebugLogDevice.h"

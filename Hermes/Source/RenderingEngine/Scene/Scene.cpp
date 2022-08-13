@@ -18,8 +18,8 @@ namespace Hermes
 			                                                        false);
 		};
 
-		ReflectionEnvmap = LoadCubemap(L"Textures/default_envmap_reflection");
-		IrradianceEnvmap = LoadCubemap(L"Textures/default_envmap_light");
+		ReflectionEnvmap = LoadCubemap(L"Textures/envmap");
+		IrradianceEnvmap = LoadCubemap(L"Textures/diffuse_envmap");
 	}
 
 	void Scene::AddMesh(MeshProxy Proxy)

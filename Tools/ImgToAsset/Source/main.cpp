@@ -9,7 +9,10 @@
 #include "Image.h"
 #include "PNGLoader.h"
 #include "stb_image.h"
+
 #include "Core/Misc/StringUtils.h"
+#include "AssetSystem/AssetLoader.h"
+#include "AssetSystem/ImageAsset.h"
 
 /*
  * TODO : setup our build so that we can use our own platform layer
@@ -33,36 +36,21 @@ enum class AssetType : uint8_t
 	Mesh = 2
 };
 
-PACKED_STRUCT_BEGIN
-struct AssetHeader
-{
-	AssetType Type;
-};
-
-struct ImageHeader
-{
-	uint16_t Width;
-	uint16_t Height;
-	ImageFormat Format;
-	uint8_t BytesPerChannel;
-};
-PACKED_STRUCT_END
-
-static ImageFormat ChooseImageFormat(bool IsMonochrome, bool HasAlphaChannel)
+static Hermes::ImageFormat ChooseImageFormat(bool IsMonochrome, bool HasAlphaChannel)
 {
 	if (IsMonochrome)
 	{
 		if (HasAlphaChannel)
-			return ImageFormat::RA;
+			return Hermes::ImageFormat::RA;
 		else
-			return ImageFormat::R;
+			return Hermes::ImageFormat::R;
 	}
 	else
 	{
 		if (HasAlphaChannel)
-			return ImageFormat::RGBA;
+			return Hermes::ImageFormat::RGBA;
 		else
-			return ImageFormat::RGBX;
+			return Hermes::ImageFormat::RGBX;
 	}
 }
 
@@ -95,10 +83,10 @@ std::vector<uint8_t> ReadAllFile(const std::string& Path)
 
 int WriteAssetFile(const Image& Image, const std::string& Filename)
 {
-	AssetHeader AssetHeader = {};
-	AssetHeader.Type = AssetType::Image;
+	Hermes::AssetHeader AssetHeader = {};
+	AssetHeader.Type = Hermes::AssetType::Image;
 
-	ImageHeader ImageHeader = {};
+	Hermes::ImageAssetHeader ImageHeader = {};
 	ImageHeader.Width = Image.GetWidth();
 	ImageHeader.Height = Image.GetHeight();
 	ImageHeader.Format = Image.GetFormat();
@@ -198,7 +186,7 @@ std::unique_ptr<Image> ReadTGA(const std::string& Path)
 		return nullptr;
 	}
 
-	ImageFormat Format = ChooseImageFormat(IsMonochrome, IsAlphaChannelAvailable);
+	Hermes::ImageFormat Format = ChooseImageFormat(IsMonochrome, IsAlphaChannelAvailable);
 	// NOTE : TGAs are always 1 byte per channel
 	auto Result = std::make_unique<Image>(InputTGAHeader->Specification.Width, InputTGAHeader->Specification.Height,
 	                                      Format, 1);
@@ -274,7 +262,7 @@ std::unique_ptr<Image> ReadPNG(const std::string& Path)
 	std::cout << "Has alpha channel: " << (PNGImage.HasAlphaChannel() ? "true" : "false") << std::endl;
 
 	// NOTE : we need to add alpha channel if necessary
-	ImageFormat DestFormat = ChooseImageFormat(PNGImage.IsMonochrome(), PNGImage.HasAlphaChannel());
+	Hermes::ImageFormat DestFormat = ChooseImageFormat(PNGImage.IsMonochrome(), PNGImage.HasAlphaChannel());
 	size_t BytesPerChannel = (PNGImage.GetBitsPerChannel() == 16 ? 2 : 1);
 	auto Result = std::make_unique<Image>(PNGImage.GetWidth(), PNGImage.GetHeight(), DestFormat, BytesPerChannel);
 	auto* Source = PNGImage.GetPixels();
@@ -370,7 +358,7 @@ std::unique_ptr<Image> ReadHDR(const std::string& Path)
 
 	// NOTE : unfortunately, STB does not allow to load image into a preallocated buffer,
 	//        so we'll have to do one more copy here
-	auto Result = std::make_unique<Image>(static_cast<uint16_t>(Width), static_cast<uint16_t>(Height), ImageFormat::HDR,
+	auto Result = std::make_unique<Image>(static_cast<uint16_t>(Width), static_cast<uint16_t>(Height), Hermes::ImageFormat::HDR,
 	                                      4, ImageData);
 	stbi_image_free(ImageData);
 	return Result;

@@ -3,17 +3,7 @@
 #include <optional>
 #include <vector>
 
-// NOTE : keep in sync with engine code
-enum class ImageFormat : uint8_t
-{
-	Undefined = 0x00,
-	R = 0x01,
-	RA = 0x09,
-	RG = 0x03,
-	RGBX = 0x07,
-	RGBA = 0x0F,
-	HDR = 0x10
-};
+#include "AssetSystem/ImageAsset.h"
 
 /*
  * Wrapper around underlying image data
@@ -22,7 +12,7 @@ enum class ImageFormat : uint8_t
 class Image
 {
 public:
-	Image(uint16_t InWidth, uint16_t InHeight, ImageFormat InFormat, size_t InBytesPerChannel,
+	Image(uint16_t InWidth, uint16_t InHeight, Hermes::ImageFormat InFormat, size_t InBytesPerChannel,
 	      std::optional<const void*> InData = {});
 
 	Image(const Image&) = delete;
@@ -34,7 +24,7 @@ public:
 	uint16_t GetWidth() const;
 	uint16_t GetHeight() const;
 
-	ImageFormat GetFormat() const;
+	Hermes::ImageFormat GetFormat() const;
 	size_t GetChannelCount() const;
 	size_t GetBytesPerChannel() const;
 	size_t GetBytesPerPixel() const;
@@ -79,7 +69,7 @@ private:
 	uint16_t Height = 0;
 	size_t BytesPerChannel = 0;
 
-	ImageFormat Format = ImageFormat::Undefined;
+	Hermes::ImageFormat Format = Hermes::ImageFormat::Undefined;
 
 	std::vector<uint8_t> Data;
 

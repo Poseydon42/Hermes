@@ -2,58 +2,58 @@
 
 #include <concepts>
 
-static size_t ChannelsPerFormat(ImageFormat Format)
+static size_t ChannelsPerFormat(Hermes::ImageFormat Format)
 {
 	switch (Format)
 	{
 	default:
-	case ImageFormat::Undefined:
+	case Hermes::ImageFormat::Undefined:
 		return 0;
-	case ImageFormat::R:
+	case Hermes::ImageFormat::R:
 		return 1;
-	case ImageFormat::RG:
-	case ImageFormat::RA:
+	case Hermes::ImageFormat::RG:
+	case Hermes::ImageFormat::RA:
 		return 2;
-	case ImageFormat::HDR:
+	case Hermes::ImageFormat::HDR:
 		return 3;
-	case ImageFormat::RGBA:
-	case ImageFormat::RGBX:
+	case Hermes::ImageFormat::RGBA:
+	case Hermes::ImageFormat::RGBX:
 		return 4;
 	}
 }
 
-static bool HasRedChannel(ImageFormat Format)
+static bool HasRedChannel(Hermes::ImageFormat Format)
 {
-	return Format != ImageFormat::Undefined;
+	return Format != Hermes::ImageFormat::Undefined;
 }
 
-static bool HasGreenChannel(ImageFormat Format)
+static bool HasGreenChannel(Hermes::ImageFormat Format)
 {
-	static constexpr ImageFormat FormatsWithGreenChannel[] = {
-		ImageFormat::RG, ImageFormat::RGBA, ImageFormat::RGBX, ImageFormat::HDR
+	static constexpr Hermes::ImageFormat FormatsWithGreenChannel[] = {
+		Hermes::ImageFormat::RG, Hermes::ImageFormat::RGBA, Hermes::ImageFormat::RGBX, Hermes::ImageFormat::HDR
 	};
 	return std::ranges::find(FormatsWithGreenChannel, Format) != std::end(FormatsWithGreenChannel);
 }
 
-static bool HasBlueChannel(ImageFormat Format)
+static bool HasBlueChannel(Hermes::ImageFormat Format)
 {
-	static constexpr ImageFormat FormatsWithBlueChannel[] = {
-		ImageFormat::RGBA, ImageFormat::RGBX, ImageFormat::HDR
+	static constexpr Hermes::ImageFormat FormatsWithBlueChannel[] = {
+		Hermes::ImageFormat::RGBA, Hermes::ImageFormat::RGBX, Hermes::ImageFormat::HDR
 	};
 	return std::ranges::find(FormatsWithBlueChannel, Format) != std::end(FormatsWithBlueChannel);
 }
 
-static bool HasAlphaChannel(ImageFormat Format)
+static bool HasAlphaChannel(Hermes::ImageFormat Format)
 {
-	static constexpr ImageFormat FormatsWithAlphaChannel[] = {
-		ImageFormat::RA, ImageFormat::RGBA
+	static constexpr Hermes::ImageFormat FormatsWithAlphaChannel[] = {
+		Hermes::ImageFormat::RA, Hermes::ImageFormat::RGBA
 	};
 	return std::ranges::find(FormatsWithAlphaChannel, Format) != std::end(FormatsWithAlphaChannel);
 }
 
-static bool HasPaddingAlphaChannel(ImageFormat Format)
+static bool HasPaddingAlphaChannel(Hermes::ImageFormat Format)
 {
-	return Format == ImageFormat::RGBX;
+	return Format == Hermes::ImageFormat::RGBX;
 }
 
 template<typename T>
@@ -95,7 +95,7 @@ static void WriteBytesFromDecomposedInteger(uint8_t* Location, size_t NumberOfBy
 	}
 }
 
-Image::Image(uint16_t InWidth, uint16_t InHeight, ImageFormat InFormat, size_t InBytesPerChannel,
+Image::Image(uint16_t InWidth, uint16_t InHeight, Hermes::ImageFormat InFormat, size_t InBytesPerChannel,
              std::optional<const void*> InData)
 	: Width(InWidth)
 	, Height(InHeight)
@@ -120,7 +120,7 @@ uint16_t Image::GetHeight() const
 	return Height;
 }
 
-ImageFormat Image::GetFormat() const
+Hermes::ImageFormat Image::GetFormat() const
 {
 	return Format;
 }
@@ -175,7 +175,7 @@ Image::Pixel Image::Sample(uint16_t X, uint16_t Y) const
 
 	const auto* PixelData = GetPointerToFirstByteOfPixel(X, Y);
 
-	if (Format == ImageFormat::HDR)
+	if (Format == Hermes::ImageFormat::HDR)
 	{
 		// NOTE : special handling for HDR as they are stored as floats instead of integers
 		const auto* FloatPixelData = reinterpret_cast<const float*>(PixelData);
@@ -265,7 +265,7 @@ void Image::Store(uint16_t X, uint16_t Y, const Pixel& Value)
 	auto* PixelData = GetPointerToFirstByteOfPixel(X, Y);
 
 	// NOTE : see comments inside Sample() for explanation
-	if (Format == ImageFormat::HDR)
+	if (Format == Hermes::ImageFormat::HDR)
 	{
 		auto* FloatPixelData = reinterpret_cast<float*>(PixelData);
 		*FloatPixelData++ = Value.R;

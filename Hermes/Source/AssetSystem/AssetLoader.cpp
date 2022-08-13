@@ -39,17 +39,7 @@ namespace Hermes
 
 	std::shared_ptr<Asset> AssetLoader::LoadImage(IPlatformFile& File, const AssetHeader&, const String& Name)
 	{
-		PACKED_STRUCT_BEGIN
-		struct ImageHeader
-		{
-			uint16 Width;
-			uint16 Height;
-			ImageFormat Format;
-			uint8 BytesPerChannel;
-		};
-		PACKED_STRUCT_END
-
-		ImageHeader Header;
+		ImageAssetHeader Header;
 		if (!File.Read(reinterpret_cast<uint8*>(&Header), sizeof(Header)))
 		{
 			HERMES_LOG_WARNING(L"Failed to read image header from asset %s", Name.c_str());

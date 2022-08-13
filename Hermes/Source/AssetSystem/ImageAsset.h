@@ -22,6 +22,16 @@ namespace Hermes
 		HDR = 0x10
 	};
 
+	PACKED_STRUCT_BEGIN
+	struct ImageAssetHeader
+	{
+		uint16 Width;
+		uint16 Height;
+		ImageFormat Format;
+		uint8 BytesPerChannel;
+	};
+	PACKED_STRUCT_END
+
 	size_t NumberOfChannelInImageFormat(ImageFormat Format);
 
 	class HERMES_API ImageAsset final : public Asset

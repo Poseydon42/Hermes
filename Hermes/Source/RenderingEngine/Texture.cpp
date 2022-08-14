@@ -107,32 +107,43 @@ namespace Hermes
 		uint32 MipLevelCount;
 		if (EnableMipMaps)
 		{
-			MipLevelCount = Math::FloorLog2(BiggestDimension);
+			if (Source.HasPrecomputedMips())
+			{
+				MipLevelCount = Source.GetMipLevelCount();
+			}
+			else
+			{
+				MipLevelCount = Math::FloorLog2(BiggestDimension) + 1;
+			}
 		}
 		else
 		{
-			MipLevelCount = 0;
+			MipLevelCount = 1;
 		}
 
+		auto Format = ChooseFormatFromImageType(Source.GetImageFormat(), Source.GetBytesPerChannel(), UseAsSRGB);
 		Image = Renderer::Get().GetActiveDevice().CreateImage(Dimensions,
 		                                                      RenderInterface::ImageUsageType::Sampled |
 		                                                      RenderInterface::ImageUsageType::CopyDestination |
-		                                                      RenderInterface::ImageUsageType::CopySource,
-		                                                      ChooseFormatFromImageType(Source.GetImageFormat(),
-			                                                      Source.GetBytesPerChannel(), UseAsSRGB),
-		                                                      MipLevelCount + 1,
-		                                                      RenderInterface::ImageLayout::Undefined);
+		                                                      RenderInterface::ImageUsageType::CopySource, Format,
+		                                                      MipLevelCount, RenderInterface::ImageLayout::Undefined);
 
 		// NOTE : normally, after loading image we will move it into
 		// transfer source layout for further blitting to generate mip
 		// maps and transition to shader read only layout will be done
 		// in GPUInteractionUtilities::GenerateMipMaps(). However, if
-		// user does not want to generate mip maps for the texture then
-		// we have to perform transition to shader read only layout
-		// immediately ourselves
-		RenderInterface::ImageLayout LayoutAfterLoad = EnableMipMaps
-			                                               ? RenderInterface::ImageLayout::TransferSourceOptimal
-			                                               : RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+		// user does not want to generate mip maps or if they are
+		// precomputed(so we only upload them) then we have to perform
+		// transition to shader read only layout immediately ourselves
+		RenderInterface::ImageLayout LayoutAfterLoad;
+		if (EnableMipMaps && !Source.HasPrecomputedMips())
+		{
+			LayoutAfterLoad = RenderInterface::ImageLayout::TransferSourceOptimal;
+		}
+		else
+		{
+			LayoutAfterLoad = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+		}
 
 		GPUInteractionUtilities::UploadDataToGPUImage(Source.GetRawData(), { 0, 0 }, Dimensions,
 		                                              Source.GetBytesPerPixel(), 0, *Image,
@@ -140,8 +151,22 @@ namespace Hermes
 
 		if (EnableMipMaps)
 		{
-			GPUInteractionUtilities::GenerateMipMaps(*Image, RenderInterface::ImageLayout::TransferSourceOptimal,
-			                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+			if (Source.HasPrecomputedMips())
+			{
+				for (uint8 MipLevel = 1; MipLevel < Source.GetMipLevelCount(); MipLevel++)
+				{
+					GPUInteractionUtilities::UploadDataToGPUImage(Source.GetRawData(MipLevel), { 0, 0 },
+					                                              Source.GetDimensions(MipLevel),
+					                                              Source.GetBytesPerPixel(), MipLevel, *Image,
+					                                              RenderInterface::ImageLayout::Undefined,
+					                                              LayoutAfterLoad);
+				}
+			}
+			else
+			{
+				GPUInteractionUtilities::GenerateMipMaps(*Image, RenderInterface::ImageLayout::TransferSourceOptimal,
+				                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+			}
 		}
 
 		DataUploadFinished = true;

@@ -8,6 +8,21 @@
 
 namespace Hermes
 {
+	/*
+	 * NOTE : overall structure of an image asset file:
+	 *
+	 * 1) AssetHeader
+	 * 2) ImageAssetHeader
+	 * 3) Binary image data
+	 *
+	 * Binary image data consists of one or more chunks that contain pixel data for each mip level,
+	 * starting with mip 0. Each chunk must have a size of <width of current mip level> * <height of
+	 * current mip level> * <bytes per pixel for image format>. Dimensions of mip level N are calculated
+	 * as following:
+	 * Dimension(N) = Max(Truncate(Dimension(N - 1) / 2, 1)
+	 * for both width and height
+	 */
+
 	enum class ImageFormat : uint8
 	{
 		Undefined = 0x00,
@@ -26,6 +41,7 @@ namespace Hermes
 		uint16 Height;
 		ImageFormat Format;
 		uint8 BytesPerChannel;
+		uint8 MipLevelCount;
 	};
 	PACKED_STRUCT_END
 

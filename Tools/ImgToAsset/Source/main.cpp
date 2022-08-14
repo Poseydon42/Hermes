@@ -1,10 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <memory>
 
 #include "Core/Misc/ArgsParser.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+
 #include "Convolution.h"
 #include "Image.h"
 #include "PNGLoader.h"
@@ -81,16 +83,17 @@ std::vector<uint8_t> ReadAllFile(const std::string& Path)
 	return Result;
 }
 
-int WriteAssetFile(const Image& Image, const std::string& Filename)
+int WriteAssetFile(const std::vector<const Image*>& Images, const std::string& Filename)
 {
 	Hermes::AssetHeader AssetHeader = {};
 	AssetHeader.Type = Hermes::AssetType::Image;
 
 	Hermes::ImageAssetHeader ImageHeader = {};
-	ImageHeader.Width = Image.GetWidth();
-	ImageHeader.Height = Image.GetHeight();
-	ImageHeader.Format = Image.GetFormat();
-	ImageHeader.BytesPerChannel = static_cast<uint8_t>(Image.GetBytesPerChannel());
+	ImageHeader.Width = Images[0]->GetWidth();
+	ImageHeader.Height = Images[0]->GetHeight();
+	ImageHeader.Format = Images[0]->GetFormat();
+	ImageHeader.BytesPerChannel = static_cast<uint8_t>(Images[0]->GetBytesPerChannel());
+	ImageHeader.MipLevelCount = static_cast<uint8_t>(Images.size());
 
 	try
 	{
@@ -98,7 +101,11 @@ int WriteAssetFile(const Image& Image, const std::string& Filename)
 
 		OutputFile.write(reinterpret_cast<const char*>(&AssetHeader), sizeof(AssetHeader));
 		OutputFile.write(reinterpret_cast<const char*>(&ImageHeader), sizeof(ImageHeader));
-		OutputFile.write(static_cast<const char*>(Image.GetData()), static_cast<std::streamsize>(Image.GetDataSize()));
+		for (const auto* Image : Images)
+		{
+			OutputFile.write(static_cast<const char*>(Image->GetData()),
+			                 static_cast<std::streamsize>(Image->GetDataSize()));
+		}		
 	}
 	catch (const std::exception& Error)
 	{
@@ -389,11 +396,13 @@ int main(int ArgCount, const char** ArgValues)
 	}
 
 	bool DisplayHelp = false;
+	bool GenerateMips = false;
 	Hermes::String ConvolutionTypeString;
 	Hermes::String InputFileNameArg;
 
 	Hermes::ArgsParser Args;
 	Args.AddOption("help", 'h', &DisplayHelp);
+	Args.AddOption("generate-mips", 'm', &GenerateMips);
 	Args.AddOption("convolution", {}, &ConvolutionTypeString);
 	Args.AddPositional(true, &InputFileNameArg);
 
@@ -492,5 +501,32 @@ int main(int ArgCount, const char** ArgValues)
 		break;
 	}
 
-	WriteAssetFile(*LoadedImage, OutputFileName);
+	std::vector<std::unique_ptr<Image>> Mips;
+	Mips.push_back(std::move(LoadedImage));
+	if (GenerateMips)
+	{
+		size_t SourceMip = 0;
+		uint16_t NextMipWidth = Mips[0]->GetWidth();
+		uint16_t NextMipHeight = Mips[0]->GetHeight();
+
+		while (NextMipWidth > 1 || NextMipHeight > 1)
+		{
+			NextMipWidth = Hermes::Math::Max<uint16_t>(NextMipWidth / 2, 1);
+			NextMipHeight = Hermes::Math::Max<uint16_t>(NextMipHeight / 2, 1);
+
+			auto Mip = Image::CreateDownscaled(*Mips[SourceMip], NextMipWidth, NextMipHeight);
+
+			Mips.push_back(std::move(Mip));
+
+			SourceMip++;
+		}
+	}
+
+	std::vector<const Image*> Result;
+	Result.reserve(Mips.size());
+	for (auto& Mip : Mips)
+	{
+		Result.push_back(Mip.get());
+	}
+	WriteAssetFile(Result, OutputFileName);
 }

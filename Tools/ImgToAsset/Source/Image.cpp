@@ -110,6 +110,26 @@ Image::Image(uint16_t InWidth, uint16_t InHeight, Hermes::ImageFormat InFormat, 
 	}
 }
 
+std::unique_ptr<Image> Image::CreateDownscaled(const Image& Source, uint16_t Width, uint16_t Height)
+{
+	auto Result = std::make_unique<Image>(Width, Height, Source.GetFormat(), Source.GetBytesPerChannel());
+
+	for (uint16_t Y = 0; Y < Height; Y++)
+	{
+		for (uint16_t X = 0; X < Width; X++)
+		{
+			float NormX = (static_cast<float>(X) + 0.5f) / static_cast<float>(Width);
+			float NormY = (static_cast<float>(Y) + 0.5f) / static_cast<float>(Height);
+
+			Pixel SampledValue = Source.Sample(NormX, NormY);
+
+			Result->Store(X, Y, SampledValue);
+		}
+	}
+
+	return Result;
+}
+
 uint16_t Image::GetWidth() const
 {
 	return Width;

@@ -21,6 +21,11 @@ public:
 	Image& operator=(Image&&) = default;
 	~Image() = default;
 
+	/*
+	 * Creates a copy of source image downscaling it to given dimensions using linear filtering
+	 */
+	static std::unique_ptr<Image> CreateDownscaled(const Image& Source, uint16_t Width, uint16_t Height);
+
 	uint16_t GetWidth() const;
 	uint16_t GetHeight() const;
 

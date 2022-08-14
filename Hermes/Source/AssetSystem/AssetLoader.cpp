@@ -47,7 +47,7 @@ namespace Hermes
 		}
 
 		size_t BytesPerPixel = NumberOfChannelInImageFormat(Header.Format) * Header.BytesPerChannel;
-		size_t TotalBytes = static_cast<size_t>(Header.Width) * Header.Height * BytesPerPixel;
+		size_t TotalBytes = CalculateTotalPixelCount(Header.Width, Header.Height, Header.MipLevelCount) * BytesPerPixel;
 		std::vector<uint8> ImageData(TotalBytes, 0x00);
 		if (!File.Read(ImageData.data(), TotalBytes))
 		{
@@ -56,7 +56,7 @@ namespace Hermes
 		}
 
 		auto Result = std::shared_ptr<ImageAsset>(new ImageAsset(Name, Vec2ui { Header.Width, Header.Height },
-		                                                         Header.Format, Header.BytesPerChannel,
+		                                                         Header.Format, Header.BytesPerChannel, Header.MipLevelCount,
 		                                                         ImageData.data()));
 
 		return Result;

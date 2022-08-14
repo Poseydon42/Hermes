@@ -47,6 +47,8 @@ namespace Hermes
 
 	size_t NumberOfChannelInImageFormat(ImageFormat Format);
 
+	size_t CalculateTotalPixelCount(size_t Width, size_t Height, size_t MipLevelCount);
+
 	class HERMES_API ImageAsset final : public Asset
 	{
 	public:
@@ -55,21 +57,25 @@ namespace Hermes
 
 		virtual size_t GetMemorySize() const override;
 
-		const uint8* GetRawData() const;
-		uint8* GetRawData();
+		const uint8* GetRawData(uint8 MipLevel = 0) const;
+		uint8* GetRawData(uint8 MipLevel = 0);
 
-		Vec2ui GetDimensions() const;
+		Vec2ui GetDimensions(uint8 MipLevel = 0) const;
 
 		ImageFormat GetImageFormat() const;
 
 		size_t GetBytesPerChannel() const;
 		size_t GetBytesPerPixel() const;
 
+		bool HasPrecomputedMips() const;
+		uint8 GetMipLevelCount() const;
+
 	private:
 		/*
 		 * Constructor that initializes raw data to 0
 		 */
-		ImageAsset(const String& Name, Vec2ui InDimensions, ImageFormat InFormat, size_t InBytesPerChannel);
+		ImageAsset(const String& Name, Vec2ui InDimensions, ImageFormat InFormat, size_t InBytesPerChannel,
+		           uint8 InMipLevelCount);
 
 		/*
 		 * Constructor that copies raw image data from external array
@@ -77,7 +83,7 @@ namespace Hermes
 		 * could be stored in default types like uint8, 16, 32, 64 etc.)
 		 */
 		ImageAsset(const String& Name, Vec2ui InDimensions, ImageFormat InFormat, size_t InBytesPerChannel,
-		           const uint8* InData);
+		           uint8 InMipLevelCount, const uint8* InData);
 
 		friend class AssetLoader;
 
@@ -85,5 +91,6 @@ namespace Hermes
 		Vec2ui Dimensions;
 		ImageFormat Format;
 		size_t BytesPerChannel;
+		uint8 MipLevelCount;
 	};
 }

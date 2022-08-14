@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <memory>
 #include <vector>
 
 #include "Core/Core.h"
@@ -9,8 +8,6 @@
 
 namespace Hermes
 {
-	class AssetLoader;
-
 	enum class ImageFormat : uint8
 	{
 		Undefined = 0x00,

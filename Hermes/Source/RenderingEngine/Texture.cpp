@@ -174,10 +174,30 @@ namespace Hermes
 		DefaultView = Image->CreateDefaultImageView();
 	}
 
+	std::unique_ptr<CubemapTexture> CubemapTexture::CreateEmpty(Vec2ui InDimensions,
+	                                                            RenderInterface::DataFormat InFormat,
+	                                                            RenderInterface::ImageUsageType InUsage,
+	                                                            uint32 InMipLevelCount)
+	{
+		return std::unique_ptr<CubemapTexture>(new CubemapTexture(InDimensions, InFormat, InUsage, InMipLevelCount));
+	}
+
 	std::unique_ptr<CubemapTexture> CubemapTexture::CreateFromEquirectangularTexture(
 		const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat, bool EnableMipMaps)
 	{
 		return std::unique_ptr<CubemapTexture>(new CubemapTexture(EquirectangularTexture, PreferredFormat, EnableMipMaps));
+	}
+
+	CubemapTexture::CubemapTexture(Vec2ui InDimensions, RenderInterface::DataFormat InFormat,
+	                               RenderInterface::ImageUsageType InUsage, uint32 InMipLevelCount)
+	{
+		Image = Renderer::Get().GetActiveDevice().CreateCubemap(InDimensions, InUsage, InFormat, InMipLevelCount,
+		                                                        RenderInterface::ImageLayout::Undefined);
+
+		Dimensions = InDimensions;
+		DataUploadFinished = true;
+
+		DefaultView = Image->CreateDefaultImageView();
 	}
 
 	CubemapTexture::CubemapTexture(const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat,

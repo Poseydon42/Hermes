@@ -52,11 +52,17 @@ namespace Hermes
 		ADD_DEFAULT_VIRTUAL_DESTRUCTOR(CubemapTexture)
 
 	public:
+		static std::unique_ptr<CubemapTexture> CreateEmpty(Vec2ui InDimensions, RenderInterface::DataFormat InFormat,
+		                                                   RenderInterface::ImageUsageType InUsage, uint32 InMipLevelCount);
+
 		static std::unique_ptr<CubemapTexture> CreateFromEquirectangularTexture(
 			const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat,
 			bool EnableMipMaps = true);
 
 	private:
-		explicit CubemapTexture(const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat, bool EnableMipMaps);
+		CubemapTexture(Vec2ui InDimensions, RenderInterface::DataFormat InFormat,
+		               RenderInterface::ImageUsageType InUsage, uint32 InMipLevelCount);
+
+		CubemapTexture(const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat, bool EnableMipMaps);
 	};
 }

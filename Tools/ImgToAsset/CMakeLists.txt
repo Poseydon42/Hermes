@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 3.22)
 project(ImgToAsset)
 
 set(SOURCES
-    Source/Convolution.cpp
-    Source/Convolution.h
     Source/Image.cpp
     Source/Image.h
     Source/main.cpp

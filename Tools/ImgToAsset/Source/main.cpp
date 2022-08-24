@@ -7,7 +7,6 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 
-#include "Convolution.h"
 #include "Image.h"
 #include "PNGLoader.h"
 #include "stb_image.h"
@@ -378,7 +377,7 @@ void DisplayHelpMessage()
 		"    imgtoasset <input file> [options]\n"
 		"Possible options:\n"
 		"    -h, --help: display this help message\n"
-		"    --convolution=<type>: generate a <type> cubemap convolution; supported types are: diffuse(used for diffuse IBL)\n"
+		"    -m, --generate-mips: generate mip maps and store them in the converted asset"
 		"Currently supported image formats:\n"
 		"    - TGA\n"
 		"    - PNG\n"
@@ -397,13 +396,11 @@ int main(int ArgCount, const char** ArgValues)
 
 	bool DisplayHelp = false;
 	bool GenerateMips = false;
-	Hermes::String ConvolutionTypeString;
 	Hermes::String InputFileNameArg;
 
 	Hermes::ArgsParser Args;
 	Args.AddOption("help", 'h', &DisplayHelp);
 	Args.AddOption("generate-mips", 'm', &GenerateMips);
-	Args.AddOption("convolution", {}, &ConvolutionTypeString);
 	Args.AddPositional(true, &InputFileNameArg);
 
 	bool ParsingSuccess = Args.Parse(ArgCount - 1, ArgValues + 1); // Skipping first argument as it's the name of the application
@@ -426,12 +423,6 @@ int main(int ArgCount, const char** ArgValues)
 		HDR
 	} FileType = FileType::Undefined;
 
-	enum class ConvolutionType
-	{
-		Undefined,
-		Diffuse
-	} ConvolutionType = ConvolutionType::Undefined;
-
 	Hermes::ANSIString InputFileName = Hermes::StringUtils::StringToANSI(InputFileNameArg);
 	std::string InputFileNameWithoutExtension = InputFileName.substr(0, InputFileName.find_last_of('.'));
 	if (InputFileName.substr(InputFileName.find_last_of('.'),
@@ -449,21 +440,6 @@ int main(int ArgCount, const char** ArgValues)
 	{
 		FileType = FileType::HDR;
 	}
-
-	if (ConvolutionTypeString == L"diffuse")
-	{
-		ConvolutionType = ConvolutionType::Diffuse;
-	}
-	else
-	{
-		if (!ConvolutionTypeString.empty())
-		{
-			std::wcerr << "Unknown convolution type " << ConvolutionTypeString <<
-				"; use --help option for more information" << std::endl;
-			return 1;
-		}
-	}
-
 	Hermes::ANSIString OutputFileName = InputFileNameWithoutExtension + ".hac";
 
 	std::unique_ptr<Image> LoadedImage;
@@ -488,17 +464,6 @@ int main(int ArgCount, const char** ArgValues)
 	{
 		std::cerr << "Cannot read input file " << InputFileName << std::endl;
 		return 3;
-	}
-
-	switch (ConvolutionType)
-	{
-	case ConvolutionType::Diffuse:
-		LoadedImage = GenerateDiffuseConvolution(*LoadedImage);
-		break;
-	case ConvolutionType::Undefined:
-	default:
-		// Do nothing, but IDE still wanted me to write this explicitly
-		break;
 	}
 
 	std::vector<std::unique_ptr<Image>> Mips;

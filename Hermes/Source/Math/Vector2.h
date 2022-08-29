@@ -144,7 +144,7 @@ namespace Hermes
 	template <typename InternalType>
 	constexpr Vector2<InternalType> Vector2<InternalType>::operator/(InternalType B) const
 	{
-		return *this * (1 / B);
+		return Vector2(X / B, Y / B);
 	}
 
 	template <typename InternalType>

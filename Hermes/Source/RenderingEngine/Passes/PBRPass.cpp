@@ -40,9 +40,16 @@ namespace Hermes
 		RenderInterface::DescriptorBinding IrradianceMapBinding = {
 			4, 1, RenderInterface::ShaderType::FragmentShader, RenderInterface::DescriptorType::CombinedSampler
 		};
+		RenderInterface::DescriptorBinding SpecularMapBinding = {
+			5, 1, RenderInterface::ShaderType::FragmentShader, RenderInterface::DescriptorType::CombinedSampler
+		};
+		RenderInterface::DescriptorBinding PrecomputedBRDFMapBinding = {
+			6, 1, RenderInterface::ShaderType::FragmentShader, RenderInterface::DescriptorType::CombinedSampler
+		};
 		DescriptorLayout = Device.CreateDescriptorSetLayout({
 			                                                    AlbedoAttachmentBinding, PositionRoughnessBinding,
-			                                                    NormalMetallicBinding, UBOBinding, IrradianceMapBinding
+			                                                    NormalMetallicBinding, UBOBinding, IrradianceMapBinding,
+			                                                    SpecularMapBinding, PrecomputedBRDFMapBinding
 		                                                    });
 		DescriptorSet = DescriptorAllocator.Allocate(*DescriptorLayout);
 
@@ -62,7 +69,10 @@ namespace Hermes
 		SamplerDescription.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
 		SamplerDescription.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
 		SamplerDescription.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
-		IrradianceMapSampler = Device.CreateSampler(SamplerDescription);
+		SamplerDescription.MipMode = RenderInterface::MipmappingMode::Linear;
+		SamplerDescription.MinMipLevel = 0.0f;
+		SamplerDescription.MaxMipLevel = 12.0f; // NOTE : up to 2^12 (4096) pixels, should be more than enough
+		EnvmapSampler = Device.CreateSampler(SamplerDescription);
 
 		Drain AlbedoDrain = {};
 		AlbedoDrain.Name = L"Albedo";
@@ -120,6 +130,13 @@ namespace Hermes
 			IsPipelineCreated = true;
 		}
 
+		if (!PrecomputedBRDF || !PrecomputedBRDFSampler)
+		{
+			EnsurePrecomputedBRDF();
+			DescriptorSet->UpdateWithImageAndSampler(6, 0, *PrecomputedBRDFView, *PrecomputedBRDFSampler,
+			                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		}
+
 		// NOTE : 3 input attachments + color buffer
 		HERMES_ASSERT_LOG(Drains.size() == 4, L"Invalid attachment count");
 		for (uint32 AttachmentIndex = 0; AttachmentIndex < 3; AttachmentIndex++)
@@ -129,7 +146,10 @@ namespace Hermes
 		}
 
 		DescriptorSet->UpdateWithImageAndSampler(4, 0, Scene.GetIrradianceEnvmap().GetDefaultView(),
-		                                         *IrradianceMapSampler,
+		                                         *EnvmapSampler,
+		                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		DescriptorSet->UpdateWithImageAndSampler(5, 0, Scene.GetSpecularEnvmap().GetDefaultView(),
+		                                         *EnvmapSampler,
 		                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
 		LightingData Lighting = {};

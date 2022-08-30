@@ -5,6 +5,7 @@
 
 // NOTE : keep in sync with engine's code
 #define MAX_POINT_LIGHT_COUNT 256
+#define NUMBER_OF_MIP_LEVELS_IN_SPECULAR_ENVMAP 5
 
 layout(input_attachment_index = 0, set = 0, binding = 0) uniform subpassInput i_Albedo;
 layout(input_attachment_index = 1, set = 0, binding = 1) uniform subpassInput i_PositionRoughness;
@@ -32,6 +33,8 @@ layout(set = 0, binding = 3) uniform LightingData
 } u_Lights;
 
 layout(set = 0, binding = 4) uniform samplerCube u_IrradianceMap;
+layout(set = 0, binding = 5) uniform samplerCube u_SpecularMap;
+layout(set = 0, binding = 6) uniform sampler2D u_PrecomputedBRDFMap;
 
 vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
 {
@@ -67,9 +70,20 @@ vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
         Result += (DiffuseCoef * AlbedoColor / Pi + Specular) * Radiance * max(dot(Normal, LightDirection), 0.0);
     }
 
+    vec3 F = FresnelSchlickRoughness(AlbedoColor, Metallic, Roughness, max(dot(Normal, ViewVector), 0.0));
+
+    vec3 SpecularCoef = F;
+    vec3 DiffuseCoef = (1.0 - SpecularCoef) * (1.0 - Metallic);
+
     vec3 IrradianceValue = texture(u_IrradianceMap, Normal).rgb;
-    vec3 DiffuseCoef = 1.0 - FresnelSchlickRoughness(AlbedoColor, Metallic, Roughness, max(dot(Normal, ViewVector), 0.0));
-    vec3 Ambient = DiffuseCoef * IrradianceValue * AlbedoColor;
+    vec3 DiffuseAmbient = IrradianceValue * AlbedoColor;
+
+    vec3 SpecularMapValue = textureLod(u_SpecularMap, reflect(-ViewVector, Normal), Roughness * NUMBER_OF_MIP_LEVELS_IN_SPECULAR_ENVMAP).rgb;
+    vec2 PrecomputedBRDFSampleCoordinates = vec2(max(dot(Normal, ViewVector), 0.0), Roughness);
+    vec2 PrecomputedBRDFValue = texture(u_PrecomputedBRDFMap, PrecomputedBRDFSampleCoordinates).rg;
+    vec3 SpecularAmbient = SpecularMapValue * (F * PrecomputedBRDFValue.x + PrecomputedBRDFValue.y);
+
+    vec3 Ambient = DiffuseCoef * DiffuseAmbient + SpecularAmbient;
     Result += Ambient;
 
     return vec4(Result, 1.0);

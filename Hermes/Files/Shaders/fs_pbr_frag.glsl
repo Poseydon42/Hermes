@@ -9,6 +9,8 @@ layout(input_attachment_index = 0, set = 0, binding = 0) uniform subpassInput i_
 layout(input_attachment_index = 1, set = 0, binding = 1) uniform subpassInput i_PositionRoughness;
 layout(input_attachment_index = 2, set = 0, binding = 2) uniform subpassInput i_NormalMetallic;
 
+layout(location = 0) in vec2 i_FragPos;
+
 layout(location = 0) out vec4 o_Color;
 
 struct PointLight

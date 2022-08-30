@@ -50,6 +50,10 @@ namespace Hermes
 		std::unique_ptr<RenderInterface::Shader> VertexShader, FragmentShader;
 		std::unique_ptr<RenderInterface::Sampler> IrradianceMapSampler;
 
+		static std::unique_ptr<RenderInterface::Image> PrecomputedBRDF;
+		static std::unique_ptr<RenderInterface::ImageView> PrecomputedBRDFView;
+		static std::unique_ptr<RenderInterface::Sampler> PrecomputedBRDFSampler;
+
 		PassDesc Description;
 
 		void PassCallback(
@@ -59,5 +63,10 @@ namespace Hermes
 			const Scene& Scene, bool ResourcesWereRecreated);
 
 		void RecreatePipeline(const RenderInterface::RenderPass& Pass);
+
+		/*
+		 * Recreates and recomputes the precomputed BRDF image and the corresponding sampler
+		 */
+		static void EnsurePrecomputedBRDF();
 	};
 }

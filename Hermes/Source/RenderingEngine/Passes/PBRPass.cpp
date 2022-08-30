@@ -8,12 +8,18 @@
 #include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/Fence.h"
 #include "RenderInterface/GenericRenderInterface/Pipeline.h"
+#include "RenderInterface/GenericRenderInterface/Queue.h"
 #include "RenderInterface/GenericRenderInterface/Shader.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
 
 namespace Hermes
 {
+	std::unique_ptr<RenderInterface::Image> PBRPass::PrecomputedBRDF;
+	std::unique_ptr<RenderInterface::ImageView> PBRPass::PrecomputedBRDFView;
+	std::unique_ptr<RenderInterface::Sampler> PBRPass::PrecomputedBRDFSampler;
+
 	PBRPass::PBRPass()
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
@@ -157,5 +163,96 @@ namespace Hermes
 		PipelineDescription.DepthStencilStage.IsDepthWriteEnabled = false;
 
 		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Pass, PipelineDescription);
+	}
+
+	void PBRPass::EnsurePrecomputedBRDF()
+	{
+		static constexpr Vec2ui Dimensions { 512 };
+		static constexpr RenderInterface::DataFormat Format = RenderInterface::DataFormat::R16G16SignedFloat;
+
+		// First, destroy the previous sampler and BRDF image
+		PrecomputedBRDF.reset();
+		PrecomputedBRDFSampler.reset();
+
+		// Compute the BRDF
+		auto& Device = Renderer::Get().GetActiveDevice();
+
+		PrecomputedBRDF = Device.CreateImage(Dimensions,
+		                                     RenderInterface::ImageUsageType::ColorAttachment |
+		                                     RenderInterface::ImageUsageType::Sampled, Format, 1,
+		                                     RenderInterface::ImageLayout::Undefined);
+		PrecomputedBRDFView = PrecomputedBRDF->CreateDefaultImageView();
+
+		RenderInterface::RenderPassAttachment OutputAttachment = {};
+		OutputAttachment.Type = RenderInterface::AttachmentType::Color;
+		OutputAttachment.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		OutputAttachment.StoreOp = RenderInterface::AttachmentStoreOp::Store;
+		OutputAttachment.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		OutputAttachment.StencilStoreOp = RenderInterface::AttachmentStoreOp::Undefined;
+		OutputAttachment.Format = PrecomputedBRDF->GetDataFormat();
+		OutputAttachment.LayoutAtStart = RenderInterface::ImageLayout::ColorAttachmentOptimal;
+		OutputAttachment.LayoutAtEnd = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+		auto RenderPass = Device.CreateRenderPass({ OutputAttachment });
+
+		auto VertexShader = Device.CreateShader(L"Shaders/Bin/fs_vert.glsl.spv", RenderInterface::ShaderType::VertexShader);
+		auto FragmentShader = Device.CreateShader(L"Shaders/Bin/precompute_brdf.glsl.spv", RenderInterface::ShaderType::FragmentShader);
+
+		RenderInterface::PipelineDescription PipelineDesc = {};
+		PipelineDesc.ShaderStages = { VertexShader.get(), FragmentShader.get() };
+		PipelineDesc.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
+		PipelineDesc.Viewport.Origin = { 0 };
+		PipelineDesc.Viewport.Dimensions = Dimensions;
+		PipelineDesc.Rasterizer.Fill = RenderInterface::FillMode::Fill;
+		PipelineDesc.Rasterizer.Cull = RenderInterface::CullMode::Back;
+		PipelineDesc.Rasterizer.Direction = RenderInterface::FaceDirection::CounterClockwise;
+		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = false;
+		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = false;
+		auto Pipeline = Device.CreatePipeline(*RenderPass, PipelineDesc);
+		
+		auto RenderTarget = Device.CreateRenderTarget(*RenderPass, { PrecomputedBRDFView.get() },
+		                                              PrecomputedBRDF->GetSize());
+
+		auto& Queue = Device.GetQueue(RenderInterface::QueueType::Render);
+		auto CommandBuffer = Queue.CreateCommandBuffer(true);
+		auto Fence = Device.CreateFence();
+
+		/*
+		 * NOTE : steps to take:
+		 *   1) Transition the precomputed BRDF image to color attachment optimal
+		 *	 2) Begin render pass
+		 *	 3) Bind pipeline
+		 *	 4) Issue draw call for 2 triangles (6 vertices)
+		 *	 5) End render pass/recording
+		 */
+		CommandBuffer->BeginRecording();
+		RenderInterface::ImageMemoryBarrier Barrier = {};
+		Barrier.OldLayout = RenderInterface::ImageLayout::Undefined;
+		Barrier.NewLayout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
+		Barrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::None;
+		Barrier.OperationsThatCanStartAfter = RenderInterface::AccessType::ColorAttachmentWrite;
+		Barrier.BaseMipLevel = 0;
+		Barrier.MipLevelCount = 1;
+		CommandBuffer->InsertImageMemoryBarrier(*PrecomputedBRDF, Barrier, RenderInterface::PipelineStage::BottomOfPipe,
+		                                        RenderInterface::PipelineStage::ColorAttachmentOutput);
+		CommandBuffer->BeginRenderPass(*RenderPass, *RenderTarget, { { 0.0f, 0.0f, 0.0f, 1.0f } });
+		CommandBuffer->BindPipeline(*Pipeline);
+		CommandBuffer->Draw(6, 1, 0, 0);
+		CommandBuffer->EndRenderPass();
+		CommandBuffer->EndRecording();
+
+		Queue.SubmitCommandBuffer(*CommandBuffer, Fence.get());
+
+		RenderInterface::SamplerDescription SamplerDesc = {};
+		SamplerDesc.AddressingModeU = SamplerDesc.AddressingModeV = RenderInterface::AddressingMode::Repeat;
+		SamplerDesc.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
+		SamplerDesc.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
+		SamplerDesc.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
+		SamplerDesc.MipMode = RenderInterface::MipmappingMode::Linear;
+		SamplerDesc.MinMipLevel = 0.0f;
+		SamplerDesc.MaxMipLevel = 1.0;
+		SamplerDesc.MipBias = 0.0f;
+		PrecomputedBRDFSampler = Device.CreateSampler(SamplerDesc);
+
+		Fence->Wait(UINT64_MAX);
 	}
 }

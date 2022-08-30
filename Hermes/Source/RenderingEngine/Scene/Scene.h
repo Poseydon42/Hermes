@@ -41,6 +41,7 @@ namespace Hermes
 
 		const CubemapTexture& GetReflectionEnvmap() const;
 		const CubemapTexture& GetIrradianceEnvmap() const;
+		const CubemapTexture& GetSpecularEnvmap() const;
 
 	private:
 		std::vector<MeshProxy> Meshes;
@@ -48,6 +49,7 @@ namespace Hermes
 
 		std::unique_ptr<CubemapTexture> ReflectionEnvmap;
 		std::unique_ptr<CubemapTexture> IrradianceEnvmap;
+		std::unique_ptr<CubemapTexture> SpecularEnvmap;
 
 		std::shared_ptr<Camera> ActiveCamera;
 	};

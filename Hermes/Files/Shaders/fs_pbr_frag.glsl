@@ -1,9 +1,10 @@
 #version 450
 #pragma shader_stage(fragment)
 
+#include "brdf_math.glsl"
+
 // NOTE : keep in sync with engine's code
 #define MAX_POINT_LIGHT_COUNT 256
-#define Pi 3.14159265359
 
 layout(input_attachment_index = 0, set = 0, binding = 0) uniform subpassInput i_Albedo;
 layout(input_attachment_index = 1, set = 0, binding = 1) uniform subpassInput i_PositionRoughness;
@@ -31,56 +32,6 @@ layout(set = 0, binding = 3) uniform LightingData
 } u_Lights;
 
 layout(set = 0, binding = 4) uniform samplerCube u_IrradianceMap;
-
-float NormalDistribution(vec3 Normal, vec3 MedianVector, float Roughness)
-{
-    float CosAngle = max(dot(Normal, MedianVector), 0.0);
-
-    float Nominator = pow(Roughness, 4);
-
-    float Denominator = (CosAngle * CosAngle * (pow(Roughness, 4) - 1.0) + 1.0);
-    Denominator = Pi * Denominator * Denominator;
-
-    return Nominator / Denominator;
-}
-
-float GeometrySchlickGGX(float CosAngle, float Roughness)
-{
-    float k = (Roughness + 1) * (Roughness + 1) / 8.0; // TODO : are these values correct?
-
-    float Nominator = CosAngle;
-    float Denominator = CosAngle * (1 - k) + k;
-
-    return Nominator / Denominator;
-}
-
-float GeometrySmithFunction(vec3 Normal, vec3 View, vec3 Light, float Roughness)
-{
-    float CosAngleNormalView = max(dot(Normal, View), 0.0);
-    float CosAngleNormalLight = max(dot(Normal, Light), 0.0);
-
-    float GGXView = GeometrySchlickGGX(CosAngleNormalView, Roughness);
-    float GGXLight = GeometrySchlickGGX(CosAngleNormalLight, Roughness);
-
-    return GGXView * GGXLight;
-}
-
-vec3 ComputeF0(vec3 AlbedoColor, float Metalness)
-{
-    return mix(vec3(0.04), AlbedoColor, Metalness);
-}
-
-vec3 FresnelSchlick(vec3 AlbedoColor, float Metalness, float CosAngle)
-{
-    vec3 F0 = ComputeF0(AlbedoColor, Metalness);
-    return F0 + (1.0 - F0) * pow(1.0 - CosAngle, 5.0);
-}
-
-vec3 FresnelSchlickRoughness(vec3 AlbedoColor, float Metalness, float Roughness, float CosAngle)
-{
-    vec3 F0 = ComputeF0(AlbedoColor, Metalness);
-    return F0 + (max(vec3(1.0 - Roughness), F0) - F0) * pow(1.0 - CosAngle, 5.0);
-}
 
 vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
 {

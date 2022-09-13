@@ -20,7 +20,7 @@ namespace Hermes
 		case RenderInterface::CubemapSide::NegativeX:
 			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { -1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
 		case RenderInterface::CubemapSide::PositiveY:
-			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f });
+			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f });
 		case RenderInterface::CubemapSide::NegativeY:
 			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { 0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f });
 		case RenderInterface::CubemapSide::PositiveZ:

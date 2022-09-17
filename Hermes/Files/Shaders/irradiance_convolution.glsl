@@ -24,7 +24,7 @@ void main()
     vec3 Right = normalize(cross(Up, Normal));
     Up = normalize(cross(Normal, Right));
 
-    float SampleDelta = 0.025;
+    float SampleDelta = 0.01;
     float SampleCount = 0.0;
     for (float Phi = 0.0; Phi < 2.0 * Pi; Phi += SampleDelta)
     {

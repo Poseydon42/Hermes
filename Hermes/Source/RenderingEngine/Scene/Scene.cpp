@@ -383,7 +383,7 @@ namespace Hermes
 			auto RawReflectionEnvmapTexture = Texture::CreateFromAsset(*RawReflectionEnvmapAsset, false, false);
 			return CubemapTexture::CreateFromEquirectangularTexture(*RawReflectionEnvmapTexture,
 			                                                        RenderInterface::DataFormat::R16G16B16A16SignedFloat,
-			                                                        false);
+			                                                        true);
 		};
 
 		ReflectionEnvmap = LoadCubemap(L"Textures/envmap");

@@ -1,7 +1,5 @@
 #include "SkyboxPass.h"
 
-#include "AssetSystem/Asset.h"
-#include "AssetSystem/AssetLoader.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Texture.h"
@@ -124,7 +122,7 @@ namespace Hermes
 		PipelineDescription.Viewport.Dimensions = Renderer::Get().GetSwapchain().GetSize();
 
 		PipelineDescription.DepthStencilStage.IsDepthTestEnabled = true;
-		PipelineDescription.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::LessOrEqual;
+		PipelineDescription.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::GreaterOrEqual;
 		PipelineDescription.DepthStencilStage.IsDepthWriteEnabled = false;
 
 		PipelineDescription.Rasterizer.Cull = RenderInterface::CullMode::Back;

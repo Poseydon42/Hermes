@@ -77,10 +77,7 @@ namespace Hermes
 		Drain DepthDrain = {};
 		DepthDrain.Name = L"Depth";
 		DepthDrain.Binding = BindingMode::DepthStencilAttachment;
-		DepthDrain.ClearColor[0] =
-			DepthDrain.ClearColor[0] =
-			DepthDrain.ClearColor[0] =
-			DepthDrain.ClearColor[0] = 1.0f;
+		DepthDrain.ClearColor[0] = 0.0f;
 		DepthDrain.Layout = RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
 		DepthDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		DepthDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Clear;
@@ -198,7 +195,7 @@ namespace Hermes
 
 		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = true;
 		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = true;
-		PipelineDesc.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Less;
+		PipelineDesc.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Greater;
 
 		Pipeline = Device->CreatePipeline(Pass, PipelineDesc);
 	}

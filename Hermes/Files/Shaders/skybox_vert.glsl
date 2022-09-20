@@ -16,5 +16,8 @@ void main()
     vec4 ProjectedVertexPosition = PushConstants.ViewProjection * vec4(LocalVertexPosition, 1.0);
 
     o_Pos = LocalVertexPosition;
-    gl_Position = ProjectedVertexPosition.xyww;
+
+    // NOTE : set Z to 0 so that it is equal to the background value of the depth buffer
+    ProjectedVertexPosition.z = 0;
+    gl_Position = ProjectedVertexPosition;
 }

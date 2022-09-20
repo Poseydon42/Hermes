@@ -57,7 +57,7 @@ namespace Hermes
 		String Name;
 		RenderInterface::AttachmentLoadOp LoadOp;
 		RenderInterface::AttachmentLoadOp StencilLoadOp;
-		float ClearColor[4];
+		float ClearColor[4]; // NOTE : in case of depth attachment only first element is used
 		RenderInterface::ImageLayout Layout;
 		BindingMode Binding;
 	};

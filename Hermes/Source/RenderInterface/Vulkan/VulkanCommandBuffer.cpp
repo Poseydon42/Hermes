@@ -74,7 +74,9 @@ namespace Hermes
 			VK_CHECK_RESULT(vkEndCommandBuffer(Buffer));
 		}
 
-		void VulkanCommandBuffer::BeginRenderPass(const RenderInterface::RenderPass& RenderPass, const RenderInterface::RenderTarget& RenderTarget, const std::vector<RenderInterface::ClearColor>& ClearColors)
+		void VulkanCommandBuffer::BeginRenderPass(const RenderInterface::RenderPass& RenderPass,
+		                                          const RenderInterface::RenderTarget& RenderTarget,
+		                                          const std::vector<RenderInterface::ClearColor>& ClearColors)
 		{
 			VkRenderPassBeginInfo BeginInfo = {};
 			BeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -82,10 +84,21 @@ namespace Hermes
 			BeginInfo.framebuffer = static_cast<const VulkanRenderTarget&>(RenderTarget).GetFramebuffer();
 			BeginInfo.renderArea.offset = { 0, 0};
 			BeginInfo.renderArea.extent =  { RenderTarget.GetSize().X, RenderTarget.GetSize().Y };
-			BeginInfo.clearValueCount = (uint32)ClearColors.size();
-			// TODO : this is a dirty hack that assumes that VkClearColor data layout exactly matches ClearColor
-			//        data layout. We should fix it one day to be 100% sure in its compatibility
-			BeginInfo.pClearValues = (const VkClearValue*)ClearColors.data();
+
+			std::vector<VkClearValue> ClearValues(ClearColors.size());
+			for (size_t ClearValueIndex = 0; ClearValueIndex < ClearColors.size(); ClearValueIndex++)
+			{
+				ClearValues[ClearValueIndex].color.float32[0] = ClearColors[ClearValueIndex].R;
+				ClearValues[ClearValueIndex].color.float32[0] = ClearColors[ClearValueIndex].G;
+				ClearValues[ClearValueIndex].color.float32[0] = ClearColors[ClearValueIndex].B;
+				ClearValues[ClearValueIndex].color.float32[0] = ClearColors[ClearValueIndex].A;
+
+				ClearValues[ClearValueIndex].depthStencil.depth = ClearColors[ClearValueIndex].Depth;
+				ClearValues[ClearValueIndex].depthStencil.stencil = ClearColors[ClearValueIndex].Stencil;
+			}
+
+			BeginInfo.clearValueCount = static_cast<uint32>(ClearValues.size());
+			BeginInfo.pClearValues = ClearValues.data();
 			
 			vkCmdBeginRenderPass(Buffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		}

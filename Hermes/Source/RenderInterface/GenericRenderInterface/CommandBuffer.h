@@ -91,10 +91,12 @@ namespace Hermes
 
 		struct ClearColor
 		{
-			float R;
-			float G;
-			float B;
-			float A;
+			float R = 0.0f;
+			float G = 0.0f;
+			float B = 0.0f;
+			float A = 0.0f;
+			float Depth = 0.0f;
+			uint32 Stencil = 0;
 		};
 
 		enum class IndexSize

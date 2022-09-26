@@ -11,7 +11,6 @@
 #include "RenderInterface/GenericRenderInterface/Fence.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/RenderPass.h"
-#include "RenderInterface/GenericRenderInterface/RenderTarget.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #include "RenderInterface/GenericRenderInterface/Image.h"
 #include "RenderInterface/GenericRenderInterface/Queue.h"
@@ -22,22 +21,23 @@ namespace Hermes
 	{
 		auto DotIndex = ResourceName.find_first_of('.');
 		HERMES_ASSERT(DotIndex != ResourceName.npos);
-		PassName = String(ResourceName.begin(), ResourceName.begin() + DotIndex);
-		OwnName = String(ResourceName.begin() + DotIndex + 1, ResourceName.end());
+		PassName = String(ResourceName.begin(),
+		                  ResourceName.begin() + static_cast<std::string::difference_type>(DotIndex));
+		OwnName = String(ResourceName.begin() + static_cast<std::string::difference_type>(DotIndex) + 1,
+		                 ResourceName.end());
 	}
 
 	void FrameGraphScheme::AddPass(const String& Name, const PassDesc& Desc)
 	{
-		HERMES_ASSERT_LOG(Passes.count(Name) == 0, L"Trying to duplicate pass with name %s", Name.c_str());
+		HERMES_ASSERT_LOG(!Passes.contains(Name), L"Trying to duplicate pass with name %s", Name.c_str());
 		Passes[Name] = Desc;
 	}
 
 	void FrameGraphScheme::AddLink(const String& Source, const String& Drain)
 	{
-		HERMES_ASSERT_LOG(
-			DrainToSourceLinkage.count(Drain) == 0,
-			L"Trying to link drain %s to source %s while it is already linked with source %s",
-			Drain.c_str(), Source.c_str(), DrainToSourceLinkage[Drain].c_str());
+		HERMES_ASSERT_LOG(!DrainToSourceLinkage.contains(Drain),
+		                  L"Trying to link drain %s to source %s while it is already linked with source %s",
+		                  Drain.c_str(), Source.c_str(), DrainToSourceLinkage[Drain].c_str());
 
 		DrainToSourceLinkage[Drain] = Source;
 		SourceToDrainLinkage[Source] = Drain;
@@ -270,11 +270,11 @@ namespace Hermes
 			std::vector<RenderInterface::RenderPassAttachment> RenderPassAttachments;
 			for (const auto& Drain : Pass.second.Drains)
 			{
-				const auto& CorrespondingSourceIterator = std::find_if(
-					Pass.second.Sources.begin(), Pass.second.Sources.end(), [&](const Source& Element)
-					{
-						return Element.Name == Drain.Name;
-					});
+				const auto& CorrespondingSourceIterator = std::ranges::find_if(Pass.second.Sources,
+				                                                               [&](const Source& Element)
+				                                                               {
+					                                                               return Element.Name == Drain.Name;
+				                                                               });
 				RenderInterface::RenderPassAttachment AttachmentDesc = {};
 				auto FullDrainName = Pass.first + L'.' + Drain.Name;
 				AttachmentDesc.Format = TraverseDrainDataFormat(FullDrainName);
@@ -423,12 +423,10 @@ namespace Hermes
 			}
 
 			auto CurrentDrainRenderPass = Scheme.Passes.at(CurrentDrainRenderPassName);
-			auto CurrentDrain = std::find_if(
-				CurrentDrainRenderPass.Drains.begin(), CurrentDrainRenderPass.Drains.end(),
-				[&](const Drain& Element)
-				{
-					return Element.Name == CurrentDrainOwnName;
-				});
+			auto CurrentDrain = std::ranges::find_if(CurrentDrainRenderPass.Drains, [&](const Drain& Element)
+			{
+				return Element.Name == CurrentDrainOwnName;
+			});
 
 			switch (CurrentDrain->Binding)
 			{
@@ -446,12 +444,12 @@ namespace Hermes
 				break;
 			}
 
-			auto CorrespondingSourceOfCurrentRenderPass = std::find_if(
-				CurrentDrainRenderPass.Sources.begin(), CurrentDrainRenderPass.Sources.end(),
-				[&](const Source& Element)
-				{
-					return Element.Name == CurrentDrainOwnName;
-				});
+			auto CorrespondingSourceOfCurrentRenderPass = std::ranges::find_if(CurrentDrainRenderPass.Sources,
+			                                                                   [&](const Source& Element)
+			                                                                   {
+				                                                                   return Element.Name ==
+					                                                                   CurrentDrainOwnName;
+			                                                                   });
 			if (CorrespondingSourceOfCurrentRenderPass == CurrentDrainRenderPass.Sources.end())
 				break;
 

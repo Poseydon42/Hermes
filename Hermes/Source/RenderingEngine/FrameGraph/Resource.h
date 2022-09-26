@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "Math/Math.h"
+#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/CommonTypes.h"
 #include "RenderInterface/GenericRenderInterface/Forward.h"
 
@@ -57,7 +58,7 @@ namespace Hermes
 		String Name;
 		RenderInterface::AttachmentLoadOp LoadOp;
 		RenderInterface::AttachmentLoadOp StencilLoadOp;
-		float ClearColor[4]; // NOTE : in case of depth attachment only first element is used
+		RenderInterface::ClearColor ClearColor;
 		RenderInterface::ImageLayout Layout;
 		BindingMode Binding;
 	};

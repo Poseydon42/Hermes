@@ -359,18 +359,7 @@ namespace Hermes
 					RenderTargetDimensions = Resource.Image->GetSize();
 				}
 
-				NewPassContainer.ClearColors.emplace_back();
-				if (Drain.Binding == BindingMode::DepthStencilAttachment)
-				{
-					NewPassContainer.ClearColors.back().Depth = Drain.ClearColor[0];
-				}
-				else
-				{
-					NewPassContainer.ClearColors.back().R = Drain.ClearColor[0];
-					NewPassContainer.ClearColors.back().G = Drain.ClearColor[1];
-					NewPassContainer.ClearColors.back().B = Drain.ClearColor[2];
-					NewPassContainer.ClearColors.back().A = Drain.ClearColor[3];
-				}
+				NewPassContainer.ClearColors.push_back(Drain.ClearColor);
 
 				NewPassContainer.Attachments.push_back(Resource.Image.get());
 				NewPassContainer.Views.push_back(Resource.View.get());

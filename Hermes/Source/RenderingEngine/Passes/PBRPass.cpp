@@ -98,8 +98,10 @@ namespace Hermes
 		Drain ColorBufferDrain = {};
 		ColorBufferDrain.Name = L"ColorBuffer";
 		ColorBufferDrain.Binding = BindingMode::ColorAttachment;
-		ColorBufferDrain.ClearColor[0] = ColorBufferDrain.ClearColor[1] = ColorBufferDrain.ClearColor[2] =
-			ColorBufferDrain.ClearColor[3] = 1.0f;
+		ColorBufferDrain.ClearColor.R =
+			ColorBufferDrain.ClearColor.G =
+			ColorBufferDrain.ClearColor.B =
+			ColorBufferDrain.ClearColor.A = 1.0f;
 		ColorBufferDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		ColorBufferDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		ColorBufferDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;

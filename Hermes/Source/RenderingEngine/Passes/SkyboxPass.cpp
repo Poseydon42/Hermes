@@ -48,16 +48,16 @@ namespace Hermes
 
 		Description.Callback.Bind<SkyboxPass, &SkyboxPass::PassCallback>(this);
 
-		Description.Drains.resize(2);
-		Description.Drains[0].Name = L"ColorBuffer";
-		Description.Drains[0].Binding = BindingMode::ColorAttachment;
-		Description.Drains[0].LoadOp = RenderInterface::AttachmentLoadOp::Load;
-		Description.Drains[0].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Description.Attachments.resize(2);
+		Description.Attachments[0].Name = L"ColorBuffer";
+		Description.Attachments[0].Binding = BindingMode::ColorAttachment;
+		Description.Attachments[0].LoadOp = RenderInterface::AttachmentLoadOp::Load;
+		Description.Attachments[0].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Description.Drains[1].Name = L"DepthBuffer";
-		Description.Drains[1].Binding = BindingMode::DepthStencilAttachment;
-		Description.Drains[1].LoadOp = RenderInterface::AttachmentLoadOp::Load;
-		Description.Drains[1].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Description.Attachments[1].Name = L"DepthBuffer";
+		Description.Attachments[1].Binding = BindingMode::DepthStencilAttachment;
+		Description.Attachments[1].LoadOp = RenderInterface::AttachmentLoadOp::Load;
+		Description.Attachments[1].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 	}
 
 	const PassDesc& SkyboxPass::GetPassDescription() const

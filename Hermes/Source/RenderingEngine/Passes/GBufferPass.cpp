@@ -41,44 +41,44 @@ namespace Hermes
 		PassCallback.Bind<GBufferPass, &GBufferPass::PassCallback>(this);
 		Descriptor.Callback = PassCallback;
 
-		Drain AlbedoDrain = {};
-		AlbedoDrain.Name = L"Albedo";
-		AlbedoDrain.Binding = BindingMode::ColorAttachment;
-		AlbedoDrain.ClearColor.R =
-			AlbedoDrain.ClearColor.G =
-			AlbedoDrain.ClearColor.B =
-			AlbedoDrain.ClearColor.A = 0.0f;
-		AlbedoDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		AlbedoDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Attachment Albedo = {};
+		Albedo.Name = L"Albedo";
+		Albedo.Binding = BindingMode::ColorAttachment;
+		Albedo.ClearColor.R =
+			Albedo.ClearColor.G =
+			Albedo.ClearColor.B =
+			Albedo.ClearColor.A = 0.0f;
+		Albedo.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		Albedo.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Drain PositionRoughnessDrain = {};
-		PositionRoughnessDrain.Name = L"PositionRoughness";
-		PositionRoughnessDrain.Binding = BindingMode::ColorAttachment;
-		PositionRoughnessDrain.ClearColor.R =
-			PositionRoughnessDrain.ClearColor.G =
-			PositionRoughnessDrain.ClearColor.B =
-			PositionRoughnessDrain.ClearColor.A = 0.0f;
-		PositionRoughnessDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		PositionRoughnessDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Attachment PositionRoughness = {};
+		PositionRoughness.Name = L"PositionRoughness";
+		PositionRoughness.Binding = BindingMode::ColorAttachment;
+		PositionRoughness.ClearColor.R =
+			PositionRoughness.ClearColor.G =
+			PositionRoughness.ClearColor.B =
+			PositionRoughness.ClearColor.A = 0.0f;
+		PositionRoughness.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		PositionRoughness.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Drain NormalMetallicDrain = {};
-		NormalMetallicDrain.Name = L"NormalMetallic";
-		NormalMetallicDrain.Binding = BindingMode::ColorAttachment;
-		NormalMetallicDrain.ClearColor.R =
-			NormalMetallicDrain.ClearColor.G =
-			NormalMetallicDrain.ClearColor.B =
-			NormalMetallicDrain.ClearColor.A = 0.0f;
-		NormalMetallicDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		NormalMetallicDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Attachment NormalMetallic = {};
+		NormalMetallic.Name = L"NormalMetallic";
+		NormalMetallic.Binding = BindingMode::ColorAttachment;
+		NormalMetallic.ClearColor.R =
+			NormalMetallic.ClearColor.G =
+			NormalMetallic.ClearColor.B =
+			NormalMetallic.ClearColor.A = 0.0f;
+		NormalMetallic.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		NormalMetallic.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Drain DepthDrain = {};
-		DepthDrain.Name = L"Depth";
-		DepthDrain.Binding = BindingMode::DepthStencilAttachment;
-		DepthDrain.ClearColor.Depth = 0.0f;
-		DepthDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		DepthDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		Attachment Depth = {};
+		Depth.Name = L"Depth";
+		Depth.Binding = BindingMode::DepthStencilAttachment;
+		Depth.ClearColor.Depth = 0.0f;
+		Depth.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		Depth.StencilLoadOp = RenderInterface::AttachmentLoadOp::Clear;
 
-		Descriptor.Drains = { AlbedoDrain, PositionRoughnessDrain, NormalMetallicDrain, DepthDrain };
+		Descriptor.Attachments = { Albedo, PositionRoughness, NormalMetallic, Depth };
 	}
 
 	const PassDesc& GBufferPass::GetPassDescription() const

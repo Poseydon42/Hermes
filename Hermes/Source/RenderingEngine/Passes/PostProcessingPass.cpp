@@ -25,20 +25,20 @@ namespace Hermes
 		VertexShader = Device.CreateShader(L"Shaders/Bin/fs_vert.glsl.spv", RenderInterface::ShaderType::VertexShader);
 		FragmentShader = Device.CreateShader(L"Shaders/Bin/fs_postprocessing_frag.glsl.spv", RenderInterface::ShaderType::FragmentShader);
 
-		Drain InputColorDrain = {};
-		InputColorDrain.Name = L"InputColor";
-		InputColorDrain.LoadOp = RenderInterface::AttachmentLoadOp::Load;
-		InputColorDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
-		InputColorDrain.Binding = BindingMode::InputAttachment;
+		Attachment InputColor = {};
+		InputColor.Name = L"InputColor";
+		InputColor.LoadOp = RenderInterface::AttachmentLoadOp::Load;
+		InputColor.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		InputColor.Binding = BindingMode::InputAttachment;
 
-		Drain OutputColorDrain = {};
-		OutputColorDrain.Name = L"OutputColor";
-		OutputColorDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		OutputColorDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
-		memset(&OutputColorDrain.ClearColor, 0, sizeof(OutputColorDrain.ClearColor));
-		OutputColorDrain.Binding = BindingMode::ColorAttachment;
+		Attachment OutputColor = {};
+		OutputColor.Name = L"OutputColor";
+		OutputColor.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		OutputColor.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		memset(&OutputColor.ClearColor, 0, sizeof(OutputColor.ClearColor));
+		OutputColor.Binding = BindingMode::ColorAttachment;
 
-		Description.Drains = { InputColorDrain, OutputColorDrain };
+		Description.Attachments = { InputColor, OutputColor };
 		Description.Callback.Bind<PostProcessingPass, &PostProcessingPass::PassCallback>(this);
 	}
 
@@ -50,7 +50,7 @@ namespace Hermes
 	void PostProcessingPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
 	                                      const RenderInterface::RenderPass& PassInstance,
 	                                      const std::vector<std::pair<
-		                                      const RenderInterface::Image*, const RenderInterface::ImageView*>>& Drains,
+		                                      const RenderInterface::Image*, const RenderInterface::ImageView*>>& Attachments,
 	                                      const Scene&, bool ResourcesWereRecreated)
 	{
 		if (ResourcesWereRecreated || !IsPipelineCreated)
@@ -59,8 +59,8 @@ namespace Hermes
 			IsPipelineCreated = true;
 		}
 
-		HERMES_ASSERT(Drains.size() == 2 && Drains[0].second != nullptr);
-		DescriptorSet->UpdateWithImage(0, 0, *Drains[0].second, RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		HERMES_ASSERT(Attachments.size() == 2 && Attachments[0].second != nullptr);
+		DescriptorSet->UpdateWithImage(0, 0, *Attachments[0].second, RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
 		CommandBuffer.BindPipeline(*Pipeline);
 		CommandBuffer.BindDescriptorSet(*DescriptorSet, *Pipeline, 0);

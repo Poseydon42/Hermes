@@ -20,7 +20,7 @@ namespace Hermes
 	public:
 		void AddPass(const String& Name, const PassDesc& Desc);
 
-		void AddLink(const String& Source, const String& Drain);
+		void AddLink(const String& From, const String& To);
 
 		void AddResource(const String& Name, const ResourceDesc& Description);
 
@@ -68,11 +68,11 @@ namespace Hermes
 
 		explicit FrameGraph(FrameGraphScheme InScheme);
 
-		String TraverseResourceName(const String& FullDrainName);
+		String TraverseResourceName(const String& FullAttachmentName);
 
 		RenderInterface::ImageUsageType TraverseResourceUsageType(const String& ResourceName) const;
 
-		RenderInterface::DataFormat TraverseDrainDataFormat(const String& DrainName) const;
+		RenderInterface::DataFormat TraverseAttachmentDataFormat(const String& AttachmentName) const;
 
 		void RecreateResources();
 		void RecreateRenderTargets();

@@ -48,14 +48,14 @@ namespace Hermes
 		Passes[Name] = Desc;
 	}
 
-	void FrameGraphScheme::AddLink(const String& Source, const String& Drain)
+	void FrameGraphScheme::AddLink(const String& From, const String& To)
 	{
-		HERMES_ASSERT_LOG(!BackwardLinks.contains(Drain),
-		                  L"Trying to link drain %s to source %s while it is already linked with source %s",
-		                  Drain.c_str(), Source.c_str(), BackwardLinks[Drain].c_str());
+		HERMES_ASSERT_LOG(!BackwardLinks.contains(To),
+		                  L"Trying to create link from %s to %s while link from %s to %s already exists",
+		                  From.c_str(), To.c_str(), BackwardLinks[To].c_str(), To.c_str());
 
-		BackwardLinks[Drain] = Source;
-		ForwardLinks[Source] = Drain;
+		BackwardLinks[To] = From;
+		ForwardLinks[From] = To;
 	}
 
 	void FrameGraphScheme::AddResource(const String& Name, const ResourceDesc& Description)
@@ -152,16 +152,16 @@ namespace Hermes
 
 			CommandBuffer->BeginRenderPass(*Pass.second.Pass, *Pass.second.RenderTarget, Pass.second.ClearColors);
 
-			std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>> DrainAttachments(Pass.second.Attachments.size());
-			for (size_t AttachmentIndex = 0; AttachmentIndex < DrainAttachments.size(); AttachmentIndex++)
+			std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>> Attachments(Pass.second.Attachments.size());
+			for (size_t AttachmentIndex = 0; AttachmentIndex < Attachments.size(); AttachmentIndex++)
 			{
-				DrainAttachments[AttachmentIndex] = {
+				Attachments[AttachmentIndex] = {
 					Pass.second.Attachments[AttachmentIndex], Pass.second.Views[AttachmentIndex]
 				};
 			}
 
 			bool ResourcesWereRecreatedTmp = ResourcesWereRecreated; // TODO : better way to fix this maybe?
-			Pass.second.Callback(*CommandBuffer, *Pass.second.Pass, DrainAttachments, Scene, std::move(ResourcesWereRecreatedTmp));
+			Pass.second.Callback(*CommandBuffer, *Pass.second.Pass, Attachments, Scene, std::move(ResourcesWereRecreatedTmp));
 			ResourcesWereRecreated = false;
 
 			CommandBuffer->EndRenderPass();
@@ -283,19 +283,19 @@ namespace Hermes
 		for (const auto& Pass : Scheme.Passes)
 		{
 			std::vector<RenderInterface::RenderPassAttachment> RenderPassAttachments;
-			for (const auto& Drain : Pass.second.Drains)
+			for (const auto& Attachment : Pass.second.Attachments)
 			{
-				auto FullDrainName = Pass.first + L'.' + Drain.Name;
-				bool IsUsedLater = Scheme.ForwardLinks.contains(FullDrainName);
+				auto FullAttachmentName = Pass.first + L'.' + Attachment.Name;
+				bool IsUsedLater = Scheme.ForwardLinks.contains(FullAttachmentName);
 				RenderInterface::RenderPassAttachment AttachmentDesc = {};
-				AttachmentDesc.Format = TraverseDrainDataFormat(FullDrainName);
+				AttachmentDesc.Format = TraverseAttachmentDataFormat(FullAttachmentName);
 				// NOTE : because the moment of layout transition after end of the render pass
 				// is not synchronized we won't use this feature and would rather perform
 				// layout transition ourselves using resource barriers
 				AttachmentDesc.LayoutAtStart = AttachmentDesc.LayoutAtEnd =
-					PickImageLayoutForBindingMode(Drain.Binding);
-				AttachmentDesc.LoadOp = Drain.LoadOp;
-				AttachmentDesc.StencilLoadOp = Drain.StencilLoadOp;
+					PickImageLayoutForBindingMode(Attachment.Binding);
+				AttachmentDesc.LoadOp = Attachment.LoadOp;
+				AttachmentDesc.StencilLoadOp = Attachment.StencilLoadOp;
 				if (IsUsedLater)
 				{
 					AttachmentDesc.StoreOp = RenderInterface::AttachmentStoreOp::Store;
@@ -306,7 +306,7 @@ namespace Hermes
 					AttachmentDesc.StoreOp = RenderInterface::AttachmentStoreOp::Undefined;
 					AttachmentDesc.StencilStoreOp = RenderInterface::AttachmentStoreOp::Undefined;
 				}
-				switch (Drain.Binding)
+				switch (Attachment.Binding)
 				{
 				case BindingMode::ColorAttachment:
 					AttachmentDesc.Type = RenderInterface::AttachmentType::Color;
@@ -318,7 +318,7 @@ namespace Hermes
 					AttachmentDesc.Type = RenderInterface::AttachmentType::Input;
 					break;
 				default:
-					HERMES_ASSERT_LOG(false, L"Unknown drain binding type");
+					HERMES_ASSERT_LOG(false, L"Unknown attachment binding mode");
 					break;
 				}
 
@@ -334,12 +334,12 @@ namespace Hermes
 			// TODO : clean this code up
 			std::vector<const RenderInterface::ImageView*> RenderTargetAttachments;
 			Vec2ui RenderTargetDimensions;
-			RenderTargetAttachments.reserve(Pass.second.Drains.size());
-			NewPassContainer.ClearColors.reserve(Pass.second.Drains.size());
-			NewPassContainer.AttachmentLayouts.reserve(Pass.second.Drains.size());
-			for (const auto& Drain : Pass.second.Drains)
+			RenderTargetAttachments.reserve(Pass.second.Attachments.size());
+			NewPassContainer.ClearColors.reserve(Pass.second.Attachments.size());
+			NewPassContainer.AttachmentLayouts.reserve(Pass.second.Attachments.size());
+			for (const auto& Attachment : Pass.second.Attachments)
 			{
-				String FullResourceName = TraverseResourceName(Pass.first + L"." + Drain.Name);
+				String FullResourceName = TraverseResourceName(Pass.first + L"." + Attachment.Name);
 
 				String PassName, ResourceOwnName;
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
@@ -352,11 +352,11 @@ namespace Hermes
 					RenderTargetDimensions = Resource.Image->GetSize();
 				}
 
-				NewPassContainer.ClearColors.push_back(Drain.ClearColor);
+				NewPassContainer.ClearColors.push_back(Attachment.ClearColor);
 
 				NewPassContainer.Attachments.push_back(Resource.Image.get());
 				NewPassContainer.Views.push_back(Resource.View.get());
-				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName, PickImageLayoutForBindingMode(Drain.Binding));
+				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName, PickImageLayoutForBindingMode(Attachment.Binding));
 			}
 
 			if (!ContainsExternalResources)
@@ -379,44 +379,41 @@ namespace Hermes
 		SplitResourceName(ResourceThatBlitsToSwapchain, DummyDollarSign, BlitToSwapchainResourceOwnName);
 	}
 
-	String FrameGraph::TraverseResourceName(const String& FullDrainName)
+	String FrameGraph::TraverseResourceName(const String& FullAttachmentName)
 	{
-		String CurrentSourceName = Scheme.BackwardLinks[FullDrainName];
-		while (CurrentSourceName.find_first_of('$') != 0)
+		String CurrentAttachmentName = Scheme.BackwardLinks[FullAttachmentName];
+		while (CurrentAttachmentName.find_first_of('$') != 0)
 		{
-			// Because if we traverse back then each source of some pass must have
-			// its corresponding drain with same name in the same pass thus their full
-			// names would be equal
-			CurrentSourceName = Scheme.BackwardLinks[CurrentSourceName];
+			CurrentAttachmentName = Scheme.BackwardLinks[CurrentAttachmentName];
 		}
-		return CurrentSourceName;
+		return CurrentAttachmentName;
 	}
 
 	RenderInterface::ImageUsageType FrameGraph::TraverseResourceUsageType(const String& ResourceName) const
 	{
 		auto Result = static_cast<RenderInterface::ImageUsageType>(0);
-		String CurrentSourceName = L"$." + ResourceName;
+		String CurrentAttachmentName = L"$." + ResourceName;
 		while (true)
 		{
-			if (!Scheme.ForwardLinks.contains(CurrentSourceName))
+			if (!Scheme.ForwardLinks.contains(CurrentAttachmentName))
 				break;
-			auto CurrentDrainName = Scheme.ForwardLinks.at(CurrentSourceName);
-			String CurrentDrainRenderPassName, CurrentDrainOwnName;
-			SplitResourceName(CurrentDrainName, CurrentDrainRenderPassName, CurrentDrainOwnName);
+			auto NextAttachmentName = Scheme.ForwardLinks.at(CurrentAttachmentName);
+			String CurrentAttachmentRenderPassName, CurrentAttachmentOwnName;
+			SplitResourceName(NextAttachmentName, CurrentAttachmentRenderPassName, CurrentAttachmentOwnName);
 
-			if (CurrentDrainName == L"$.BLIT_TO_SWAPCHAIN")
+			if (NextAttachmentName == L"$.BLIT_TO_SWAPCHAIN")
 			{
 				Result |= RenderInterface::ImageUsageType::CopySource;
 				break;
 			}
 
-			auto CurrentDrainRenderPass = Scheme.Passes.at(CurrentDrainRenderPassName);
-			auto CurrentDrain = std::ranges::find_if(CurrentDrainRenderPass.Drains, [&](const Drain& Element)
+			auto CurrentAttachmentRenderPass = Scheme.Passes.at(CurrentAttachmentRenderPassName);
+			auto CurrentAttachment = std::ranges::find_if(CurrentAttachmentRenderPass.Attachments, [&](const Attachment& Element)
 			{
-				return Element.Name == CurrentDrainOwnName;
+				return Element.Name == CurrentAttachmentOwnName;
 			});
 
-			switch (CurrentDrain->Binding)
+			switch (CurrentAttachment->Binding)
 			{
 			case BindingMode::ColorAttachment:
 				Result |= RenderInterface::ImageUsageType::ColorAttachment;
@@ -432,28 +429,25 @@ namespace Hermes
 				break;
 			}
 
-			if (!Scheme.ForwardLinks.contains(CurrentDrainName))
+			if (!Scheme.ForwardLinks.contains(NextAttachmentName))
 				break;
-
-			// NOTE : Because own name of connected drains and sources have to match
-			// and they are within same render pass thus their full names would be equal
-			CurrentSourceName = CurrentDrainName;
+			
+			CurrentAttachmentName = NextAttachmentName;
 		}
 
 		return Result;
 	}
 
-	RenderInterface::DataFormat FrameGraph::TraverseDrainDataFormat(const String& DrainName) const
+	RenderInterface::DataFormat FrameGraph::TraverseAttachmentDataFormat(const String& AttachmentName) const
 	{
-		auto CurrentSource = Scheme.BackwardLinks.at(DrainName);
-		while (CurrentSource[0] != L'$')
+		auto CurrentAttachment = Scheme.BackwardLinks.at(AttachmentName);
+		while (CurrentAttachment[0] != L'$')
 		{
-			// NOTE : because drain and source name within same pass have to be the same if they are interconnected
-			CurrentSource = Scheme.BackwardLinks.at(CurrentSource);
+			CurrentAttachment = Scheme.BackwardLinks.at(CurrentAttachment);
 		}
 
 		String ResourcePassName, ResourceOwnName;
-		SplitResourceName(CurrentSource, ResourcePassName, ResourceOwnName);
+		SplitResourceName(CurrentAttachment, ResourcePassName, ResourceOwnName);
 		HERMES_ASSERT(ResourcePassName == L"$");
 
 		const auto& Resource = Resources.at(ResourceOwnName);
@@ -487,12 +481,12 @@ namespace Hermes
 		{
 			std::vector<const RenderInterface::ImageView*> Attachments;
 			Vec2ui RenderTargetDimensions = {};
-			Attachments.reserve(Pass.second.Drains.size());
+			Attachments.reserve(Pass.second.Attachments.size());
 			Passes[Pass.first].Attachments.clear();
 			Passes[Pass.first].Views.clear();
-			for (const auto& Drain : Pass.second.Drains)
+			for (const auto& Attachment : Pass.second.Attachments)
 			{
-				String FullResourceName = TraverseResourceName(Pass.first + L"." + Drain.Name);
+				String FullResourceName = TraverseResourceName(Pass.first + L"." + Attachment.Name);
 
 				String PassName, ResourceOwnName;
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);

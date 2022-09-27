@@ -74,35 +74,35 @@ namespace Hermes
 		SamplerDescription.MaxMipLevel = 12.0f; // NOTE : up to 2^12 (4096) pixels, should be more than enough
 		EnvmapSampler = Device.CreateSampler(SamplerDescription);
 
-		Drain AlbedoDrain = {};
-		AlbedoDrain.Name = L"Albedo";
-		AlbedoDrain.Binding = BindingMode::InputAttachment;
-		AlbedoDrain.LoadOp = RenderInterface::AttachmentLoadOp::Load;
-		AlbedoDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Attachment Albedo = {};
+		Albedo.Name = L"Albedo";
+		Albedo.Binding = BindingMode::InputAttachment;
+		Albedo.LoadOp = RenderInterface::AttachmentLoadOp::Load;
+		Albedo.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Drain PositionRoughnessDrain = {};
-		PositionRoughnessDrain.Name = L"PositionRoughness";
-		PositionRoughnessDrain.Binding = BindingMode::InputAttachment;
-		PositionRoughnessDrain.LoadOp = RenderInterface::AttachmentLoadOp::Load;
-		PositionRoughnessDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Attachment PositionRoughness = {};
+		PositionRoughness.Name = L"PositionRoughness";
+		PositionRoughness.Binding = BindingMode::InputAttachment;
+		PositionRoughness.LoadOp = RenderInterface::AttachmentLoadOp::Load;
+		PositionRoughness.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Drain NormalMetallicDrain = {};
-		NormalMetallicDrain.Name = L"NormalMetallic";
-		NormalMetallicDrain.Binding = BindingMode::InputAttachment;
-		NormalMetallicDrain.LoadOp = RenderInterface::AttachmentLoadOp::Load;
-		NormalMetallicDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Attachment NormalMetallic = {};
+		NormalMetallic.Name = L"NormalMetallic";
+		NormalMetallic.Binding = BindingMode::InputAttachment;
+		NormalMetallic.LoadOp = RenderInterface::AttachmentLoadOp::Load;
+		NormalMetallic.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Drain ColorBufferDrain = {};
-		ColorBufferDrain.Name = L"ColorBuffer";
-		ColorBufferDrain.Binding = BindingMode::ColorAttachment;
-		ColorBufferDrain.ClearColor.R =
-			ColorBufferDrain.ClearColor.G =
-			ColorBufferDrain.ClearColor.B =
-			ColorBufferDrain.ClearColor.A = 1.0f;
-		ColorBufferDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		ColorBufferDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Attachment ColorBuffer = {};
+		ColorBuffer.Name = L"ColorBuffer";
+		ColorBuffer.Binding = BindingMode::ColorAttachment;
+		ColorBuffer.ClearColor.R =
+			ColorBuffer.ClearColor.G =
+			ColorBuffer.ClearColor.B =
+			ColorBuffer.ClearColor.A = 1.0f;
+		ColorBuffer.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
+		ColorBuffer.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
-		Description.Drains = { AlbedoDrain, PositionRoughnessDrain, NormalMetallicDrain, ColorBufferDrain };
+		Description.Attachments = { Albedo, PositionRoughness, NormalMetallic, ColorBuffer };
 
 		Description.Callback.Bind<PBRPass, &PBRPass::PassCallback>(this);
 	}
@@ -115,7 +115,7 @@ namespace Hermes
 	void PBRPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
 	                           const RenderInterface::RenderPass& PassInstance,
 	                           const std::vector<std::pair<
-		                           const RenderInterface::Image*, const RenderInterface::ImageView*>>& Drains,
+		                           const RenderInterface::Image*, const RenderInterface::ImageView*>>& Attachments,
 	                           const Scene& Scene, bool ResourcesWereRecreated)
 	{
 		if (ResourcesWereRecreated || !IsPipelineCreated)
@@ -132,10 +132,10 @@ namespace Hermes
 		}
 
 		// NOTE : 3 input attachments + color buffer
-		HERMES_ASSERT_LOG(Drains.size() == 4, L"Invalid attachment count");
+		HERMES_ASSERT_LOG(Attachments.size() == 4, L"Invalid attachment count");
 		for (uint32 AttachmentIndex = 0; AttachmentIndex < 3; AttachmentIndex++)
 		{
-			DescriptorSet->UpdateWithImage(AttachmentIndex, 0, *Drains[AttachmentIndex].second,
+			DescriptorSet->UpdateWithImage(AttachmentIndex, 0, *Attachments[AttachmentIndex].second,
 			                               RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 		}
 

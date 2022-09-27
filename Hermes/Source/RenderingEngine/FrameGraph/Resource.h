@@ -53,7 +53,7 @@ namespace Hermes
 		DepthStencilAttachment = 2,
 	};
 
-	struct Drain
+	struct Attachment
 	{
 		String Name;
 		RenderInterface::AttachmentLoadOp LoadOp;

@@ -59,7 +59,6 @@ namespace Hermes
 		RenderInterface::AttachmentLoadOp LoadOp;
 		RenderInterface::AttachmentLoadOp StencilLoadOp;
 		RenderInterface::ClearColor ClearColor;
-		RenderInterface::ImageLayout Layout;
 		BindingMode Binding;
 	};
 

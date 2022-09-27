@@ -27,6 +27,21 @@ namespace Hermes
 		                 ResourceName.end());
 	}
 
+	static RenderInterface::ImageLayout PickImageLayoutForBindingMode(BindingMode Mode)
+	{
+		switch (Mode)
+		{
+		case BindingMode::DepthStencilAttachment:
+			return RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
+		case BindingMode::ColorAttachment:
+			return RenderInterface::ImageLayout::ColorAttachmentOptimal;
+		case BindingMode::InputAttachment:
+			return RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+		}
+		HERMES_ASSERT(false);
+		return RenderInterface::ImageLayout::Undefined;
+	}
+
 	void FrameGraphScheme::AddPass(const String& Name, const PassDesc& Desc)
 	{
 		HERMES_ASSERT_LOG(!Passes.contains(Name), L"Trying to duplicate pass with name %s", Name.c_str());
@@ -281,15 +296,8 @@ namespace Hermes
 				// NOTE : because the moment of layout transition after end of the render pass
 				// is not synchronized we won't use this feature and would rather perform
 				// layout transition ourselves using resource barriers
-				if (Drain.Binding == BindingMode::InputAttachment)
-				{
-					AttachmentDesc.LayoutAtStart = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
-					AttachmentDesc.LayoutAtEnd = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
-				}
-				else
-				{
-					AttachmentDesc.LayoutAtEnd = AttachmentDesc.LayoutAtStart = Drain.Layout;
-				}
+				AttachmentDesc.LayoutAtStart = AttachmentDesc.LayoutAtEnd =
+					PickImageLayoutForBindingMode(Drain.Binding);
 				AttachmentDesc.LoadOp = Drain.LoadOp;
 				AttachmentDesc.StencilLoadOp = Drain.StencilLoadOp;
 				if (CorrespondingSourceIterator != Pass.second.Sources.end())
@@ -363,7 +371,7 @@ namespace Hermes
 
 				NewPassContainer.Attachments.push_back(Resource.Image.get());
 				NewPassContainer.Views.push_back(Resource.View.get());
-				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName, Drain.Layout);
+				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName, PickImageLayoutForBindingMode(Drain.Binding));
 			}
 
 			if (!ContainsExternalResources)

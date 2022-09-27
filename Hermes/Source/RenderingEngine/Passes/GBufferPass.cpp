@@ -48,7 +48,6 @@ namespace Hermes
 			AlbedoDrain.ClearColor.G =
 			AlbedoDrain.ClearColor.B =
 			AlbedoDrain.ClearColor.A = 0.0f;
-		AlbedoDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		AlbedoDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		AlbedoDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
@@ -59,7 +58,6 @@ namespace Hermes
 			PositionRoughnessDrain.ClearColor.G =
 			PositionRoughnessDrain.ClearColor.B =
 			PositionRoughnessDrain.ClearColor.A = 0.0f;
-		PositionRoughnessDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		PositionRoughnessDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		PositionRoughnessDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
@@ -70,7 +68,6 @@ namespace Hermes
 			NormalMetallicDrain.ClearColor.G =
 			NormalMetallicDrain.ClearColor.B =
 			NormalMetallicDrain.ClearColor.A = 0.0f;
-		NormalMetallicDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		NormalMetallicDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		NormalMetallicDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
@@ -78,7 +75,6 @@ namespace Hermes
 		DepthDrain.Name = L"Depth";
 		DepthDrain.Binding = BindingMode::DepthStencilAttachment;
 		DepthDrain.ClearColor.Depth = 0.0f;
-		DepthDrain.Layout = RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
 		DepthDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		DepthDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Clear;
 

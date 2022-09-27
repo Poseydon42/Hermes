@@ -53,13 +53,11 @@ namespace Hermes
 		Description.Drains.resize(2);
 		Description.Drains[0].Name = L"ColorBuffer";
 		Description.Drains[0].Binding = BindingMode::ColorAttachment;
-		Description.Drains[0].Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		Description.Drains[0].LoadOp = RenderInterface::AttachmentLoadOp::Load;
 		Description.Drains[0].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
 		Description.Drains[1].Name = L"DepthBuffer";
 		Description.Drains[1].Binding = BindingMode::DepthStencilAttachment;
-		Description.Drains[1].Layout = RenderInterface::ImageLayout::DepthStencilReadOnlyOptimal;
 		Description.Drains[1].LoadOp = RenderInterface::AttachmentLoadOp::Load;
 		Description.Drains[1].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 	}

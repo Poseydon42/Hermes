@@ -29,7 +29,6 @@ namespace Hermes
 		InputColorDrain.Name = L"InputColor";
 		InputColorDrain.LoadOp = RenderInterface::AttachmentLoadOp::Load;
 		InputColorDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
-		InputColorDrain.Layout = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
 		InputColorDrain.Binding = BindingMode::InputAttachment;
 
 		Drain OutputColorDrain = {};
@@ -37,7 +36,6 @@ namespace Hermes
 		OutputColorDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		OutputColorDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 		memset(&OutputColorDrain.ClearColor, 0, sizeof(OutputColorDrain.ClearColor));
-		OutputColorDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		OutputColorDrain.Binding = BindingMode::ColorAttachment;
 
 		Description.Drains = { InputColorDrain, OutputColorDrain };

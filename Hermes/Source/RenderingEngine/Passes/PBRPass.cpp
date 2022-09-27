@@ -77,21 +77,18 @@ namespace Hermes
 		Drain AlbedoDrain = {};
 		AlbedoDrain.Name = L"Albedo";
 		AlbedoDrain.Binding = BindingMode::InputAttachment;
-		AlbedoDrain.Layout = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
 		AlbedoDrain.LoadOp = RenderInterface::AttachmentLoadOp::Load;
 		AlbedoDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
 		Drain PositionRoughnessDrain = {};
 		PositionRoughnessDrain.Name = L"PositionRoughness";
 		PositionRoughnessDrain.Binding = BindingMode::InputAttachment;
-		PositionRoughnessDrain.Layout = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
 		PositionRoughnessDrain.LoadOp = RenderInterface::AttachmentLoadOp::Load;
 		PositionRoughnessDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
 		Drain NormalMetallicDrain = {};
 		NormalMetallicDrain.Name = L"NormalMetallic";
 		NormalMetallicDrain.Binding = BindingMode::InputAttachment;
-		NormalMetallicDrain.Layout = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
 		NormalMetallicDrain.LoadOp = RenderInterface::AttachmentLoadOp::Load;
 		NormalMetallicDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 
@@ -102,7 +99,6 @@ namespace Hermes
 			ColorBufferDrain.ClearColor.G =
 			ColorBufferDrain.ClearColor.B =
 			ColorBufferDrain.ClearColor.A = 1.0f;
-		ColorBufferDrain.Layout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
 		ColorBufferDrain.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
 		ColorBufferDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
 

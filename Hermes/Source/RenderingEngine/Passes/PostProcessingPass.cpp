@@ -39,7 +39,6 @@ namespace Hermes
 		OutputColorDrain.Binding = BindingMode::ColorAttachment;
 
 		Description.Drains = { InputColorDrain, OutputColorDrain };
-		Description.Sources = { { L"OutputColor" } };
 		Description.Callback.Bind<PostProcessingPass, &PostProcessingPass::PassCallback>(this);
 	}
 

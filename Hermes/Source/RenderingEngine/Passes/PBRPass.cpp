@@ -104,10 +104,6 @@ namespace Hermes
 
 		Description.Drains = { AlbedoDrain, PositionRoughnessDrain, NormalMetallicDrain, ColorBufferDrain };
 
-		Source ColorBufferSource = { L"ColorBuffer" };
-
-		Description.Sources = { ColorBufferSource };
-
 		Description.Callback.Bind<PBRPass, &PBRPass::PassCallback>(this);
 	}
 

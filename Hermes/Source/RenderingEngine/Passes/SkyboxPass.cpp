@@ -48,8 +48,6 @@ namespace Hermes
 
 		Description.Callback.Bind<SkyboxPass, &SkyboxPass::PassCallback>(this);
 
-		Description.Sources.push_back({ L"ColorBuffer" });
-
 		Description.Drains.resize(2);
 		Description.Drains[0].Name = L"ColorBuffer";
 		Description.Drains[0].Binding = BindingMode::ColorAttachment;

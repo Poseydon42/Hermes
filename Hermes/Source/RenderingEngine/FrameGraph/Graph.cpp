@@ -50,12 +50,12 @@ namespace Hermes
 
 	void FrameGraphScheme::AddLink(const String& Source, const String& Drain)
 	{
-		HERMES_ASSERT_LOG(!DrainToSourceLinkage.contains(Drain),
+		HERMES_ASSERT_LOG(!BackwardLinks.contains(Drain),
 		                  L"Trying to link drain %s to source %s while it is already linked with source %s",
-		                  Drain.c_str(), Source.c_str(), DrainToSourceLinkage[Drain].c_str());
+		                  Drain.c_str(), Source.c_str(), BackwardLinks[Drain].c_str());
 
-		DrainToSourceLinkage[Drain] = Source;
-		SourceToDrainLinkage[Source] = Drain;
+		BackwardLinks[Drain] = Source;
+		ForwardLinks[Source] = Drain;
 	}
 
 	void FrameGraphScheme::AddResource(const String& Name, const ResourceDesc& Description)
@@ -285,13 +285,9 @@ namespace Hermes
 			std::vector<RenderInterface::RenderPassAttachment> RenderPassAttachments;
 			for (const auto& Drain : Pass.second.Drains)
 			{
-				const auto& CorrespondingSourceIterator = std::ranges::find_if(Pass.second.Sources,
-				                                                               [&](const Source& Element)
-				                                                               {
-					                                                               return Element.Name == Drain.Name;
-				                                                               });
-				RenderInterface::RenderPassAttachment AttachmentDesc = {};
 				auto FullDrainName = Pass.first + L'.' + Drain.Name;
+				bool IsUsedLater = Scheme.ForwardLinks.contains(FullDrainName);
+				RenderInterface::RenderPassAttachment AttachmentDesc = {};
 				AttachmentDesc.Format = TraverseDrainDataFormat(FullDrainName);
 				// NOTE : because the moment of layout transition after end of the render pass
 				// is not synchronized we won't use this feature and would rather perform
@@ -300,7 +296,7 @@ namespace Hermes
 					PickImageLayoutForBindingMode(Drain.Binding);
 				AttachmentDesc.LoadOp = Drain.LoadOp;
 				AttachmentDesc.StencilLoadOp = Drain.StencilLoadOp;
-				if (CorrespondingSourceIterator != Pass.second.Sources.end())
+				if (IsUsedLater)
 				{
 					AttachmentDesc.StoreOp = RenderInterface::AttachmentStoreOp::Store;
 					AttachmentDesc.StencilStoreOp = RenderInterface::AttachmentStoreOp::Store;
@@ -327,17 +323,6 @@ namespace Hermes
 				}
 
 				RenderPassAttachments.push_back(AttachmentDesc);
-			}
-
-			for (const auto& Source : Pass.second.Sources)
-			{
-				if (Scheme.SourceToDrainLinkage[Pass.first + L"." + Source.Name] == L"$.BLIT_TO_SWAPCHAIN")
-				{
-					HERMES_ASSERT(BlitToSwapchainResourceOwnName.empty());
-					String ResourceFullName = TraverseResourceName(Pass.first + L"." + Source.Name);
-					String PassName;
-					SplitResourceName(ResourceFullName, PassName, BlitToSwapchainResourceOwnName);
-				}
 			}
 
 			const auto& RenderQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Render);
@@ -386,17 +371,23 @@ namespace Hermes
 
 			Passes[Pass.first] = std::move(NewPassContainer);
 		}
+
+		HERMES_ASSERT_LOG(Scheme.BackwardLinks.contains(L"$.BLIT_TO_SWAPCHAIN"),
+		                  L"Render graph scheme does not contain link that points to swapchain");
+		auto ResourceThatBlitsToSwapchain = TraverseResourceName(L"$.BLIT_TO_SWAPCHAIN");
+		String DummyDollarSign;
+		SplitResourceName(ResourceThatBlitsToSwapchain, DummyDollarSign, BlitToSwapchainResourceOwnName);
 	}
 
 	String FrameGraph::TraverseResourceName(const String& FullDrainName)
 	{
-		String CurrentSourceName = Scheme.DrainToSourceLinkage[FullDrainName];
+		String CurrentSourceName = Scheme.BackwardLinks[FullDrainName];
 		while (CurrentSourceName.find_first_of('$') != 0)
 		{
 			// Because if we traverse back then each source of some pass must have
 			// its corresponding drain with same name in the same pass thus their full
 			// names would be equal
-			CurrentSourceName = Scheme.DrainToSourceLinkage[CurrentSourceName];
+			CurrentSourceName = Scheme.BackwardLinks[CurrentSourceName];
 		}
 		return CurrentSourceName;
 	}
@@ -407,9 +398,9 @@ namespace Hermes
 		String CurrentSourceName = L"$." + ResourceName;
 		while (true)
 		{
-			if (!Scheme.SourceToDrainLinkage.contains(CurrentSourceName))
+			if (!Scheme.ForwardLinks.contains(CurrentSourceName))
 				break;
-			auto CurrentDrainName = Scheme.SourceToDrainLinkage.at(CurrentSourceName);
+			auto CurrentDrainName = Scheme.ForwardLinks.at(CurrentSourceName);
 			String CurrentDrainRenderPassName, CurrentDrainOwnName;
 			SplitResourceName(CurrentDrainName, CurrentDrainRenderPassName, CurrentDrainOwnName);
 
@@ -441,13 +432,7 @@ namespace Hermes
 				break;
 			}
 
-			auto CorrespondingSourceOfCurrentRenderPass = std::ranges::find_if(CurrentDrainRenderPass.Sources,
-			                                                                   [&](const Source& Element)
-			                                                                   {
-				                                                                   return Element.Name ==
-					                                                                   CurrentDrainOwnName;
-			                                                                   });
-			if (CorrespondingSourceOfCurrentRenderPass == CurrentDrainRenderPass.Sources.end())
+			if (!Scheme.ForwardLinks.contains(CurrentDrainName))
 				break;
 
 			// NOTE : Because own name of connected drains and sources have to match
@@ -460,11 +445,11 @@ namespace Hermes
 
 	RenderInterface::DataFormat FrameGraph::TraverseDrainDataFormat(const String& DrainName) const
 	{
-		auto CurrentSource = Scheme.DrainToSourceLinkage.at(DrainName);
+		auto CurrentSource = Scheme.BackwardLinks.at(DrainName);
 		while (CurrentSource[0] != L'$')
 		{
 			// NOTE : because drain and source name within same pass have to be the same if they are interconnected
-			CurrentSource = Scheme.DrainToSourceLinkage.at(CurrentSource);
+			CurrentSource = Scheme.BackwardLinks.at(CurrentSource);
 		}
 
 		String ResourcePassName, ResourceOwnName;

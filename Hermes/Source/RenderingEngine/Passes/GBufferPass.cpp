@@ -79,13 +79,6 @@ namespace Hermes
 		DepthDrain.StencilLoadOp = RenderInterface::AttachmentLoadOp::Clear;
 
 		Descriptor.Drains = { AlbedoDrain, PositionRoughnessDrain, NormalMetallicDrain, DepthDrain };
-
-		Source AlbedoSource = { L"Albedo" };
-		Source PositionRoughnessSource = { L"PositionRoughness" };
-		Source NormalMetallicSource = { L"NormalMetallic" };
-		Source DepthSource = { L"Depth" };
-
-		Descriptor.Sources = { AlbedoSource, PositionRoughnessSource, NormalMetallicSource, DepthSource };
 	}
 
 	const PassDesc& GBufferPass::GetPassDescription() const

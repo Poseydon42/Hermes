@@ -61,9 +61,4 @@ namespace Hermes
 		RenderInterface::ClearColor ClearColor;
 		BindingMode Binding;
 	};
-
-	struct Source
-	{
-		String Name;
-	};
 }

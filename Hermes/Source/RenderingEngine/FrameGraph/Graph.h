@@ -41,8 +41,11 @@ namespace Hermes
 			bool IsExternal = false;
 		};
 		std::vector<ResourceContainer> Resources;
-		std::unordered_map<String, String> DrainToSourceLinkage;
-		std::unordered_map<String, String> SourceToDrainLinkage;
+
+		// NOTE : ForwardLinks holds links between outputs of first render pass and inputs of the second
+		//        BackwardLinks is just a reversed version of it because STL does not have bidirectional map
+		std::unordered_map<String, String> ForwardLinks;
+		std::unordered_map<String, String> BackwardLinks;
 
 		// TODO : implement this!
 		bool Validate() const;

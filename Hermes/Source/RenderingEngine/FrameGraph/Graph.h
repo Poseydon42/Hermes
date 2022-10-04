@@ -47,7 +47,6 @@ namespace Hermes
 		std::unordered_map<String, String> ForwardLinks;
 		std::unordered_map<String, String> BackwardLinks;
 
-		// TODO : implement this!
 		bool Validate() const;
 	};
 

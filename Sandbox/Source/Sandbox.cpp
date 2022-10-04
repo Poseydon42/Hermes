@@ -131,7 +131,7 @@ private:
 	float DebugObjectAngle = 0.0f;
 };
 
-extern "C" _declspec(dllexport) Hermes::IApplication* CreateApplicationInstance()
+extern "C" APP_API Hermes::IApplication* CreateApplicationInstance()
 {
 	auto App = new SandboxApp;
 

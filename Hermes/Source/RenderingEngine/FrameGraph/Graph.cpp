@@ -80,6 +80,134 @@ namespace Hermes
 
 	bool FrameGraphScheme::Validate() const
 	{
+		// Step 1: check for any unacceptable names of passes, resources and attachments
+		for (const auto& Pass : Passes)
+		{
+			// Pass name cannot have '$' character as it is reserved for pass that provides external resources
+			if (Pass.first.find(L'$') != String::npos)
+			{
+				HERMES_LOG_ERROR(L"Invalid render pass name %s", Pass.first.c_str());
+				return false;
+			}
+			// Pass name cannot have '.' character as it is used as separator between pass and attachment name
+			if (Pass.first.find(L'.') != String::npos)
+			{
+				HERMES_LOG_ERROR(L"Invalid render pass name %s", Pass.first.c_str());
+				return false;
+			}
+
+			// Check every attachment of this pass
+			for (const auto& Attachment : Pass.second.Attachments)
+			{
+				// Attachment name cannot have '.' character as it is used as separator
+				// between pass and attachment name
+				if (Attachment.Name.find(L'.') != String::npos)
+				{
+					HERMES_LOG_ERROR(L"Invalid attachment name %s in render pas %s", Attachment.Name.c_str(),
+					                 Pass.first.c_str());
+					return false;
+				}
+			}
+		}
+		for (const auto& Resource : Resources)
+		{
+			// Resource name cannot have '.' character as it is used as separator between pass and attachment name
+			if (Resource.Name.find(L'.') != String::npos)
+			{
+				HERMES_LOG_ERROR(L"Invalid resource name %s", Resource.Name.c_str());
+				return false;
+			}
+		}
+
+		// Step 2: check that all links have valid start and end pass and attachment name
+		for (const auto& Link : ForwardLinks)
+		{
+			// There must be a dot in the link from and to names
+			if (Link.first.find(L'.') == String::npos || Link.second.find(L'.') == String::npos)
+			{
+				HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s'", Link.first.c_str(), Link.second.c_str());
+				return false;
+			}
+
+			String FirstPassName, FirstAttachmentName, SecondPassName, SecondAttachmentName;
+			SplitResourceName(Link.first, FirstPassName, FirstAttachmentName);
+			SplitResourceName(Link.second, SecondPassName, SecondAttachmentName);
+
+			// Checking the first resource name (link 'from')
+			if (FirstPassName == L"$")
+			{
+				// If the first pass is the pass that contains external resources then check if
+				// such resource exists
+				if (std::ranges::find_if(Resources, [&](const auto& Element)
+				{
+					return Element.Name == FirstAttachmentName;
+				}) == Resources.end())
+				{
+					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': resource '%s' does not exist",
+					                 Link.first.c_str(), Link.second.c_str(), FirstAttachmentName.c_str());
+					return false;
+				}
+			}
+			else
+			{
+				// Otherwise, check if the render pass and the attachment with such name exists
+				auto FirstPass = Passes.find(FirstPassName);
+				if (FirstPass == Passes.end())
+				{
+					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': pass '%s' does not exist", Link.first.c_str(),
+					                 Link.second.c_str(), FirstPassName.c_str());
+					return false;
+				}
+				if (std::ranges::find_if(FirstPass->second.Attachments, [&](const auto& Element)
+				{
+					return Element.Name == FirstAttachmentName;
+				}) == FirstPass->second.Attachments.end())
+				{
+					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': pass '%s' does not contain attachmet '%s'",
+					                 Link.first.c_str(), Link.second.c_str(), FirstPassName.c_str(),
+					                 FirstAttachmentName.c_str());
+					return false;
+				}
+			}
+
+			// Checking the second resource name (link 'to')
+			if (SecondPassName == L"$")
+			{
+				// If the second pass is the external pass (pass that contains external resources)
+				// then check if the attachment name is equal to BLIT_TO_SWAPCHAIN as it is the
+				// only resource that can be pointed to by some render pass
+				if (SecondAttachmentName != L"BLIT_TO_SWAPCHAIN")
+				{
+					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': only BLIT_TO_SWAPCHAIN is allowed as attachment name for the external render pass",
+					                 Link.first.c_str(), Link.second.c_str());
+					return false;
+				}
+			}
+			else
+			{
+				// Otherwise, check if the render pass and the attachment with such name exists
+				auto SecondPass = Passes.find(SecondPassName);
+				if (SecondPass == Passes.end())
+				{
+					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': pass '%s' does not exist", Link.first.c_str(),
+					                 Link.second.c_str(), SecondPassName.c_str());
+					return false;
+				}
+				if (std::ranges::find_if(SecondPass->second.Attachments, [&](const auto& Element)
+				{
+					return Element.Name == SecondAttachmentName;
+				}) == SecondPass->second.Attachments.end())
+				{
+					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': pass '%s' does not contain attachmet '%s'",
+					                 Link.first.c_str(), Link.second.c_str(), SecondPassName.c_str(),
+					                 SecondAttachmentName.c_str());
+					return false;
+				}
+			}
+		}
+
+		// TODO : add more checks (acyclic graphs, more than one component etc.)
+
 		return true;
 	}
 

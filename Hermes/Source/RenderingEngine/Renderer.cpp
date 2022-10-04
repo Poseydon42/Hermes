@@ -70,6 +70,7 @@ namespace Hermes
 		Scheme.AddLink(L"PostProcessingPass.OutputColor", L"$.BLIT_TO_SWAPCHAIN");
 
 		FrameGraph = Scheme.Compile();
+		HERMES_ASSERT_LOG(FrameGraph, L"Failed to compile a frame graph");
 
 		return true;
 	}

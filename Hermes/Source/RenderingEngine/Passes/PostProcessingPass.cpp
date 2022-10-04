@@ -3,6 +3,7 @@
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/Pipeline.h"
 #include "RenderInterface/GenericRenderInterface/Shader.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
 

@@ -5,9 +5,14 @@
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
+#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #include "RenderInterface/GenericRenderInterface/Fence.h"
+#include "RenderInterface/GenericRenderInterface/Pipeline.h"
 #include "RenderInterface/GenericRenderInterface/Queue.h"
+#include "RenderInterface/GenericRenderInterface/RenderPass.h"
+#include "RenderInterface/GenericRenderInterface/Sampler.h"
+#include "RenderInterface/GenericRenderInterface/Shader.h"
 
 namespace Hermes
 {

@@ -23,6 +23,5 @@ namespace Hermes
 		/* Only first 3 components are meaningful, 4th is added for alignment purposes */
 		Vec4 Position;
 		Vec4 Color;
-		Vec4 AttenuationCoefficients;
 	};
 }

@@ -14,6 +14,8 @@ set(SOURCES
     GPUInteractionUtilities.h
     MeshBuffer.cpp
     MeshBuffer.h
+    Passes/ForwardPass.cpp
+    Passes/ForwardPass.h
     Passes/GBufferPass.cpp
     Passes/GBufferPass.h
     Passes/PBRPass.cpp

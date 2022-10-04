@@ -16,10 +16,6 @@ set(SOURCES
     MeshBuffer.h
     Passes/ForwardPass.cpp
     Passes/ForwardPass.h
-    Passes/GBufferPass.cpp
-    Passes/GBufferPass.h
-    Passes/PBRPass.cpp
-    Passes/PBRPass.h
     Passes/PostProcessingPass.cpp
     Passes/PostProcessingPass.h
     Passes/SkyboxPass.cpp

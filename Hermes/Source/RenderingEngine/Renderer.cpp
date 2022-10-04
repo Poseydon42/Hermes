@@ -1,8 +1,6 @@
 #include "Renderer.h"
 
 #include "Logging/Logger.h"
-#include "RenderingEngine/Passes/PBRPass.h"
-#include "RenderingEngine/Passes/GBufferPass.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Scene/Scene.h"

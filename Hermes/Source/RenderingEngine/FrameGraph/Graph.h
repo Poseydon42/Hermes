@@ -103,6 +103,8 @@ namespace Hermes
 			PassDesc::RenderPassCallbackType Callback;
 		};
 		std::unordered_map<String, PassContainer> Passes;
+
+		std::vector<String> PassExecutionOrder;
 		
 		String BlitToSwapchainResourceOwnName;
 

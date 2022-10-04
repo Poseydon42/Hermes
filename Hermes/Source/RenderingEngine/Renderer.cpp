@@ -33,16 +33,14 @@ namespace Hermes
 
 		DescriptorAllocator = std::make_shared<class DescriptorAllocator>(RenderingDevice);
 
-		GBufferPass = std::make_shared<class GBufferPass>(RenderingDevice);
-		PBRPass = std::make_unique<class PBRPass>();
-		SkyboxPass = std::make_shared<class SkyboxPass>(RenderingDevice);
+		ForwardPass = std::make_unique<class ForwardPass>();
 		PostProcessingPass = std::make_unique<class PostProcessingPass>();
+		SkyboxPass = std::make_unique<class SkyboxPass>(RenderingDevice);
 
 		FrameGraphScheme Scheme;		
-		Scheme.AddPass(L"GBufferPass", GBufferPass->GetPassDescription());
-		Scheme.AddPass(L"PBRPass", PBRPass->GetPassDescription());
-		Scheme.AddPass(L"SkyboxPass", SkyboxPass->GetPassDescription());
+		Scheme.AddPass(L"ForwardPass", ForwardPass->GetPassDescription());
 		Scheme.AddPass(L"PostProcessingPass", PostProcessingPass->GetPassDescription());
+		Scheme.AddPass(L"SkyboxPass", SkyboxPass->GetPassDescription());
 
 		ResourceDesc HDRColorBufferResource = {};
 		HDRColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
@@ -51,28 +49,10 @@ namespace Hermes
 		Scheme.AddResource(L"HDRColorBuffer", HDRColorBufferResource);
 
 		ResourceDesc ColorBufferResource = {};
-		ColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
+		ColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f });
 		ColorBufferResource.Format = RenderInterface::DataFormat::B8G8R8A8SRGB;
 		ColorBufferResource.MipLevels = 1;
 		Scheme.AddResource(L"ColorBuffer", ColorBufferResource);
-
-		ResourceDesc AlbedoResource = {};
-		AlbedoResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		AlbedoResource.Format = RenderInterface::DataFormat::R16G16B16A16SignedFloat;
-		AlbedoResource.MipLevels = 1;
-		Scheme.AddResource(L"Albedo", AlbedoResource);
-
-		ResourceDesc PositionRoughnessResource = {};
-		PositionRoughnessResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		PositionRoughnessResource.Format = RenderInterface::DataFormat::R16G16B16A16SignedFloat;
-		PositionRoughnessResource.MipLevels = 1;
-		Scheme.AddResource(L"PositionRoughness", PositionRoughnessResource);
-
-		ResourceDesc NormalMetallicResource = {};
-		NormalMetallicResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		NormalMetallicResource.Format = RenderInterface::DataFormat::R16G16B16A16SignedFloat;
-		NormalMetallicResource.MipLevels = 1;
-		Scheme.AddResource(L"NormalMetallic", NormalMetallicResource);
 
 		ResourceDesc DepthBufferResource = {};
 		DepthBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
@@ -80,18 +60,11 @@ namespace Hermes
 		DepthBufferResource.MipLevels = 1;
 		Scheme.AddResource(L"DepthBuffer", DepthBufferResource);
 
-		Scheme.AddLink(L"$.Albedo", L"GBufferPass.Albedo");
-		Scheme.AddLink(L"$.PositionRoughness", L"GBufferPass.PositionRoughness");
-		Scheme.AddLink(L"$.NormalMetallic", L"GBufferPass.NormalMetallic");
-		Scheme.AddLink(L"$.DepthBuffer", L"GBufferPass.Depth");
+		Scheme.AddLink(L"$.HDRColorBuffer", L"ForwardPass.Color");
+		Scheme.AddLink(L"$.DepthBuffer", L"ForwardPass.Depth");
 
-		Scheme.AddLink(L"GBufferPass.Albedo", L"PBRPass.Albedo");
-		Scheme.AddLink(L"GBufferPass.PositionRoughness", L"PBRPass.PositionRoughness");
-		Scheme.AddLink(L"GBufferPass.NormalMetallic", L"PBRPass.NormalMetallic");
-		Scheme.AddLink(L"$.HDRColorBuffer", L"PBRPass.ColorBuffer");
-
-		Scheme.AddLink(L"GBufferPass.Depth", L"SkyboxPass.DepthBuffer");
-		Scheme.AddLink(L"PBRPass.ColorBuffer", L"SkyboxPass.ColorBuffer");
+		Scheme.AddLink(L"ForwardPass.Color", L"SkyboxPass.ColorBuffer");
+		Scheme.AddLink(L"ForwardPass.Depth", L"SkyboxPass.DepthBuffer");
 
 		Scheme.AddLink(L"SkyboxPass.ColorBuffer", L"PostProcessingPass.InputColor");
 		Scheme.AddLink(L"$.ColorBuffer", L"PostProcessingPass.OutputColor");

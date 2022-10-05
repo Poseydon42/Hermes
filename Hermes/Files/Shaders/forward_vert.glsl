@@ -1,7 +1,7 @@
 #version 450
 #pragma shader_stage(vertex)
 
-#include "global_data.glsl"
+#include "SharedData.h"
 
 layout(location = 0) in vec3 i_Position;
 layout(location = 1) in vec2 i_TextureCoordinates;

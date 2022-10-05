@@ -2,7 +2,7 @@
 #pragma shader_stage(fragment)
 
 #include "brdf_math.glsl"
-#include "global_data.glsl"
+#include "SharedData.h"
 
 // NOTE : set 0 - global scene data, updated once for every frame
 

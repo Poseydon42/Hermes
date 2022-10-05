@@ -12,6 +12,7 @@
 #include "RenderInterface/GenericRenderInterface/Pipeline.h"
 #include "RenderInterface/GenericRenderInterface/Queue.h"
 #include "RenderInterface/GenericRenderInterface/Shader.h"
+#include "RenderingEngine/SharedData.h"
 
 namespace Hermes
 {
@@ -50,7 +51,7 @@ namespace Hermes
 			                                                            SpecularCubemapBinding, PrecomputedBRDFBinding
 		                                                            });
 		SceneUBODescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*SceneUBODescriptorLayout);
-		SceneUBOBuffer = Device.CreateBuffer(sizeof(SceneUBO),
+		SceneUBOBuffer = Device.CreateBuffer(sizeof(GlobalSceneData),
 		                                     RenderInterface::BufferUsageType::UniformBuffer |
 		                                     RenderInterface::BufferUsageType::CPUAccessible);
 
@@ -111,16 +112,17 @@ namespace Hermes
 		auto& Camera = Scene.GetActiveCamera();
 		auto ViewProjectionMatrix = Camera.GetProjectionMatrix() * Camera.GetViewMatrix();
 
-		SceneUBO SceneData = {};
+		GlobalSceneData SceneData = {};
 		SceneData.ViewProjection = ViewProjectionMatrix;
 		SceneData.CameraLocation = Vec4(Camera.GetLocation(), 1.0f);
-		HERMES_ASSERT_LOG(Scene.GetPointLights().size() < SceneUBO::MaxPointLightCount,
+		HERMES_ASSERT_LOG(Scene.GetPointLights().size() < GlobalSceneData::MaxPointLightCount,
 		                  L"There are more point lights in the scene than the shader can process, some of them will be ignored");
 		SceneData.PointLightCount = Math::Min<uint32>(static_cast<uint32>(Scene.GetPointLights().size()),
-		                                              SceneUBO::MaxPointLightCount);
+		                                              GlobalSceneData::MaxPointLightCount);
 		for (uint32 LightIndex = 0; LightIndex < SceneData.PointLightCount; LightIndex++)
 		{
-			SceneData.PointLights[LightIndex] = Scene.GetPointLights()[LightIndex];
+			SceneData.PointLights[LightIndex].Color = Scene.GetPointLights()[LightIndex].Color;
+			SceneData.PointLights[LightIndex].Position = Scene.GetPointLights()[LightIndex].Position;
 		}
 
 		auto* SceneDataMemory = SceneUBOBuffer->Map();

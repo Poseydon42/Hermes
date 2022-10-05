@@ -4,7 +4,6 @@
 
 #include "Core/Core.h"
 #include "Math/Math.h"
-#include "RenderingEngine/Scene/SceneProxies.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
 #include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/Image.h"
@@ -26,16 +25,6 @@ namespace Hermes
 		std::unique_ptr<RenderInterface::DescriptorSetLayout> SceneUBODescriptorLayout;
 		std::unique_ptr<RenderInterface::DescriptorSet> SceneUBODescriptorSet;
 		std::unique_ptr<RenderInterface::Buffer> SceneUBOBuffer;
-
-		struct SceneUBO
-		{
-			Mat4 ViewProjection;
-			Vec4 CameraLocation;
-
-			static constexpr size_t MaxPointLightCount = 256;
-			PointLightProxy PointLights[MaxPointLightCount];
-			uint32 PointLightCount = 0;
-		};
 
 		bool PipelineWasCreated = false;
 

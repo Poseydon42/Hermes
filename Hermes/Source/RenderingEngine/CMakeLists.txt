@@ -30,6 +30,7 @@ set(SOURCES
     Scene/Scene.cpp
     Scene/Scene.h
     Scene/SceneProxies.h
+    SharedData.h
     Texture.cpp
     Texture.h
 )

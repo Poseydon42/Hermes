@@ -43,16 +43,19 @@ namespace Hermes
 
 	struct GlobalSceneData
 	{
+#define MAX_POINT_LIGHT_COUNT 256
 #ifndef _GLSL_
-		static constexpr uint32 MaxPointLightCount = 256;
+		static constexpr uint32 MaxPointLightCount = MAX_POINT_LIGHT_COUNT;
 #else
-#define MaxPointLightCount 256
+#define MaxPointLightCount MAX_POINT_LIGHT_COUNT
 #endif
 
 		Mat4 ViewProjection;
 		Vec4 CameraLocation;
 		PointLight PointLights[MaxPointLightCount];
 		uint32 PointLightCount;
+
+#undef MAX_POINT_LIGHT_COUNT
 	};
 
 #ifndef _GLSL_

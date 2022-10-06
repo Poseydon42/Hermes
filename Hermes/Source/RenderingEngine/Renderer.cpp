@@ -108,11 +108,6 @@ namespace Hermes
 
 	void Renderer::UpdateGraphicsSettings(GraphicsSettings NewSettings)
 	{
-		if (NewSettings.AnisotropyLevel != CurrentSettings.AnisotropyLevel)
-		{
-			Material::SetDefaultAnisotropyLevel(NewSettings.AnisotropyLevel);
-		}
-
 		CurrentSettings = NewSettings;
 	}
 

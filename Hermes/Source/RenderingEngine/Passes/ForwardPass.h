@@ -21,8 +21,7 @@ namespace Hermes
 		const PassDesc& GetPassDescription() const;
 
 	private:
-
-		std::unique_ptr<RenderInterface::DescriptorSetLayout> SceneUBODescriptorLayout;
+		
 		std::unique_ptr<RenderInterface::DescriptorSet> SceneUBODescriptorSet;
 		std::unique_ptr<RenderInterface::Buffer> SceneUBOBuffer;
 
@@ -42,8 +41,6 @@ namespace Hermes
 		                  const RenderInterface::RenderPass& PassInstance,
 		                  const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>
 		                  & Attachments, const Scene& Scene, bool ResourcesWereRecreated);
-
-		void RecreatePipeline(const RenderInterface::RenderPass& Pass, Vec2ui Dimensions);
 
 		/*
 		 * Recreates and recomputes the precomputed BRDF image and the corresponding sampler

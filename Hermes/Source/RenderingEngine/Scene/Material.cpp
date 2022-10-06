@@ -1,169 +1,112 @@
 ﻿#include "Material.h"
 
+#include "AssetSystem/MeshAsset.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderInterface/GenericRenderInterface/Sampler.h"
+#include "RenderingEngine/SharedData.h"
 #include "RenderInterface/GenericRenderInterface/Shader.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderInterface/GenericRenderInterface/Swapchain.h"
 
 namespace Hermes
 {
-	float                                                 Material::DefaultAnisotropyLevel;
-	std::vector<Material*>                                Material::Instances;
-	std::shared_ptr<RenderInterface::DescriptorSetLayout> Material::MaterialDescriptorLayout;
 
-	Material::Material(std::vector<std::shared_ptr<Texture>> InTextures)
-		: Textures(std::move(InTextures))
-		, Descriptor(AllocateDescriptor())
+	Material::Material()
 	{
-		HERMES_ASSERT(Textures.size() == static_cast<uint32>(TextureType::Count_));
-		static_assert(SamplersPerMaterial == 1);
+		auto& Device = Renderer::Get().GetActiveDevice();
 
-		Instances.push_back(this);
-
-		Vec2ui TextureDimensions = Textures[0]->GetDimensions();
-		for (size_t Index = 1; Index < Textures.size(); Index++)
+		std::vector<RenderInterface::DescriptorBinding> PerMaterialDataBindings =
 		{
-			if (TextureDimensions.X != Textures[Index]->GetDimensions().X ||
-				TextureDimensions.Y != Textures[Index]->GetDimensions().Y)
+			/* UBO with material data */
 			{
-				HERMES_ASSERT_LOG(false, L"Found two textures with different sizes while trying to create material instance.");
+				0,
+				1,
+				RenderInterface::ShaderType::FragmentShader,
+				RenderInterface::DescriptorType::UniformBuffer
 			}
-		}
+		};
+		DescriptorSetLayout = Device.CreateDescriptorSetLayout(PerMaterialDataBindings);
+		DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorSetLayout);
 
-		UpdateSampler();
+		UniformBuffer = Device.CreateBuffer(sizeof(MaterialData),
+		                                    RenderInterface::BufferUsageType::UniformBuffer |
+		                                    RenderInterface::BufferUsageType::CPUAccessible);
 
-		for (uint32 ImageIndex = 0; ImageIndex < static_cast<uint32>(TextureType::Count_); ImageIndex++)
-		{
-			if (Textures[ImageIndex]->IsReady())
-			{
-				Descriptor->UpdateWithImage(ImageIndex + 1, 0, Textures[ImageIndex]->GetDefaultView(), RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
-			}
-			else
-			{
-				HERMES_LOG_WARNING(L"Trying to create material with invalid texture handle %u", static_cast<uint32>(ImageIndex));
-			}
-		}
-	}
+		MaterialData Data = {};
+		Data.Color = { 0.7f, 0.3f, 0.0f, 1.0f };
+		auto* Memory = UniformBuffer->Map();
+		memcpy(Memory, &Data, sizeof(Data));
+		UniformBuffer->Unmap();
+		DescriptorSet->UpdateWithBuffer(0, 0, *UniformBuffer, 0, static_cast<uint32>(UniformBuffer->GetSize()));
 
-	Material::~Material()
-	{
-		auto InstanceIterator = std::find(Instances.begin(), Instances.end(), this);
-		HERMES_ASSERT_LOG(InstanceIterator != Instances.end(), L"Found material instance that is not contained in Material::Instances list");
-		Instances.erase(InstanceIterator);
-	}
+		auto VertexShader = Device.CreateShader(L"Shaders/Bin/solid_color_vert.glsl.spv",
+		                                        RenderInterface::ShaderType::VertexShader);
+		auto FragmentShader = Device.CreateShader(L"Shaders/Bin/solid_color_frag.glsl.spv",
+		                                          RenderInterface::ShaderType::FragmentShader);RenderInterface::PipelineDescription PipelineDesc = {};
+		PipelineDesc.PushConstants.push_back({ RenderInterface::ShaderType::VertexShader, 0, sizeof(GlobalDrawcallData) });
+		PipelineDesc.ShaderStages = { VertexShader.get(), FragmentShader.get() };
+		PipelineDesc.DescriptorLayouts = {
+			&Renderer::Get().GetGlobalDataDescriptorSetLayout(), DescriptorSetLayout.get()
+		};
 
-	const Texture& Material::GetBasicTexture(TextureType Type) const
-	{
-		return *Textures[static_cast<size_t>(Type)];
-	}
+		RenderInterface::VertexBinding VertexInput = {};
+		VertexInput.Index = 0;
+		VertexInput.Stride = sizeof(Vertex);
+		VertexInput.IsPerInstance = false;
+		PipelineDesc.VertexInput.VertexBindings.push_back(VertexInput);
 
-	Texture&  Material::GetBasicTexture(TextureType Type)
-	{
-		return *Textures[static_cast<size_t>(Type)];
+		RenderInterface::VertexAttribute PositionAttribute = {}, TextureCoordinatesAttribute = {}, NormalAttribute = {}, TangentAttribute = {};
+		PositionAttribute.BindingIndex = 0;
+		PositionAttribute.Location = 0;
+		PositionAttribute.Offset = offsetof(Vertex, Position);
+		PositionAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
+		PipelineDesc.VertexInput.VertexAttributes.push_back(PositionAttribute);
+
+		TextureCoordinatesAttribute.BindingIndex = 0;
+		TextureCoordinatesAttribute.Location = 1;
+		TextureCoordinatesAttribute.Offset = offsetof(Vertex, TextureCoordinates);
+		TextureCoordinatesAttribute.Format = RenderInterface::DataFormat::R32G32SignedFloat;
+		PipelineDesc.VertexInput.VertexAttributes.push_back(TextureCoordinatesAttribute);
+
+		NormalAttribute.BindingIndex = 0;
+		NormalAttribute.Location = 2;
+		NormalAttribute.Offset = offsetof(Vertex, Normal);
+		NormalAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
+		PipelineDesc.VertexInput.VertexAttributes.push_back(NormalAttribute);
+
+		TangentAttribute.BindingIndex = 0;
+		TangentAttribute.Location = 3;
+		TangentAttribute.Offset = offsetof(Vertex, Tangent);
+		TangentAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
+		PipelineDesc.VertexInput.VertexAttributes.push_back(TangentAttribute);
+
+		PipelineDesc.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
+
+		PipelineDesc.Viewport.Origin = { 0 };
+		// TODO : recreate pipeline on resize
+		PipelineDesc.Viewport.Dimensions = Renderer::Get().GetSwapchain().GetSize();
+
+		PipelineDesc.Rasterizer.Cull = RenderInterface::CullMode::Back;
+		PipelineDesc.Rasterizer.Direction = RenderInterface::FaceDirection::Clockwise;
+		PipelineDesc.Rasterizer.Fill = RenderInterface::FillMode::Fill;
+
+		PipelineDesc.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Greater;
+		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = true;
+		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = true;
+
+		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetGraphicsRenderPassObject(),
+		                                                            PipelineDesc);
 	}
 
 	const RenderInterface::DescriptorSet& Material::GetMaterialDescriptorSet() const
 	{
-		return *Descriptor;
+		return *DescriptorSet;
 	}
 
-	std::shared_ptr<RenderInterface::DescriptorSetLayout> Material::GetDescriptorSetLayout()
+	const RenderInterface::Pipeline& Material::GetPipeline() const
 	{
-		if (!MaterialDescriptorLayout)
-			CreateDescriptorSetLayout();
-		return MaterialDescriptorLayout;
-	}
-
-	void Material::SetDefaultAnisotropyLevel(float NewLevel)
-	{
-		if (Math::Abs(DefaultAnisotropyLevel - NewLevel) > 0.000001f)
-		{
-			DefaultAnisotropyLevel = NewLevel;
-			for (const auto& Instance : Instances)
-			{
-				Instance->UpdateSampler();
-			}
-		}
-	}
-
-	std::shared_ptr<RenderInterface::DescriptorSet> Material::AllocateDescriptor()
-	{
-		if (!MaterialDescriptorLayout)
-		{
-			CreateDescriptorSetLayout();
-		}
-		return Renderer::Get().GetDescriptorAllocator().Allocate(*MaterialDescriptorLayout);
-	}
-
-	void Material::CreateDescriptorSetLayout()
-	{
-		auto& RenderingDevice = Renderer::Get().GetActiveDevice();
-
-		std::vector<RenderInterface::DescriptorBinding> PerMaterialDataBindings =
-		{
-			/* Albedo sampler */
-			{
-				/*Index*/ 0,
-				/*DescriptorCount*/ 1,
-				/*Shader*/ RenderInterface::ShaderType::FragmentShader,
-				/*Type*/ RenderInterface::DescriptorType::Sampler,
-			},
-
-			/* Albedo texture */
-			{
-				/*Index*/ 1,
-				/*DescriptorCount*/ 1,
-				/*Shader*/ RenderInterface::ShaderType::FragmentShader,
-				/*Type*/ RenderInterface::DescriptorType::SampledImage,
-			},
-
-			/* Metallic texture */
-			{
-				/*Index*/ 2,
-				/*DescriptorCount*/ 1,
-				/*Shader*/ RenderInterface::ShaderType::FragmentShader,
-				/*Type*/ RenderInterface::DescriptorType::SampledImage,
-			},
-
-			/* Roughness texture */
-			{
-				/*Index*/ 3,
-				/*DescriptorCount*/ 1,
-				/*Shader*/ RenderInterface::ShaderType::FragmentShader,
-				/*Type*/ RenderInterface::DescriptorType::SampledImage,
-			},
-
-			/* Normal texture */
-			{
-				/*Index*/ 4,
-				/*DescriptorCount*/ 1,
-				/*Shader*/ RenderInterface::ShaderType::FragmentShader,
-				/*Type*/ RenderInterface::DescriptorType::SampledImage,
-			},
-		};
-		MaterialDescriptorLayout = RenderingDevice.CreateDescriptorSetLayout(PerMaterialDataBindings);
-	}
-
-	void Material::UpdateSampler()
-	{
-		auto& RenderingDevice = Renderer::Get().GetActiveDevice();
-
-		RenderInterface::SamplerDescription Description;
-		Description.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
-		Description.AddressingModeU = RenderInterface::AddressingMode::Repeat;
-		Description.AddressingModeV = RenderInterface::AddressingMode::Repeat;
-		Description.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
-		Description.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
-		Description.AnisotropyLevel = DefaultAnisotropyLevel > 0.0f ? DefaultAnisotropyLevel : std::optional<float>{};
-		Description.MinMipLevel = 0.0f;
-		Description.MaxMipLevel = static_cast<float>(Textures[0]->GetMipLevelsCount());
-		Description.MipBias = 0.0f;
-		Description.MipMode = RenderInterface::MipmappingMode::Linear;
-		Sampler = RenderingDevice.CreateSampler(Description);
-
-		Descriptor->UpdateWithSampler(0, 0, *Sampler);
+		return *Pipeline;
 	}
 }

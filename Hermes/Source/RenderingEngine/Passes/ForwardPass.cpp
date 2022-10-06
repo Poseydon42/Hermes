@@ -68,17 +68,11 @@ namespace Hermes
 	}
 
 	void ForwardPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
-	                               const RenderInterface::RenderPass& PassInstance,
+	                               const RenderInterface::RenderPass&,
 	                               const std::vector<std::pair<
-		                               const RenderInterface::Image*, const RenderInterface::ImageView*>>& Attachments,
-	                               const Scene& Scene, bool ResourcesWereRecreated)
+		                               const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
+	                               const Scene& Scene, bool)
 	{
-		if (!PipelineWasCreated || ResourcesWereRecreated)
-		{
-			RecreatePipeline(PassInstance, Attachments[0].first->GetSize());
-			PipelineWasCreated = true;
-		}
-
 		if (!PrecomputedBRDFSampler || !PrecomputedBRDFView || !PrecomputedBRDFSampler)
 		{
 			EnsurePrecomputedBRDF();
@@ -113,74 +107,23 @@ namespace Hermes
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(3, 0, *PrecomputedBRDFView, *PrecomputedBRDFSampler,
 		                                                 RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
-		CommandBuffer.BindPipeline(*Pipeline);
-		CommandBuffer.BindDescriptorSet(*SceneUBODescriptorSet, *Pipeline, 0);
 		for (const auto& Mesh : Scene.GetMeshes())
 		{
-			CommandBuffer.BindDescriptorSet(Mesh.Material->GetMaterialDescriptorSet(), *Pipeline, 1);
-			CommandBuffer.BindVertexBuffer(Mesh.MeshData.GetVertexBuffer());
-			CommandBuffer.BindIndexBuffer(Mesh.MeshData.GetIndexBuffer(), RenderInterface::IndexSize::Uint32);
-			CommandBuffer.UploadPushConstants(*Pipeline, RenderInterface::ShaderType::VertexShader,
+			auto& Material = Mesh.Material;
+			auto& MaterialPipeline = Material->GetPipeline();
+			auto& MeshBuffer = Mesh.MeshData;
+
+			CommandBuffer.BindPipeline(MaterialPipeline);
+			CommandBuffer.BindDescriptorSet(*SceneUBODescriptorSet, MaterialPipeline, 0);
+			CommandBuffer.BindDescriptorSet(Material->GetMaterialDescriptorSet(), MaterialPipeline, 1);
+			CommandBuffer.BindVertexBuffer(MeshBuffer.GetVertexBuffer());
+			CommandBuffer.BindIndexBuffer(MeshBuffer.GetIndexBuffer(), RenderInterface::IndexSize::Uint32);
+			CommandBuffer.UploadPushConstants(MaterialPipeline, RenderInterface::ShaderType::VertexShader,
 			                                  &Mesh.TransformationMatrix, sizeof(Mesh.TransformationMatrix), 0);
-			const auto& DrawInformation = Mesh.MeshData.GetDrawInformation();
+			const auto& DrawInformation = MeshBuffer.GetDrawInformation();
 			CommandBuffer.DrawIndexed(DrawInformation.IndexCount, 1, DrawInformation.IndexOffset,
 			                          DrawInformation.VertexOffset, 0);
 		}
-	}
-
-	void ForwardPass::RecreatePipeline(const RenderInterface::RenderPass& Pass, Vec2ui Dimensions)
-	{
-		RenderInterface::PipelineDescription PipelineDesc = {};
-		// Per drawcall data - model matrix
-		PipelineDesc.PushConstants.push_back({ RenderInterface::ShaderType::VertexShader, 0, sizeof(Mat4) });
-		PipelineDesc.ShaderStages = { VertexShader.get(), FragmentShader.get() };
-		PipelineDesc.DescriptorLayouts = { SceneUBODescriptorLayout.get(), Material::GetDescriptorSetLayout().get() };
-
-		RenderInterface::VertexBinding VertexInput = {};
-		VertexInput.Index = 0;
-		VertexInput.Stride = sizeof(Vertex);
-		VertexInput.IsPerInstance = false;
-		PipelineDesc.VertexInput.VertexBindings.push_back(VertexInput);
-
-		RenderInterface::VertexAttribute PositionAttribute = {}, TextureCoordinatesAttribute = {}, NormalAttribute = {}, TangentAttribute = {};
-		PositionAttribute.BindingIndex = 0;
-		PositionAttribute.Location = 0;
-		PositionAttribute.Offset = offsetof(Vertex, Position);
-		PositionAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(PositionAttribute);
-
-		TextureCoordinatesAttribute.BindingIndex = 0;
-		TextureCoordinatesAttribute.Location = 1;
-		TextureCoordinatesAttribute.Offset = offsetof(Vertex, TextureCoordinates);
-		TextureCoordinatesAttribute.Format = RenderInterface::DataFormat::R32G32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(TextureCoordinatesAttribute);
-
-		NormalAttribute.BindingIndex = 0;
-		NormalAttribute.Location = 2;
-		NormalAttribute.Offset = offsetof(Vertex, Normal);
-		NormalAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(NormalAttribute);
-
-		TangentAttribute.BindingIndex = 0;
-		TangentAttribute.Location = 3;
-		TangentAttribute.Offset = offsetof(Vertex, Tangent);
-		TangentAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(TangentAttribute);
-
-		PipelineDesc.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
-
-		PipelineDesc.Viewport.Origin = { 0 };
-		PipelineDesc.Viewport.Dimensions = Dimensions;
-
-		PipelineDesc.Rasterizer.Cull = RenderInterface::CullMode::Back;
-		PipelineDesc.Rasterizer.Direction = RenderInterface::FaceDirection::Clockwise;
-		PipelineDesc.Rasterizer.Fill = RenderInterface::FillMode::Fill;
-
-		PipelineDesc.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Greater;
-		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = true;
-		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = true;
-
-		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Pass, PipelineDesc);
 	}
 
 	void ForwardPass::EnsurePrecomputedBRDF()

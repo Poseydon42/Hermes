@@ -19,23 +19,12 @@ public:
 	{
 		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"sphere"));
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
-		auto AlbedoTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_albedo"));
-		auto MetallicTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_metallic"));
-		auto RoughnessTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_roughness"));
-		auto NormalTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_normal"));
-
-		auto AlbedoTexture = Hermes::Texture::CreateFromAsset(*AlbedoTextureAsset, true);
-		auto MetallicTexture = Hermes::Texture::CreateFromAsset(*MetallicTextureAsset, false);
-		auto RoughnessTexture = Hermes::Texture::CreateFromAsset(*RoughnessTextureAsset, false);
-		auto NormalTexture = Hermes::Texture::CreateFromAsset(*NormalTextureAsset, false, true);
-		std::shared_ptr<Hermes::Material> PBRMaterial = std::make_shared<Hermes::Material>(std::vector {
-			AlbedoTexture, RoughnessTexture, MetallicTexture, NormalTexture
-		});
+		auto TestMaterial = std::make_shared<Hermes::Material>();
 		Hermes::MeshProxy SphereMeshProxy =
 		{
 			Hermes::Mat4::Translation(SphereLocation),
 			*SphereMeshBuffer,
-			PBRMaterial
+			TestMaterial
 		};
 		Hermes::GGameLoop->GetScene().AddMesh(SphereMeshProxy);
 

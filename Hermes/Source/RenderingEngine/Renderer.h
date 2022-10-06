@@ -50,6 +50,8 @@ namespace Hermes
 
 		const RenderInterface::DescriptorSetLayout& GetGlobalDataDescriptorSetLayout() const;
 
+		const RenderInterface::RenderPass& GetGraphicsRenderPassObject() const;
+
 	private:
 		RenderInterface::DeviceProperties GPUProperties;
 		GraphicsSettings CurrentSettings;

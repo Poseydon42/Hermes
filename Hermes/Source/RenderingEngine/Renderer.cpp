@@ -141,6 +141,11 @@ namespace Hermes
 		return *GlobalDataDescriptorSetLayout;
 	}
 
+	const RenderInterface::RenderPass& Renderer::GetGraphicsRenderPassObject() const
+	{
+		return FrameGraph->GetRenderPassObject(L"ForwardPass");
+	}
+
 	void Renderer::DumpGPUProperties() const
 	{
 		HERMES_LOG_INFO(L"======== GPU Information ========");

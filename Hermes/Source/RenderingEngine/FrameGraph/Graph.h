@@ -62,6 +62,8 @@ namespace Hermes
 
 		void Execute(const Scene& Scene);
 
+		const RenderInterface::RenderPass& GetRenderPassObject(const String& Name) const;
+
 	private:
 		friend class FrameGraphScheme;
 

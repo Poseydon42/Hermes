@@ -381,6 +381,14 @@ namespace Hermes
 		}
 	}
 
+	const RenderInterface::RenderPass& FrameGraph::GetRenderPassObject(const String& Name) const
+	{
+		HERMES_ASSERT(Passes.contains(Name));
+		auto& Result = Passes.at(Name).Pass;
+		HERMES_ASSERT(Result);
+		return *Result;
+	}
+
 	FrameGraph::FrameGraph(FrameGraphScheme InScheme)
 		: Scheme(std::move(InScheme))
 	{

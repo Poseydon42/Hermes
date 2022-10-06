@@ -40,7 +40,9 @@ namespace Hermes
 #ifndef HERMES_RELEASE
 #define HERMES_ASSERT(Expression) {if(!(Expression)) DEBUG_BREAK(); }
 #else
-#define HERMES_ASSERT(Expression)
+// NOTE : the compiler will *hopefully* optimize it away, but this way we won't get any errors
+//        about unreferenced variables (that were only referenced inside the assert expression
+#define HERMES_ASSERT(Expression) {if(!(Expression)) {} }
 #endif
 
 #define HERMES_ASSERT_LOG(Expression, Msg, ...) {if(!(Expression)) { HERMES_LOG_ERROR(Msg, __VA_ARGS__); DEBUG_BREAK(); } }

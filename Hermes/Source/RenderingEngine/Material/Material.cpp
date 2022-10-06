@@ -34,11 +34,6 @@ namespace Hermes
 		                                    RenderInterface::BufferUsageType::UniformBuffer |
 		                                    RenderInterface::BufferUsageType::CPUAccessible);
 
-		MaterialData Data = {};
-		Data.Color = { 0.7f, 0.3f, 0.0f, 1.0f };
-		auto* Memory = UniformBuffer->Map();
-		memcpy(Memory, &Data, sizeof(Data));
-		UniformBuffer->Unmap();
 		DescriptorSet->UpdateWithBuffer(0, 0, *UniformBuffer, 0, static_cast<uint32>(UniformBuffer->GetSize()));
 
 		auto VertexShader = Device.CreateShader(L"Shaders/Bin/solid_color_vert.glsl.spv",
@@ -98,6 +93,24 @@ namespace Hermes
 
 		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetGraphicsRenderPassObject(),
 		                                                            PipelineDesc);
+	}
+
+	void Material::SetColor(Vec4 NewColor)
+	{
+		Color = NewColor;
+		IsDirty = true;
+	}
+
+	void Material::Update() const
+	{
+		if (IsDirty)
+		{
+			MaterialData Data = {};
+			Data.Color = Color;
+			auto* Memory = UniformBuffer->Map();
+			memcpy(Memory, &Data, sizeof(Data));
+			UniformBuffer->Unmap();
+		}
 	}
 
 	const RenderInterface::DescriptorSet& Material::GetMaterialDescriptorSet() const

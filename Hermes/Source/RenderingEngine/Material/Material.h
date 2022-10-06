@@ -14,11 +14,17 @@ namespace Hermes
 	public:
 		Material();
 
+		void SetColor(Vec4 NewColor);
+
+		void Update() const;
+
 		const RenderInterface::DescriptorSet& GetMaterialDescriptorSet() const;
 
 		const RenderInterface::Pipeline& GetPipeline() const;
 
 	private:
+		Vec4 Color;
+		bool IsDirty = true;
 		struct MaterialData
 		{
 			Vec4 Color;

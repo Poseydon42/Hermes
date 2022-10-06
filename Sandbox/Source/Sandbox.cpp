@@ -19,7 +19,8 @@ public:
 	{
 		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"sphere"));
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
-		auto TestMaterial = std::make_shared<Hermes::Material>();
+		TestMaterial = std::make_shared<Hermes::Material>();
+		TestMaterial->SetColor({ 0.0f, 1.0f, 0.0f, 1.0f });
 		Hermes::MeshProxy SphereMeshProxy =
 		{
 			Hermes::Mat4::Translation(SphereLocation),
@@ -101,6 +102,7 @@ public:
 private:
 	bool AnisotropyEnabled = false, AnisotropyChanged = false;
 	std::shared_ptr<Hermes::FPSCamera> Camera;
+	std::shared_ptr<Hermes::Material> TestMaterial;
 	const Hermes::Vec3 SphereLocation = Hermes::Vec3(0.0f, 0.0f, 10.0f);
 
 	void KeyEventHandler(const Hermes::IEvent& Event)
@@ -112,6 +114,17 @@ private:
 			{
 				AnisotropyChanged = true;
 				AnisotropyEnabled = !AnisotropyEnabled;
+			}
+			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::C)
+			{
+				if (KeyEvent.IsPressEvent())
+				{
+					TestMaterial->SetColor({ 1.0f, 0.0f, 1.0f, 1.0f });
+				}
+				else
+				{
+					TestMaterial->SetColor({ 0.0f, 1.0f, 0.0f, 1.0f });
+				}
 			}
 		}
 	}

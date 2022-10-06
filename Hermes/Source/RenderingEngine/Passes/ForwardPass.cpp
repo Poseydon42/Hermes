@@ -114,6 +114,9 @@ namespace Hermes
 			auto& MaterialPipeline = Material->GetPipeline();
 			auto& MeshBuffer = Mesh.MeshData;
 
+			// TODO : move it into the renderer?
+			Material->Update();
+
 			CommandBuffer.BindPipeline(MaterialPipeline);
 			CommandBuffer.BindDescriptorSet(*SceneUBODescriptorSet, MaterialPipeline, 0);
 			CommandBuffer.BindDescriptorSet(Material->GetMaterialDescriptorSet(), MaterialPipeline, 1);

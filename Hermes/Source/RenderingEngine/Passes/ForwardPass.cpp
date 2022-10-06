@@ -24,33 +24,8 @@ namespace Hermes
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
 
-		RenderInterface::DescriptorBinding SceneUBOBinding = {};
-		SceneUBOBinding.Index = 0;
-		SceneUBOBinding.DescriptorCount = 1;
-		SceneUBOBinding.Shader = RenderInterface::ShaderType::VertexShader |
-			RenderInterface::ShaderType::FragmentShader;
-		SceneUBOBinding.Type = RenderInterface::DescriptorType::UniformBuffer;
-		RenderInterface::DescriptorBinding IrradianceCubemapBinding = {};
-		IrradianceCubemapBinding.Index = 1;
-		IrradianceCubemapBinding.DescriptorCount = 1;
-		IrradianceCubemapBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		IrradianceCubemapBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
-		RenderInterface::DescriptorBinding SpecularCubemapBinding = {};
-		SpecularCubemapBinding.Index = 2;
-		SpecularCubemapBinding.DescriptorCount = 1;
-		SpecularCubemapBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		SpecularCubemapBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
-		RenderInterface::DescriptorBinding PrecomputedBRDFBinding = {};
-		PrecomputedBRDFBinding.Index = 3;
-		PrecomputedBRDFBinding.DescriptorCount = 1;
-		PrecomputedBRDFBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		PrecomputedBRDFBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
-
-		SceneUBODescriptorLayout = Device.CreateDescriptorSetLayout({
-			                                                            SceneUBOBinding, IrradianceCubemapBinding,
-			                                                            SpecularCubemapBinding, PrecomputedBRDFBinding
-		                                                            });
-		SceneUBODescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*SceneUBODescriptorLayout);
+		SceneUBODescriptorSet = Renderer::Get().GetDescriptorAllocator().
+		                                        Allocate(Renderer::Get().GetGlobalDataDescriptorSetLayout());
 		SceneUBOBuffer = Device.CreateBuffer(sizeof(GlobalSceneData),
 		                                     RenderInterface::BufferUsageType::UniformBuffer |
 		                                     RenderInterface::BufferUsageType::CPUAccessible);

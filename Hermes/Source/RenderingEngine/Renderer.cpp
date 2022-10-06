@@ -31,6 +31,32 @@ namespace Hermes
 
 		DescriptorAllocator = std::make_shared<class DescriptorAllocator>(RenderingDevice);
 
+		RenderInterface::DescriptorBinding SceneUBOBinding = {};
+		SceneUBOBinding.Index = 0;
+		SceneUBOBinding.DescriptorCount = 1;
+		SceneUBOBinding.Shader = RenderInterface::ShaderType::VertexShader |
+			RenderInterface::ShaderType::FragmentShader;
+		SceneUBOBinding.Type = RenderInterface::DescriptorType::UniformBuffer;
+		RenderInterface::DescriptorBinding IrradianceCubemapBinding = {};
+		IrradianceCubemapBinding.Index = 1;
+		IrradianceCubemapBinding.DescriptorCount = 1;
+		IrradianceCubemapBinding.Shader = RenderInterface::ShaderType::FragmentShader;
+		IrradianceCubemapBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
+		RenderInterface::DescriptorBinding SpecularCubemapBinding = {};
+		SpecularCubemapBinding.Index = 2;
+		SpecularCubemapBinding.DescriptorCount = 1;
+		SpecularCubemapBinding.Shader = RenderInterface::ShaderType::FragmentShader;
+		SpecularCubemapBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
+		RenderInterface::DescriptorBinding PrecomputedBRDFBinding = {};
+		PrecomputedBRDFBinding.Index = 3;
+		PrecomputedBRDFBinding.DescriptorCount = 1;
+		PrecomputedBRDFBinding.Shader = RenderInterface::ShaderType::FragmentShader;
+		PrecomputedBRDFBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
+
+		GlobalDataDescriptorSetLayout = RenderingDevice->CreateDescriptorSetLayout({
+			SceneUBOBinding, IrradianceCubemapBinding, SpecularCubemapBinding, PrecomputedBRDFBinding
+		});
+
 		ForwardPass = std::make_unique<class ForwardPass>();
 		PostProcessingPass = std::make_unique<class PostProcessingPass>();
 		SkyboxPass = std::make_unique<class SkyboxPass>(RenderingDevice);
@@ -108,6 +134,11 @@ namespace Hermes
 	DescriptorAllocator& Renderer::GetDescriptorAllocator()
 	{
 		return *DescriptorAllocator;
+	}
+
+	const RenderInterface::DescriptorSetLayout& Renderer::GetGlobalDataDescriptorSetLayout() const
+	{
+		return *GlobalDataDescriptorSetLayout;
 	}
 
 	void Renderer::DumpGPUProperties() const

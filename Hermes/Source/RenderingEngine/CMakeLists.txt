@@ -12,6 +12,8 @@ set(SOURCES
     FrameGraph/Resource.h
     GPUInteractionUtilities.cpp
     GPUInteractionUtilities.h
+    Material/Material.cpp
+    Material/Material.h
     MeshBuffer.cpp
     MeshBuffer.h
     Passes/ForwardPass.cpp
@@ -25,8 +27,6 @@ set(SOURCES
     Scene/Camera.h
     Scene/FPSCamera.cpp
     Scene/FPSCamera.h
-    Scene/Material.cpp
-    Scene/Material.h
     Scene/Scene.cpp
     Scene/Scene.h
     Scene/SceneProxies.h

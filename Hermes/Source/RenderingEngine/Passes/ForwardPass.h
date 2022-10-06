@@ -3,7 +3,6 @@
 #include <memory>
 
 #include "Core/Core.h"
-#include "Math/Math.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
 #include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/Image.h"

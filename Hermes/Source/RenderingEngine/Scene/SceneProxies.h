@@ -5,7 +5,7 @@
 #include "Core/Core.h"
 #include "Math/Math.h"
 #include "RenderingEngine/MeshBuffer.h"
-#include "RenderingEngine/Scene/Material.h"
+#include "RenderingEngine/Material/Material.h"
 
 namespace Hermes
 {

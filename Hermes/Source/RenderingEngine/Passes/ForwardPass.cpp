@@ -2,6 +2,7 @@
 
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
+#include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"

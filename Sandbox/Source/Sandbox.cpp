@@ -20,7 +20,7 @@ public:
 		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"sphere"));
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
 		TestMaterial = std::make_shared<Hermes::Material>();
-		TestMaterial->SetColor({ 0.0f, 1.0f, 0.0f, 1.0f });
+		TestMaterial->SetProperty<Hermes::Vec4>(L"Color", { 0.0f, 1.0f, 0.0f, 1.0f });
 		Hermes::MeshProxy SphereMeshProxy =
 		{
 			Hermes::Mat4::Translation(SphereLocation),
@@ -119,11 +119,11 @@ private:
 			{
 				if (KeyEvent.IsPressEvent())
 				{
-					TestMaterial->SetColor({ 1.0f, 0.0f, 1.0f, 1.0f });
+					TestMaterial->SetProperty<Hermes::Vec4>(L"Color", { 1.0f, 0.0f, 1.0f, 1.0f });
 				}
 				else
 				{
-					TestMaterial->SetColor({ 0.0f, 1.0f, 0.0f, 1.0f });
+					TestMaterial->SetProperty<Hermes::Vec4>(L"Color", { 0.0f, 1.0f, 0.0f, 1.0f });
 				}
 			}
 		}

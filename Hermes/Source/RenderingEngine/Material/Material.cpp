@@ -1,7 +1,8 @@
 ﻿#include "Material.h"
 
+#include <cstring>
+
 #include "AssetSystem/MeshAsset.h"
-#include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/SharedData.h"
@@ -15,6 +16,11 @@ namespace Hermes
 
 	Material::Material()
 	{
+		Vec4 DefaultColor = { 1.0f, 0.0f, 1.0f, 1.0f };
+		MaterialProperty ColorProperty = { L"Color", MaterialPropertyType::Vec4, 0, {} };
+		memmove(&ColorProperty.Value, &DefaultColor, sizeof(DefaultColor));
+		Properties.push_back(ColorProperty);
+
 		auto& Device = Renderer::Get().GetActiveDevice();
 
 		std::vector<RenderInterface::DescriptorBinding> PerMaterialDataBindings =
@@ -30,7 +36,9 @@ namespace Hermes
 		DescriptorSetLayout = Device.CreateDescriptorSetLayout(PerMaterialDataBindings);
 		DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorSetLayout);
 
-		UniformBuffer = Device.CreateBuffer(sizeof(MaterialData),
+		auto UniformBufferSize = CalculateUniformBufferSize();
+
+		UniformBuffer = Device.CreateBuffer(UniformBufferSize,
 		                                    RenderInterface::BufferUsageType::UniformBuffer |
 		                                    RenderInterface::BufferUsageType::CPUAccessible);
 
@@ -95,20 +103,20 @@ namespace Hermes
 		                                                            PipelineDesc);
 	}
 
-	void Material::SetColor(Vec4 NewColor)
-	{
-		Color = NewColor;
-		IsDirty = true;
-	}
-
 	void Material::Update() const
 	{
 		if (IsDirty)
 		{
-			MaterialData Data = {};
-			Data.Color = Color;
-			auto* Memory = UniformBuffer->Map();
-			memcpy(Memory, &Data, sizeof(Data));
+			// TODO : use frame local allocator for better performance
+			auto BufferSize = UniformBuffer->GetSize();
+			auto* MappedMemory = static_cast<uint8*>(UniformBuffer->Map());
+			HERMES_ASSERT(MappedMemory);
+			for (const auto& Property : Properties)
+			{
+				auto PropertySize = GetMaterialPropertySize(Property.Type);
+				HERMES_ASSERT(Property.Offset + PropertySize <= BufferSize);
+				memcpy(MappedMemory + Property.Offset, &Property.Value, PropertySize);
+			}
 			UniformBuffer->Unmap();
 		}
 	}
@@ -121,5 +129,18 @@ namespace Hermes
 	const RenderInterface::Pipeline& Material::GetPipeline() const
 	{
 		return *Pipeline;
+	}
+
+	// TODO : this is very *very* bare bones implementation, without dealing with offsets, alignment etc.
+	size_t Material::CalculateUniformBufferSize() const
+	{
+		size_t Result = 0;
+
+		for (const auto& Property : Properties)
+		{
+			Result += GetMaterialPropertySize(Property.Type);
+		}
+
+		return Result;
 	}
 }

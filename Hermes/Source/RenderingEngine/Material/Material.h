@@ -2,8 +2,9 @@
 
 #include <vector>
 
+#include "MaterialProperty.h"
 #include "Core/Core.h"
-#include "Math/Math.h"
+#include "Logging/Logger.h"
 #include "RenderingEngine/Texture.h"
 #include "RenderInterface/GenericRenderInterface/Forward.h"
 
@@ -14,7 +15,8 @@ namespace Hermes
 	public:
 		Material();
 
-		void SetColor(Vec4 NewColor);
+		template<typename ValueType>
+		void SetProperty(const String& Name, const ValueType& Value);
 
 		void Update() const;
 
@@ -23,16 +25,27 @@ namespace Hermes
 		const RenderInterface::Pipeline& GetPipeline() const;
 
 	private:
-		Vec4 Color;
+		std::vector<MaterialProperty> Properties;
 		bool IsDirty = true;
-		struct MaterialData
-		{
-			Vec4 Color;
-		};
 
 		std::unique_ptr<RenderInterface::DescriptorSetLayout> DescriptorSetLayout;
 		std::unique_ptr<RenderInterface::DescriptorSet> DescriptorSet;
 		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
 		std::unique_ptr<RenderInterface::Buffer> UniformBuffer;
+
+		size_t CalculateUniformBufferSize() const;
 	};
+
+	// TODO: add some type checking (at least in debug builds)?
+	template<typename ValueType>
+	void Material::SetProperty(const String& Name, const ValueType& Value)
+	{
+		auto Property = std::ranges::find_if(Properties, [Name](const auto& Element) { return Element.Name == Name; });
+		HERMES_ASSERT_LOG(Property != Properties.end(), L"Trying to update unknown property with name '%s'",
+		                  Name.c_str());
+		HERMES_ASSERT(sizeof(ValueType) <= GetMaterialPropertySize(Property->Type));
+		memcpy(&Property->Value, &Value, sizeof(ValueType));
+
+		IsDirty = true;
+	}
 }

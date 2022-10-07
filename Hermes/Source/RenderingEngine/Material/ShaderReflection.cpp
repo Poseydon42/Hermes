@@ -60,13 +60,12 @@ namespace Hermes
 			auto Offset = Compiler.type_struct_member_offset(TypeContainer, MemberIndex);
 
 			MaterialProperty Property;
-			Property.Name = Name;
 			Property.Type = Type;
 			Property.Width = NativeType.vecsize;
 			Property.Size = Size;
 			Property.Offset = Offset;
 
-			Properties[Name] = std::move(Property);
+			Properties[std::move(Name)] = Property;
 		}
 	}
 

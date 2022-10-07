@@ -13,12 +13,6 @@ namespace Hermes
 	struct HERMES_API MaterialProperty
 	{
 		/*
-		 * Name of the property as it appears in the shader. It is also the name
-		 * by which this property can be changed from the engine or application code
-		 */
-		String Name;
-
-		/*
 		 * Base type of a compound type (e.g. double for dvec3 or float for mat4)
 		 */
 		MaterialPropertyType Type = MaterialPropertyType::Undefined;

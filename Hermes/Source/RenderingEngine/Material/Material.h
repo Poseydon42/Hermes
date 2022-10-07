@@ -2,52 +2,46 @@
 
 #include <vector>
 
-#include "MaterialProperty.h"
 #include "Core/Core.h"
-#include "Logging/Logger.h"
+#include "RenderingEngine/Material/MaterialProperty.h"
 #include "RenderingEngine/Texture.h"
 #include "RenderInterface/GenericRenderInterface/Forward.h"
 
 namespace Hermes
 {
-	class HERMES_API Material
+	class MaterialInstance;
+
+	/*
+	 * A generic definition of a material - collection of shaders, a set of properties that can be changed
+	 * by the user and the graphics pipeline object that this material uses.
+	 *
+	 * A material cannot be applied directly to an object. It serves as a template based on which material
+	 * instances can be created.
+	 */
+	class HERMES_API Material : public std::enable_shared_from_this<Material>
 	{
 	public:
 		static std::shared_ptr<Material> Create();
 
-		template<typename ValueType>
-		void SetProperty(const String& Name, const ValueType& Value);
+		std::unique_ptr<MaterialInstance> CreateInstance() const;
 
-		void Update() const;
+		const std::vector<MaterialProperty>& GetProperties() const;
 
-		const RenderInterface::DescriptorSet& GetMaterialDescriptorSet() const;
+		const MaterialProperty* FindProperty(const String& Name) const;
+
+		const RenderInterface::DescriptorSetLayout& GetDescriptorSetLayout() const;
 
 		const RenderInterface::Pipeline& GetPipeline() const;
 
 	private:
 		std::vector<MaterialProperty> Properties;
-		bool IsDirty = true;
+		size_t UniformBufferSize;
 
 		std::unique_ptr<RenderInterface::DescriptorSetLayout> DescriptorSetLayout;
-		std::unique_ptr<RenderInterface::DescriptorSet> DescriptorSet;
 		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
-		std::unique_ptr<RenderInterface::Buffer> UniformBuffer;
 
 		Material();
 
 		size_t CalculateUniformBufferSize() const;
 	};
-
-	// TODO: add some type checking (at least in debug builds)?
-	template<typename ValueType>
-	void Material::SetProperty(const String& Name, const ValueType& Value)
-	{
-		auto Property = std::ranges::find_if(Properties, [Name](const auto& Element) { return Element.Name == Name; });
-		HERMES_ASSERT_LOG(Property != Properties.end(), L"Trying to update unknown property with name '%s'",
-		                  Name.c_str());
-		HERMES_ASSERT(sizeof(ValueType) <= GetMaterialPropertySize(Property->Type));
-		memcpy(&Property->Value, &Value, sizeof(ValueType));
-
-		IsDirty = true;
-	}
 }

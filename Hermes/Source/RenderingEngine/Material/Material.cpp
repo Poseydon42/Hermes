@@ -10,16 +10,19 @@
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
+#include "RenderingEngine/Material/MaterialInstance.h"
 
 namespace Hermes
 {
 
 	Material::Material()
 	{
-		Vec4 DefaultColor = { 1.0f, 0.0f, 1.0f, 1.0f };
+		Vec4 DefaultColor = { 1.0f, 0.0f, 0.0f, 1.0f };
 		MaterialProperty ColorProperty = { L"Color", MaterialPropertyType::Vec4, 0, {} };
-		memmove(&ColorProperty.Value, &DefaultColor, sizeof(DefaultColor));
+		memmove(&ColorProperty.DefaultValue, &DefaultColor, sizeof(DefaultColor));
 		Properties.push_back(ColorProperty);
+
+		UniformBufferSize = CalculateUniformBufferSize();
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 
@@ -34,15 +37,6 @@ namespace Hermes
 			}
 		};
 		DescriptorSetLayout = Device.CreateDescriptorSetLayout(PerMaterialDataBindings);
-		DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorSetLayout);
-
-		auto UniformBufferSize = CalculateUniformBufferSize();
-
-		UniformBuffer = Device.CreateBuffer(UniformBufferSize,
-		                                    RenderInterface::BufferUsageType::UniformBuffer |
-		                                    RenderInterface::BufferUsageType::CPUAccessible);
-
-		DescriptorSet->UpdateWithBuffer(0, 0, *UniformBuffer, 0, static_cast<uint32>(UniformBuffer->GetSize()));
 
 		auto VertexShader = Device.CreateShader(L"Shaders/Bin/solid_color_vert.glsl.spv",
 		                                        RenderInterface::ShaderType::VertexShader);
@@ -108,27 +102,27 @@ namespace Hermes
 		return std::shared_ptr<Material>(new Material());
 	}
 
-	void Material::Update() const
+	std::unique_ptr<MaterialInstance> Material::CreateInstance() const
 	{
-		if (IsDirty)
-		{
-			// TODO : use frame local allocator for better performance
-			auto BufferSize = UniformBuffer->GetSize();
-			auto* MappedMemory = static_cast<uint8*>(UniformBuffer->Map());
-			HERMES_ASSERT(MappedMemory);
-			for (const auto& Property : Properties)
-			{
-				auto PropertySize = GetMaterialPropertySize(Property.Type);
-				HERMES_ASSERT(Property.Offset + PropertySize <= BufferSize);
-				memcpy(MappedMemory + Property.Offset, &Property.Value, PropertySize);
-			}
-			UniformBuffer->Unmap();
-		}
+		return std::unique_ptr<MaterialInstance>(new MaterialInstance(shared_from_this(), UniformBufferSize));
 	}
 
-	const RenderInterface::DescriptorSet& Material::GetMaterialDescriptorSet() const
+	const std::vector<MaterialProperty>& Material::GetProperties() const
 	{
-		return *DescriptorSet;
+		return Properties;
+	}
+
+	const MaterialProperty* Material::FindProperty(const String& Name) const
+	{
+		auto Result = std::ranges::find_if(Properties, [&](const auto& Element) { return Element.Name == Name; });
+		if (Result == Properties.end())
+			return {};
+		return &*Result;
+	}
+
+	const RenderInterface::DescriptorSetLayout& Material::GetDescriptorSetLayout() const
+	{
+		return *DescriptorSetLayout;
 	}
 
 	const RenderInterface::Pipeline& Material::GetPipeline() const

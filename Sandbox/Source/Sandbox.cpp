@@ -10,6 +10,8 @@
 #include "Math/Vector.h"
 #include "RenderingEngine/Scene/FPSCamera.h"
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
+#include "RenderingEngine/Material/Material.h"
+#include "RenderingEngine/Material/MaterialInstance.h"
 
 class SandboxApp : public Hermes::IApplication
 {
@@ -20,12 +22,12 @@ public:
 		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"sphere"));
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
 		TestMaterial = Hermes::Material::Create();
-		TestMaterial->SetProperty<Hermes::Vec4>(L"Color", { 0.0f, 1.0f, 0.0f, 1.0f });
+		TestMaterialInstance = TestMaterial->CreateInstance();
 		Hermes::MeshProxy SphereMeshProxy =
 		{
 			Hermes::Mat4::Translation(SphereLocation),
 			*SphereMeshBuffer,
-			TestMaterial
+			TestMaterialInstance
 		};
 		Hermes::GGameLoop->GetScene().AddMesh(SphereMeshProxy);
 
@@ -103,6 +105,7 @@ private:
 	bool AnisotropyEnabled = false, AnisotropyChanged = false;
 	std::shared_ptr<Hermes::FPSCamera> Camera;
 	std::shared_ptr<Hermes::Material> TestMaterial;
+	std::shared_ptr<Hermes::MaterialInstance> TestMaterialInstance;
 	const Hermes::Vec3 SphereLocation = Hermes::Vec3(0.0f, 0.0f, 10.0f);
 
 	void KeyEventHandler(const Hermes::IEvent& Event)
@@ -119,11 +122,11 @@ private:
 			{
 				if (KeyEvent.IsPressEvent())
 				{
-					TestMaterial->SetProperty<Hermes::Vec4>(L"Color", { 1.0f, 0.0f, 1.0f, 1.0f });
+					TestMaterialInstance->SetProperty<Hermes::Vec4>(L"Color", { 1.0f, 0.0f, 1.0f, 1.0f });
 				}
 				else
 				{
-					TestMaterial->SetProperty<Hermes::Vec4>(L"Color", { 0.0f, 1.0f, 0.0f, 1.0f });
+					TestMaterialInstance->SetProperty<Hermes::Vec4>(L"Color", { 0.0f, 1.0f, 0.0f, 1.0f });
 				}
 			}
 		}

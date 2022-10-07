@@ -111,11 +111,11 @@ namespace Hermes
 		for (const auto& Mesh : Scene.GetMeshes())
 		{
 			auto& Material = Mesh.Material;
-			auto& MaterialPipeline = Material->GetPipeline();
+			auto& MaterialPipeline = Material->GetBaseMaterial().GetPipeline();
 			auto& MeshBuffer = Mesh.MeshData;
 
 			// TODO : move it into the renderer?
-			Material->Update();
+			Material->PrepareForRender();
 
 			CommandBuffer.BindPipeline(MaterialPipeline);
 			CommandBuffer.BindDescriptorSet(*SceneUBODescriptorSet, MaterialPipeline, 0);

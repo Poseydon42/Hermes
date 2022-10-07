@@ -14,6 +14,8 @@ set(SOURCES
     GPUInteractionUtilities.h
     Material/Material.cpp
     Material/Material.h
+    Material/MaterialInstance.cpp
+    Material/MaterialInstance.h
     Material/MaterialProperty.cpp
     Material/MaterialProperty.h
     MeshBuffer.cpp

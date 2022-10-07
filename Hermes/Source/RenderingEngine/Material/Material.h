@@ -13,7 +13,7 @@ namespace Hermes
 	class HERMES_API Material
 	{
 	public:
-		Material();
+		static std::shared_ptr<Material> Create();
 
 		template<typename ValueType>
 		void SetProperty(const String& Name, const ValueType& Value);
@@ -32,6 +32,8 @@ namespace Hermes
 		std::unique_ptr<RenderInterface::DescriptorSet> DescriptorSet;
 		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
 		std::unique_ptr<RenderInterface::Buffer> UniformBuffer;
+
+		Material();
 
 		size_t CalculateUniformBufferSize() const;
 	};

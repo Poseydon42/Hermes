@@ -103,6 +103,11 @@ namespace Hermes
 		                                                            PipelineDesc);
 	}
 
+	std::shared_ptr<Material> Material::Create()
+	{
+		return std::shared_ptr<Material>(new Material());
+	}
+
 	void Material::Update() const
 	{
 		if (IsDirty)

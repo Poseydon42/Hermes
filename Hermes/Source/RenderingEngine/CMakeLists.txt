@@ -18,6 +18,8 @@ set(SOURCES
     Material/MaterialInstance.h
     Material/MaterialProperty.cpp
     Material/MaterialProperty.h
+    Material/ShaderReflection.cpp
+    Material/ShaderReflection.h
     MeshBuffer.cpp
     MeshBuffer.h
     Passes/ForwardPass.cpp

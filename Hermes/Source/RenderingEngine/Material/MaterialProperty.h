@@ -21,7 +21,7 @@ namespace Hermes
 		/*
 		 * Base type of a compound type (e.g. double for dvec3 or float for mat4)
 		 */
-		MaterialPropertyType BaseType = MaterialPropertyType::Undefined;
+		MaterialPropertyType Type = MaterialPropertyType::Undefined;
 
 		/*
 		 * Number of elements in a compound type in a single dimension (e.g. 2 for vec2 or 4 for mat4)

@@ -14,11 +14,8 @@ namespace Hermes
 {
 
 	Material::Material()
+		: Reflection(L"Shaders/Bin/solid_color_frag.glsl.spv")
 	{
-		MaterialProperty ColorProperty = { L"Color", MaterialPropertyType::Float, 4, 16, 0 };
-		Properties.push_back(ColorProperty);
-
-		UniformBufferSize = CalculateUniformBufferSize();
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 
@@ -100,20 +97,13 @@ namespace Hermes
 
 	std::unique_ptr<MaterialInstance> Material::CreateInstance() const
 	{
-		return std::unique_ptr<MaterialInstance>(new MaterialInstance(shared_from_this(), UniformBufferSize));
-	}
-
-	const std::vector<MaterialProperty>& Material::GetProperties() const
-	{
-		return Properties;
+		return std::unique_ptr<MaterialInstance>(new MaterialInstance(shared_from_this(),
+		                                                              Reflection.GetTotalSizeForUniformBuffer()));
 	}
 
 	const MaterialProperty* Material::FindProperty(const String& Name) const
 	{
-		auto Result = std::ranges::find_if(Properties, [&](const auto& Element) { return Element.Name == Name; });
-		if (Result == Properties.end())
-			return {};
-		return &*Result;
+		return Reflection.FindProperty(Name);
 	}
 
 	const RenderInterface::DescriptorSetLayout& Material::GetDescriptorSetLayout() const
@@ -124,18 +114,5 @@ namespace Hermes
 	const RenderInterface::Pipeline& Material::GetPipeline() const
 	{
 		return *Pipeline;
-	}
-
-	// TODO : this is very *very* bare bones implementation, without dealing with offsets, alignment etc.
-	size_t Material::CalculateUniformBufferSize() const
-	{
-		size_t Result = 0;
-
-		for (const auto& Property : Properties)
-		{
-			Result += Property.Size;
-		}
-
-		return Result;
 	}
 }

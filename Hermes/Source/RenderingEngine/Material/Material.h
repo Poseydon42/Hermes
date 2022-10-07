@@ -4,6 +4,7 @@
 
 #include "Core/Core.h"
 #include "RenderingEngine/Material/MaterialProperty.h"
+#include "RenderingEngine/Material/ShaderReflection.h"
 #include "RenderingEngine/Texture.h"
 #include "RenderInterface/GenericRenderInterface/Forward.h"
 
@@ -25,8 +26,6 @@ namespace Hermes
 
 		std::unique_ptr<MaterialInstance> CreateInstance() const;
 
-		const std::vector<MaterialProperty>& GetProperties() const;
-
 		const MaterialProperty* FindProperty(const String& Name) const;
 
 		const RenderInterface::DescriptorSetLayout& GetDescriptorSetLayout() const;
@@ -34,14 +33,11 @@ namespace Hermes
 		const RenderInterface::Pipeline& GetPipeline() const;
 
 	private:
-		std::vector<MaterialProperty> Properties;
-		size_t UniformBufferSize;
+		ShaderReflection Reflection;
 
 		std::unique_ptr<RenderInterface::DescriptorSetLayout> DescriptorSetLayout;
 		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
 
 		Material();
-
-		size_t CalculateUniformBufferSize() const;
 	};
 }

@@ -44,14 +44,5 @@ namespace Hermes
 		                                    RenderInterface::BufferUsageType::CPUAccessible);
 		DescriptorSet = DescriptorAllocator.Allocate(BaseMaterial->GetDescriptorSetLayout());
 		DescriptorSet->UpdateWithBuffer(0, 0, *UniformBuffer, 0, static_cast<uint32>(UniformBuffer->GetSize()));
-
-		// Filling CPU buffer with default values
-		for (const auto& Property : BaseMaterial->GetProperties())
-		{
-			auto PropertySize = GetMaterialPropertySize(Property.Type);
-			HERMES_ASSERT(Property.Offset + PropertySize <= UniformBufferSize);
-			memcpy(CPUBuffer.data() + Property.Offset, &Property.DefaultValue, PropertySize);
-		}
-		IsDirty = true;
 	}
 }

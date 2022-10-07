@@ -17,9 +17,7 @@ namespace Hermes
 
 	Material::Material()
 	{
-		Vec4 DefaultColor = { 1.0f, 0.0f, 0.0f, 1.0f };
-		MaterialProperty ColorProperty = { L"Color", MaterialPropertyType::Vec4, 0, {} };
-		memmove(&ColorProperty.DefaultValue, &DefaultColor, sizeof(DefaultColor));
+		MaterialProperty ColorProperty = { L"Color", MaterialPropertyType::Vec4, 0 };
 		Properties.push_back(ColorProperty);
 
 		UniformBufferSize = CalculateUniformBufferSize();

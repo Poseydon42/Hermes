@@ -48,7 +48,7 @@ namespace Hermes
 	{
 		auto* Property = BaseMaterial->FindProperty(Name);
 		HERMES_ASSERT_LOG(Property, L"Unknown material property '%s'", Name.c_str());
-		HERMES_ASSERT(sizeof(ValueType) <= GetMaterialPropertySize(Property->Type));
+		HERMES_ASSERT(sizeof(ValueType) <= Property->Size);
 		memcpy(CPUBuffer.data() + Property->Offset, &Value, sizeof(ValueType));
 
 		IsDirty = true;

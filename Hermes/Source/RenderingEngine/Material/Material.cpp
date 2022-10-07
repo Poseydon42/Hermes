@@ -1,7 +1,5 @@
 ﻿#include "Material.h"
 
-#include <cstring>
-
 #include "AssetSystem/MeshAsset.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
@@ -17,7 +15,7 @@ namespace Hermes
 
 	Material::Material()
 	{
-		MaterialProperty ColorProperty = { L"Color", MaterialPropertyType::Vec4, 0 };
+		MaterialProperty ColorProperty = { L"Color", MaterialPropertyType::Float, 4, 16, 0 };
 		Properties.push_back(ColorProperty);
 
 		UniformBufferSize = CalculateUniformBufferSize();
@@ -135,7 +133,7 @@ namespace Hermes
 
 		for (const auto& Property : Properties)
 		{
-			Result += GetMaterialPropertySize(Property.Type);
+			Result += Property.Size;
 		}
 
 		return Result;

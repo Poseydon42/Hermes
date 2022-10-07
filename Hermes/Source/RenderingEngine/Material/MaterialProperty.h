@@ -6,16 +6,37 @@ namespace Hermes
 {
 	enum class MaterialPropertyType
 	{
-		Undefined = 0x00,
-		Vec4 = 0xF1,
+		Undefined,
+		Float,
 	};
 
-	size_t HERMES_API GetMaterialPropertySize(MaterialPropertyType Type);
-
-	struct MaterialProperty
+	struct HERMES_API MaterialProperty
 	{
+		/*
+		 * Name of the property as it appears in the shader. It is also the name
+		 * by which this property can be changed from the engine or application code
+		 */
 		String Name;
-		MaterialPropertyType Type;
-		size_t Offset;
+
+		/*
+		 * Base type of a compound type (e.g. double for dvec3 or float for mat4)
+		 */
+		MaterialPropertyType BaseType = MaterialPropertyType::Undefined;
+
+		/*
+		 * Number of elements in a compound type in a single dimension (e.g. 2 for vec2 or 4 for mat4)
+		 */
+		uint32 Width = 1;
+
+		/*
+		 * Full size of this property in bytes, without padding
+		 */
+		size_t Size = 0;
+
+		/*
+		 * Offset of the memory address that holds this property in the uniform
+		 * buffer relative to the beginning of this uniform buffer
+		 */
+		size_t Offset = 0;
 	};
 }

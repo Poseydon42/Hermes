@@ -8,15 +8,15 @@
 
 namespace Hermes
 {
-	static MaterialPropertyType SPIRVTypeToMaterialPropertyType(spirv_cross::SPIRType::BaseType Type)
+	static MaterialPropertyDataType SPIRVTypeToMaterialPropertyDataType(spirv_cross::SPIRType::BaseType Type)
 	{
 		switch (Type)
 		{
 		case spirv_cross::SPIRType::Float:
-			return MaterialPropertyType::Float;
+			return MaterialPropertyDataType::Float;
 		default:
 			HERMES_ASSERT_LOG(false, L"Unsupported SPIR-V type");
-			return MaterialPropertyType::Undefined;
+			return MaterialPropertyDataType::Undefined;
 		}
 	}
 
@@ -54,13 +54,30 @@ namespace Hermes
 			auto Name = StringUtils::ANSIToString(ANSIName);
 
 			auto& NativeType = Compiler.get_type(TypeContainer.member_types[MemberIndex]);
-			auto Type = SPIRVTypeToMaterialPropertyType(NativeType.basetype);
+			auto DataType = SPIRVTypeToMaterialPropertyDataType(NativeType.basetype);
 
 			auto Size = Compiler.get_declared_struct_member_size(TypeContainer, MemberIndex);
 			auto Offset = Compiler.type_struct_member_offset(TypeContainer, MemberIndex);
 
+			auto Type = MaterialPropertyType::Undefined;
+			if (NativeType.vecsize == 1 && NativeType.columns == 1)
+			{
+				Type = MaterialPropertyType::Value;
+			}
+			else if (NativeType.vecsize > 1 && NativeType.columns == 1)
+			{
+				Type = MaterialPropertyType::Vector;
+			}
+			else
+			{
+				HERMES_ASSERT_LOG(NativeType.vecsize == NativeType.columns,
+				                  L"Reflection of non-square matrices is not supported");
+				Type = MaterialPropertyType::Matrix;
+			}
+
 			MaterialProperty Property;
 			Property.Type = Type;
+			Property.DataType = DataType;
 			Property.Width = NativeType.vecsize;
 			Property.Size = Size;
 			Property.Offset = Offset;

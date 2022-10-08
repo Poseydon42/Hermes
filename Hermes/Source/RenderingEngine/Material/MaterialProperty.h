@@ -4,21 +4,43 @@
 
 namespace Hermes
 {
-	enum class MaterialPropertyType
+	/*
+	 * Data types that can be reflected from a shader
+	 */
+	enum class MaterialPropertyDataType
 	{
 		Undefined,
 		Float,
 	};
 
+	/*
+	 * Types of individual properties that can be reflected from a shader
+	 */
+	enum class MaterialPropertyType
+	{
+		Undefined,
+		Value,
+		Vector,
+		Matrix
+	};
+
 	struct HERMES_API MaterialProperty
 	{
 		/*
-		 * Base type of a compound type (e.g. double for dvec3 or float for mat4)
+		 * Type of the property
 		 */
 		MaterialPropertyType Type = MaterialPropertyType::Undefined;
 
 		/*
+		 * Data type of a compound type (e.g. double for dvec3 or float for mat4)
+		 */
+		MaterialPropertyDataType DataType = MaterialPropertyDataType::Undefined;
+
+		/*
 		 * Number of elements in a compound type in a single dimension (e.g. 2 for vec2 or 4 for mat4)
+		 *
+		 * NOTE: only square matrices are supported, therefore we only need one variable to describe
+		 *       the size of any compound type.
 		 */
 		uint32 Width = 1;
 

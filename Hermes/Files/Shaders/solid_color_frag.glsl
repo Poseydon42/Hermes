@@ -19,10 +19,13 @@ layout(set = 1, binding = 0) uniform MaterialData
 {
     vec4 Color;
 } u_MaterialData;
+layout(set = 1, binding = 1) uniform sampler2D u_AlbedoTexture;
+
+layout(location = 0) in vec2 i_TextureCoordinates;
 
 layout(location = 0) out vec4 o_Color;
 
 void main()
 {
-    o_Color = u_MaterialData.Color;
+    o_Color = texture(u_AlbedoTexture, i_TextureCoordinates) * u_MaterialData.Color;
 }

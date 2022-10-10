@@ -21,8 +21,13 @@ public:
 	{
 		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"sphere"));
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
+
+		auto TestTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_albedo"));
+		TestTexture = Hermes::Texture::CreateFromAsset(*TestTextureAsset, true);
+
 		TestMaterial = Hermes::Material::Create();
 		TestMaterialInstance = TestMaterial->CreateInstance();
+		TestMaterialInstance->SetTextureProperty(L"u_AlbedoTexture", *TestTexture);
 		Hermes::MeshProxy SphereMeshProxy =
 		{
 			Hermes::Mat4::Translation(SphereLocation),
@@ -106,6 +111,7 @@ private:
 	std::shared_ptr<Hermes::FPSCamera> Camera;
 	std::shared_ptr<Hermes::Material> TestMaterial;
 	std::shared_ptr<Hermes::MaterialInstance> TestMaterialInstance;
+	std::shared_ptr<Hermes::Texture> TestTexture;
 	const Hermes::Vec3 SphereLocation = Hermes::Vec3(0.0f, 0.0f, 10.0f);
 
 	void KeyEventHandler(const Hermes::IEvent& Event)

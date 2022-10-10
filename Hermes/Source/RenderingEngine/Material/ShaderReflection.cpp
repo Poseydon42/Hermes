@@ -46,6 +46,7 @@ namespace Hermes
 		}
 		HERMES_ASSERT(MaterialDataUBO);
 
+		// Numeric properties (in UBO at binding 0)
 		const auto& TypeContainer = Compiler.get_type(MaterialDataUBO->base_type_id);
 		SizeForUniformBuffer = Compiler.get_declared_struct_size(TypeContainer);
 		for (uint32 MemberIndex = 0; MemberIndex < TypeContainer.member_types.size(); MemberIndex++)
@@ -81,6 +82,30 @@ namespace Hermes
 			Property.Width = NativeType.vecsize;
 			Property.Size = Size;
 			Property.Offset = Offset;
+			Property.Binding = 0;
+
+			Properties[std::move(Name)] = Property;
+		}
+
+		// Texture property (DescriptorType::CombinedImageSampler)
+		for (const auto& Texture : Compiler.get_shader_resources().sampled_images)
+		{
+			// NOTE: material properties are located only in descriptor set 1
+			if (Compiler.get_decoration(Texture.id, spv::DecorationDescriptorSet) != 1)
+				continue;
+
+			const auto& ANSIName = Compiler.get_name(Texture.id);
+			auto Name = StringUtils::ANSIToString(ANSIName);
+
+			auto Binding = Compiler.get_decoration(Texture.id, spv::DecorationBinding);
+
+			MaterialProperty Property;
+			Property.Type = MaterialPropertyType::Texture;
+			Property.DataType = MaterialPropertyDataType::Undefined;
+			Property.Width = 1;
+			Property.Size = 0;
+			Property.Offset = 0;
+			Property.Binding = Binding;
 
 			Properties[std::move(Name)] = Property;
 		}

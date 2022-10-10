@@ -21,6 +21,8 @@ namespace Hermes
 
 		const MaterialProperty* FindProperty(const String& Name) const;
 
+		const std::unordered_map<String, MaterialProperty>& GetProperties() const;
+
 		size_t GetTotalSizeForUniformBuffer() const;
 
 	private:

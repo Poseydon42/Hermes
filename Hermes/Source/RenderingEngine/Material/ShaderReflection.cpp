@@ -119,6 +119,11 @@ namespace Hermes
 		return &Result->second;
 	}
 
+	const std::unordered_map<String, MaterialProperty>& ShaderReflection::GetProperties() const
+	{
+		return Properties;
+	}
+
 	size_t ShaderReflection::GetTotalSizeForUniformBuffer() const
 	{
 		return SizeForUniformBuffer;

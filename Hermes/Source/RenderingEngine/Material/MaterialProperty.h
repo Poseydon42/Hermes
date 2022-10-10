@@ -21,7 +21,8 @@ namespace Hermes
 		Undefined,
 		Value,
 		Vector,
-		Matrix
+		Matrix,
+		Texture
 	};
 
 	struct HERMES_API MaterialProperty
@@ -33,6 +34,8 @@ namespace Hermes
 
 		/*
 		 * Data type of a compound type (e.g. double for dvec3 or float for mat4)
+		 *
+		 * Undefined for non-value objects (e.g. textures, samplers etc.)
 		 */
 		MaterialPropertyDataType DataType = MaterialPropertyDataType::Undefined;
 
@@ -46,6 +49,8 @@ namespace Hermes
 
 		/*
 		 * Full size of this property in bytes, without padding
+		 *
+		 * Must always be zero for non-value properties (e.g. textures, samplers etc.)
 		 */
 		size_t Size = 0;
 

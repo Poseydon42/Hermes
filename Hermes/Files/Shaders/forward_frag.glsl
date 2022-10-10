@@ -14,13 +14,12 @@ layout(set = 0, binding = 1) uniform samplerCube u_IrradianceMap;
 layout(set = 0, binding = 2) uniform samplerCube u_SpecularMap;
 layout(set = 0, binding = 3) uniform sampler2D u_PrecomputedBRDFMap;
 
-// NOTE : set 1 - material data, updated for every material type
+// NOTE : set 1 - material data, updated for every material type; we can't use binding #0 because it can only be used for uniform buffer containing numeric properties
 
-layout(set = 1, binding = 0) uniform sampler u_DefaultSampler;
-layout(set = 1, binding = 1) uniform texture2D u_AlbedoTexture;
-layout(set = 1, binding = 2) uniform texture2D u_RoughnessTexture;
-layout(set = 1, binding = 3) uniform texture2D u_MetallicTexture;
-layout(set = 1, binding = 4) uniform texture2D u_NormalTexture;
+layout(set = 1, binding = 1) uniform sampler2D u_AlbedoTexture;
+layout(set = 1, binding = 2) uniform sampler2D u_RoughnessTexture;
+layout(set = 1, binding = 3) uniform sampler2D u_MetallicTexture;
+layout(set = 1, binding = 4) uniform sampler2D u_NormalTexture;
 
 layout(location = 0) in vec2 i_TextureCoordinates;
 layout(location = 1) in vec3 i_FragmentPosition;
@@ -33,9 +32,9 @@ vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
 {
     vec3 Result = vec3(0.0);
 
-    vec3 AlbedoColor = texture(sampler2D(u_AlbedoTexture, u_DefaultSampler), i_TextureCoordinates).rgb;
-    float Roughness = texture(sampler2D(u_RoughnessTexture, u_DefaultSampler), i_TextureCoordinates).r;
-    float Metallic = texture(sampler2D(u_MetallicTexture, u_DefaultSampler), i_TextureCoordinates).r;
+    vec3 AlbedoColor = texture(u_AlbedoTexture, i_TextureCoordinates).rgb;
+    float Roughness = texture(u_RoughnessTexture, i_TextureCoordinates).r;
+    float Metallic = texture(u_MetallicTexture, i_TextureCoordinates).r;
 
     for (int LightIndex = 0;  LightIndex < u_SceneData.Data.PointLightCount; LightIndex++)
     {
@@ -85,7 +84,7 @@ vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
 
 void main()
 {
-    vec3 Normal = texture(sampler2D(u_NormalTexture, u_DefaultSampler), i_TextureCoordinates).rgb;
+    vec3 Normal = texture(u_NormalTexture, i_TextureCoordinates).rgb;
     Normal = Normal * 2.0 - 1.0; // Remapping into [-1;+1]
     Normal = normalize(i_TBNMatrix * Normal);
 

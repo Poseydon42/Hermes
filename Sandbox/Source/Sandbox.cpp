@@ -122,11 +122,11 @@ private:
 			{
 				if (KeyEvent.IsPressEvent())
 				{
-					TestMaterialInstance->SetProperty<Hermes::Vec4>(L"Color", { 1.0f, 0.0f, 1.0f, 1.0f });
+					TestMaterialInstance->SetNumericProperty<Hermes::Vec4>(L"Color", { 1.0f, 0.0f, 1.0f, 1.0f });
 				}
 				else
 				{
-					TestMaterialInstance->SetProperty<Hermes::Vec4>(L"Color", { 0.0f, 1.0f, 0.0f, 1.0f });
+					TestMaterialInstance->SetNumericProperty<Hermes::Vec4>(L"Color", { 0.0f, 1.0f, 0.0f, 1.0f });
 				}
 			}
 		}

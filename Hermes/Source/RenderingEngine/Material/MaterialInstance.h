@@ -21,7 +21,7 @@ namespace Hermes
 	{
 	public:
 		template<typename ValueType>
-		void SetProperty(const String& Name, const ValueType& Value);
+		void SetNumericProperty(const String& Name, const ValueType& Value);
 
 		void PrepareForRender() const;
 
@@ -44,7 +44,7 @@ namespace Hermes
 
 	// TODO : add type checking
 	template<typename ValueType>
-	void MaterialInstance::SetProperty(const String& Name, const ValueType& Value)
+	void MaterialInstance::SetNumericProperty(const String& Name, const ValueType& Value)
 	{
 		auto* Property = BaseMaterial->FindProperty(Name);
 		HERMES_ASSERT_LOG(Property, L"Unknown material property '%s'", Name.c_str());

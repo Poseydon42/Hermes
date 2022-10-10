@@ -22,7 +22,7 @@ namespace Hermes
 	{
 	public:
 		template<typename ValueType>
-		void SetNumericProperty(const String& Name, const ValueType& Value);
+		void SetNumericProperty(const String& Name, const ValueType& Value, size_t ArrayIndex = 0);
 
 		void SetTextureProperty(const String& Name, const Texture& Value);
 
@@ -47,12 +47,15 @@ namespace Hermes
 
 	// TODO : add type checking
 	template<typename ValueType>
-	void MaterialInstance::SetNumericProperty(const String& Name, const ValueType& Value)
+	void MaterialInstance::SetNumericProperty(const String& Name, const ValueType& Value, size_t ArrayIndex)
 	{
 		auto* Property = BaseMaterial->FindProperty(Name);
 		HERMES_ASSERT_LOG(Property, L"Unknown material property '%s'", Name.c_str());
-		HERMES_ASSERT(sizeof(ValueType) <= Property->Size);
-		memcpy(CPUBuffer.data() + Property->Offset, &Value, sizeof(ValueType));
+
+		auto SizeOfSingleElement = Property->Size / Property->ArrayLength;
+		HERMES_ASSERT(sizeof(ValueType) <= SizeOfSingleElement);
+		HERMES_ASSERT(ArrayIndex < Property->ArrayLength)
+		memcpy(CPUBuffer.data() + Property->Offset + ArrayIndex * SizeOfSingleElement, &Value, sizeof(ValueType));
 
 		IsDirty = true;
 	}

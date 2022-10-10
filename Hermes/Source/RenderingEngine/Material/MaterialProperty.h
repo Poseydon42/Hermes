@@ -59,5 +59,13 @@ namespace Hermes
 		 * buffer relative to the beginning of this uniform buffer
 		 */
 		size_t Offset = 0;
+
+		/*
+		 * Index of the binding of this property
+		 *
+		 * NOTE: must be 0 for any value property (property that is stored in a uniform buffer)
+		 *       because we only support one uniform buffer at binding 0 at the moment.
+		 */
+		uint32 Binding = 0;
 	};
 }

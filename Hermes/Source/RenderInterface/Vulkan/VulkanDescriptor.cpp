@@ -38,13 +38,12 @@ namespace Hermes
 		{
 			std::vector<VkDescriptorSetLayoutBinding> VulkanBindings(Bindings.size());
 			auto VulkanBinding = VulkanBindings.begin();
-			DescriptorTypes.resize(Bindings.size());
 			for (const auto& Binding : Bindings)
 			{
 				VulkanBinding->binding = Binding.Index;
 				VulkanBinding->descriptorCount = Binding.DescriptorCount; // TODO
 				VulkanBinding->descriptorType = DescriptorTypeToVkDescriptorType(Binding.Type);
-				VulkanBinding->pImmutableSamplers = 0;
+				VulkanBinding->pImmutableSamplers = nullptr;
 				VulkanBinding->stageFlags = ShaderTypeToVkShaderStage(Binding.Shader);
 
 				DescriptorTypes[Binding.Index] = VulkanBinding->descriptorType;

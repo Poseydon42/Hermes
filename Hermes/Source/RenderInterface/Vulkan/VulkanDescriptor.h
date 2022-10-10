@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <memory>
-#include <vector>
+#include <unordered_map>
 
 #include "Core/Core.h"
 #include "RenderInterface/GenericRenderInterface/Descriptor.h"
@@ -26,11 +26,11 @@ namespace Hermes
 			VulkanDescriptorSetLayout& operator=(VulkanDescriptorSetLayout&& Other);
 
 			VkDescriptorSetLayout GetDescriptorSetLayout() const { return Layout; }
-			VkDescriptorType GetDescriptorType(uint32 BindingIndex) const { return DescriptorTypes[BindingIndex]; }
+			VkDescriptorType GetDescriptorType(uint32 BindingIndex) const { return DescriptorTypes.at(BindingIndex); }
 
 		private:
 			std::shared_ptr<const VulkanDevice> Device;
-			std::vector<VkDescriptorType> DescriptorTypes;
+			std::unordered_map<uint32, VkDescriptorType> DescriptorTypes;
 			VkDescriptorSetLayout Layout;
 
 			friend class VulkanDescriptorSet;
@@ -103,7 +103,7 @@ namespace Hermes
 		private:
 			std::shared_ptr<const VulkanDevice> Device;
 			std::shared_ptr<VulkanDescriptorSetPool::VkDescriptorPoolHolder> Pool;
-			std::vector<VkDescriptorType> DescriptorTypes;
+			std::unordered_map<uint32, VkDescriptorType> DescriptorTypes;
 			VkDescriptorSet Set;
 			bool FreeInDestructor;
 		};

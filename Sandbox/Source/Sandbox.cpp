@@ -22,13 +22,22 @@ public:
 		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"sphere"));
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
 
-		auto TestTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_albedo"));
-		TestTexture = Hermes::Texture::CreateFromAsset(*TestTextureAsset, true);
+		auto AlbedoTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_albedo"));
+		auto NormalTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_normal"));
+		auto MetallicTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_metallic"));
+		auto RoughnessTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_roughness"));
+		AlbedoTexture = Hermes::Texture::CreateFromAsset(*AlbedoTextureAsset, true);
+		NormalTexture = Hermes::Texture::CreateFromAsset(*NormalTextureAsset, false);
+		MetallicTexture = Hermes::Texture::CreateFromAsset(*MetallicTextureAsset, false);
+		RoughnessTexture = Hermes::Texture::CreateFromAsset(*RoughnessTextureAsset, false);
 
-		TestMaterial = Hermes::Material::Create(L"Shaders/Bin/solid_color_vert.glsl.spv",
-		                                        L"Shaders/Bin/solid_color_frag.glsl.spv");
+		TestMaterial = Hermes::Material::Create(L"Shaders/Bin/forward_vert.glsl.spv",
+		                                        L"Shaders/Bin/forward_frag.glsl.spv");
 		TestMaterialInstance = TestMaterial->CreateInstance();
-		TestMaterialInstance->SetTextureProperty(L"u_AlbedoTexture", *TestTexture);
+		TestMaterialInstance->SetTextureProperty(L"u_AlbedoTexture", *AlbedoTexture);
+		TestMaterialInstance->SetTextureProperty(L"u_RoughnessTexture", *RoughnessTexture);
+		TestMaterialInstance->SetTextureProperty(L"u_MetallicTexture", *MetallicTexture);
+		TestMaterialInstance->SetTextureProperty(L"u_NormalTexture", *NormalTexture);
 		Hermes::MeshProxy SphereMeshProxy =
 		{
 			Hermes::Mat4::Translation(SphereLocation),
@@ -112,7 +121,7 @@ private:
 	std::shared_ptr<Hermes::FPSCamera> Camera;
 	std::shared_ptr<Hermes::Material> TestMaterial;
 	std::shared_ptr<Hermes::MaterialInstance> TestMaterialInstance;
-	std::shared_ptr<Hermes::Texture> TestTexture;
+	std::shared_ptr<Hermes::Texture> AlbedoTexture, NormalTexture, MetallicTexture, RoughnessTexture;
 	const Hermes::Vec3 SphereLocation = Hermes::Vec3(0.0f, 0.0f, 10.0f);
 
 	void KeyEventHandler(const Hermes::IEvent& Event)

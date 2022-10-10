@@ -48,7 +48,7 @@ namespace Hermes
 		uint32 Width = 1;
 
 		/*
-		 * Full size of this property in bytes, without padding
+		 * Full size of this property in bytes
 		 *
 		 * Must always be zero for non-value properties (e.g. textures, samplers etc.)
 		 */
@@ -59,6 +59,14 @@ namespace Hermes
 		 * buffer relative to the beginning of this uniform buffer
 		 */
 		size_t Offset = 0;
+
+		/*
+		 * Length of the array if this property is an array, 1 otherwise
+		 *
+		 * NOTE: must be 1 for non-numeric properties because we currently don't
+		 *       support arrays of descriptors.
+		 */
+		size_t ArrayLength = 1;
 
 		/*
 		 * Index of the binding of this property

@@ -59,6 +59,11 @@ namespace Hermes
 
 			auto Size = Compiler.get_declared_struct_member_size(TypeContainer, MemberIndex);
 			auto Offset = Compiler.type_struct_member_offset(TypeContainer, MemberIndex);
+			size_t ArraySize = 1;
+			if (!NativeType.array.empty())
+				ArraySize = NativeType.array[0];
+			HERMES_ASSERT_LOG(NativeType.array.size() <= 1,
+			                  L"Multidimensional array as material properties are not currently supported.");
 
 			auto Type = MaterialPropertyType::Undefined;
 			if (NativeType.vecsize == 1 && NativeType.columns == 1)
@@ -82,6 +87,7 @@ namespace Hermes
 			Property.Width = NativeType.vecsize;
 			Property.Size = Size;
 			Property.Offset = Offset;
+			Property.ArrayLength = ArraySize;
 			Property.Binding = 0;
 
 			Properties[std::move(Name)] = Property;
@@ -97,6 +103,9 @@ namespace Hermes
 			const auto& ANSIName = Compiler.get_name(Texture.id);
 			auto Name = StringUtils::ANSIToString(ANSIName);
 
+			HERMES_ASSERT_LOG(Compiler.get_type(Texture.type_id).array.empty(),
+			                  L"Arrays of textures as material properties are not supported");
+
 			auto Binding = Compiler.get_decoration(Texture.id, spv::DecorationBinding);
 
 			MaterialProperty Property;
@@ -105,6 +114,7 @@ namespace Hermes
 			Property.Width = 1;
 			Property.Size = 0;
 			Property.Offset = 0;
+			Property.ArrayLength = 1;
 			Property.Binding = Binding;
 
 			Properties[std::move(Name)] = Property;

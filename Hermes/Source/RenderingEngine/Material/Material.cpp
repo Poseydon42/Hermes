@@ -19,16 +19,30 @@ namespace Hermes
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 
-		std::vector<RenderInterface::DescriptorBinding> PerMaterialDataBindings =
+		std::vector<RenderInterface::DescriptorBinding> PerMaterialDataBindings;
+
+		// Binding 0 is always material uniform buffer that stores numeric properties
+		RenderInterface::DescriptorBinding UBOBinding = {};
+		UBOBinding.Index = 0;
+		UBOBinding.DescriptorCount = 1;
+		UBOBinding.Shader = RenderInterface::ShaderType::FragmentShader;
+		UBOBinding.Type = RenderInterface::DescriptorType::UniformBuffer;
+		PerMaterialDataBindings.push_back(UBOBinding);
+
+		// Iterate over texture properties and add their corresponding bindings to the list
+		for (const auto& Property : Reflection.GetProperties())
 		{
-			/* UBO with material data */
-			{
-				0,
-				1,
-				RenderInterface::ShaderType::FragmentShader,
-				RenderInterface::DescriptorType::UniformBuffer
-			}
-		};
+			if (Property.second.Type != MaterialPropertyType::Texture)
+				continue;
+
+			RenderInterface::DescriptorBinding Binding = {};
+			Binding.Index = Property.second.Binding;
+			Binding.DescriptorCount = 1;
+			Binding.Shader = RenderInterface::ShaderType::FragmentShader;
+			Binding.Type = RenderInterface::DescriptorType::CombinedSampler;
+			PerMaterialDataBindings.push_back(Binding);
+		}
+
 		DescriptorSetLayout = Device.CreateDescriptorSetLayout(PerMaterialDataBindings);
 
 		auto VertexShader = Device.CreateShader(L"Shaders/Bin/solid_color_vert.glsl.spv",

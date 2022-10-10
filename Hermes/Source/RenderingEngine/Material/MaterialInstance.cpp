@@ -6,6 +6,17 @@
 
 namespace Hermes
 {
+	void MaterialInstance::SetTextureProperty(const String& Name, const Texture& Value)
+	{
+		auto* Property = BaseMaterial->FindProperty(Name);
+		HERMES_ASSERT(Property);
+
+		DescriptorSet->UpdateWithImageAndSampler(Property->Binding, 0, Value.GetDefaultView(),
+		                                         Renderer::Get().GetDefaultSampler(),
+		                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		IsDirty = true;
+	}
+
 	void MaterialInstance::PrepareForRender() const
 	{
 		if (IsDirty)

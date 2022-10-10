@@ -3,14 +3,15 @@
 #include <memory>
 #include <vector>
 
-#include "Material.h"
 #include "Core/Core.h"
 #include "Logging/Logger.h"
+#include "RenderingEngine/Material/Material.h"
 #include "RenderInterface/GenericRenderInterface/Forward.h"
 
 namespace Hermes
 {
 	class Material;
+	class Texture;
 
 	/*
 	 * An instantiation of a material that stores the values of every material property.
@@ -22,6 +23,8 @@ namespace Hermes
 	public:
 		template<typename ValueType>
 		void SetNumericProperty(const String& Name, const ValueType& Value);
+
+		void SetTextureProperty(const String& Name, const Texture& Value);
 
 		void PrepareForRender() const;
 

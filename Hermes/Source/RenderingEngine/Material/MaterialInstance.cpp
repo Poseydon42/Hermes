@@ -14,7 +14,6 @@ namespace Hermes
 		DescriptorSet->UpdateWithImageAndSampler(Property->Binding, 0, Value.GetDefaultView(),
 		                                         Renderer::Get().GetDefaultSampler(),
 		                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
-		IsDirty = true;
 	}
 
 	void MaterialInstance::PrepareForRender() const

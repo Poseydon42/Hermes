@@ -57,6 +57,18 @@ namespace Hermes
 			SceneUBOBinding, IrradianceCubemapBinding, SpecularCubemapBinding, PrecomputedBRDFBinding
 		});
 
+		RenderInterface::SamplerDescription SamplerDesc = {};
+		SamplerDesc.AddressingModeU = RenderInterface::AddressingMode::Repeat;
+		SamplerDesc.AddressingModeV = RenderInterface::AddressingMode::Repeat;
+		SamplerDesc.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
+		SamplerDesc.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
+		SamplerDesc.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
+		SamplerDesc.MipMode = RenderInterface::MipmappingMode::Linear;
+		SamplerDesc.MinMipLevel = 0.0f;
+		SamplerDesc.MaxMipLevel = 13.0f; // 8192x8192 texture is probably enough for everyone :)
+		SamplerDesc.MipBias = 0.0f;
+		DefaultSampler = RenderingDevice->CreateSampler(SamplerDesc);
+
 		ForwardPass = std::make_unique<class ForwardPass>();
 		PostProcessingPass = std::make_unique<class PostProcessingPass>();
 		SkyboxPass = std::make_unique<class SkyboxPass>(RenderingDevice);
@@ -139,6 +151,11 @@ namespace Hermes
 	const RenderInterface::RenderPass& Renderer::GetGraphicsRenderPassObject() const
 	{
 		return FrameGraph->GetRenderPassObject(L"ForwardPass");
+	}
+
+	const RenderInterface::Sampler& Renderer::GetDefaultSampler() const
+	{
+		return *DefaultSampler;
 	}
 
 	void Renderer::DumpGPUProperties() const

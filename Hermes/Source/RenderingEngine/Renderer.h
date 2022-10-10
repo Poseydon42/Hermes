@@ -52,6 +52,8 @@ namespace Hermes
 
 		const RenderInterface::RenderPass& GetGraphicsRenderPassObject() const;
 
+		const RenderInterface::Sampler& GetDefaultSampler() const;
+
 	private:
 		RenderInterface::DeviceProperties GPUProperties;
 		GraphicsSettings CurrentSettings;
@@ -61,6 +63,7 @@ namespace Hermes
 
 		std::shared_ptr<DescriptorAllocator> DescriptorAllocator;
 		std::unique_ptr<RenderInterface::DescriptorSetLayout> GlobalDataDescriptorSetLayout;
+		std::unique_ptr<RenderInterface::Sampler> DefaultSampler;
 		
 		std::unique_ptr<FrameGraph> FrameGraph;
 		std::unique_ptr<ForwardPass> ForwardPass;

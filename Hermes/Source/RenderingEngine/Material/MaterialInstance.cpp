@@ -18,7 +18,7 @@ namespace Hermes
 
 	void MaterialInstance::PrepareForRender() const
 	{
-		if (IsDirty)
+		if (IsDirty && HasUniformBuffer)
 		{
 			// TODO : use frame local allocator for better performance
 			auto BufferSize = UniformBuffer->GetSize();
@@ -42,17 +42,23 @@ namespace Hermes
 	}
 
 	MaterialInstance::MaterialInstance(std::shared_ptr<const Material> Material, size_t UniformBufferSize)
-		: BaseMaterial(std::move(Material))
+		: HasUniformBuffer(UniformBufferSize > 0)
+		, BaseMaterial(std::move(Material))
 	{
 		CPUBuffer.resize(UniformBufferSize);
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 		auto& DescriptorAllocator = Renderer::Get().GetDescriptorAllocator();
 
-		UniformBuffer = Device.CreateBuffer(UniformBufferSize,
-		                                    RenderInterface::BufferUsageType::UniformBuffer |
-		                                    RenderInterface::BufferUsageType::CPUAccessible);
 		DescriptorSet = DescriptorAllocator.Allocate(BaseMaterial->GetDescriptorSetLayout());
-		DescriptorSet->UpdateWithBuffer(0, 0, *UniformBuffer, 0, static_cast<uint32>(UniformBuffer->GetSize()));
+
+		if (HasUniformBuffer)
+		{
+			UniformBuffer = Device.CreateBuffer(UniformBufferSize,
+			                                    RenderInterface::BufferUsageType::UniformBuffer |
+			                                    RenderInterface::BufferUsageType::CPUAccessible);
+			DescriptorSet->UpdateWithBuffer(0, 0, *UniformBuffer, 0, static_cast<uint32>(UniformBuffer->GetSize()));
+			IsDirty = true;
+		}		
 	}
 }

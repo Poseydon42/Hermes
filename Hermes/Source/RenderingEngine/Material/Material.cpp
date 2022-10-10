@@ -21,13 +21,16 @@ namespace Hermes
 
 		std::vector<RenderInterface::DescriptorBinding> PerMaterialDataBindings;
 
-		// Binding 0 is always material uniform buffer that stores numeric properties
-		RenderInterface::DescriptorBinding UBOBinding = {};
-		UBOBinding.Index = 0;
-		UBOBinding.DescriptorCount = 1;
-		UBOBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		UBOBinding.Type = RenderInterface::DescriptorType::UniformBuffer;
-		PerMaterialDataBindings.push_back(UBOBinding);
+		if (Reflection.RequiresUniformBuffer())
+		{
+			// Binding 0 is always material uniform buffer that stores numeric properties
+			RenderInterface::DescriptorBinding UBOBinding = {};
+			UBOBinding.Index = 0;
+			UBOBinding.DescriptorCount = 1;
+			UBOBinding.Shader = RenderInterface::ShaderType::FragmentShader;
+			UBOBinding.Type = RenderInterface::DescriptorType::UniformBuffer;
+			PerMaterialDataBindings.push_back(UBOBinding);
+		}
 
 		// Iterate over texture properties and add their corresponding bindings to the list
 		for (const auto& Property : Reflection.GetProperties())

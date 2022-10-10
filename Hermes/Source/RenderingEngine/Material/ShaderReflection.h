@@ -23,6 +23,8 @@ namespace Hermes
 
 		const std::unordered_map<String, MaterialProperty>& GetProperties() const;
 
+		bool RequiresUniformBuffer() const;
+
 		size_t GetTotalSizeForUniformBuffer() const;
 
 	private:

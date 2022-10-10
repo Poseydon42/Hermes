@@ -44,53 +44,55 @@ namespace Hermes
 				break;
 			}
 		}
-		HERMES_ASSERT(MaterialDataUBO);
 
 		// Numeric properties (in UBO at binding 0)
-		const auto& TypeContainer = Compiler.get_type(MaterialDataUBO->base_type_id);
-		SizeForUniformBuffer = Compiler.get_declared_struct_size(TypeContainer);
-		for (uint32 MemberIndex = 0; MemberIndex < TypeContainer.member_types.size(); MemberIndex++)
+		if (MaterialDataUBO)
 		{
-			const auto& ANSIName = Compiler.get_member_name(TypeContainer.self, MemberIndex);
-			auto Name = StringUtils::ANSIToString(ANSIName);
-
-			auto& NativeType = Compiler.get_type(TypeContainer.member_types[MemberIndex]);
-			auto DataType = SPIRVTypeToMaterialPropertyDataType(NativeType.basetype);
-
-			auto Size = Compiler.get_declared_struct_member_size(TypeContainer, MemberIndex);
-			auto Offset = Compiler.type_struct_member_offset(TypeContainer, MemberIndex);
-			size_t ArraySize = 1;
-			if (!NativeType.array.empty())
-				ArraySize = NativeType.array[0];
-			HERMES_ASSERT_LOG(NativeType.array.size() <= 1,
-			                  L"Multidimensional array as material properties are not currently supported.");
-
-			auto Type = MaterialPropertyType::Undefined;
-			if (NativeType.vecsize == 1 && NativeType.columns == 1)
+			const auto& TypeContainer = Compiler.get_type(MaterialDataUBO->base_type_id);
+			SizeForUniformBuffer = Compiler.get_declared_struct_size(TypeContainer);
+			for (uint32 MemberIndex = 0; MemberIndex < TypeContainer.member_types.size(); MemberIndex++)
 			{
-				Type = MaterialPropertyType::Value;
-			}
-			else if (NativeType.vecsize > 1 && NativeType.columns == 1)
-			{
-				Type = MaterialPropertyType::Vector;
-			}
-			else
-			{
-				HERMES_ASSERT_LOG(NativeType.vecsize == NativeType.columns,
-				                  L"Reflection of non-square matrices is not supported");
-				Type = MaterialPropertyType::Matrix;
-			}
+				const auto& ANSIName = Compiler.get_member_name(TypeContainer.self, MemberIndex);
+				auto Name = StringUtils::ANSIToString(ANSIName);
 
-			MaterialProperty Property;
-			Property.Type = Type;
-			Property.DataType = DataType;
-			Property.Width = NativeType.vecsize;
-			Property.Size = Size;
-			Property.Offset = Offset;
-			Property.ArrayLength = ArraySize;
-			Property.Binding = 0;
+				auto& NativeType = Compiler.get_type(TypeContainer.member_types[MemberIndex]);
+				auto DataType = SPIRVTypeToMaterialPropertyDataType(NativeType.basetype);
 
-			Properties[std::move(Name)] = Property;
+				auto Size = Compiler.get_declared_struct_member_size(TypeContainer, MemberIndex);
+				auto Offset = Compiler.type_struct_member_offset(TypeContainer, MemberIndex);
+				size_t ArraySize = 1;
+				if (!NativeType.array.empty())
+					ArraySize = NativeType.array[0];
+				HERMES_ASSERT_LOG(NativeType.array.size() <= 1,
+				                  L"Multidimensional array as material properties are not currently supported.");
+
+				auto Type = MaterialPropertyType::Undefined;
+				if (NativeType.vecsize == 1 && NativeType.columns == 1)
+				{
+					Type = MaterialPropertyType::Value;
+				}
+				else if (NativeType.vecsize > 1 && NativeType.columns == 1)
+				{
+					Type = MaterialPropertyType::Vector;
+				}
+				else
+				{
+					HERMES_ASSERT_LOG(NativeType.vecsize == NativeType.columns,
+					                  L"Reflection of non-square matrices is not supported");
+					Type = MaterialPropertyType::Matrix;
+				}
+
+				MaterialProperty Property;
+				Property.Type = Type;
+				Property.DataType = DataType;
+				Property.Width = NativeType.vecsize;
+				Property.Size = Size;
+				Property.Offset = Offset;
+				Property.ArrayLength = ArraySize;
+				Property.Binding = 0;
+
+				Properties[std::move(Name)] = Property;
+			}
 		}
 
 		// Texture property (DescriptorType::CombinedImageSampler)
@@ -132,6 +134,11 @@ namespace Hermes
 	const std::unordered_map<String, MaterialProperty>& ShaderReflection::GetProperties() const
 	{
 		return Properties;
+	}
+
+	bool ShaderReflection::RequiresUniformBuffer() const
+	{
+		return SizeForUniformBuffer > 0;
 	}
 
 	size_t ShaderReflection::GetTotalSizeForUniformBuffer() const

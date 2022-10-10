@@ -33,7 +33,8 @@ namespace Hermes
 		const RenderInterface::DescriptorSet& GetMaterialDescriptorSet() const;
 
 	private:
-		mutable bool IsDirty = true;
+		mutable bool IsDirty = false;
+		bool HasUniformBuffer = false;
 
 		std::shared_ptr<const Material> BaseMaterial;
 		std::vector<uint8> CPUBuffer;

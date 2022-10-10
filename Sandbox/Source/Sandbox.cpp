@@ -25,7 +25,8 @@ public:
 		auto TestTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_albedo"));
 		TestTexture = Hermes::Texture::CreateFromAsset(*TestTextureAsset, true);
 
-		TestMaterial = Hermes::Material::Create();
+		TestMaterial = Hermes::Material::Create(L"Shaders/Bin/solid_color_vert.glsl.spv",
+		                                        L"Shaders/Bin/solid_color_frag.glsl.spv");
 		TestMaterialInstance = TestMaterial->CreateInstance();
 		TestMaterialInstance->SetTextureProperty(L"u_AlbedoTexture", *TestTexture);
 		Hermes::MeshProxy SphereMeshProxy =

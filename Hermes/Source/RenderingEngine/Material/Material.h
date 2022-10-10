@@ -22,7 +22,7 @@ namespace Hermes
 	class HERMES_API Material : public std::enable_shared_from_this<Material>
 	{
 	public:
-		static std::shared_ptr<Material> Create();
+		static std::shared_ptr<Material> Create(const String& VertexShaderPath, const String& FragmentShaderPath);
 
 		std::unique_ptr<MaterialInstance> CreateInstance() const;
 
@@ -38,6 +38,6 @@ namespace Hermes
 		std::unique_ptr<RenderInterface::DescriptorSetLayout> DescriptorSetLayout;
 		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
 
-		Material();
+		Material(const String& VertexShaderPath, const String& FragmentShaderPath);
 	};
 }

@@ -13,8 +13,8 @@
 namespace Hermes
 {
 
-	Material::Material()
-		: Reflection(L"Shaders/Bin/solid_color_frag.glsl.spv")
+	Material::Material(const String& VertexShaderPath, const String& FragmentShaderPath)
+		: Reflection(FragmentShaderPath)
 	{
 
 		auto& Device = Renderer::Get().GetActiveDevice();
@@ -45,10 +45,10 @@ namespace Hermes
 
 		DescriptorSetLayout = Device.CreateDescriptorSetLayout(PerMaterialDataBindings);
 
-		auto VertexShader = Device.CreateShader(L"Shaders/Bin/solid_color_vert.glsl.spv",
-		                                        RenderInterface::ShaderType::VertexShader);
-		auto FragmentShader = Device.CreateShader(L"Shaders/Bin/solid_color_frag.glsl.spv",
-		                                          RenderInterface::ShaderType::FragmentShader);RenderInterface::PipelineDescription PipelineDesc = {};
+		auto VertexShader = Device.CreateShader(VertexShaderPath, RenderInterface::ShaderType::VertexShader);
+		auto FragmentShader = Device.CreateShader(FragmentShaderPath, RenderInterface::ShaderType::FragmentShader);
+
+		RenderInterface::PipelineDescription PipelineDesc = {};
 		PipelineDesc.PushConstants.push_back({ RenderInterface::ShaderType::VertexShader, 0, sizeof(GlobalDrawcallData) });
 		PipelineDesc.ShaderStages = { VertexShader.get(), FragmentShader.get() };
 		PipelineDesc.DescriptorLayouts = {
@@ -104,9 +104,9 @@ namespace Hermes
 		                                                            PipelineDesc);
 	}
 
-	std::shared_ptr<Material> Material::Create()
+	std::shared_ptr<Material> Material::Create(const String& VertexShaderPath, const String& FragmentShaderPath)
 	{
-		return std::shared_ptr<Material>(new Material());
+		return std::shared_ptr<Material>(new Material(VertexShaderPath, FragmentShaderPath));
 	}
 
 	std::unique_ptr<MaterialInstance> Material::CreateInstance() const

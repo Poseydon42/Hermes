@@ -69,5 +69,6 @@ target_include_directories(${HERMES_SUBLIB_NAME} PRIVATE "${HERMES_THIRD_PARTY_D
 target_link_libraries(${HERMES_SUBLIB_NAME} PRIVATE Vulkan::Vulkan)
 
 target_include_directories(${HERMES_SUBLIB_NAME} PUBLIC ${HERMES_SOURCE_DIR})
+target_link_libraries(${HERMES_SUBLIB_NAME} PRIVATE Hermes_Core)
 
 KeepFolderStructure(${CMAKE_CURRENT_SOURCE_DIR} "${SOURCES}")

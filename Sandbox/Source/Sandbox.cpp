@@ -38,13 +38,32 @@ public:
 		TestMaterialInstance->SetTextureProperty(L"u_RoughnessTexture", *RoughnessTexture);
 		TestMaterialInstance->SetTextureProperty(L"u_MetallicTexture", *MetallicTexture);
 		TestMaterialInstance->SetTextureProperty(L"u_NormalTexture", *NormalTexture);
-		Hermes::MeshProxy SphereMeshProxy =
+
+		static constexpr Hermes::int32 SphereCountInSingleDimension = 19;
+		for (Hermes::int32 SphereX = -SphereCountInSingleDimension / 2;
+		     SphereX <= SphereCountInSingleDimension / 2;
+		     SphereX++)
 		{
-			Hermes::Mat4::Translation(SphereLocation),
-			*SphereMeshBuffer,
-			TestMaterialInstance
-		};
-		Hermes::GGameLoop->GetScene().AddMesh(SphereMeshProxy);
+			for (Hermes::int32 SphereZ = -SphereCountInSingleDimension / 2;
+			     SphereZ <= SphereCountInSingleDimension / 2;
+			     SphereZ++)
+			{
+				static constexpr float DistanceBetweenSpheres = 10.0f;
+				Hermes::Vec3 SphereLocation = {
+					static_cast<float>(SphereX) * DistanceBetweenSpheres,
+					0.0f,
+					static_cast<float>(SphereZ) * DistanceBetweenSpheres
+				};
+
+				Hermes::MeshProxy SphereMeshProxy =
+				{
+					Hermes::Mat4::Translation(SphereLocation),
+					*SphereMeshBuffer,
+					TestMaterialInstance
+				};
+				Hermes::GGameLoop->GetScene().AddMesh(SphereMeshProxy);
+			}
+		}
 
 		Hermes::PointLightProxy PointLight = {};
 		PointLight.Color = { 1.0f, 1.0f, 0.9f, 200.0f };
@@ -95,21 +114,6 @@ public:
 		auto& Light = const_cast<Hermes::PointLightProxy&>(Hermes::GGameLoop->GetScene().GetPointLights()[0]);
 		Light.Color.W += DeltaLightPower;
 		Light.Color.W = Hermes::Math::Max(Light.Color.W, 0.0f);
-
-
-		/* OBJECT ROTATION DEBUG */
-		float DeltaAngle = 0.0f;
-		if (InputEngine.IsKeyPressed(Hermes::KeyCode::E))
-			DeltaAngle += 1.0f;
-		if (InputEngine.IsKeyPressed(Hermes::KeyCode::Q))
-			DeltaAngle -= 1.0f;
-		DeltaAngle *= DeltaTime * Hermes::Math::Pi / 3.0f;
-		DebugObjectAngle += DeltaAngle;
-		auto RotationMatrix = Hermes::Mat4::Rotation(Hermes::Vec3{0.0f, DebugObjectAngle, 0.0f});
-		auto RotationMatrix4 = Hermes::Mat4(RotationMatrix);
-		RotationMatrix4[3][3] = 1.0f;
-		const_cast<Hermes::MeshProxy&>(Hermes::GGameLoop->GetScene().GetMeshes()[0]).TransformationMatrix =
-			Hermes::Mat4::Translation(SphereLocation) * RotationMatrix4;
 	}
 
 	void Shutdown() override
@@ -122,7 +126,6 @@ private:
 	std::shared_ptr<Hermes::Material> TestMaterial;
 	std::shared_ptr<Hermes::MaterialInstance> TestMaterialInstance;
 	std::shared_ptr<Hermes::Texture> AlbedoTexture, NormalTexture, MetallicTexture, RoughnessTexture;
-	const Hermes::Vec3 SphereLocation = Hermes::Vec3(0.0f, 0.0f, 10.0f);
 
 	void KeyEventHandler(const Hermes::IEvent& Event)
 	{

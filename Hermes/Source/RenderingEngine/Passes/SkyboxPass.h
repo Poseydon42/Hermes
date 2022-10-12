@@ -10,6 +10,7 @@
 namespace Hermes
 {
 	class CubemapTexture;
+	struct FrameMetrics;
 	class ImageAsset;
 	struct PassDesc;
 	class Scene;
@@ -37,7 +38,7 @@ namespace Hermes
 		void PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
 		                  const RenderInterface::RenderPass& PassInstance,
 		                  const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
-		                  const Scene& Scene, bool ResourcesWereRecreated);
+		                  const Scene& Scene, FrameMetrics& Metrics, bool ResourcesWereRecreated);
 
 		void RecreatePipeline(const RenderInterface::RenderPass& Pass);
 	};

@@ -4,6 +4,7 @@
 
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
+#include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
@@ -74,7 +75,7 @@ namespace Hermes
 	                               const RenderInterface::RenderPass&,
 	                               const std::vector<std::pair<
 		                               const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
-	                               const Scene& Scene, bool)
+	                               const Scene& Scene, FrameMetrics& Metrics, bool)
 	{
 		OPTICK_EVENT();
 
@@ -122,15 +123,21 @@ namespace Hermes
 			Material->PrepareForRender();
 
 			CommandBuffer.BindPipeline(MaterialPipeline);
+			Metrics.PipelineBindCount++;
 			CommandBuffer.BindDescriptorSet(*SceneUBODescriptorSet, MaterialPipeline, 0);
+			Metrics.DescriptorSetBindCount++;
 			CommandBuffer.BindDescriptorSet(Material->GetMaterialDescriptorSet(), MaterialPipeline, 1);
+			Metrics.DescriptorSetBindCount++;
 			CommandBuffer.BindVertexBuffer(MeshBuffer.GetVertexBuffer());
+			Metrics.BufferBindCount++;
 			CommandBuffer.BindIndexBuffer(MeshBuffer.GetIndexBuffer(), RenderInterface::IndexSize::Uint32);
+			Metrics.BufferBindCount++;
 			CommandBuffer.UploadPushConstants(MaterialPipeline, RenderInterface::ShaderType::VertexShader,
 			                                  &Mesh.TransformationMatrix, sizeof(Mesh.TransformationMatrix), 0);
 			const auto& DrawInformation = MeshBuffer.GetDrawInformation();
 			CommandBuffer.DrawIndexed(DrawInformation.IndexCount, 1, DrawInformation.IndexOffset,
 			                          DrawInformation.VertexOffset, 0);
+			Metrics.DrawCallCount++;
 		}
 	}
 

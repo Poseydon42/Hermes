@@ -128,7 +128,11 @@ namespace Hermes
 	void Renderer::RunFrame(const Scene& Scene)
 	{
 		OPTICK_EVENT();
-		FrameGraph->Execute(Scene);
+		auto Metrics = FrameGraph->Execute(Scene);
+		OPTICK_TAG("Drawm call count", Metrics.DrawCallCount);
+		OPTICK_TAG("Pipeline bind count", Metrics.PipelineBindCount);
+		OPTICK_TAG("Buffer bind count", Metrics.BufferBindCount);
+		OPTICK_TAG("Descriptor set bind count", Metrics.DescriptorSetBindCount);
 	}
 
 	RenderInterface::Device& Renderer::GetActiveDevice()

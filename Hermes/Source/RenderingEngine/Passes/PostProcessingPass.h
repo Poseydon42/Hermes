@@ -10,6 +10,8 @@
 
 namespace Hermes
 {
+	struct FrameMetrics;
+
 	class HERMES_API PostProcessingPass
 	{
 		MAKE_NON_COPYABLE(PostProcessingPass)
@@ -35,7 +37,7 @@ namespace Hermes
 			RenderInterface::CommandBuffer& CommandBuffer,
 			const RenderInterface::RenderPass& PassInstance,
 			const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>& Attachments,
-			const Scene& Scene, bool ResourcesWereRecreated);
+			const Scene& Scene, FrameMetrics& Metrics, bool ResourcesWereRecreated);
 
 		void RecreatePipeline(const RenderInterface::RenderPass& Pass);
 	};

@@ -230,9 +230,12 @@ namespace Hermes
 		RecreateRenderTargets();
 	}
 
-	void FrameGraph::Execute(const Scene& Scene)
+	FrameMetrics FrameGraph::Execute(const Scene& Scene)
 	{
 		OPTICK_EVENT();
+
+		FrameMetrics Metrics = {};
+
 		if (RenderTargetsNeedsInitialization)
 		{
 			RecreateRenderTargets();
@@ -294,7 +297,7 @@ namespace Hermes
 			}
 
 			bool ResourcesWereRecreatedTmp = ResourcesWereRecreated; // TODO : better way to fix this maybe?
-			Pass.Callback(*CommandBuffer, *Pass.Pass, Attachments, Scene, std::move(ResourcesWereRecreatedTmp));
+			Pass.Callback(*CommandBuffer, *Pass.Pass, Attachments, Scene, Metrics, std::move(ResourcesWereRecreatedTmp));
 			ResourcesWereRecreated = false;
 
 			CommandBuffer->EndRenderPass();
@@ -316,7 +319,7 @@ namespace Hermes
 			// execution on rendering queue
 			// TODO : any more efficient way to do this?
 			RenderQueue.WaitForIdle();
-			return; // Skip presentation of current frame
+			return Metrics; // Skip presentation of current frame
 		}
 		const auto SwapchainImage = Swapchain.GetImage(SwapchainImageIndex.value());
 
@@ -382,6 +385,8 @@ namespace Hermes
 			RecreateResources();
 			RecreateRenderTargets();
 		}
+
+		return Metrics;
 	}
 
 	const RenderInterface::RenderPass& FrameGraph::GetRenderPassObject(const String& Name) const

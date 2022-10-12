@@ -54,7 +54,7 @@ namespace Hermes
 	                                      const RenderInterface::RenderPass& PassInstance,
 	                                      const std::vector<std::pair<
 		                                      const RenderInterface::Image*, const RenderInterface::ImageView*>>& Attachments,
-	                                      const Scene&, bool ResourcesWereRecreated)
+	                                      const Scene&, FrameMetrics& Metrics, bool ResourcesWereRecreated)
 	{
 		OPTICK_EVENT();
 		if (ResourcesWereRecreated || !IsPipelineCreated)
@@ -67,8 +67,11 @@ namespace Hermes
 		DescriptorSet->UpdateWithImage(0, 0, *Attachments[0].second, RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
 		CommandBuffer.BindPipeline(*Pipeline);
+		Metrics.PipelineBindCount++;
 		CommandBuffer.BindDescriptorSet(*DescriptorSet, *Pipeline, 0);
+		Metrics.DescriptorSetBindCount++;
 		CommandBuffer.Draw(6, 1, 0, 0);
+		Metrics.DrawCallCount++;
 	}
 
 	void PostProcessingPass::RecreatePipeline(const RenderInterface::RenderPass& Pass)

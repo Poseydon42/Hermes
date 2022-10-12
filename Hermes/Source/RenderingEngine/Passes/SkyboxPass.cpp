@@ -3,6 +3,7 @@
 #include <optick.h>
 
 #include "RenderingEngine/DescriptorAllocator.h"
+#include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Texture.h"
 #include "RenderingEngine/Scene/Camera.h"
@@ -71,7 +72,7 @@ namespace Hermes
 	                              const RenderInterface::RenderPass& PassInstance,
 	                              const std::vector<std::pair<
 		                              const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
-	                              const Scene& Scene, bool ResourcesWereRecreated)
+	                              const Scene& Scene, FrameMetrics& Metrics, bool ResourcesWereRecreated)
 	{
 		OPTICK_EVENT();
 
@@ -95,12 +96,15 @@ namespace Hermes
 		                                             RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
 		CommandBuffer.BindPipeline(*Pipeline);
+		Metrics.PipelineBindCount++;
 		CommandBuffer.BindDescriptorSet(*DataDescriptorSet, *Pipeline, 0);
+		Metrics.DescriptorSetBindCount++;
 		CommandBuffer.UploadPushConstants(*Pipeline, RenderInterface::ShaderType::VertexShader, &ViewProjectionMatrix,
 		                                  sizeof(ViewProjectionMatrix), 0);
 		// Drawing 36 vertices without bound vertex buffer because their coordinates
 		// are hardcoded in shader code
 		CommandBuffer.Draw(36, 1, 0, 0);
+		Metrics.DrawCallCount++;
 	}
 
 	void SkyboxPass::RecreatePipeline(const RenderInterface::RenderPass& Pass)

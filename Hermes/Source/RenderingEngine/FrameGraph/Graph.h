@@ -50,6 +50,14 @@ namespace Hermes
 		bool Validate() const;
 	};
 
+	struct FrameMetrics
+	{
+		uint32 DrawCallCount = 0;
+		uint32 PipelineBindCount = 0;
+		uint32 BufferBindCount = 0;
+		uint32 DescriptorSetBindCount = 0;
+	};
+
 	class HERMES_API FrameGraph
 	{
 		MAKE_NON_COPYABLE(FrameGraph)
@@ -60,7 +68,7 @@ namespace Hermes
 		                          std::shared_ptr<RenderInterface::ImageView> View,
 		                          RenderInterface::ImageLayout CurrentLayout);
 
-		void Execute(const Scene& Scene);
+		FrameMetrics Execute(const Scene& Scene);
 
 		const RenderInterface::RenderPass& GetRenderPassObject(const String& Name) const;
 

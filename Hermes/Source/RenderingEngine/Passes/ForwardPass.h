@@ -12,6 +12,8 @@
 
 namespace Hermes
 {
+	struct FrameMetrics;
+
 	class HERMES_API ForwardPass
 	{
 	public:
@@ -23,8 +25,6 @@ namespace Hermes
 		
 		std::unique_ptr<RenderInterface::DescriptorSet> SceneUBODescriptorSet;
 		std::unique_ptr<RenderInterface::Buffer> SceneUBOBuffer;
-
-		bool PipelineWasCreated = false;
 
 		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
 		std::unique_ptr<RenderInterface::Sampler> EnvmapSampler;
@@ -39,7 +39,7 @@ namespace Hermes
 		void PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
 		                  const RenderInterface::RenderPass& PassInstance,
 		                  const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>
-		                  & Attachments, const Scene& Scene, bool ResourcesWereRecreated);
+		                  & Attachments, const Scene& Scene, FrameMetrics& Metrics, bool ResourcesWereRecreated);
 
 		/*
 		 * Recreates and recomputes the precomputed BRDF image and the corresponding sampler

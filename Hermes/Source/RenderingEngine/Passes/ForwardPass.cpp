@@ -1,5 +1,7 @@
 #include "ForwardPass.h"
 
+#include <optick.h>
+
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Material/Material.h"
@@ -74,6 +76,8 @@ namespace Hermes
 		                               const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
 	                               const Scene& Scene, bool)
 	{
+		OPTICK_EVENT();
+
 		if (!PrecomputedBRDFSampler || !PrecomputedBRDFView || !PrecomputedBRDFSampler)
 		{
 			EnsurePrecomputedBRDF();

@@ -1,5 +1,7 @@
 #include "PostProcessingPass.h"
 
+#include <optick.h>
+
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
@@ -54,6 +56,7 @@ namespace Hermes
 		                                      const RenderInterface::Image*, const RenderInterface::ImageView*>>& Attachments,
 	                                      const Scene&, bool ResourcesWereRecreated)
 	{
+		OPTICK_EVENT();
 		if (ResourcesWereRecreated || !IsPipelineCreated)
 		{
 			RecreatePipeline(PassInstance);

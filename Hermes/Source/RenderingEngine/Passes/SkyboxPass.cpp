@@ -1,5 +1,7 @@
 #include "SkyboxPass.h"
 
+#include <optick.h>
+
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Texture.h"
@@ -71,6 +73,8 @@ namespace Hermes
 		                              const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
 	                              const Scene& Scene, bool ResourcesWereRecreated)
 	{
+		OPTICK_EVENT();
+
 		if (ResourcesWereRecreated || !IsPipelineCreated)
 		{
 			RecreatePipeline(PassInstance);

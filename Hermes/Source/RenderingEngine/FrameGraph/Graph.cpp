@@ -1,8 +1,10 @@
 ﻿#include "Graph.h"
 
 #include <algorithm>
+#include <optick.h>
 #include <utility>
 
+#include "Core/Misc/StringUtils.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
@@ -230,6 +232,7 @@ namespace Hermes
 
 	void FrameGraph::Execute(const Scene& Scene)
 	{
+		OPTICK_EVENT();
 		if (RenderTargetsNeedsInitialization)
 		{
 			RecreateRenderTargets();

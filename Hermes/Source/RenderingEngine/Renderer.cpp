@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include <optick.h>
+
 #include "Logging/Logger.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/DescriptorAllocator.h"
@@ -125,6 +127,7 @@ namespace Hermes
 
 	void Renderer::RunFrame(const Scene& Scene)
 	{
+		OPTICK_EVENT();
 		FrameGraph->Execute(Scene);
 	}
 

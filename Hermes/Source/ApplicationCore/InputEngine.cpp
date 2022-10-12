@@ -1,5 +1,7 @@
 ﻿#include "InputEngine.h"
 
+#include <optick.h>
+
 #include "ApplicationCore/GameLoop.h"
 
 namespace Hermes
@@ -376,6 +378,7 @@ namespace Hermes
 
 	void InputEngine::ProcessDeferredEvents()
 	{
+		OPTICK_EVENT();
 		Queue.Run();
 	}
 

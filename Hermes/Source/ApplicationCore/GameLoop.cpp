@@ -86,7 +86,7 @@ namespace Hermes
 				float DeltaTime = PlatformTime::ToSeconds(CurrentTimestamp - PrevFrameEndTimestamp);
 
 				{
-					OPTICK_EVENT("IApplication::Run")
+					OPTICK_EVENT("IApplication::Run");
 					Application->Run(DeltaTime);
 				}
 				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)

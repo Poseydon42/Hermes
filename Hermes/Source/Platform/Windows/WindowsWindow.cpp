@@ -1,5 +1,7 @@
 ﻿#include "WindowsWindow.h"
 
+#include <optick.h>
+
 #include "ApplicationCore/GameLoop.h"
 #include "ApplicationCore/InputEngine.h"
 #include "Logging/Logger.h"
@@ -149,6 +151,8 @@ namespace Hermes
 
 	void WindowsWindow::Run() const
 	{
+		OPTICK_EVENT();
+
 		MSG Message;
 
 		while (PeekMessageW(&Message, WindowHandle, 0, 0, PM_REMOVE))

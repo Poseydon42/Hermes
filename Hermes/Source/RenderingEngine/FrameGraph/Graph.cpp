@@ -258,6 +258,7 @@ namespace Hermes
 		
 		for (const auto& PassName : PassExecutionOrder)
 		{
+			OPTICK_EVENT("FrameGraph::Execute PerPassLoop");
 			const auto& Pass = Passes[PassName];
 
 			auto& CommandBuffer = Pass.CommandBuffer;
@@ -306,84 +307,87 @@ namespace Hermes
 			RenderQueue.SubmitCommandBuffer(*CommandBuffer, {});
 		}
 
-		auto& PresentQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Presentation);
-		auto BlitAndPresentCommandBuffer = PresentQueue.CreateCommandBuffer(true);
-
-		auto& BlitToSwapchainResource = Resources[BlitToSwapchainResourceOwnName];
-
-		SwapchainImageAcquiredFence->Wait(UINT64_MAX);
-		if (!SwapchainImageIndex.has_value())
 		{
-			HERMES_LOG_ERROR(L"Swapchain did not return valid image index");
-			// Waiting for previously submitted rendering command buffers to finish
-			// execution on rendering queue
-			// TODO : any more efficient way to do this?
-			RenderQueue.WaitForIdle();
-			return Metrics; // Skip presentation of current frame
-		}
-		const auto SwapchainImage = Swapchain.GetImage(SwapchainImageIndex.value());
+			OPTICK_EVENT("FrapeGraph::Execute Presentation")
+			auto& PresentQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Presentation);
+			auto BlitAndPresentCommandBuffer = PresentQueue.CreateCommandBuffer(true);
 
-		BlitAndPresentCommandBuffer->BeginRecording();
-		
-		RenderInterface::ImageMemoryBarrier SourceImageToTransferSourceBarrier = {};
-		SourceImageToTransferSourceBarrier.BaseMipLevel = 0;
-		SourceImageToTransferSourceBarrier.MipLevelCount = 1;
-		SourceImageToTransferSourceBarrier.OldLayout = BlitToSwapchainResource.CurrentLayout;
-		SourceImageToTransferSourceBarrier.NewLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
-		SourceImageToTransferSourceBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryWrite;
-		SourceImageToTransferSourceBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferRead;
-		BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(
-			*BlitToSwapchainResource.Image, SourceImageToTransferSourceBarrier, 
-			RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
-		BlitToSwapchainResource.CurrentLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
-		
-		RenderInterface::ImageMemoryBarrier SwapchainImageToTransferDestinationBarrier = {};
-		SwapchainImageToTransferDestinationBarrier.BaseMipLevel = 0;
-		SwapchainImageToTransferDestinationBarrier.MipLevelCount = 1;
-		SwapchainImageToTransferDestinationBarrier.OldLayout = RenderInterface::ImageLayout::Undefined;
-		SwapchainImageToTransferDestinationBarrier.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
-		SwapchainImageToTransferDestinationBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryRead;
-		SwapchainImageToTransferDestinationBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferWrite;
-		BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(
-			*SwapchainImage, SwapchainImageToTransferDestinationBarrier, 
-			RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
+			auto& BlitToSwapchainResource = Resources[BlitToSwapchainResourceOwnName];
 
-		RenderInterface::ImageBlitRegion BlitRegion = {};
-		BlitRegion.SourceRegion.MipLevel = 0;
-		BlitRegion.SourceRegion.AspectMask = RenderInterface::ImageAspect::Color;
-		BlitRegion.SourceRegion.RectMin = { 0, 0 };
-		BlitRegion.SourceRegion.RectMax = BlitToSwapchainResource.Image->GetSize();
-		BlitRegion.DestinationRegion.MipLevel = 0;
-		BlitRegion.DestinationRegion.AspectMask = RenderInterface::ImageAspect::Color;
-		BlitRegion.DestinationRegion.RectMin = { 0, 0 };
-		BlitRegion.DestinationRegion.RectMax = SwapchainImage->GetSize();
+			SwapchainImageAcquiredFence->Wait(UINT64_MAX);
+			if (!SwapchainImageIndex.has_value())
+			{
+				HERMES_LOG_ERROR(L"Swapchain did not return valid image index");
+				// Waiting for previously submitted rendering command buffers to finish
+				// execution on rendering queue
+				// TODO : any more efficient way to do this?
+				RenderQueue.WaitForIdle();
+				return Metrics; // Skip presentation of current frame
+			}
+			const auto SwapchainImage = Swapchain.GetImage(SwapchainImageIndex.value());
 
-		BlitAndPresentCommandBuffer->BlitImage(
-			*BlitToSwapchainResource.Image, RenderInterface::ImageLayout::TransferSourceOptimal,
-			*SwapchainImage, RenderInterface::ImageLayout::TransferDestinationOptimal,
-			{ BlitRegion }, RenderInterface::FilteringMode::Linear);
+			BlitAndPresentCommandBuffer->BeginRecording();
+			
+			RenderInterface::ImageMemoryBarrier SourceImageToTransferSourceBarrier = {};
+			SourceImageToTransferSourceBarrier.BaseMipLevel = 0;
+			SourceImageToTransferSourceBarrier.MipLevelCount = 1;
+			SourceImageToTransferSourceBarrier.OldLayout = BlitToSwapchainResource.CurrentLayout;
+			SourceImageToTransferSourceBarrier.NewLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
+			SourceImageToTransferSourceBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryWrite;
+			SourceImageToTransferSourceBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferRead;
+			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(
+				*BlitToSwapchainResource.Image, SourceImageToTransferSourceBarrier,
+				RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
+			BlitToSwapchainResource.CurrentLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
+			
+			RenderInterface::ImageMemoryBarrier SwapchainImageToTransferDestinationBarrier = {};
+			SwapchainImageToTransferDestinationBarrier.BaseMipLevel = 0;
+			SwapchainImageToTransferDestinationBarrier.MipLevelCount = 1;
+			SwapchainImageToTransferDestinationBarrier.OldLayout = RenderInterface::ImageLayout::Undefined;
+			SwapchainImageToTransferDestinationBarrier.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
+			SwapchainImageToTransferDestinationBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryRead;
+			SwapchainImageToTransferDestinationBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferWrite;
+			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(
+				*SwapchainImage, SwapchainImageToTransferDestinationBarrier,
+				RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
 
-		RenderInterface::ImageMemoryBarrier SwapchainImageToReadyForPresentationBarrier = {};
-		SwapchainImageToReadyForPresentationBarrier.BaseMipLevel = 0;
-		SwapchainImageToReadyForPresentationBarrier.MipLevelCount = 1;
-		SwapchainImageToReadyForPresentationBarrier.OldLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
-		SwapchainImageToReadyForPresentationBarrier.NewLayout = RenderInterface::ImageLayout::ReadyForPresentation;
-		SwapchainImageToReadyForPresentationBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferWrite;
-		SwapchainImageToReadyForPresentationBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead;
-		BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(
-			*SwapchainImage, SwapchainImageToReadyForPresentationBarrier, 
-			RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);
+			RenderInterface::ImageBlitRegion BlitRegion = {};
+			BlitRegion.SourceRegion.MipLevel = 0;
+			BlitRegion.SourceRegion.AspectMask = RenderInterface::ImageAspect::Color;
+			BlitRegion.SourceRegion.RectMin = { 0, 0 };
+			BlitRegion.SourceRegion.RectMax = BlitToSwapchainResource.Image->GetSize();
+			BlitRegion.DestinationRegion.MipLevel = 0;
+			BlitRegion.DestinationRegion.AspectMask = RenderInterface::ImageAspect::Color;
+			BlitRegion.DestinationRegion.RectMin = { 0, 0 };
+			BlitRegion.DestinationRegion.RectMax = SwapchainImage->GetSize();
 
-		BlitAndPresentCommandBuffer->EndRecording();
-		auto PresentationFence = Renderer::Get().GetActiveDevice().CreateFence();
-		PresentQueue.SubmitCommandBuffer(*BlitAndPresentCommandBuffer, PresentationFence.get());
-		PresentationFence->Wait(UINT64_MAX);
+			BlitAndPresentCommandBuffer->BlitImage(
+				*BlitToSwapchainResource.Image, RenderInterface::ImageLayout::TransferSourceOptimal,
+				*SwapchainImage, RenderInterface::ImageLayout::TransferDestinationOptimal,
+				{ BlitRegion }, RenderInterface::FilteringMode::Linear);
 
-		Swapchain.Present(SwapchainImageIndex.value(), SwapchainWasRecreated);
-		if (SwapchainWasRecreated)
-		{
-			RecreateResources();
-			RecreateRenderTargets();
+			RenderInterface::ImageMemoryBarrier SwapchainImageToReadyForPresentationBarrier = {};
+			SwapchainImageToReadyForPresentationBarrier.BaseMipLevel = 0;
+			SwapchainImageToReadyForPresentationBarrier.MipLevelCount = 1;
+			SwapchainImageToReadyForPresentationBarrier.OldLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
+			SwapchainImageToReadyForPresentationBarrier.NewLayout = RenderInterface::ImageLayout::ReadyForPresentation;
+			SwapchainImageToReadyForPresentationBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferWrite;
+			SwapchainImageToReadyForPresentationBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead;
+			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(
+				*SwapchainImage, SwapchainImageToReadyForPresentationBarrier,
+				RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);
+
+			BlitAndPresentCommandBuffer->EndRecording();
+			auto PresentationFence = Renderer::Get().GetActiveDevice().CreateFence();
+			PresentQueue.SubmitCommandBuffer(*BlitAndPresentCommandBuffer, PresentationFence.get());
+			PresentationFence->Wait(UINT64_MAX);
+
+			Swapchain.Present(SwapchainImageIndex.value(), SwapchainWasRecreated);
+			if (SwapchainWasRecreated)
+			{
+				RecreateResources();
+				RecreateRenderTargets();
+			}
 		}
 
 		return Metrics;

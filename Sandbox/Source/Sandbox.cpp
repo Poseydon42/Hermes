@@ -59,7 +59,7 @@ public:
 				Hermes::MeshProxy SphereMeshProxy =
 				{
 					Hermes::Mat4::Translation(SphereLocation),
-					*SphereMeshBuffer,
+					SphereMeshBuffer,
 					TestMaterialInstance
 				};
 				Hermes::GGameLoop->GetScene().AddMesh(SphereMeshProxy);

@@ -12,7 +12,7 @@ namespace Hermes
 	struct HERMES_API MeshProxy
 	{
 		Mat4 TransformationMatrix;
-		MeshBuffer MeshData;
+		std::shared_ptr<MeshBuffer> MeshData;
 		std::shared_ptr<MaterialInstance> Material;
 	};
 

@@ -129,13 +129,13 @@ namespace Hermes
 			Metrics.DescriptorSetBindCount++;
 			CommandBuffer.BindDescriptorSet(Material->GetMaterialDescriptorSet(), MaterialPipeline, 1);
 			Metrics.DescriptorSetBindCount++;
-			CommandBuffer.BindVertexBuffer(MeshBuffer.GetVertexBuffer());
+			CommandBuffer.BindVertexBuffer(MeshBuffer->GetVertexBuffer());
 			Metrics.BufferBindCount++;
-			CommandBuffer.BindIndexBuffer(MeshBuffer.GetIndexBuffer(), RenderInterface::IndexSize::Uint32);
+			CommandBuffer.BindIndexBuffer(MeshBuffer->GetIndexBuffer(), RenderInterface::IndexSize::Uint32);
 			Metrics.BufferBindCount++;
 			CommandBuffer.UploadPushConstants(MaterialPipeline, RenderInterface::ShaderType::VertexShader,
 			                                  &Mesh.TransformationMatrix, sizeof(Mesh.TransformationMatrix), 0);
-			const auto& DrawInformation = MeshBuffer.GetDrawInformation();
+			const auto& DrawInformation = MeshBuffer->GetDrawInformation();
 			CommandBuffer.DrawIndexed(DrawInformation.IndexCount, 1, DrawInformation.IndexOffset,
 			                          DrawInformation.VertexOffset, 0);
 			Metrics.DrawCallCount++;

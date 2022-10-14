@@ -1,8 +1,9 @@
 #pragma once
 
+#include <cmath>
+
 #include "Core/Core.h"
 #include "Math/Vector2.h"
-#include <cmath>
 
 namespace Hermes
 {

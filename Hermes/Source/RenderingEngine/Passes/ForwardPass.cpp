@@ -9,6 +9,7 @@
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"
+#include "RenderingEngine/Texture.h"
 #include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"

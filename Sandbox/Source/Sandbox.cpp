@@ -12,6 +12,7 @@
 #include "RenderInterface/GenericRenderInterface/Swapchain.h"
 #include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
+#include "RenderingEngine/Texture.h"
 
 class SandboxApp : public Hermes::IApplication
 {

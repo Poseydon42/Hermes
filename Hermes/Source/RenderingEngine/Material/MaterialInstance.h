@@ -6,7 +6,8 @@
 #include "Core/Core.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/Material/Material.h"
-#include "RenderInterface/GenericRenderInterface/Forward.h"
+#include "RenderInterface/GenericRenderInterface/Buffer.h"
+#include "RenderInterface/GenericRenderInterface/Descriptor.h"
 
 namespace Hermes
 {

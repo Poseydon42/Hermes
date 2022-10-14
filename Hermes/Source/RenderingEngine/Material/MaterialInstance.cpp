@@ -4,6 +4,7 @@
 
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
+#include "RenderingEngine/Texture.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 
 namespace Hermes

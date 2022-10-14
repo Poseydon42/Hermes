@@ -4,6 +4,7 @@
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "RenderingEngine/Scene/SceneProxies.h"
+#include "RenderingEngine/Texture.h"
 
 namespace Hermes
 {

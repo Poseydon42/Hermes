@@ -5,8 +5,8 @@
 #include "Core/Core.h"
 #include "RenderingEngine/Material/MaterialProperty.h"
 #include "RenderingEngine/Material/ShaderReflection.h"
-#include "RenderingEngine/Texture.h"
-#include "RenderInterface/GenericRenderInterface/Forward.h"
+#include "RenderInterface/GenericRenderInterface/Descriptor.h"
+#include "RenderInterface/GenericRenderInterface/Pipeline.h"
 
 namespace Hermes
 {

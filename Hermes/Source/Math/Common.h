@@ -28,6 +28,12 @@ namespace Hermes
 		}
 
 		template<typename T>
+		T Sqrt(T Value)
+		{
+			return static_cast<T>(sqrt(Value));
+		}
+
+		template<typename T>
 		T Clamp(T MinValue, T MaxValue, T Value)
 		{
 			return Max(MinValue, Min(MaxValue, Value));

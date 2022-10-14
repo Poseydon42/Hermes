@@ -16,6 +16,8 @@ namespace Hermes
 		Vec3 Normal;
 		float W = 0.0f;
 
+		Plane() = default;
+
 		Plane(Vec3 InNormal, float InW);
 		Plane(float InX, float InY, float InZ, float InW);
 		Plane(Vec3 InNormal, Vec3 PointOnPlane);

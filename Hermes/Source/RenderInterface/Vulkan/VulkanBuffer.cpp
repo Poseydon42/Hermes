@@ -30,10 +30,11 @@ namespace Hermes
 			CreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 			VmaAllocationCreateInfo AllocationInfo = {};
+			AllocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
 			if ((bool)(Usage & RenderInterface::BufferUsageType::CPUAccessible))
-				AllocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+				AllocationInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 			else
-				AllocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+				AllocationInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 			VK_CHECK_RESULT(vmaCreateBuffer(Allocator, &CreateInfo, &AllocationInfo, &Buffer, &Allocation, nullptr));
 		}
 

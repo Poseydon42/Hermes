@@ -59,10 +59,11 @@ namespace Hermes
 				CreateInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
 			VmaAllocationCreateInfo AllocationInfo = {};
+			AllocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
 			if (static_cast<bool>(InUsage & RenderInterface::ImageUsageType::CPUAccessible))
-				AllocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+				AllocationInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 			else
-				AllocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+				AllocationInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 			VK_CHECK_RESULT(vmaCreateImage(Holder->Device->GetAllocator(), &CreateInfo, &AllocationInfo, &Holder->Image, &Holder->Allocation, nullptr))
 
 			Holder->IsOwned = true;

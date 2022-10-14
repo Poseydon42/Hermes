@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.24)
 set(HERMES_SUBLIB_NAME Hermes_Math)
 
 set(SOURCES
+    BoundingVolume.cpp
+    BoundingVolume.h
     Common.h
     Math.h
     Matrix.h

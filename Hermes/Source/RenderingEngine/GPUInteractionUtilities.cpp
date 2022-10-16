@@ -147,11 +147,11 @@ namespace Hermes
 		for (uint32 CurrentMipLevel = 1; CurrentMipLevel < Image.GetMipLevelsCount(); CurrentMipLevel++)
 		{
 			RenderInterface::ImageMemoryBarrier SourceMipLevelBarrier = {};
-			SourceMipLevelBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryWrite;
+			SourceMipLevelBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferWrite;
 			SourceMipLevelBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferRead;
 			// If the mip level that we're going to blit from is 0, then its layout
-			// wasn't changed in this function, in other cases layout is Render destination
-			// optimal because we've performed blits into it in previous loop iterations
+			// wasn't changed in this function, in otherwise layout is in transfer destination
+			// optimal layout because we've performed blits into it in previous loop iterations
 			SourceMipLevelBarrier.OldLayout = CurrentMipLevel == 1 ? CurrentLayout : RenderInterface::ImageLayout::TransferDestinationOptimal;
 			SourceMipLevelBarrier.NewLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
 			SourceMipLevelBarrier.BaseMipLevel = CurrentMipLevel - 1;
@@ -159,7 +159,7 @@ namespace Hermes
 			SourceMipLevelBarrier.Side = Side;
 
 			RenderInterface::ImageMemoryBarrier DestinationMipLevelBarrier = {};
-			DestinationMipLevelBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryRead;
+			DestinationMipLevelBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::None;
 			DestinationMipLevelBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferWrite;
 			DestinationMipLevelBarrier.OldLayout = CurrentLayout;
 			DestinationMipLevelBarrier.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
@@ -169,10 +169,10 @@ namespace Hermes
 
 			RenderCommandBuffer->InsertImageMemoryBarrier(
 				Image, SourceMipLevelBarrier,
-				RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
+				RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::Transfer);
 			RenderCommandBuffer->InsertImageMemoryBarrier(
 				Image, DestinationMipLevelBarrier,
-				RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
+				RenderInterface::PipelineStage::None, RenderInterface::PipelineStage::Transfer);
 
 			DestinationMipLevelDimensions.X = Math::Max(SourceMipLevelDimensions.X / 2, static_cast<uint32>(1));
 			DestinationMipLevelDimensions.Y = Math::Max(SourceMipLevelDimensions.Y / 2, static_cast<uint32>(1));
@@ -198,13 +198,21 @@ namespace Hermes
 		RenderInterface::ImageMemoryBarrier FinalBarrier = {};
 		FinalBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferRead | RenderInterface::AccessType::TransferWrite;
 		FinalBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead | RenderInterface::AccessType::MemoryWrite;
-		FinalBarrier.OldLayout = RenderInterface::ImageLayout::Undefined;
+		FinalBarrier.OldLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
 		FinalBarrier.NewLayout = LayoutToTransitionTo;
 		FinalBarrier.BaseMipLevel = 0;
-		FinalBarrier.MipLevelCount = Image.GetMipLevelsCount();
+		// NOTE: because the last mip level will have layout transfer destination optimal
+		FinalBarrier.MipLevelCount = Image.GetMipLevelsCount() - 1;
 		FinalBarrier.Side = Side;
-		RenderCommandBuffer->InsertImageMemoryBarrier(
-			Image, FinalBarrier, RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);
+		RenderCommandBuffer->InsertImageMemoryBarrier(Image, FinalBarrier, RenderInterface::PipelineStage::Transfer,
+		                                              RenderInterface::PipelineStage::TopOfPipe);
+
+		// NOTE: insert the final barrier once again, but this time for the last mip level
+		FinalBarrier.OldLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
+		FinalBarrier.BaseMipLevel = Image.GetMipLevelsCount() - 1;
+		FinalBarrier.MipLevelCount = 1;
+		RenderCommandBuffer->InsertImageMemoryBarrier(Image, FinalBarrier, RenderInterface::PipelineStage::Transfer,
+		                                              RenderInterface::PipelineStage::TopOfPipe);
 
 		RenderCommandBuffer->EndRecording();
 		auto FinishFence = Device.CreateFence();

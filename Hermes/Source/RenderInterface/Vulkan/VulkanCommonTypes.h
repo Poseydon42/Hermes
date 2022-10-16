@@ -905,8 +905,6 @@ namespace Hermes
 
 		inline VkPipelineStageFlags PipelineStageToVkPipelineStageFlags(RenderInterface::PipelineStage Stage)
 		{
-			if (Stage == RenderInterface::PipelineStage::None)
-				return static_cast<VkPipelineStageFlags>(0);
 			auto Result = static_cast<VkPipelineStageFlags>(0);
 #define CORRESPONDING_BIT(Bit, VkBit) if (static_cast<bool>(Stage & (Bit))) Result |= (VkBit);
 			CORRESPONDING_BIT(Hermes::RenderInterface::PipelineStage::TopOfPipe, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);

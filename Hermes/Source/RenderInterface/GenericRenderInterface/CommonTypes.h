@@ -188,7 +188,6 @@ namespace Hermes
 
 		enum class PipelineStage
 		{
-			None = 0,
 			TopOfPipe = 1 << 0,
 			DrawIndirect = 1 << 1,
 			VertexInput = 1 << 2,

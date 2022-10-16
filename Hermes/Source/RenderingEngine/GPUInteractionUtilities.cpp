@@ -172,7 +172,7 @@ namespace Hermes
 				RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::Transfer);
 			RenderCommandBuffer->InsertImageMemoryBarrier(
 				Image, DestinationMipLevelBarrier,
-				RenderInterface::PipelineStage::None, RenderInterface::PipelineStage::Transfer);
+				RenderInterface::PipelineStage::TopOfPipe, RenderInterface::PipelineStage::Transfer);
 
 			DestinationMipLevelDimensions.X = Math::Max(SourceMipLevelDimensions.X / 2, static_cast<uint32>(1));
 			DestinationMipLevelDimensions.Y = Math::Max(SourceMipLevelDimensions.Y / 2, static_cast<uint32>(1));

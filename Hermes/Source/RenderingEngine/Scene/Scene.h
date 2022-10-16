@@ -3,6 +3,7 @@
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
+#include "RenderingEngine/Scene/GeometryList.h"
 #include "RenderingEngine/Scene/SceneProxies.h"
 #include "RenderingEngine/Texture.h"
 
@@ -35,6 +36,8 @@ namespace Hermes
 		void ChangeActiveCamera(std::shared_ptr<Camera> NewCamera);
 
 		Camera& GetActiveCamera() const;
+
+		GeometryList BakeGeometryList() const;
 
 		const std::vector<MeshProxy>& GetMeshes() const;
 

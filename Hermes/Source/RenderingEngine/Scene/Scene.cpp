@@ -1,10 +1,14 @@
 ﻿#include "Scene.h"
 
+#include <optick.h>
+
 #include "AssetSystem/AssetLoader.h"
 #include "AssetSystem/ImageAsset.h"
 #include "Logging/Logger.h"
+#include "Math/Frustum.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
+#include "RenderingEngine/Scene/Camera.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
 #include "RenderInterface/GenericRenderInterface/Fence.h"
@@ -439,5 +443,20 @@ namespace Hermes
 	Camera& Scene::GetActiveCamera() const
 	{
 		return *ActiveCamera;
+	}
+
+	GeometryList Scene::BakeGeometryList() const
+	{
+		OPTICK_EVENT();
+		std::vector<MeshProxy> CulledMeshes;
+
+		auto Frustum = GetActiveCamera().GetFrustum();
+		for (const auto& Mesh : Meshes)
+		{
+			if (Frustum.IsInside(Mesh.BoundingVolume, Mesh.TransformationMatrix))
+				CulledMeshes.push_back(Mesh);
+		}
+
+		return { std::move(CulledMeshes) };
 	}
 }

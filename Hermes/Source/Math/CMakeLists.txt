@@ -6,6 +6,8 @@ set(SOURCES
     BoundingVolume.cpp
     BoundingVolume.h
     Common.h
+    Frustum.cpp
+    Frustum.h
     Math.h
     Matrix.h
     Plane.h

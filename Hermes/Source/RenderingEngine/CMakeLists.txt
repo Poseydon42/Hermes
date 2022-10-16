@@ -33,6 +33,8 @@ set(SOURCES
     Scene/Camera.h
     Scene/FPSCamera.cpp
     Scene/FPSCamera.h
+    Scene/GeometryList.cpp
+    Scene/GeometryList.h
     Scene/Scene.cpp
     Scene/Scene.h
     Scene/SceneProxies.h

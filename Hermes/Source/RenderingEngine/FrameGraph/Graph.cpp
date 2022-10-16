@@ -279,10 +279,13 @@ namespace Hermes
 				Barrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryWrite;
 				Barrier.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead | RenderInterface::AccessType::MemoryWrite;
 
-				CommandBuffer->InsertImageMemoryBarrier(
-					*Resource.Image, Barrier,
-					RenderInterface::PipelineStage::BottomOfPipe,
-					RenderInterface::PipelineStage::TopOfPipe);
+				// TODO: see above
+				auto SourceStages = RenderInterface::PipelineStage::ColorAttachmentOutput |
+					RenderInterface::PipelineStage::EarlyFragmentTests |
+					RenderInterface::PipelineStage::LateFragmentTests;
+
+				CommandBuffer->InsertImageMemoryBarrier(*Resource.Image, Barrier, SourceStages,
+				                                        RenderInterface::PipelineStage::TopOfPipe);
 
 				Resource.CurrentLayout = Attachment.second;
 			}
@@ -335,9 +338,12 @@ namespace Hermes
 			SourceImageToTransferSourceBarrier.NewLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
 			SourceImageToTransferSourceBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryWrite;
 			SourceImageToTransferSourceBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferRead;
-			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(
-				*BlitToSwapchainResource.Image, SourceImageToTransferSourceBarrier,
-				RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
+			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(*BlitToSwapchainResource.Image,
+			                                                      SourceImageToTransferSourceBarrier,
+			                                                      RenderInterface::PipelineStage::ColorAttachmentOutput
+			                                                      | RenderInterface::PipelineStage::EarlyFragmentTests |
+			                                                      RenderInterface::PipelineStage::LateFragmentTests,
+			                                                      RenderInterface::PipelineStage::Transfer);
 			BlitToSwapchainResource.CurrentLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
 			
 			RenderInterface::ImageMemoryBarrier SwapchainImageToTransferDestinationBarrier = {};

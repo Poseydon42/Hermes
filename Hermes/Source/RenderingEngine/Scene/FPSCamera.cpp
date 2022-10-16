@@ -1,5 +1,7 @@
 #include "FPSCamera.h"
 
+#include "Math/Frustum.h"
+
 namespace Hermes
 {
 	FPSCamera::FPSCamera(
@@ -48,7 +50,30 @@ namespace Hermes
 	{
 		return Mat4::Perspective(Math::Radians(VerticalFOV), AspectRatio, NearPlane, FarPlane);;
 	}
-	
+
+	Frustum FPSCamera::GetFrustum() const
+	{
+		Frustum Result = {};
+
+		auto UpVector = (Direction ^ RightVector).Normalize();
+		auto VectorToCenterOfFarPlane = Direction * FarPlane;
+		auto HalfVerticalSizeOfFarPlane = FarPlane * Math::Tan(0.5f * Math::Radians(VerticalFOV));
+		auto HalfHorizontalSizeOfFarPlane = HalfVerticalSizeOfFarPlane * AspectRatio;
+
+		Result.Near = Plane(Direction, Location + Direction * NearPlane);
+		Result.Far = Plane(-Direction, Location + VectorToCenterOfFarPlane);
+		Result.Right = Plane((VectorToCenterOfFarPlane + RightVector * HalfHorizontalSizeOfFarPlane) ^ UpVector,
+		                     Location);
+		Result.Left = Plane(UpVector ^ (VectorToCenterOfFarPlane - RightVector * HalfHorizontalSizeOfFarPlane),
+		                    Location);
+		Result.Top = Plane(RightVector ^ (VectorToCenterOfFarPlane + UpVector * HalfVerticalSizeOfFarPlane),
+		                   Location);
+		Result.Bottom = Plane((VectorToCenterOfFarPlane - UpVector * HalfVerticalSizeOfFarPlane) ^ RightVector,
+		                      Location);
+
+		return Result;
+	}
+
 	void FPSCamera::ApplyMovementInput(Vec2 Input, float DeltaTime)
 	{
 		Input *= DeltaTime;

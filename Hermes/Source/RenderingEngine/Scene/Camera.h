@@ -7,6 +7,8 @@
 
 namespace Hermes
 {
+	struct Frustum;
+
 	class HERMES_API Camera
 	{
 	public:
@@ -26,5 +28,7 @@ namespace Hermes
 		virtual Mat4 GetViewMatrix() const = 0;
 
 		virtual Mat4 GetProjectionMatrix() const = 0;
+
+		virtual Frustum GetFrustum() const = 0;
 	};
 }

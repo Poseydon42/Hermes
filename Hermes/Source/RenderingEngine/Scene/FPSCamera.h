@@ -28,6 +28,8 @@ namespace Hermes
 
 		virtual Mat4 GetProjectionMatrix() const override;
 
+		virtual Frustum GetFrustum() const override;
+
 		void ApplyMovementInput(Vec2 Input, float DeltaTime);
 
 		void ApplyRotationInput(Vec2 Input, float DeltaTime);

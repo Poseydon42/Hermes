@@ -4,6 +4,7 @@
 
 #include "AssetSystem/Asset.h"
 #include "Core/Core.h"
+#include "Math/BoundingVolume.h"
 #include "Math/Math.h"
 
 namespace Hermes
@@ -40,11 +41,18 @@ namespace Hermes
 		size_t GetRequiredVertexBufferSize() const;
 
 		size_t GetRequiredIndexBufferSize() const;
+
+		const SphereBoundingVolume& GetBoundingVolume() const;
+
 	private:
 		MeshAsset(const String& Name, std::vector<Vertex> VertexData, std::vector<uint32> IndexData);
 
 		std::vector<Vertex> Vertices;
 		std::vector<uint32> Indices;
+
+		SphereBoundingVolume BoundingVolume;
+
+		float CalculateMeshRadius() const;
 
 		friend class AssetLoader;
 	};

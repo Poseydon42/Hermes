@@ -53,10 +53,25 @@ namespace Hermes
 		return GetIndexCount() * sizeof(Indices[0]);
 	}
 
+	const SphereBoundingVolume& MeshAsset::GetBoundingVolume() const
+	{
+		return BoundingVolume;
+	}
+
 	MeshAsset::MeshAsset(const String& Name, std::vector<Vertex> VertexData, std::vector<uint32> IndexData)
 		: Asset(Name, AssetType::Mesh)
 		, Vertices(std::move(VertexData))
 		, Indices(std::move(IndexData))
+		, BoundingVolume(CalculateMeshRadius())
 	{
+	}
+
+	float MeshAsset::CalculateMeshRadius() const
+	{
+		float MaxDistanceSquared = 0.0f;
+		for (const auto& Vertex : Vertices)
+			MaxDistanceSquared = Math::Max(MaxDistanceSquared, Vertex.Position.LengthSq());
+
+		return Math::Sqrt(MaxDistanceSquared);
 	}
 }

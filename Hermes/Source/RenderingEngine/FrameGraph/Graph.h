@@ -14,6 +14,7 @@
 namespace Hermes
 {
 	class FrameGraph;
+	class GeometryList;
 
 	class HERMES_API FrameGraphScheme
 	{
@@ -68,7 +69,7 @@ namespace Hermes
 		                          std::shared_ptr<RenderInterface::ImageView> View,
 		                          RenderInterface::ImageLayout CurrentLayout);
 
-		FrameMetrics Execute(const Scene& Scene);
+		FrameMetrics Execute(const Scene& Scene, const GeometryList& GeometryList);
 
 		const RenderInterface::RenderPass& GetRenderPassObject(const String& Name) const;
 

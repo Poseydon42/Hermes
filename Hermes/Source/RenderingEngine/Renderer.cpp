@@ -128,8 +128,9 @@ namespace Hermes
 	void Renderer::RunFrame(const Scene& Scene)
 	{
 		OPTICK_EVENT();
-		auto Metrics = FrameGraph->Execute(Scene);
-		OPTICK_TAG("Drawm call count", Metrics.DrawCallCount);
+		auto GeometryList = Scene.BakeGeometryList();
+		auto Metrics = FrameGraph->Execute(Scene, GeometryList);
+		OPTICK_TAG("Draw call count", Metrics.DrawCallCount);
 		OPTICK_TAG("Pipeline bind count", Metrics.PipelineBindCount);
 		OPTICK_TAG("Buffer bind count", Metrics.BufferBindCount);
 		OPTICK_TAG("Descriptor set bind count", Metrics.DescriptorSetBindCount);

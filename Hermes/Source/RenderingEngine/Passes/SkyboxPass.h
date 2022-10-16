@@ -38,7 +38,7 @@ namespace Hermes
 		void PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
 		                  const RenderInterface::RenderPass& PassInstance,
 		                  const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
-		                  const Scene& Scene, FrameMetrics& Metrics, bool ResourcesWereRecreated);
+		                  const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics, bool ResourcesWereRecreated);
 
 		void RecreatePipeline(const RenderInterface::RenderPass& Pass);
 	};

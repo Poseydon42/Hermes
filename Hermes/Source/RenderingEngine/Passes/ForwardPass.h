@@ -39,7 +39,8 @@ namespace Hermes
 		void PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
 		                  const RenderInterface::RenderPass& PassInstance,
 		                  const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>
-		                  & Attachments, const Scene& Scene, FrameMetrics& Metrics, bool ResourcesWereRecreated);
+		                  & Attachments, const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics,
+		                  bool ResourcesWereRecreated);
 
 		/*
 		 * Recreates and recomputes the precomputed BRDF image and the corresponding sampler

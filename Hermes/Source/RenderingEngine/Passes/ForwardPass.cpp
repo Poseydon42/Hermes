@@ -8,8 +8,8 @@
 #include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
+#include "RenderingEngine/Scene/GeometryList.h"
 #include "RenderingEngine/Scene/Scene.h"
-#include "RenderingEngine/Texture.h"
 #include "RenderInterface/GenericRenderInterface/Buffer.h"
 #include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
 #include "RenderInterface/GenericRenderInterface/Device.h"
@@ -72,11 +72,9 @@ namespace Hermes
 		return Description;
 	}
 
-	void ForwardPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
-	                               const RenderInterface::RenderPass&,
-	                               const std::vector<std::pair<
-		                               const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
-	                               const Scene& Scene, FrameMetrics& Metrics, bool)
+	void ForwardPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer, const RenderInterface::RenderPass&,
+	                               const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
+	                               const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics, bool)
 	{
 		OPTICK_EVENT();
 
@@ -114,7 +112,7 @@ namespace Hermes
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(3, 0, *PrecomputedBRDFView, *PrecomputedBRDFSampler,
 		                                                 RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
 
-		for (const auto& Mesh : Scene.GetMeshes())
+		for (const auto& Mesh : GeometryList.GetMeshList())
 		{
 			auto& Material = Mesh.Material;
 			auto& MaterialPipeline = Material->GetBaseMaterial().GetPipeline();

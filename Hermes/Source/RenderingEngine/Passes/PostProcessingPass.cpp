@@ -52,9 +52,9 @@ namespace Hermes
 
 	void PostProcessingPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
 	                                      const RenderInterface::RenderPass& PassInstance,
-	                                      const std::vector<std::pair<
-		                                      const RenderInterface::Image*, const RenderInterface::ImageView*>>& Attachments,
-	                                      const Scene&, FrameMetrics& Metrics, bool ResourcesWereRecreated)
+	                                      const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>&
+	                                      Attachments, const Scene&, const GeometryList&, FrameMetrics& Metrics,
+	                                      bool ResourcesWereRecreated)
 	{
 		OPTICK_EVENT();
 		if (ResourcesWereRecreated || !IsPipelineCreated)

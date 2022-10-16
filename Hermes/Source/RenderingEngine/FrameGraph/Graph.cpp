@@ -230,7 +230,7 @@ namespace Hermes
 		RecreateRenderTargets();
 	}
 
-	FrameMetrics FrameGraph::Execute(const Scene& Scene)
+	FrameMetrics FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList)
 	{
 		OPTICK_EVENT();
 
@@ -301,12 +301,13 @@ namespace Hermes
 			}
 
 			bool ResourcesWereRecreatedTmp = ResourcesWereRecreated; // TODO : better way to fix this maybe?
-			Pass.Callback(*CommandBuffer, *Pass.Pass, Attachments, Scene, Metrics, std::move(ResourcesWereRecreatedTmp));
+			Pass.Callback(*CommandBuffer, *Pass.Pass, Attachments, Scene, GeometryList, Metrics,
+			              std::move(ResourcesWereRecreatedTmp));
 			ResourcesWereRecreated = false;
 
 			CommandBuffer->EndRenderPass();
 			CommandBuffer->EndRecording();
-			
+
 			RenderQueue.SubmitCommandBuffer(*CommandBuffer, {});
 		}
 

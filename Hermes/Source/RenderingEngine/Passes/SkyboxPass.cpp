@@ -72,7 +72,7 @@ namespace Hermes
 	                              const RenderInterface::RenderPass& PassInstance,
 	                              const std::vector<std::pair<
 		                              const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
-	                              const Scene& Scene, FrameMetrics& Metrics, bool ResourcesWereRecreated)
+	                              const Scene& Scene, const GeometryList&, FrameMetrics& Metrics, bool ResourcesWereRecreated)
 	{
 		OPTICK_EVENT();
 

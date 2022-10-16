@@ -109,7 +109,7 @@ namespace Hermes::Vulkan
 		VkResult VkCheckedResult = Call; \
 		if (VkCheckedResult != VK_SUCCESS) \
 		{ \
-			HERMES_LOG_ERROR(L"Vulkan function call failed. Error code is %s", VkResultToString(VkCheckedResult).c_str()); \
+			HERMES_ASSERT_LOG(false, L"Vulkan function call failed. Error code is %s", VkResultToString(VkCheckedResult).c_str()); \
 			::Hermes::PlatformMisc::ExitWithMessageBox((uint32)-1, L"Vulkan error", L"One of Vulkan functions returned VkResult code indicating error. Application could not continue normal execution."); \
 		} \
 	}

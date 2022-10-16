@@ -140,22 +140,8 @@ private:
 				AnisotropyChanged = true;
 				AnisotropyEnabled = !AnisotropyEnabled;
 			}
-			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::C)
-			{
-				if (KeyEvent.IsPressEvent())
-				{
-					TestMaterialInstance->SetNumericProperty<Hermes::Vec4>(L"Color", { 1.0f, 0.0f, 1.0f, 1.0f });
-				}
-				else
-				{
-					TestMaterialInstance->SetNumericProperty<Hermes::Vec4>(L"Color", { 0.0f, 1.0f, 0.0f, 1.0f });
-				}
-			}
 		}
 	}
-
-	/* OBJECT ROTATION DEBUG */
-	float DebugObjectAngle = 0.0f;
 };
 
 extern "C" APP_API Hermes::IApplication* CreateApplicationInstance()

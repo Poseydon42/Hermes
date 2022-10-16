@@ -21,6 +21,7 @@ public:
 	bool Init() override
 	{
 		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"sphere"));
+		auto BoundingVolume = SphereMesh->GetBoundingVolume();
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
 
 		auto AlbedoTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_albedo"));
@@ -59,6 +60,7 @@ public:
 				Hermes::MeshProxy SphereMeshProxy =
 				{
 					Hermes::Mat4::Translation(SphereLocation),
+					BoundingVolume,
 					SphereMeshBuffer,
 					TestMaterialInstance
 				};

@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "Core/Core.h"
+#include "Math/BoundingVolume.h"
 #include "Math/Math.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
 #include "RenderingEngine/MeshBuffer.h"
@@ -12,6 +13,7 @@ namespace Hermes
 	struct HERMES_API MeshProxy
 	{
 		Mat4 TransformationMatrix;
+		SphereBoundingVolume BoundingVolume;
 		std::shared_ptr<MeshBuffer> MeshData;
 		std::shared_ptr<MaterialInstance> Material;
 	};

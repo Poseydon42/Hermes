@@ -1,7 +1,5 @@
 #include "MaterialInstance.h"
 
-#include <optick.h>
-
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Texture.h"
@@ -21,7 +19,6 @@ namespace Hermes
 
 	void MaterialInstance::PrepareForRender() const
 	{
-		OPTICK_EVENT();
 		if (IsDirty && HasUniformBuffer)
 		{
 			// TODO : use frame local allocator for better performance

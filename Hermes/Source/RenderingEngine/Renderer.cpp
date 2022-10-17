@@ -1,7 +1,5 @@
 #include "Renderer.h"
 
-#include <optick.h>
-
 #include "Logging/Logger.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/DescriptorAllocator.h"
@@ -127,13 +125,9 @@ namespace Hermes
 
 	void Renderer::RunFrame(const Scene& Scene)
 	{
-		OPTICK_EVENT();
 		auto GeometryList = Scene.BakeGeometryList();
 		auto Metrics = FrameGraph->Execute(Scene, GeometryList);
-		OPTICK_TAG("Draw call count", Metrics.DrawCallCount);
-		OPTICK_TAG("Pipeline bind count", Metrics.PipelineBindCount);
-		OPTICK_TAG("Buffer bind count", Metrics.BufferBindCount);
-		OPTICK_TAG("Descriptor set bind count", Metrics.DescriptorSetBindCount);
+		(void)Metrics;
 	}
 
 	RenderInterface::Device& Renderer::GetActiveDevice()

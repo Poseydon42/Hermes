@@ -4,6 +4,3 @@
 [submodule "Hermes/ThirdParty/SPIRV-Cross"]
 	path = Hermes/ThirdParty/SPIRV-Cross
 	url = https://github.com/KhronosGroup/SPIRV-Cross.git
-[submodule "Hermes/ThirdParty/optick"]
-	path = Hermes/ThirdParty/optick
-	url = https://github.com/Poseydon42/optick.git

@@ -1,7 +1,5 @@
 ﻿#include "Scene.h"
 
-#include <optick.h>
-
 #include "AssetSystem/AssetLoader.h"
 #include "AssetSystem/ImageAsset.h"
 #include "Logging/Logger.h"
@@ -447,7 +445,6 @@ namespace Hermes
 
 	GeometryList Scene::BakeGeometryList() const
 	{
-		OPTICK_EVENT();
 		std::vector<MeshProxy> CulledMeshes;
 
 		auto Frustum = GetActiveCamera().GetFrustum();

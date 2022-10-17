@@ -1,7 +1,5 @@
 #include "GameLoop.h"
 
-#include <optick.h>
-
 #include "Core/Event/EventQueue.h"
 #include "ApplicationCore/InputEngine.h"
 #include "Logging/Logger.h"
@@ -78,17 +76,13 @@ namespace Hermes
 	{
 		while (!RequestedExit)
 		{
-			OPTICK_FRAME("MainThread");
 			ApplicationWindow->Run();
 			if (!Paused && !RequestedExit)
 			{
 				auto CurrentTimestamp = PlatformTime::GetCurrentTimestamp();
 				float DeltaTime = PlatformTime::ToSeconds(CurrentTimestamp - PrevFrameEndTimestamp);
 
-				{
-					OPTICK_EVENT("IApplication::Run");
-					Application->Run(DeltaTime);
-				}
+				Application->Run(DeltaTime);
 				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
 
 				auto& Renderer = Renderer::Get();

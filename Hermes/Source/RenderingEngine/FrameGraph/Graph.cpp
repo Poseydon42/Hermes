@@ -1,7 +1,6 @@
 ﻿#include "Graph.h"
 
 #include <algorithm>
-#include <optick.h>
 #include <utility>
 
 #include "Core/Misc/StringUtils.h"
@@ -232,8 +231,6 @@ namespace Hermes
 
 	FrameMetrics FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList)
 	{
-		OPTICK_EVENT();
-
 		FrameMetrics Metrics = {};
 
 		if (RenderTargetsNeedsInitialization)
@@ -258,7 +255,6 @@ namespace Hermes
 		
 		for (const auto& PassName : PassExecutionOrder)
 		{
-			OPTICK_EVENT("FrameGraph::Execute PerPassLoop");
 			const auto& Pass = Passes[PassName];
 
 			auto& CommandBuffer = Pass.CommandBuffer;
@@ -312,7 +308,6 @@ namespace Hermes
 		}
 
 		{
-			OPTICK_EVENT("FrapeGraph::Execute Presentation")
 			auto& PresentQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Presentation);
 			auto BlitAndPresentCommandBuffer = PresentQueue.CreateCommandBuffer(true);
 

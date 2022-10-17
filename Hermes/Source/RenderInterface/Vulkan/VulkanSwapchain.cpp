@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <memory>
-#include <optick.h>
 #include <utility>
 
 #include "RenderInterface/Vulkan/VulkanDevice.h"
@@ -86,15 +85,10 @@ namespace Hermes
 
 		std::optional<uint32> VulkanSwapchain::AcquireImage(uint64 Timeout, const RenderInterface::Fence& Fence, bool& SwapchainWasRecreated)
 		{
-			OPTICK_EVENT();
-
 			uint32 Result;
 			VkFence TargetFence = reinterpret_cast<const VulkanFence&>(Fence).GetFence();
-			VkResult Error;
-			{
-				OPTICK_EVENT("VulkanSwapchain::AcquireImage vkAcquireNextImageKHR");
-				Error = vkAcquireNextImageKHR(Device->GetDevice(), Swapchain, Timeout, VK_NULL_HANDLE, TargetFence, &Result);
-			}
+			VkResult Error = vkAcquireNextImageKHR(Device->GetDevice(), Swapchain, Timeout, VK_NULL_HANDLE, TargetFence,
+			                                       &Result);
 			if (Error == VK_SUCCESS)
 				return Result;
 			if (Error == VK_SUBOPTIMAL_KHR || Error == VK_ERROR_OUT_OF_DATE_KHR)
@@ -111,7 +105,6 @@ namespace Hermes
 
 		void VulkanSwapchain::Present(uint32 ImageIndex, bool& SwapchainWasRecreated)
 		{
-			OPTICK_EVENT();
 			VkPresentInfoKHR Info = {};
 			VkResult Result;
 			Info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -132,7 +125,6 @@ namespace Hermes
 
 		void VulkanSwapchain::RecreateSwapchain(uint32 NumFrames)
 		{
-			OPTICK_EVENT();
 			Images.clear();
 
 			if (Window.expired())

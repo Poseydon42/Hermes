@@ -29,6 +29,8 @@ set(SPIRV_CROSS_ENABLE_C_API OFF CACHE BOOL "Enable C API wrapper support in sta
 set(SPIRV_CROSS_ENABLE_UTIL OFF CACHE BOOL "Enable util module support.")
 add_subdirectory(ThirdParty/SPIRV-Cross)
 
+add_subdirectory(ThirdParty/tracy)
+
 include(CMakeCommon)
 
 add_executable(Hermes WIN32 Source/HermesExecutable.cpp)

@@ -4,6 +4,7 @@
 #include <memory>
 #include <utility>
 
+#include "Core/Profiling.h"
 #include "RenderInterface/Vulkan/VulkanDevice.h"
 #include "RenderInterface/Vulkan/VulkanImage.h"
 #include "RenderInterface/Vulkan/VulkanFence.h"
@@ -85,6 +86,7 @@ namespace Hermes
 
 		std::optional<uint32> VulkanSwapchain::AcquireImage(uint64 Timeout, const RenderInterface::Fence& Fence, bool& SwapchainWasRecreated)
 		{
+			HERMES_PROFILE_FUNC();
 			uint32 Result;
 			VkFence TargetFence = reinterpret_cast<const VulkanFence&>(Fence).GetFence();
 			VkResult Error = vkAcquireNextImageKHR(Device->GetDevice(), Swapchain, Timeout, VK_NULL_HANDLE, TargetFence,
@@ -105,6 +107,7 @@ namespace Hermes
 
 		void VulkanSwapchain::Present(uint32 ImageIndex, bool& SwapchainWasRecreated)
 		{
+			HERMES_PROFILE_FUNC();
 			VkPresentInfoKHR Info = {};
 			VkResult Result;
 			Info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -113,7 +116,10 @@ namespace Hermes
 			Info.pSwapchains = &Swapchain;
 			Info.swapchainCount = 1;
 			Info.waitSemaphoreCount = 0;
-			vkQueuePresentKHR(static_cast<const VulkanQueue&>(Device->GetQueue(RenderInterface::QueueType::Presentation)).GetQueue(), &Info);
+			{
+				HERMES_PROFILE_FRAME();
+				vkQueuePresentKHR(static_cast<const VulkanQueue&>(Device->GetQueue(RenderInterface::QueueType::Presentation)).GetQueue(), &Info);
+			}
 			if (Info.pResults[0] == VK_SUBOPTIMAL_KHR || Info.pResults[0] == VK_ERROR_OUT_OF_DATE_KHR)
 			{
 				RecreateSwapchain(static_cast<uint32>(Images.size()));

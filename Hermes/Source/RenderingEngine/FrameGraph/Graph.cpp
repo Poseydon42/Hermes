@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "Core/Misc/StringUtils.h"
+#include "Core/Profiling.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
@@ -231,6 +232,7 @@ namespace Hermes
 
 	FrameMetrics FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList)
 	{
+		HERMES_PROFILE_FUNC();
 		FrameMetrics Metrics = {};
 
 		if (RenderTargetsNeedsInitialization)
@@ -255,6 +257,7 @@ namespace Hermes
 		
 		for (const auto& PassName : PassExecutionOrder)
 		{
+			HERMES_PROFILE_SCOPE("Hermes::FrameGraph::Execute per pass loop");
 			const auto& Pass = Passes[PassName];
 
 			auto& CommandBuffer = Pass.CommandBuffer;
@@ -308,6 +311,7 @@ namespace Hermes
 		}
 
 		{
+			HERMES_PROFILE_SCOPE("Hermes::FrameGraph::Execute presentation");
 			auto& PresentQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Presentation);
 			auto BlitAndPresentCommandBuffer = PresentQueue.CreateCommandBuffer(true);
 

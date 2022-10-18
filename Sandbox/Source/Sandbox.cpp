@@ -1,6 +1,7 @@
 #ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
+#include "Core/Profiling.h"
 #include "ApplicationCore/Application.h"
 #include "ApplicationCore/GameLoop.h"
 #include "AssetSystem/AssetLoader.h"
@@ -41,7 +42,7 @@ public:
 		TestMaterialInstance->SetTextureProperty(L"u_MetallicTexture", *MetallicTexture);
 		TestMaterialInstance->SetTextureProperty(L"u_NormalTexture", *NormalTexture);
 
-		static constexpr Hermes::int32 SphereCountInSingleDimension = 19;
+		static constexpr Hermes::int32 SphereCountInSingleDimension = 39;
 		for (Hermes::int32 SphereX = -SphereCountInSingleDimension / 2;
 		     SphereX <= SphereCountInSingleDimension / 2;
 		     SphereX++)
@@ -85,6 +86,7 @@ public:
 
 	void Run(float DeltaTime) override
 	{
+		HERMES_PROFILE_FUNC();
 		const auto& InputEngine = Hermes::GGameLoop->GetInputEngine();
 		
 		Hermes::Vec2 CameraMovementInput = {};

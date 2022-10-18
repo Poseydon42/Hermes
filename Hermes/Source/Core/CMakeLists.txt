@@ -16,6 +16,7 @@ set(SOURCES
     Misc/ArgsParser.h
     Misc/StringUtils.cpp
     Misc/StringUtils.h
+    Profiling.h
 )
 
 include(CMakeCommon)
@@ -26,5 +27,7 @@ target_compile_definitions(${HERMES_SUBLIB_NAME} PRIVATE HERMES_BUILD_ENGINE)
 target_compile_definitions(${HERMES_SUBLIB_NAME} PRIVATE HERMES_GAME_NAME="Sandbox") # TODO : expose as an CMake option later
 
 target_include_directories(${HERMES_SUBLIB_NAME} PUBLIC ${HERMES_SOURCE_DIR})
+target_link_libraries(${HERMES_SUBLIB_NAME} PUBLIC $<$<CONFIG:Release>:Tracy::TracyClient>)
+target_compile_definitions(${HERMES_SUBLIB_NAME} PUBLIC $<$<CONFIG:Release>:HERMES_ENABLE_PROFILING>)
 
 KeepFolderStructure(${CMAKE_CURRENT_SOURCE_DIR} "${SOURCES}")

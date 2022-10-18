@@ -1,5 +1,6 @@
 #include "Renderer.h"
 
+#include "Core/Profiling.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/DescriptorAllocator.h"
@@ -125,9 +126,13 @@ namespace Hermes
 
 	void Renderer::RunFrame(const Scene& Scene)
 	{
+		HERMES_PROFILE_FUNC();
 		auto GeometryList = Scene.BakeGeometryList();
 		auto Metrics = FrameGraph->Execute(Scene, GeometryList);
-		(void)Metrics;
+		HERMES_PROFILE_TAG("Draw call count", static_cast<int64>(Metrics.DrawCallCount));
+		HERMES_PROFILE_TAG("Pipeline bind count", static_cast<int64>(Metrics.PipelineBindCount));
+		HERMES_PROFILE_TAG("Descriptor set bind count", static_cast<int64>(Metrics.DescriptorSetBindCount));
+		HERMES_PROFILE_TAG("Buffer bind count", static_cast<int64>(Metrics.BufferBindCount));
 	}
 
 	RenderInterface::Device& Renderer::GetActiveDevice()

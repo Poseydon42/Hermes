@@ -1,6 +1,7 @@
 #include "GameLoop.h"
 
 #include "Core/Event/EventQueue.h"
+#include "Core/Profiling.h"
 #include "ApplicationCore/InputEngine.h"
 #include "Logging/Logger.h"
 #include "Logging/DebugLogDevice.h"
@@ -33,6 +34,7 @@ namespace Hermes
 
 	bool GameLoop::Init()
 	{
+		HERMES_PROFILE_THREAD("MainThread");
 		PlatformTime::Init();
 
 		ApplicationWindow = IPlatformWindow::CreatePlatformWindow(L"Hermes Engine", { 1280, 720 });
@@ -79,6 +81,7 @@ namespace Hermes
 			ApplicationWindow->Run();
 			if (!Paused && !RequestedExit)
 			{
+				HERMES_PROFILE_SCOPE("GameLoop");
 				auto CurrentTimestamp = PlatformTime::GetCurrentTimestamp();
 				float DeltaTime = PlatformTime::ToSeconds(CurrentTimestamp - PrevFrameEndTimestamp);
 

@@ -1,5 +1,6 @@
 #include "SkyboxPass.h"
 
+#include "Core/Profiling.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Renderer.h"
@@ -72,6 +73,7 @@ namespace Hermes
 		                              const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
 	                              const Scene& Scene, const GeometryList&, FrameMetrics& Metrics, bool ResourcesWereRecreated)
 	{
+		HERMES_PROFILE_FUNC();
 		if (ResourcesWereRecreated || !IsPipelineCreated)
 		{
 			RecreatePipeline(PassInstance);

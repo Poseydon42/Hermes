@@ -2,6 +2,7 @@
 
 #include "AssetSystem/AssetLoader.h"
 #include "AssetSystem/ImageAsset.h"
+#include "Core/Profiling.h"
 #include "Logging/Logger.h"
 #include "Math/Frustum.h"
 #include "RenderingEngine/DescriptorAllocator.h"
@@ -445,6 +446,7 @@ namespace Hermes
 
 	GeometryList Scene::BakeGeometryList() const
 	{
+		HERMES_PROFILE_FUNC();
 		std::vector<MeshProxy> CulledMeshes;
 
 		auto Frustum = GetActiveCamera().GetFrustum();

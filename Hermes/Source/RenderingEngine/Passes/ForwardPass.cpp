@@ -1,5 +1,6 @@
 #include "ForwardPass.h"
 
+#include "Core/Profiling.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/FrameGraph/Graph.h"
@@ -74,6 +75,7 @@ namespace Hermes
 	                               const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
 	                               const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics, bool)
 	{
+		HERMES_PROFILE_FUNC();
 		if (!PrecomputedBRDFSampler || !PrecomputedBRDFView || !PrecomputedBRDFSampler)
 		{
 			EnsurePrecomputedBRDF();

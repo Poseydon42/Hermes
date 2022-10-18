@@ -5,6 +5,8 @@ project(Hermes)
 set(HERMES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 set(HERMES_THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty")
 
+find_package(Vulkan REQUIRED)
+
 add_subdirectory(Source/ApplicationCore)
 add_subdirectory(Source/AssetSystem)
 add_subdirectory(Source/Core)

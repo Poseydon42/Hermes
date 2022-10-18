@@ -30,4 +30,8 @@ target_include_directories(${HERMES_SUBLIB_NAME} PUBLIC ${HERMES_SOURCE_DIR})
 target_link_libraries(${HERMES_SUBLIB_NAME} PUBLIC $<$<CONFIG:Release>:Tracy::TracyClient>)
 target_compile_definitions(${HERMES_SUBLIB_NAME} PUBLIC $<$<CONFIG:Release>:HERMES_ENABLE_PROFILING>)
 
+# target_include_directories(${HERMES_SUBLIB_NAME} PUBLIC ${Vulkan_INCLUDE_DIR})
+target_include_directories(${HERMES_SUBLIB_NAME} PUBLIC "${HERMES_THIRD_PARTY_DIR}/VulkanMemoryAllocator/include")
+target_link_libraries(${HERMES_SUBLIB_NAME} PUBLIC Vulkan::Vulkan)
+
 KeepFolderStructure(${CMAKE_CURRENT_SOURCE_DIR} "${SOURCES}")

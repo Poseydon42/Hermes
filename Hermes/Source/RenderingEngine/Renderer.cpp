@@ -1,14 +1,11 @@
 #include "Renderer.h"
 
+#include "ApplicationCore/GameLoop.h"
 #include "Core/Profiling.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Scene/Scene.h"
-#include "RenderInterface/GenericRenderInterface/Swapchain.h"
-#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
-#include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
 
 namespace Hermes
 {
@@ -18,61 +15,62 @@ namespace Hermes
 		return Instance;
 	}
 
-	bool Renderer::Init(const RenderInterface::PhysicalDevice& GPU)
+	bool Renderer::Init()
 	{
-		RenderingDevice = GPU.CreateDevice();
-		if (!RenderingDevice)
+		VulkanInstance = std::make_unique<Vulkan::Instance>(*GGameLoop->GetWindow());
+
+		constexpr size_t GPUIndex = 0;
+		GPUProperties = VulkanInstance->EnumerateAvailableDevices()[GPUIndex];
+		Device = VulkanInstance->CreateDevice(GPUIndex);
+		if (!Device)
 			return false;
-		GPUProperties = GPU.GetProperties();
 		DumpGPUProperties();
 
-		Swapchain = RenderingDevice->CreateSwapchain(NumberOfBackBuffers);
+		Swapchain = Device->CreateSwapchain(NumberOfBackBuffers);
 		if (!Swapchain)
 			return false;
 
-		DescriptorAllocator = std::make_shared<class DescriptorAllocator>(RenderingDevice);
+		DescriptorAllocator = std::make_unique<class DescriptorAllocator>();
 
-		RenderInterface::DescriptorBinding SceneUBOBinding = {};
-		SceneUBOBinding.Index = 0;
-		SceneUBOBinding.DescriptorCount = 1;
-		SceneUBOBinding.Shader = RenderInterface::ShaderType::VertexShader |
-			RenderInterface::ShaderType::FragmentShader;
-		SceneUBOBinding.Type = RenderInterface::DescriptorType::UniformBuffer;
-		RenderInterface::DescriptorBinding IrradianceCubemapBinding = {};
-		IrradianceCubemapBinding.Index = 1;
-		IrradianceCubemapBinding.DescriptorCount = 1;
-		IrradianceCubemapBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		IrradianceCubemapBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
-		RenderInterface::DescriptorBinding SpecularCubemapBinding = {};
-		SpecularCubemapBinding.Index = 2;
-		SpecularCubemapBinding.DescriptorCount = 1;
-		SpecularCubemapBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		SpecularCubemapBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
-		RenderInterface::DescriptorBinding PrecomputedBRDFBinding = {};
-		PrecomputedBRDFBinding.Index = 3;
-		PrecomputedBRDFBinding.DescriptorCount = 1;
-		PrecomputedBRDFBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		PrecomputedBRDFBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
+		VkDescriptorSetLayoutBinding SceneUBOBinding = {};
+		SceneUBOBinding.binding = 0;
+		SceneUBOBinding.descriptorCount = 1;
+		SceneUBOBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		SceneUBOBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		VkDescriptorSetLayoutBinding IrradianceCubemapBinding = {};
+		IrradianceCubemapBinding.binding = 1;
+		IrradianceCubemapBinding.descriptorCount = 1;
+		IrradianceCubemapBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		IrradianceCubemapBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		VkDescriptorSetLayoutBinding SpecularCubemapBinding = {};
+		SpecularCubemapBinding.binding = 2;
+		SpecularCubemapBinding.descriptorCount = 1;
+		SpecularCubemapBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		SpecularCubemapBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		VkDescriptorSetLayoutBinding PrecomputedBRDFBinding = {};
+		PrecomputedBRDFBinding.binding = 3;
+		PrecomputedBRDFBinding.descriptorCount = 1;
+		PrecomputedBRDFBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		PrecomputedBRDFBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 
-		GlobalDataDescriptorSetLayout = RenderingDevice->CreateDescriptorSetLayout({
+		GlobalDataDescriptorSetLayout = Device->CreateDescriptorSetLayout({
 			SceneUBOBinding, IrradianceCubemapBinding, SpecularCubemapBinding, PrecomputedBRDFBinding
 		});
 
-		RenderInterface::SamplerDescription SamplerDesc = {};
-		SamplerDesc.AddressingModeU = RenderInterface::AddressingMode::Repeat;
-		SamplerDesc.AddressingModeV = RenderInterface::AddressingMode::Repeat;
-		SamplerDesc.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
-		SamplerDesc.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
-		SamplerDesc.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
-		SamplerDesc.MipMode = RenderInterface::MipmappingMode::Linear;
-		SamplerDesc.MinMipLevel = 0.0f;
-		SamplerDesc.MaxMipLevel = 13.0f; // 8192x8192 texture is probably enough for everyone :)
-		SamplerDesc.MipBias = 0.0f;
-		DefaultSampler = RenderingDevice->CreateSampler(SamplerDesc);
+		Vulkan::SamplerDescription SamplerDesc = {};
+		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		SamplerDesc.MinificationFilter = VK_FILTER_LINEAR;
+		SamplerDesc.MagnificationFilter = VK_FILTER_LINEAR;
+		SamplerDesc.CoordinateSystem = Vulkan::CoordinateSystem::Normalized;
+		SamplerDesc.MipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		SamplerDesc.MinLOD = 0.0f;
+		SamplerDesc.MaxLOD = 13.0f; // 8192x8192 texture is probably enough for everyone :)
+		SamplerDesc.LODBias = 0.0f;
+		DefaultSampler = Device->CreateSampler(SamplerDesc);
 
 		ForwardPass = std::make_unique<class ForwardPass>();
 		PostProcessingPass = std::make_unique<class PostProcessingPass>();
-		SkyboxPass = std::make_unique<class SkyboxPass>(RenderingDevice);
+		SkyboxPass = std::make_unique<class SkyboxPass>();
 
 		FrameGraphScheme Scheme;		
 		Scheme.AddPass(L"ForwardPass", ForwardPass->GetPassDescription());
@@ -81,19 +79,19 @@ namespace Hermes
 
 		ResourceDesc HDRColorBufferResource = {};
 		HDRColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		HDRColorBufferResource.Format = RenderInterface::DataFormat::R16G16B16A16SignedFloat;
+		HDRColorBufferResource.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
 		HDRColorBufferResource.MipLevels = 1;
 		Scheme.AddResource(L"HDRColorBuffer", HDRColorBufferResource);
 
 		ResourceDesc ColorBufferResource = {};
 		ColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f });
-		ColorBufferResource.Format = RenderInterface::DataFormat::B8G8R8A8SRGB;
+		ColorBufferResource.Format = VK_FORMAT_B8G8R8A8_SRGB;
 		ColorBufferResource.MipLevels = 1;
 		Scheme.AddResource(L"ColorBuffer", ColorBufferResource);
 
 		ResourceDesc DepthBufferResource = {};
 		DepthBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		DepthBufferResource.Format = RenderInterface::DataFormat::D32SignedFloat;
+		DepthBufferResource.Format = VK_FORMAT_D32_SFLOAT;
 		DepthBufferResource.MipLevels = 1;
 		Scheme.AddResource(L"DepthBuffer", DepthBufferResource);
 
@@ -135,12 +133,12 @@ namespace Hermes
 		HERMES_PROFILE_TAG("Buffer bind count", static_cast<int64>(Metrics.BufferBindCount));
 	}
 
-	RenderInterface::Device& Renderer::GetActiveDevice()
+	Vulkan::Device& Renderer::GetActiveDevice()
 	{
-		return *RenderingDevice;
+		return *Device;
 	}
 
-	RenderInterface::Swapchain& Renderer::GetSwapchain()
+	Vulkan::Swapchain& Renderer::GetSwapchain()
 	{
 		return *Swapchain;
 	}
@@ -150,17 +148,17 @@ namespace Hermes
 		return *DescriptorAllocator;
 	}
 
-	const RenderInterface::DescriptorSetLayout& Renderer::GetGlobalDataDescriptorSetLayout() const
+	const Vulkan::DescriptorSetLayout& Renderer::GetGlobalDataDescriptorSetLayout() const
 	{
 		return *GlobalDataDescriptorSetLayout;
 	}
 
-	const RenderInterface::RenderPass& Renderer::GetGraphicsRenderPassObject() const
+	const Vulkan::RenderPass& Renderer::GetGraphicsRenderPassObject() const
 	{
 		return FrameGraph->GetRenderPassObject(L"ForwardPass");
 	}
 
-	const RenderInterface::Sampler& Renderer::GetDefaultSampler() const
+	const Vulkan::Sampler& Renderer::GetDefaultSampler() const
 	{
 		return *DefaultSampler;
 	}

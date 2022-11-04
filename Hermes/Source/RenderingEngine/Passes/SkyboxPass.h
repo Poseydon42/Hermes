@@ -3,9 +3,9 @@
 #include <memory>
 
 #include "Core/Core.h"
-#include "Math/Math.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
-#include "RenderInterface/GenericRenderInterface/Forward.h"
+#include "Vulkan/Forward.h"
+#include "Vulkan/Shader.h"
 
 namespace Hermes
 {
@@ -19,27 +19,26 @@ namespace Hermes
 	class HERMES_API SkyboxPass
 	{
 	public:
-		SkyboxPass(std::shared_ptr<RenderInterface::Device> InDevice);
+		SkyboxPass();
 
 		const PassDesc& GetPassDescription() const;
+
 	private:
-		std::shared_ptr<RenderInterface::Device> Device;
+		std::unique_ptr<Vulkan::DescriptorSetLayout> DataDescriptorLayout;
+		std::unique_ptr<Vulkan::DescriptorSet> DataDescriptorSet;
+		std::unique_ptr<Vulkan::Sampler> EnvmapSampler;
 
-		std::shared_ptr<RenderInterface::DescriptorSetLayout> DataDescriptorLayout;
-		std::shared_ptr<RenderInterface::DescriptorSet> DataDescriptorSet;
-		std::shared_ptr<RenderInterface::Sampler> EnvmapSampler;
-
-		std::shared_ptr<RenderInterface::Shader> VertexShader, FragmentShader;
-		std::shared_ptr<RenderInterface::Pipeline> Pipeline;
+		std::unique_ptr<Vulkan::Shader> VertexShader, FragmentShader;
+		std::unique_ptr<Vulkan::Pipeline> Pipeline;
 		bool IsPipelineCreated = false;
 
 		PassDesc Description;
 
-		void PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
-		                  const RenderInterface::RenderPass& PassInstance,
-		                  const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
+		void PassCallback(Vulkan::CommandBuffer& CommandBuffer,
+		                  const Vulkan::RenderPass& PassInstance,
+		                  const std::vector<std::pair<const Vulkan::Image*, const Vulkan::ImageView*>>&,
 		                  const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics, bool ResourcesWereRecreated);
 
-		void RecreatePipeline(const RenderInterface::RenderPass& Pass);
+		void RecreatePipeline(const Vulkan::RenderPass& Pass);
 	};
 }

@@ -4,7 +4,7 @@
 
 #include "AssetSystem/MeshAsset.h"
 #include "Core/Core.h"
-#include "RenderInterface/GenericRenderInterface/Buffer.h"
+#include "Vulkan/Buffer.h"
 
 namespace Hermes
 {
@@ -13,8 +13,8 @@ namespace Hermes
 	public:
 		static std::shared_ptr<MeshBuffer> CreateFromAsset(std::weak_ptr<MeshAsset> InAsset);
 
-		const RenderInterface::Buffer& GetVertexBuffer() const;
-		const RenderInterface::Buffer& GetIndexBuffer() const;
+		const Vulkan::Buffer& GetVertexBuffer() const;
+		const Vulkan::Buffer& GetIndexBuffer() const;
 
 		bool IsReady() const;
 
@@ -33,6 +33,6 @@ namespace Hermes
 		bool DataUploadFinished;
 		uint32 IndexCount;
 		std::weak_ptr<MeshAsset> Asset;
-		std::shared_ptr<RenderInterface::Buffer> VertexBuffer, IndexBuffer;
+		std::shared_ptr<Vulkan::Buffer> VertexBuffer, IndexBuffer;
 	};
 }

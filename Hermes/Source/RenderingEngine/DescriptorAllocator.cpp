@@ -1,33 +1,32 @@
 ﻿#include "DescriptorAllocator.h"
 
-#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "RenderingEngine/Renderer.h"
+#include "Vulkan/Device.h"
 
 namespace Hermes
 {
-	DescriptorAllocator::DescriptorAllocator(std::shared_ptr<RenderInterface::Device> InDevice)
-		: Device(std::move(InDevice))
+	DescriptorAllocator::DescriptorAllocator()
 	{
 		AllocateNewPool();
 	}
 
-	std::unique_ptr<RenderInterface::DescriptorSet> DescriptorAllocator::Allocate(const RenderInterface::DescriptorSetLayout& Layout)
+	std::unique_ptr<Vulkan::DescriptorSet> DescriptorAllocator::Allocate(const Vulkan::DescriptorSetLayout& Layout)
 	{
 		for (const auto& Pool : PoolList)
 		{
-			auto Result = Pool->CreateDescriptorSet(Layout);
+			auto Result = Pool->AllocateDescriptorSet(Layout);
 			if (Result != nullptr)
 				return Result;
 		}
 		AllocateNewPool();
-		auto Result = PoolList.back()->CreateDescriptorSet(Layout);
+		auto Result = PoolList.back()->AllocateDescriptorSet(Layout);
 		HERMES_ASSERT(Result);
 		return Result;
 	}
 
 	void DescriptorAllocator::AllocateNewPool()
 	{
-		PoolList.push_back(Device->CreateDescriptorSetPool(DescriptorSetsPerPool, {
-			                                                   Subpools.begin(), Subpools.end()
-		                                                   }));
+		auto& Device = Renderer::Get().GetActiveDevice();
+		PoolList.push_back(Device.CreateDescriptorSetPool(DescriptorSetsPerPool, { Subpools.begin(), Subpools.end() }));
 	}
 }

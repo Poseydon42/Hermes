@@ -2,8 +2,7 @@
 
 #include "RenderingEngine/GPUInteractionUtilities.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
-#include "RenderInterface/GenericRenderInterface/Buffer.h"
+#include "Vulkan/Device.h"
 
 namespace Hermes
 {
@@ -18,8 +17,10 @@ namespace Hermes
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 
-		VertexBuffer = Device.CreateBuffer(LockedAsset->GetRequiredVertexBufferSize(), RenderInterface::BufferUsageType::VertexBuffer | RenderInterface::BufferUsageType::CopyDestination);
-		IndexBuffer = Device.CreateBuffer(LockedAsset->GetRequiredIndexBufferSize(), RenderInterface::BufferUsageType::IndexBuffer | RenderInterface::BufferUsageType::CopyDestination);
+		VertexBuffer = Device.CreateBuffer(LockedAsset->GetRequiredVertexBufferSize(),
+		                                   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+		IndexBuffer = Device.CreateBuffer(LockedAsset->GetRequiredIndexBufferSize(),
+		                                  VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 
 		GPUInteractionUtilities::UploadDataToGPUBuffer(LockedAsset->GetRawVertexData(), LockedAsset->GetRequiredVertexBufferSize(), 0, *VertexBuffer);
 		GPUInteractionUtilities::UploadDataToGPUBuffer(LockedAsset->GetRawIndexData(), LockedAsset->GetRequiredIndexBufferSize(), 0, *IndexBuffer);
@@ -35,12 +36,12 @@ namespace Hermes
 		return std::shared_ptr<MeshBuffer>(new MeshBuffer(std::move(InAsset)));
 	}
 
-	const RenderInterface::Buffer& MeshBuffer::GetVertexBuffer() const
+	const Vulkan::Buffer& MeshBuffer::GetVertexBuffer() const
 	{
 		return *VertexBuffer;
 	}
 
-	const RenderInterface::Buffer& MeshBuffer::GetIndexBuffer() const
+	const Vulkan::Buffer& MeshBuffer::GetIndexBuffer() const
 	{
 		return *IndexBuffer;
 	}
@@ -54,7 +55,7 @@ namespace Hermes
 	{
 		HERMES_ASSERT(IsReady());
 
-		MeshDrawInformation Result;
+		MeshDrawInformation Result = {};
 		Result.IndexCount = IndexCount;
 		Result.IndexOffset = 0;
 		Result.VertexOffset = 0;

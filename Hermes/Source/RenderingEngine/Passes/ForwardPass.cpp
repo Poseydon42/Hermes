@@ -6,23 +6,23 @@
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Renderer.h"
+#include "RenderingEngine/SharedData.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/GeometryList.h"
 #include "RenderingEngine/Scene/Scene.h"
-#include "RenderInterface/GenericRenderInterface/Buffer.h"
-#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
-#include "RenderInterface/GenericRenderInterface/Fence.h"
-#include "RenderInterface/GenericRenderInterface/Pipeline.h"
-#include "RenderInterface/GenericRenderInterface/Queue.h"
-#include "RenderInterface/GenericRenderInterface/Shader.h"
-#include "RenderingEngine/SharedData.h"
+#include "Vulkan/Buffer.h"
+#include "Vulkan/CommandBuffer.h"
+#include "Vulkan/Device.h"
+#include "Vulkan/Fence.h"
+#include "Vulkan/Pipeline.h"
+#include "Vulkan/Queue.h"
+#include "Vulkan/RenderPass.h"
 
 namespace Hermes
 {
-	std::unique_ptr<RenderInterface::Image> ForwardPass::PrecomputedBRDFImage;
-	std::unique_ptr<RenderInterface::ImageView> ForwardPass::PrecomputedBRDFView;
-	std::unique_ptr<RenderInterface::Sampler> ForwardPass::PrecomputedBRDFSampler;
+	std::unique_ptr<Vulkan::Image> ForwardPass::PrecomputedBRDFImage;
+	std::unique_ptr<Vulkan::ImageView> ForwardPass::PrecomputedBRDFView;
+	std::unique_ptr<Vulkan::Sampler> ForwardPass::PrecomputedBRDFSampler;
 
 	ForwardPass::ForwardPass()
 	{
@@ -30,38 +30,36 @@ namespace Hermes
 
 		SceneUBODescriptorSet = Renderer::Get().GetDescriptorAllocator().
 		                                        Allocate(Renderer::Get().GetGlobalDataDescriptorSetLayout());
-		SceneUBOBuffer = Device.CreateBuffer(sizeof(GlobalSceneData),
-		                                     RenderInterface::BufferUsageType::UniformBuffer |
-		                                     RenderInterface::BufferUsageType::CPUAccessible);
+		SceneUBOBuffer = Device.CreateBuffer(sizeof(GlobalSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, true);
 
-		RenderInterface::SamplerDescription SamplerDesc = {};
-		SamplerDesc.AddressingModeU = SamplerDesc.AddressingModeV = RenderInterface::AddressingMode::Repeat;
-		SamplerDesc.MinificationFilteringMode = SamplerDesc.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
-		SamplerDesc.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
-		SamplerDesc.MipMode = RenderInterface::MipmappingMode::Linear;
-		SamplerDesc.MinMipLevel = 0.0f;
-		SamplerDesc.MaxMipLevel = 16.0f; // NOTE : 65536 * 65536 textures is more than enough :)
-		SamplerDesc.MipBias = 0.0f;
+		Vulkan::SamplerDescription SamplerDesc = {};
+		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		SamplerDesc.MagnificationFilter = VK_FILTER_LINEAR;
+		SamplerDesc.MinificationFilter = VK_FILTER_LINEAR;
+		SamplerDesc.CoordinateSystem = Vulkan::CoordinateSystem::Normalized;
+		SamplerDesc.MipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		SamplerDesc.MinLOD = 0.0f;
+		SamplerDesc.MaxLOD = 16.0f; // NOTE : 65536 * 65536 textures is more than enough :)
+		SamplerDesc.LODBias = 0.0f;
 		EnvmapSampler = Device.CreateSampler(SamplerDesc);
-
-		VertexShader = Device.CreateShader(L"Shaders/Bin/forward_vert.glsl.spv",
-		                                   RenderInterface::ShaderType::VertexShader);
-		FragmentShader = Device.CreateShader(L"Shaders/Bin/forward_frag.glsl.spv",
-		                                     RenderInterface::ShaderType::FragmentShader);
 
 		Description.Callback.Bind<ForwardPass, &ForwardPass::PassCallback>(this);
 
 		Attachment Color = {};
 		Color.Name = L"Color";
-		Color.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		Color.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
-		Color.ClearColor.R = Color.ClearColor.G = Color.ClearColor.B = Color.ClearColor.A = 1.0f;
+		Color.LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		Color.StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		Color.ClearColor.color.float32[0] = 1.0f;
+		Color.ClearColor.color.float32[1] = 1.0f;
+		Color.ClearColor.color.float32[2] = 1.0f;
+		Color.ClearColor.color.float32[3] = 1.0f;
 		Color.Binding = BindingMode::ColorAttachment;
+
 		Attachment Depth = {};
 		Depth.Name = L"Depth";
-		Depth.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		Depth.StencilLoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		Depth.ClearColor.Depth = 0.0f;
+		Depth.LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		Depth.StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		Depth.ClearColor.depthStencil.depth = 0.0f;
 		Depth.Binding = BindingMode::DepthStencilAttachment;
 		Description.Attachments = { Color, Depth };
 	}
@@ -71,8 +69,8 @@ namespace Hermes
 		return Description;
 	}
 
-	void ForwardPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer, const RenderInterface::RenderPass&,
-	                               const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
+	void ForwardPass::PassCallback(Vulkan::CommandBuffer& CommandBuffer, const Vulkan::RenderPass&,
+	                               const std::vector<std::pair<const Vulkan::Image*, const Vulkan::ImageView*>>&,
 	                               const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics, bool)
 	{
 		HERMES_PROFILE_FUNC();
@@ -103,12 +101,11 @@ namespace Hermes
 
 		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, *SceneUBOBuffer, 0,
 		                                        static_cast<uint32>(SceneUBOBuffer->GetSize()));
-		SceneUBODescriptorSet->UpdateWithImageAndSampler(1, 0, Scene.GetIrradianceEnvmap().GetDefaultView(), *EnvmapSampler,
-		                                                 RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
-		SceneUBODescriptorSet->UpdateWithImageAndSampler(2, 0, Scene.GetSpecularEnvmap().GetDefaultView(), *EnvmapSampler,
-		                                                 RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
-		SceneUBODescriptorSet->UpdateWithImageAndSampler(3, 0, *PrecomputedBRDFView, *PrecomputedBRDFSampler,
-		                                                 RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		SceneUBODescriptorSet->UpdateWithImageAndSampler(1, 0, Scene.GetIrradianceEnvmap().GetDefaultView(),
+		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		SceneUBODescriptorSet->UpdateWithImageAndSampler(2, 0, Scene.GetSpecularEnvmap().GetDefaultView(),
+		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		SceneUBODescriptorSet->UpdateWithImageAndSampler(3, 0, *PrecomputedBRDFView, *PrecomputedBRDFSampler,		                                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		for (const auto& Mesh : GeometryList.GetMeshList())
 		{
@@ -127,13 +124,13 @@ namespace Hermes
 			Metrics.DescriptorSetBindCount++;
 			CommandBuffer.BindVertexBuffer(MeshBuffer->GetVertexBuffer());
 			Metrics.BufferBindCount++;
-			CommandBuffer.BindIndexBuffer(MeshBuffer->GetIndexBuffer(), RenderInterface::IndexSize::Uint32);
+			CommandBuffer.BindIndexBuffer(MeshBuffer->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
 			Metrics.BufferBindCount++;
-			CommandBuffer.UploadPushConstants(MaterialPipeline, RenderInterface::ShaderType::VertexShader,
+			CommandBuffer.UploadPushConstants(MaterialPipeline, VK_SHADER_STAGE_VERTEX_BIT,
 			                                  &Mesh.TransformationMatrix, sizeof(Mesh.TransformationMatrix), 0);
 			const auto& DrawInformation = MeshBuffer->GetDrawInformation();
 			CommandBuffer.DrawIndexed(DrawInformation.IndexCount, 1, DrawInformation.IndexOffset,
-			                          DrawInformation.VertexOffset, 0);
+			                          static_cast<int32>(DrawInformation.VertexOffset), 0);
 			Metrics.DrawCallCount++;
 		}
 	}
@@ -141,7 +138,7 @@ namespace Hermes
 	void ForwardPass::EnsurePrecomputedBRDF()
 	{
 		static constexpr Vec2ui Dimensions { 512 };
-		static constexpr RenderInterface::DataFormat Format = RenderInterface::DataFormat::R16G16SignedFloat;
+		static constexpr VkFormat Format = VK_FORMAT_R16G16_SFLOAT;
 
 		// First, destroy the previous sampler and BRDF image
 		PrecomputedBRDFImage.reset();
@@ -152,63 +149,76 @@ namespace Hermes
 		auto& Device = Renderer::Get().GetActiveDevice();
 
 		PrecomputedBRDFImage = Device.CreateImage(Dimensions,
-		                                     RenderInterface::ImageUsageType::ColorAttachment |
-		                                     RenderInterface::ImageUsageType::Sampled, Format, 1,
-		                                     RenderInterface::ImageLayout::Undefined);
+		                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		                                          Format, 1);
 		PrecomputedBRDFView = PrecomputedBRDFImage->CreateDefaultImageView();
 
-		RenderInterface::RenderPassAttachment OutputAttachment = {};
-		OutputAttachment.Type = RenderInterface::AttachmentType::Color;
-		OutputAttachment.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		OutputAttachment.StoreOp = RenderInterface::AttachmentStoreOp::Store;
-		OutputAttachment.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
-		OutputAttachment.StencilStoreOp = RenderInterface::AttachmentStoreOp::Undefined;
-		OutputAttachment.Format = PrecomputedBRDFImage->GetDataFormat();
-		OutputAttachment.LayoutAtStart = RenderInterface::ImageLayout::ColorAttachmentOptimal;
-		OutputAttachment.LayoutAtEnd = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
-		auto RenderPass = Device.CreateRenderPass({ OutputAttachment });
+		VkAttachmentDescription OutputAttachment = {};
+		OutputAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		OutputAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		OutputAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		OutputAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		OutputAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		OutputAttachment.format = PrecomputedBRDFImage->GetDataFormat();
+		OutputAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		OutputAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		auto RenderPass = Device.CreateRenderPass({ { OutputAttachment, Vulkan::AttachmentType::Color } });
 
-		auto VertexShader = Device.CreateShader(L"Shaders/Bin/fs_vert.glsl.spv", RenderInterface::ShaderType::VertexShader);
-		auto FragmentShader = Device.CreateShader(L"Shaders/Bin/precompute_brdf.glsl.spv", RenderInterface::ShaderType::FragmentShader);
+		auto VertexShader = Device.CreateShader(L"Shaders/Bin/fs_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
+		auto FragmentShader = Device.CreateShader(L"Shaders/Bin/precompute_brdf.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		RenderInterface::PipelineDescription PipelineDesc = {};
+		Vulkan::PipelineDescription PipelineDesc = {};
 		PipelineDesc.ShaderStages = { VertexShader.get(), FragmentShader.get() };
-		PipelineDesc.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
-		PipelineDesc.Viewport.Origin = { 0 };
-		PipelineDesc.Viewport.Dimensions = Dimensions;
-		PipelineDesc.Rasterizer.Fill = RenderInterface::FillMode::Fill;
-		PipelineDesc.Rasterizer.Cull = RenderInterface::CullMode::Back;
-		PipelineDesc.Rasterizer.Direction = RenderInterface::FaceDirection::CounterClockwise;
-		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = false;
-		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = false;
+		PipelineDesc.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		PipelineDesc.Viewport.x = 0;
+		PipelineDesc.Viewport.y = 0;
+		PipelineDesc.Viewport.width = static_cast<float>(PrecomputedBRDFImage->GetDimensions().X);
+		PipelineDesc.Viewport.height = static_cast<float>(PrecomputedBRDFImage->GetDimensions().Y);
+		PipelineDesc.Viewport.minDepth = 0.0f;
+		PipelineDesc.Viewport.maxDepth = 1.0f;
+		PipelineDesc.Scissor.offset = { 0, 0 };
+		PipelineDesc.Scissor.extent = {
+			PrecomputedBRDFImage->GetDimensions().X, PrecomputedBRDFImage->GetDimensions().Y
+		};
+		PipelineDesc.PolygonMode = VK_POLYGON_MODE_FILL;
+		PipelineDesc.CullMode = VK_CULL_MODE_BACK_BIT;
+		PipelineDesc.FaceDirection = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		PipelineDesc.IsDepthTestEnabled = false;
+		PipelineDesc.IsDepthWriteEnabled = false;
 		auto Pipeline = Device.CreatePipeline(*RenderPass, PipelineDesc);
-		
-		auto RenderTarget = Device.CreateRenderTarget(*RenderPass, { PrecomputedBRDFView.get() },
-		                                              PrecomputedBRDFImage->GetSize());
 
-		auto& Queue = Device.GetQueue(RenderInterface::QueueType::Render);
+		auto Framebuffer = Device.CreateFramebuffer(*RenderPass, { PrecomputedBRDFView.get() },
+		                                            PrecomputedBRDFImage->GetDimensions());
+
+		auto& Queue = Device.GetQueue(VK_QUEUE_GRAPHICS_BIT);
 		auto CommandBuffer = Queue.CreateCommandBuffer(true);
 		auto Fence = Device.CreateFence();
 
 		/*
 		 * NOTE : steps to take:
-		 *   1) Transition the precomputed BRDF image to color attachment optimal
+		 *   1) Transition the precomputed BRDF image to VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
 		 *	 2) Begin render pass
 		 *	 3) Bind pipeline
 		 *	 4) Issue draw call for 2 triangles (6 vertices)
 		 *	 5) End render pass/recording
 		 */
 		CommandBuffer->BeginRecording();
-		RenderInterface::ImageMemoryBarrier Barrier = {};
-		Barrier.OldLayout = RenderInterface::ImageLayout::Undefined;
-		Barrier.NewLayout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
-		Barrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::None;
-		Barrier.OperationsThatCanStartAfter = RenderInterface::AccessType::ColorAttachmentWrite;
-		Barrier.BaseMipLevel = 0;
-		Barrier.MipLevelCount = 1;
-		CommandBuffer->InsertImageMemoryBarrier(*PrecomputedBRDFImage, Barrier, RenderInterface::PipelineStage::BottomOfPipe,
-		                                        RenderInterface::PipelineStage::ColorAttachmentOutput);
-		CommandBuffer->BeginRenderPass(*RenderPass, *RenderTarget, { { 0.0f, 0.0f, 0.0f, 1.0f } });
+		VkImageMemoryBarrier Barrier = {};
+		Barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		Barrier.srcAccessMask = VK_ACCESS_NONE;
+		Barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		Barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		Barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		Barrier.image = PrecomputedBRDFImage->GetImage();
+		Barrier.subresourceRange = PrecomputedBRDFImage->GetFullSubresourceRange();
+		CommandBuffer->InsertImageMemoryBarrier(Barrier, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+		                                        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+		VkClearValue ClearValue = {};
+		ClearValue.color.float32[0] = 0.0f;
+		ClearValue.color.float32[1] = 0.0f;
+		ClearValue.color.float32[2] = 0.0f;
+		ClearValue.color.float32[3] = 1.0f;
+		CommandBuffer->BeginRenderPass(*RenderPass, *Framebuffer, { &ClearValue, 1 });
 		CommandBuffer->BindPipeline(*Pipeline);
 		CommandBuffer->Draw(6, 1, 0, 0);
 		CommandBuffer->EndRenderPass();
@@ -216,15 +226,15 @@ namespace Hermes
 
 		Queue.SubmitCommandBuffer(*CommandBuffer, Fence.get());
 
-		RenderInterface::SamplerDescription SamplerDesc = {};
-		SamplerDesc.AddressingModeU = SamplerDesc.AddressingModeV = RenderInterface::AddressingMode::Repeat;
-		SamplerDesc.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
-		SamplerDesc.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
-		SamplerDesc.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
-		SamplerDesc.MipMode = RenderInterface::MipmappingMode::Linear;
-		SamplerDesc.MinMipLevel = 0.0f;
-		SamplerDesc.MaxMipLevel = 1.0;
-		SamplerDesc.MipBias = 0.0f;
+		Vulkan::SamplerDescription SamplerDesc = {};
+		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		SamplerDesc.MinificationFilter = VK_FILTER_LINEAR;
+		SamplerDesc.MagnificationFilter = VK_FILTER_LINEAR;
+		SamplerDesc.CoordinateSystem = Vulkan::CoordinateSystem::Normalized;
+		SamplerDesc.MipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		SamplerDesc.MinLOD = 0.0f;
+		SamplerDesc.MaxLOD = 1.0f;
+		SamplerDesc.LODBias = 0.0f;
 		PrecomputedBRDFSampler = Device.CreateSampler(SamplerDesc);
 
 		Fence->Wait(UINT64_MAX);

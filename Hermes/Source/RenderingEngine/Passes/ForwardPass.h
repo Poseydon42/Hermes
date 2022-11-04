@@ -4,11 +4,10 @@
 
 #include "Core/Core.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
-#include "RenderInterface/GenericRenderInterface/Buffer.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
-#include "RenderInterface/GenericRenderInterface/Pipeline.h"
-#include "RenderInterface/GenericRenderInterface/Sampler.h"
-#include "RenderInterface/GenericRenderInterface/Shader.h"
+#include "Vulkan/Buffer.h"
+#include "Vulkan/Image.h"
+#include "Vulkan/Pipeline.h"
+#include "Vulkan/Sampler.h"
 
 namespace Hermes
 {
@@ -22,23 +21,20 @@ namespace Hermes
 		const PassDesc& GetPassDescription() const;
 
 	private:
-		
-		std::unique_ptr<RenderInterface::DescriptorSet> SceneUBODescriptorSet;
-		std::unique_ptr<RenderInterface::Buffer> SceneUBOBuffer;
+		std::unique_ptr<Vulkan::DescriptorSet> SceneUBODescriptorSet;
+		std::unique_ptr<Vulkan::Buffer> SceneUBOBuffer;
 
-		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
-		std::unique_ptr<RenderInterface::Sampler> EnvmapSampler;
-		std::unique_ptr<RenderInterface::Shader> VertexShader, FragmentShader;
+		std::unique_ptr<Vulkan::Sampler> EnvmapSampler;
 
-		static std::unique_ptr<RenderInterface::Image> PrecomputedBRDFImage;
-		static std::unique_ptr<RenderInterface::ImageView> PrecomputedBRDFView;
-		static std::unique_ptr<RenderInterface::Sampler> PrecomputedBRDFSampler;
+		static std::unique_ptr<Vulkan::Image> PrecomputedBRDFImage;
+		static std::unique_ptr<Vulkan::ImageView> PrecomputedBRDFView;
+		static std::unique_ptr<Vulkan::Sampler> PrecomputedBRDFSampler;
 
 		PassDesc Description;
 
-		void PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
-		                  const RenderInterface::RenderPass& PassInstance,
-		                  const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>
+		void PassCallback(Vulkan::CommandBuffer& CommandBuffer,
+		                  const Vulkan::RenderPass& PassInstance,
+		                  const std::vector<std::pair<const Vulkan::Image*, const Vulkan::ImageView*>>
 		                  & Attachments, const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics,
 		                  bool ResourcesWereRecreated);
 

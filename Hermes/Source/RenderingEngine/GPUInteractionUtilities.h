@@ -5,7 +5,8 @@
 
 #include "Core/Core.h"
 #include "Math/Math.h"
-#include "RenderInterface/GenericRenderInterface/Forward.h"
+#include "Vulkan/Forward.h"
+#include "Vulkan/VulkanCore.h"
 
 namespace Hermes
 {
@@ -14,7 +15,7 @@ namespace Hermes
 	public:
 		static void UploadDataToGPUBuffer(
 			const void* Data, size_t DataSize,
-			size_t TargetOffset, RenderInterface::Buffer& Target);
+			size_t TargetOffset, const Vulkan::Buffer& Target);
 
 		/**
 		 * Uploads image data stored in @param Data to @param Destination via staging buffer
@@ -27,19 +28,19 @@ namespace Hermes
 		 * @param Side Side of cubemap image to upload data to(ignored if image is not cubemap)
 		 */
 		static void UploadDataToGPUImage(const void* Data, Vec2ui Offset, Vec2ui Dimensions, size_t BytesPerPixel,
-		                                 uint32 MipLevel, RenderInterface::Image& Destination,
-		                                 RenderInterface::ImageLayout CurrentLayout,
-		                                 RenderInterface::ImageLayout LayoutToTransitionTo,
-		                                 std::optional<RenderInterface::CubemapSide> Side = {});
+		                                 uint32 MipLevel, Vulkan::Image& Destination,
+		                                 VkImageLayout CurrentLayout,
+		                                 VkImageLayout LayoutToTransitionTo,
+		                                 std::optional<Vulkan::CubemapSide> Side = {});
 
-		static void GenerateMipMaps(RenderInterface::Image& Image,
-		                            RenderInterface::ImageLayout CurrentLayout,
-		                            RenderInterface::ImageLayout LayoutToTransitionTo,
-		                            std::optional<RenderInterface::CubemapSide> Side = {});
+		static void GenerateMipMaps(const Vulkan::Image& Image,
+		                            VkImageLayout CurrentLayout,
+		                            VkImageLayout LayoutToTransitionTo,
+		                            std::optional<Vulkan::CubemapSide> Side = {});
 
 	private:
-		static RenderInterface::Buffer& EnsureStagingBuffer();
+		static Vulkan::Buffer& EnsureStagingBuffer();
 
-		static std::shared_ptr<RenderInterface::Buffer> StagingBuffer;
+		static std::unique_ptr<Vulkan::Buffer> StagingBuffer;
 	};
 }

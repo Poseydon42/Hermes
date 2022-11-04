@@ -1,26 +1,27 @@
 ﻿#include "GPUInteractionUtilities.h"
 
-#include "RenderInterface/GenericRenderInterface/Device.h"
-#include "RenderInterface/GenericRenderInterface/Queue.h"
-#include "RenderInterface/GenericRenderInterface/Buffer.h"
-#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
-#include "RenderInterface/GenericRenderInterface/Fence.h"
-#include "Math/Common.h"
-#include "RenderingEngine/Renderer.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
 #include "Logging/Logger.h"
+#include "Math/Common.h"
+#include "RenderingEngine/DescriptorAllocator.h"
+#include "RenderingEngine/Renderer.h"
+#include "Vulkan/Buffer.h"
+#include "Vulkan/CommandBuffer.h"
+#include "Vulkan/Device.h"
+#include "Vulkan/Fence.h"
+#include "Vulkan/Image.h"
+#include "Vulkan/Queue.h"
 
 namespace Hermes
 {
-	std::shared_ptr<RenderInterface::Buffer> GPUInteractionUtilities::StagingBuffer;
+	std::unique_ptr<Vulkan::Buffer> GPUInteractionUtilities::StagingBuffer;
 
 	// TODO : do we need to perform ownership transfer between render and transfer queue and vice-versa?
-	void GPUInteractionUtilities::UploadDataToGPUBuffer(const void* Data, size_t DataSize, size_t TargetOffset, RenderInterface::Buffer& Target)
+	void GPUInteractionUtilities::UploadDataToGPUBuffer(const void* Data, size_t DataSize, size_t TargetOffset, const Vulkan::Buffer& Target)
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
 
 		auto& CurrentStagingBuffer = EnsureStagingBuffer();
-		auto& TransferQueue = Device.GetQueue(RenderInterface::QueueType::Transfer);
+		auto& TransferQueue = Device.GetQueue(VK_QUEUE_TRANSFER_BIT);
 		auto TransferCommandBuffer = TransferQueue.CreateCommandBuffer(true);
 		auto TransferFinishedFence = Device.CreateFence(true);
 		HERMES_ASSERT(TargetOffset + DataSize <= Target.GetSize())
@@ -30,18 +31,18 @@ namespace Hermes
 			size_t NumBytesToCopy = Math::Min(DataSize - DataOffset, CurrentStagingBuffer.GetSize());
 
 			auto* MappedBufferData = CurrentStagingBuffer.Map();
-			memcpy(MappedBufferData, reinterpret_cast<const uint8*>(Data) + DataOffset, NumBytesToCopy);
+			memcpy(MappedBufferData, static_cast<const uint8*>(Data) + DataOffset, NumBytesToCopy);
 			CurrentStagingBuffer.Unmap();
 
 			TransferFinishedFence->Wait(UINT64_MAX);
 			TransferFinishedFence->Reset();
 
 			TransferCommandBuffer->BeginRecording();
-			RenderInterface::BufferCopyRegion Region;
-			Region.NumBytes = NumBytesToCopy;
-			Region.SourceOffset = 0;
-			Region.DestinationOffset = TargetOffset + DataOffset;
-			TransferCommandBuffer->CopyBuffer(CurrentStagingBuffer, Target, { Region });
+			VkBufferCopy Copy;
+			Copy.size = NumBytesToCopy;
+			Copy.srcOffset = 0;
+			Copy.dstOffset = TargetOffset + DataOffset;
+			TransferCommandBuffer->CopyBuffer(CurrentStagingBuffer, Target, { &Copy, 1 });
 			TransferCommandBuffer->EndRecording();
 
 			TransferQueue.SubmitCommandBuffer(*TransferCommandBuffer, TransferFinishedFence.get());
@@ -51,20 +52,20 @@ namespace Hermes
 
 	void GPUInteractionUtilities::UploadDataToGPUImage(const void* Data, Vec2ui Offset, Vec2ui Dimensions,
 	                                                   size_t BytesPerPixel,
-	                                                   uint32 MipLevel, RenderInterface::Image& Destination,
-	                                                   RenderInterface::ImageLayout CurrentLayout,
-	                                                   RenderInterface::ImageLayout LayoutToTransitionTo,
-	                                                   std::optional<RenderInterface::CubemapSide> Side)
+	                                                   uint32 MipLevel, Vulkan::Image& Destination,
+	                                                   VkImageLayout CurrentLayout,
+	                                                   VkImageLayout LayoutToTransitionTo,
+	                                                   std::optional<Vulkan::CubemapSide> Side)
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
 
 		auto& CurrentStagingBuffer = EnsureStagingBuffer();
-		auto& TransferQueue = Device.GetQueue(RenderInterface::QueueType::Transfer);
+		auto& TransferQueue = Device.GetQueue(VK_QUEUE_TRANSFER_BIT);
 		auto TransferCommandBuffer = TransferQueue.CreateCommandBuffer(true);
 		auto TransferFinishedFence = Device.CreateFence(true);
 
-		HERMES_ASSERT(Offset.X + Dimensions.X <= Destination.GetSize().X);
-		HERMES_ASSERT(Offset.Y + Dimensions.Y <= Destination.GetSize().Y);
+		HERMES_ASSERT(Offset.X + Dimensions.X <= Destination.GetDimensions().X);
+		HERMES_ASSERT(Offset.Y + Dimensions.Y <= Destination.GetDimensions().Y);
 
 		size_t StagingBufferSize = CurrentStagingBuffer.GetSize();
 		size_t BytesPerRow = BytesPerPixel * Dimensions.X;
@@ -77,49 +78,60 @@ namespace Hermes
 
 			auto* Memory = CurrentStagingBuffer.Map();
 			size_t OffsetIntoSourceData = static_cast<size_t>(Row) * Dimensions.X * BytesPerPixel;
-			const void* CurrentDataPointer = reinterpret_cast<const uint8*>(Data) + OffsetIntoSourceData;
+			const void* CurrentDataPointer = static_cast<const uint8*>(Data) + OffsetIntoSourceData;
 			memcpy(Memory, CurrentDataPointer, RowsToCopy * BytesPerRow);
 			CurrentStagingBuffer.Unmap();
 
 			TransferCommandBuffer->BeginRecording();
 
-			if (CurrentLayout != RenderInterface::ImageLayout::TransferDestinationOptimal && Row == 0)
+			if (CurrentLayout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && Row == 0)
 			{
-				RenderInterface::ImageMemoryBarrier Barrier = {};
-				Barrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::None;
-				Barrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferWrite;
-				Barrier.OldLayout = CurrentLayout;
-				Barrier.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
-				Barrier.BaseMipLevel = 0;
-				Barrier.MipLevelCount = Destination.GetMipLevelsCount();
-				Barrier.Side = Side;
-				TransferCommandBuffer->InsertImageMemoryBarrier(
-					Destination, Barrier,
-					RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
+				VkImageMemoryBarrier Barrier = {};
+				Barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				Barrier.srcAccessMask = VK_ACCESS_NONE;
+				Barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+				Barrier.oldLayout = CurrentLayout;
+				Barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				Barrier.image = Destination.GetImage();
+				Barrier.subresourceRange = Destination.GetFullSubresourceRange();
+				if (Side.has_value())
+					Barrier.subresourceRange.baseArrayLayer = CubemapSideToArrayLayer(Side.value());
+				TransferCommandBuffer->InsertImageMemoryBarrier(Barrier, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+				                                                VK_PIPELINE_STAGE_TRANSFER_BIT);
 			}
 
-			RenderInterface::BufferToImageCopyRegion Region = {};
-			Region.ImageDimensions = { Dimensions.X, RowsToCopy };
-			Region.ImageOffset = { Offset.X, Offset.Y + Row };
-			Region.MipLevel = MipLevel;
-			Region.Side = Side;
-			TransferCommandBuffer->CopyBufferToImage(
-				CurrentStagingBuffer, Destination, RenderInterface::ImageLayout::TransferDestinationOptimal,
-				{ Region });
+			VkBufferImageCopy Copy = {};
+			Copy.imageExtent.width = Dimensions.X;
+			Copy.imageExtent.height = RowsToCopy;
+			Copy.imageExtent.depth = 1;
+			Copy.imageOffset.x = static_cast<int32>(Offset.X);
+			Copy.imageOffset.y = static_cast<int32>(Offset.Y + Row);
+			Copy.imageOffset.z = 0;
+			Copy.imageSubresource.mipLevel = MipLevel;
+			Copy.imageSubresource.layerCount = Destination.IsCubemap() ? 6 : 1;
+			Copy.imageSubresource.aspectMask = Destination.GetFullAspectMask();
+			if (Side.has_value())
+				Copy.imageSubresource.baseArrayLayer = CubemapSideToArrayLayer(Side.value());
+			TransferCommandBuffer->CopyBufferToImage(CurrentStagingBuffer, Destination,
+			                                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { &Copy, 1 });
 
 			if (Row + RowsPerSingleTransfer >= Dimensions.Y)
 			{
-				RenderInterface::ImageMemoryBarrier Barrier = {};
-				Barrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferWrite;
-				Barrier.OperationsThatCanStartAfter = RenderInterface::AccessType::None;
-				Barrier.OldLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
-				Barrier.NewLayout = LayoutToTransitionTo;
-				Barrier.BaseMipLevel = 0;
-				Barrier.MipLevelCount = Destination.GetMipLevelsCount();
-				Barrier.Side = Side;
-				TransferCommandBuffer->InsertImageMemoryBarrier(
-					Destination, Barrier,
-					RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);
+				VkImageMemoryBarrier Barrier = {};
+				Barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				Barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+				Barrier.dstAccessMask = VK_ACCESS_NONE;
+				Barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				Barrier.newLayout = LayoutToTransitionTo;
+				Barrier.image = Destination.GetImage();
+				Barrier.subresourceRange.baseMipLevel = 0;
+				Barrier.subresourceRange.levelCount = Destination.GetMipLevelsCount();
+				Barrier.subresourceRange.layerCount = Destination.IsCubemap() ? 6 : 1;
+				Barrier.subresourceRange.aspectMask = Vulkan::FullImageAspectMask(Destination.GetDataFormat());
+				if (Side.has_value())
+					Barrier.subresourceRange.baseArrayLayer = CubemapSideToArrayLayer(Side.value());
+				TransferCommandBuffer->InsertImageMemoryBarrier(Barrier, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				                                                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 			}
 
 			TransferCommandBuffer->EndRecording();
@@ -130,105 +142,124 @@ namespace Hermes
 		}
 	}
 
-	void GPUInteractionUtilities::GenerateMipMaps(RenderInterface::Image& Image,
-	                                              RenderInterface::ImageLayout CurrentLayout,
-	                                              RenderInterface::ImageLayout LayoutToTransitionTo,
-	                                              std::optional<RenderInterface::CubemapSide> Side)
+	void GPUInteractionUtilities::GenerateMipMaps(const Vulkan::Image& Image,
+	                                              VkImageLayout CurrentLayout,
+	                                              VkImageLayout LayoutToTransitionTo,
+	                                              std::optional<Vulkan::CubemapSide> Side)
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
 		
-		auto& RenderQueue = Device.GetQueue(RenderInterface::QueueType::Render);
-		auto RenderCommandBuffer = RenderQueue.CreateCommandBuffer(true);
+		auto& Queue = Device.GetQueue(VK_QUEUE_GRAPHICS_BIT);
+		auto CommandBuffer = Queue.CreateCommandBuffer(true);
 
-		RenderCommandBuffer->BeginRecording();
+		CommandBuffer->BeginRecording();
 
-		Vec2ui SourceMipLevelDimensions = Image.GetSize();
-		Vec2ui DestinationMipLevelDimensions = {};
+		auto SourceMipLevelDimensions = Vec2i(Image.GetDimensions());
+		Vec2i DestinationMipLevelDimensions = {};
 		for (uint32 CurrentMipLevel = 1; CurrentMipLevel < Image.GetMipLevelsCount(); CurrentMipLevel++)
 		{
-			RenderInterface::ImageMemoryBarrier SourceMipLevelBarrier = {};
-			SourceMipLevelBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferWrite;
-			SourceMipLevelBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferRead;
+			VkImageMemoryBarrier PerLevelMemoryBarriers[2] = {};
+
+			// Source mip level barrier
+			PerLevelMemoryBarriers[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			PerLevelMemoryBarriers[0].image = Image.GetImage();
+			PerLevelMemoryBarriers[0].srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			PerLevelMemoryBarriers[0].dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 			// If the mip level that we're going to blit from is 0, then its layout
 			// wasn't changed in this function, in otherwise layout is in transfer destination
 			// optimal layout because we've performed blits into it in previous loop iterations
-			SourceMipLevelBarrier.OldLayout = CurrentMipLevel == 1 ? CurrentLayout : RenderInterface::ImageLayout::TransferDestinationOptimal;
-			SourceMipLevelBarrier.NewLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
-			SourceMipLevelBarrier.BaseMipLevel = CurrentMipLevel - 1;
-			SourceMipLevelBarrier.MipLevelCount = 1;
-			SourceMipLevelBarrier.Side = Side;
+			PerLevelMemoryBarriers[0].oldLayout = (CurrentMipLevel == 1
+				                                   ? CurrentLayout
+				                                   : VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			PerLevelMemoryBarriers[0].newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			PerLevelMemoryBarriers[0].subresourceRange.aspectMask = Image.GetFullAspectMask();
+			PerLevelMemoryBarriers[0].subresourceRange.baseArrayLayer = Side.has_value()
+				                                                            ? CubemapSideToArrayLayer(Side.value())
+				                                                            : 0;
+			PerLevelMemoryBarriers[0].subresourceRange.layerCount = 1;
+			PerLevelMemoryBarriers[0].subresourceRange.baseMipLevel = CurrentMipLevel - 1;
+			PerLevelMemoryBarriers[0].subresourceRange.levelCount = 1;
 
-			RenderInterface::ImageMemoryBarrier DestinationMipLevelBarrier = {};
-			DestinationMipLevelBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::None;
-			DestinationMipLevelBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferWrite;
-			DestinationMipLevelBarrier.OldLayout = CurrentLayout;
-			DestinationMipLevelBarrier.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
-			DestinationMipLevelBarrier.BaseMipLevel = CurrentMipLevel;
-			DestinationMipLevelBarrier.MipLevelCount = 1;
-			DestinationMipLevelBarrier.Side = Side;
+			// Destination mip level barrier
+			PerLevelMemoryBarriers[1].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			PerLevelMemoryBarriers[1].image = Image.GetImage();
+			PerLevelMemoryBarriers[1].srcAccessMask = VK_ACCESS_NONE;
+			PerLevelMemoryBarriers[1].dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			PerLevelMemoryBarriers[1].oldLayout = CurrentLayout;
+			PerLevelMemoryBarriers[1].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			PerLevelMemoryBarriers[1].subresourceRange.aspectMask = Image.GetFullAspectMask();
+			PerLevelMemoryBarriers[1].subresourceRange.baseMipLevel = CurrentMipLevel;
+			PerLevelMemoryBarriers[1].subresourceRange.levelCount = 1;
+			PerLevelMemoryBarriers[1].subresourceRange.layerCount = 1;
+			if (Side.has_value())
+				PerLevelMemoryBarriers[1].subresourceRange.baseArrayLayer = CubemapSideToArrayLayer(Side.value());
 
-			RenderCommandBuffer->InsertImageMemoryBarrier(
-				Image, SourceMipLevelBarrier,
-				RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::Transfer);
-			RenderCommandBuffer->InsertImageMemoryBarrier(
-				Image, DestinationMipLevelBarrier,
-				RenderInterface::PipelineStage::TopOfPipe, RenderInterface::PipelineStage::Transfer);
+			CommandBuffer->InsertImageMemoryBarriers(PerLevelMemoryBarriers, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
 
-			DestinationMipLevelDimensions.X = Math::Max(SourceMipLevelDimensions.X / 2, static_cast<uint32>(1));
-			DestinationMipLevelDimensions.Y = Math::Max(SourceMipLevelDimensions.Y / 2, static_cast<uint32>(1));
-			RenderInterface::ImageBlitRegion BlitInfo = {};
-			BlitInfo.SourceRegion.RectMin = { 0, 0 };
-			BlitInfo.SourceRegion.RectMax = SourceMipLevelDimensions;
-			BlitInfo.SourceRegion.MipLevel = CurrentMipLevel - 1;
-			BlitInfo.SourceRegion.AspectMask = RenderInterface::ImageAspect::Color; // TODO : fix
-			BlitInfo.SourceRegion.Side = Side;
-			BlitInfo.DestinationRegion.RectMin = { 0, 0 };
-			BlitInfo.DestinationRegion.RectMax = DestinationMipLevelDimensions;
-			BlitInfo.DestinationRegion.MipLevel = CurrentMipLevel;
-			BlitInfo.DestinationRegion.AspectMask = RenderInterface::ImageAspect::Color;
-			BlitInfo.DestinationRegion.Side = Side;
-			RenderCommandBuffer->BlitImage(
-				Image, RenderInterface::ImageLayout::TransferSourceOptimal,
-				Image, RenderInterface::ImageLayout::TransferDestinationOptimal,
-				{ BlitInfo }, RenderInterface::FilteringMode::Linear);
+			DestinationMipLevelDimensions.X = Math::Max(SourceMipLevelDimensions.X / 2, 1);
+			DestinationMipLevelDimensions.Y = Math::Max(SourceMipLevelDimensions.Y / 2, 1);
+
+			VkImageBlit BlitInfo = {};
+			BlitInfo.srcOffsets[0] = { 0, 0, 0 };
+			BlitInfo.srcOffsets[1] = { SourceMipLevelDimensions.X, SourceMipLevelDimensions.Y, 1 };
+			BlitInfo.srcSubresource.mipLevel = CurrentMipLevel - 1;
+			BlitInfo.srcSubresource.aspectMask = Image.GetFullAspectMask();
+			BlitInfo.srcSubresource.layerCount = 1;
+			if (Side.has_value())
+				BlitInfo.srcSubresource.baseArrayLayer = CubemapSideToArrayLayer(Side.value());
+
+			BlitInfo.dstOffsets[0] = { 0, 0, 0 };
+			BlitInfo.dstOffsets[1] = { DestinationMipLevelDimensions.X, DestinationMipLevelDimensions.Y, 1 };
+			BlitInfo.dstSubresource.mipLevel = CurrentMipLevel;
+			BlitInfo.dstSubresource.aspectMask = Image.GetFullAspectMask();
+			BlitInfo.dstSubresource.layerCount = 1;
+			if (Side.has_value())
+				BlitInfo.dstSubresource.baseArrayLayer = CubemapSideToArrayLayer(Side.value());
+			CommandBuffer->BlitImage(Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, Image,
+			                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { &BlitInfo, 1 }, VK_FILTER_LINEAR);
 
 			SourceMipLevelDimensions = DestinationMipLevelDimensions;
 		}
 
-		RenderInterface::ImageMemoryBarrier FinalBarrier = {};
-		FinalBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferRead | RenderInterface::AccessType::TransferWrite;
-		FinalBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead | RenderInterface::AccessType::MemoryWrite;
-		FinalBarrier.OldLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
-		FinalBarrier.NewLayout = LayoutToTransitionTo;
-		FinalBarrier.BaseMipLevel = 0;
-		// NOTE: because the last mip level will have layout transfer destination optimal
-		FinalBarrier.MipLevelCount = Image.GetMipLevelsCount() - 1;
-		FinalBarrier.Side = Side;
-		RenderCommandBuffer->InsertImageMemoryBarrier(Image, FinalBarrier, RenderInterface::PipelineStage::Transfer,
-		                                              RenderInterface::PipelineStage::TopOfPipe);
+		VkImageMemoryBarrier FinalBarrier = {};
+		FinalBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		FinalBarrier.image = Image.GetImage();
+		FinalBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+		FinalBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+		FinalBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		FinalBarrier.newLayout = LayoutToTransitionTo;
+		FinalBarrier.subresourceRange.baseMipLevel = 0;
+		// NOTE: because the last mip level will be in VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+		FinalBarrier.subresourceRange.levelCount = Image.GetMipLevelsCount() - 1;
+		FinalBarrier.subresourceRange.aspectMask = Image.GetFullAspectMask();
+		FinalBarrier.subresourceRange.layerCount = 1;
+		if (Side.has_value())
+			FinalBarrier.subresourceRange.baseArrayLayer = CubemapSideToArrayLayer(Side.value());
+		CommandBuffer->InsertImageMemoryBarrier(FinalBarrier, VK_PIPELINE_STAGE_TRANSFER_BIT,
+		                                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
 		// NOTE: insert the final barrier once again, but this time for the last mip level
-		FinalBarrier.OldLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
-		FinalBarrier.BaseMipLevel = Image.GetMipLevelsCount() - 1;
-		FinalBarrier.MipLevelCount = 1;
-		RenderCommandBuffer->InsertImageMemoryBarrier(Image, FinalBarrier, RenderInterface::PipelineStage::Transfer,
-		                                              RenderInterface::PipelineStage::TopOfPipe);
+		FinalBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		FinalBarrier.subresourceRange.baseMipLevel = Image.GetMipLevelsCount() - 1;
+		FinalBarrier.subresourceRange.levelCount = 1;
+		CommandBuffer->InsertImageMemoryBarrier(FinalBarrier, VK_PIPELINE_STAGE_TRANSFER_BIT,
+		                                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
-		RenderCommandBuffer->EndRecording();
+		CommandBuffer->EndRecording();
 		auto FinishFence = Device.CreateFence();
-		Device.GetQueue(RenderInterface::QueueType::Render).SubmitCommandBuffer(*RenderCommandBuffer, FinishFence.get());
+		Queue.SubmitCommandBuffer(*CommandBuffer, FinishFence.get());
 		FinishFence->Wait(UINT64_MAX);
 	}
 
-	RenderInterface::Buffer& GPUInteractionUtilities::EnsureStagingBuffer()
+	Vulkan::Buffer& GPUInteractionUtilities::EnsureStagingBuffer()
 	{
 		if (StagingBuffer)
 			return *StagingBuffer;
 
-		static constexpr size_t StagingBufferSize = 8 * 1024 * 1024;
+		static constexpr size_t StagingBufferSize = 8ull * 1024 * 1024;
 
 		auto& Device = Renderer::Get().GetActiveDevice();
-		StagingBuffer = Device.CreateBuffer(StagingBufferSize, RenderInterface::BufferUsageType::CPUAccessible | RenderInterface::BufferUsageType::CopySource);
+		StagingBuffer = Device.CreateBuffer(StagingBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true);
 		HERMES_ASSERT_LOG(StagingBuffer, L"Failed to create staging buffer with size %ull", StagingBufferSize);
 		return *StagingBuffer;
 	}

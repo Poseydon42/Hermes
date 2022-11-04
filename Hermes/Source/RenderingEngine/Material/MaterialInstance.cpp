@@ -3,7 +3,7 @@
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Texture.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
+#include "Vulkan/Device.h"
 
 namespace Hermes
 {
@@ -14,7 +14,7 @@ namespace Hermes
 
 		DescriptorSet->UpdateWithImageAndSampler(Property->Binding, 0, Value.GetDefaultView(),
 		                                         Renderer::Get().GetDefaultSampler(),
-		                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void MaterialInstance::PrepareForRender() const
@@ -37,7 +37,7 @@ namespace Hermes
 		return *BaseMaterial;
 	}
 
-	const RenderInterface::DescriptorSet& MaterialInstance::GetMaterialDescriptorSet() const
+	const Vulkan::DescriptorSet& MaterialInstance::GetMaterialDescriptorSet() const
 	{
 		return *DescriptorSet;
 	}
@@ -55,9 +55,7 @@ namespace Hermes
 
 		if (HasUniformBuffer)
 		{
-			UniformBuffer = Device.CreateBuffer(UniformBufferSize,
-			                                    RenderInterface::BufferUsageType::UniformBuffer |
-			                                    RenderInterface::BufferUsageType::CPUAccessible);
+			UniformBuffer = Device.CreateBuffer(UniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, true);
 			DescriptorSet->UpdateWithBuffer(0, 0, *UniformBuffer, 0, static_cast<uint32>(UniformBuffer->GetSize()));
 			IsDirty = true;
 		}		

@@ -4,10 +4,9 @@
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/SharedData.h"
-#include "RenderInterface/GenericRenderInterface/Shader.h"
-#include "RenderInterface/GenericRenderInterface/Descriptor.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
-#include "RenderInterface/GenericRenderInterface/Swapchain.h"
+#include "Vulkan/Descriptor.h"
+#include "Vulkan/Device.h"
+#include "Vulkan/Swapchain.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
 
 namespace Hermes
@@ -19,16 +18,16 @@ namespace Hermes
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 
-		std::vector<RenderInterface::DescriptorBinding> PerMaterialDataBindings;
+		std::vector<VkDescriptorSetLayoutBinding> PerMaterialDataBindings;
 
 		if (Reflection.RequiresUniformBuffer())
 		{
 			// Binding 0 is always material uniform buffer that stores numeric properties
-			RenderInterface::DescriptorBinding UBOBinding = {};
-			UBOBinding.Index = 0;
-			UBOBinding.DescriptorCount = 1;
-			UBOBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-			UBOBinding.Type = RenderInterface::DescriptorType::UniformBuffer;
+			VkDescriptorSetLayoutBinding UBOBinding = {};
+			UBOBinding.binding = 0;
+			UBOBinding.descriptorCount = 1;
+			UBOBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			UBOBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			PerMaterialDataBindings.push_back(UBOBinding);
 		}
 
@@ -38,70 +37,78 @@ namespace Hermes
 			if (Property.second.Type != MaterialPropertyType::Texture)
 				continue;
 
-			RenderInterface::DescriptorBinding Binding = {};
-			Binding.Index = Property.second.Binding;
-			Binding.DescriptorCount = 1;
-			Binding.Shader = RenderInterface::ShaderType::FragmentShader;
-			Binding.Type = RenderInterface::DescriptorType::CombinedSampler;
+			VkDescriptorSetLayoutBinding Binding = {};
+			Binding.binding = Property.second.Binding;
+			Binding.descriptorCount = 1;
+			Binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			Binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			PerMaterialDataBindings.push_back(Binding);
 		}
 
 		DescriptorSetLayout = Device.CreateDescriptorSetLayout(PerMaterialDataBindings);
 
-		auto VertexShader = Device.CreateShader(VertexShaderPath, RenderInterface::ShaderType::VertexShader);
-		auto FragmentShader = Device.CreateShader(FragmentShaderPath, RenderInterface::ShaderType::FragmentShader);
+		auto VertexShader = Device.CreateShader(VertexShaderPath, VK_SHADER_STAGE_VERTEX_BIT);
+		auto FragmentShader = Device.CreateShader(FragmentShaderPath, VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		RenderInterface::PipelineDescription PipelineDesc = {};
-		PipelineDesc.PushConstants.push_back({ RenderInterface::ShaderType::VertexShader, 0, sizeof(GlobalDrawcallData) });
+		Vulkan::PipelineDescription PipelineDesc = {};
+		PipelineDesc.PushConstants.push_back({ VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GlobalDrawcallData) });
 		PipelineDesc.ShaderStages = { VertexShader.get(), FragmentShader.get() };
-		PipelineDesc.DescriptorLayouts = {
+		PipelineDesc.DescriptorSetLayouts = {
 			&Renderer::Get().GetGlobalDataDescriptorSetLayout(), DescriptorSetLayout.get()
 		};
 
-		RenderInterface::VertexBinding VertexInput = {};
-		VertexInput.Index = 0;
-		VertexInput.Stride = sizeof(Vertex);
-		VertexInput.IsPerInstance = false;
-		PipelineDesc.VertexInput.VertexBindings.push_back(VertexInput);
+		VkVertexInputBindingDescription VertexInput = {};
+		VertexInput.binding = 0;
+		VertexInput.stride = sizeof(Vertex);
+		VertexInput.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		PipelineDesc.VertexInputBindings.push_back(VertexInput);
 
-		RenderInterface::VertexAttribute PositionAttribute = {}, TextureCoordinatesAttribute = {}, NormalAttribute = {}, TangentAttribute = {};
-		PositionAttribute.BindingIndex = 0;
-		PositionAttribute.Location = 0;
-		PositionAttribute.Offset = offsetof(Vertex, Position);
-		PositionAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(PositionAttribute);
+		VkVertexInputAttributeDescription PositionAttribute = {}, TextureCoordinatesAttribute = {}, NormalAttribute = {}, TangentAttribute = {};
+		PositionAttribute.binding = 0;
+		PositionAttribute.location = 0;
+		PositionAttribute.offset = offsetof(Vertex, Position);
+		PositionAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+		PipelineDesc.VertexInputAttributes.push_back(PositionAttribute);
 
-		TextureCoordinatesAttribute.BindingIndex = 0;
-		TextureCoordinatesAttribute.Location = 1;
-		TextureCoordinatesAttribute.Offset = offsetof(Vertex, TextureCoordinates);
-		TextureCoordinatesAttribute.Format = RenderInterface::DataFormat::R32G32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(TextureCoordinatesAttribute);
+		TextureCoordinatesAttribute.binding = 0;
+		TextureCoordinatesAttribute.location = 1;
+		TextureCoordinatesAttribute.offset = offsetof(Vertex, TextureCoordinates);
+		TextureCoordinatesAttribute.format = VK_FORMAT_R32G32_SFLOAT;
+		PipelineDesc.VertexInputAttributes.push_back(TextureCoordinatesAttribute);
 
-		NormalAttribute.BindingIndex = 0;
-		NormalAttribute.Location = 2;
-		NormalAttribute.Offset = offsetof(Vertex, Normal);
-		NormalAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(NormalAttribute);
+		NormalAttribute.binding = 0;
+		NormalAttribute.location = 2;
+		NormalAttribute.offset = offsetof(Vertex, Normal);
+		NormalAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+		PipelineDesc.VertexInputAttributes.push_back(NormalAttribute);
 
-		TangentAttribute.BindingIndex = 0;
-		TangentAttribute.Location = 3;
-		TangentAttribute.Offset = offsetof(Vertex, Tangent);
-		TangentAttribute.Format = RenderInterface::DataFormat::R32G32B32SignedFloat;
-		PipelineDesc.VertexInput.VertexAttributes.push_back(TangentAttribute);
+		TangentAttribute.binding = 0;
+		TangentAttribute.location = 3;
+		TangentAttribute.offset = offsetof(Vertex, Tangent);
+		TangentAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+		PipelineDesc.VertexInputAttributes.push_back(TangentAttribute);
 
-		PipelineDesc.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
+		PipelineDesc.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-		PipelineDesc.Viewport.Origin = { 0 };
+		PipelineDesc.Viewport.x = 0;
+		PipelineDesc.Viewport.y = 0;
+		PipelineDesc.Viewport.minDepth = 0.0f;
+		PipelineDesc.Viewport.maxDepth = 1.0f;
 		// TODO : recreate pipeline on resize
-		PipelineDesc.Viewport.Dimensions = Renderer::Get().GetSwapchain().GetSize();
+		PipelineDesc.Viewport.width = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().X);
+		PipelineDesc.Viewport.height = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().Y);
+		PipelineDesc.Scissor.offset = { 0, 0 };
+		PipelineDesc.Scissor.extent = {
+			Renderer::Get().GetSwapchain().GetDimensions().X, Renderer::Get().GetSwapchain().GetDimensions().Y
+		};
 
-		PipelineDesc.Rasterizer.Cull = RenderInterface::CullMode::Back;
-		PipelineDesc.Rasterizer.Direction = RenderInterface::FaceDirection::Clockwise;
-		PipelineDesc.Rasterizer.Fill = RenderInterface::FillMode::Fill;
+		PipelineDesc.CullMode = VK_CULL_MODE_BACK_BIT;
+		PipelineDesc.FaceDirection = VK_FRONT_FACE_CLOCKWISE;
+		PipelineDesc.PolygonMode = VK_POLYGON_MODE_FILL;
 
-		PipelineDesc.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::Greater;
-		PipelineDesc.DepthStencilStage.IsDepthTestEnabled = true;
-		PipelineDesc.DepthStencilStage.IsDepthWriteEnabled = true;
+		PipelineDesc.DepthCompareOperator = VK_COMPARE_OP_GREATER;
+		PipelineDesc.IsDepthTestEnabled = true;
+		PipelineDesc.IsDepthWriteEnabled = true;
 
 		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetGraphicsRenderPassObject(),
 		                                                            PipelineDesc);
@@ -123,12 +130,12 @@ namespace Hermes
 		return Reflection.FindProperty(Name);
 	}
 
-	const RenderInterface::DescriptorSetLayout& Material::GetDescriptorSetLayout() const
+	const Vulkan::DescriptorSetLayout& Material::GetDescriptorSetLayout() const
 	{
 		return *DescriptorSetLayout;
 	}
 
-	const RenderInterface::Pipeline& Material::GetPipeline() const
+	const Vulkan::Pipeline& Material::GetPipeline() const
 	{
 		return *Pipeline;
 	}

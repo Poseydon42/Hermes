@@ -8,7 +8,6 @@
 #include "Logging/FileLogDevice.h"
 #include "Core/Misc/StringUtils.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
-#include "RenderInterface/GenericRenderInterface/Instance.h"
 
 namespace Hermes
 {
@@ -55,11 +54,7 @@ namespace Hermes
 			return false;
 		}
 
-		auto RenderInterfaceInstance = RenderInterface::Instance::CreateRenderInterfaceInstance(ApplicationWindow);
-		auto GPUName = RenderInterfaceInstance->EnumerateAvailableDevices()[0].Name;
-		HERMES_LOG_INFO(L"Using GPU#0: %S", GPUName.c_str());
-		auto GPU = RenderInterfaceInstance->GetPhysicalDevice(0);
-		Renderer::Get().Init(*GPU);
+		Renderer::Get().Init();
 
 		GameScene = std::make_unique<Scene>();
 

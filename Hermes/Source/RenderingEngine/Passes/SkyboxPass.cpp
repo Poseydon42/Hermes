@@ -7,59 +7,57 @@
 #include "RenderingEngine/Texture.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"
-#include "RenderInterface/GenericRenderInterface/Descriptor.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
-#include "RenderInterface/GenericRenderInterface/Pipeline.h"
-#include "RenderInterface/GenericRenderInterface/RenderPass.h"
-#include "RenderInterface/GenericRenderInterface/Sampler.h"
-#include "RenderInterface/GenericRenderInterface/Shader.h"
-#include "RenderInterface/GenericRenderInterface/Swapchain.h"
+#include "Vulkan/Descriptor.h"
+#include "Vulkan/Device.h"
+#include "Vulkan/Image.h"
+#include "Vulkan/Pipeline.h"
+#include "Vulkan/RenderPass.h"
+#include "Vulkan/Sampler.h"
+#include "Vulkan/Swapchain.h"
 
 namespace Hermes
 {
-	SkyboxPass::SkyboxPass(std::shared_ptr<RenderInterface::Device> InDevice)
-		: Device(std::move(InDevice))
+	SkyboxPass::SkyboxPass()
 	{
+		auto& Device = Renderer::Get().GetActiveDevice();
 		auto& DescriptorAllocator = Renderer::Get().GetDescriptorAllocator();
 
-		RenderInterface::DescriptorBinding CubemapTextureBinding = {};
-		CubemapTextureBinding.Index = 0;
-		CubemapTextureBinding.DescriptorCount = 1;
-		CubemapTextureBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		CubemapTextureBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
-		DataDescriptorLayout = Device->CreateDescriptorSetLayout({ CubemapTextureBinding });
+		VkDescriptorSetLayoutBinding CubemapTextureBinding = {};
+		CubemapTextureBinding.binding = 0;
+		CubemapTextureBinding.descriptorCount = 1;
+		CubemapTextureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		CubemapTextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		DataDescriptorLayout = Device.CreateDescriptorSetLayout({ CubemapTextureBinding });
 
 		DataDescriptorSet = DescriptorAllocator.Allocate(*DataDescriptorLayout);
 
-		VertexShader = Device->CreateShader(L"Shaders/Bin/skybox_vert.glsl.spv",
-		                                    RenderInterface::ShaderType::VertexShader);
-		FragmentShader = Device->CreateShader(L"Shaders/Bin/skybox_frag.glsl.spv",
-		                                      RenderInterface::ShaderType::FragmentShader);
+		VertexShader = Device.CreateShader(L"Shaders/Bin/skybox_vert.glsl.spv",
+		                                   VK_SHADER_STAGE_VERTEX_BIT);
+		FragmentShader = Device.CreateShader(L"Shaders/Bin/skybox_frag.glsl.spv",
+		                                     VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		RenderInterface::SamplerDescription SamplerDesc = {};
-		SamplerDesc.AddressingModeU = RenderInterface::AddressingMode::Repeat;
-		SamplerDesc.AddressingModeV = RenderInterface::AddressingMode::Repeat;
+		Vulkan::SamplerDescription SamplerDesc = {};
+		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		// TODO : recreate when graphics settings change
 		SamplerDesc.AnisotropyLevel = Renderer::Get().GetGraphicsSettings().AnisotropyLevel;
-		SamplerDesc.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
-		SamplerDesc.MagnificationFilteringMode = RenderInterface::FilteringMode::Linear;
-		SamplerDesc.MinificationFilteringMode = RenderInterface::FilteringMode::Linear;
-		SamplerDesc.MipMode = RenderInterface::MipmappingMode::Linear;
-		EnvmapSampler = Device->CreateSampler(SamplerDesc);
+		SamplerDesc.CoordinateSystem = Vulkan::CoordinateSystem::Normalized;
+		SamplerDesc.MinificationFilter = VK_FILTER_LINEAR;
+		SamplerDesc.MagnificationFilter = VK_FILTER_LINEAR;
+		SamplerDesc.MipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		EnvmapSampler = Device.CreateSampler(SamplerDesc);
 
 		Description.Callback.Bind<SkyboxPass, &SkyboxPass::PassCallback>(this);
 
 		Description.Attachments.resize(2);
 		Description.Attachments[0].Name = L"ColorBuffer";
 		Description.Attachments[0].Binding = BindingMode::ColorAttachment;
-		Description.Attachments[0].LoadOp = RenderInterface::AttachmentLoadOp::Load;
-		Description.Attachments[0].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Description.Attachments[0].LoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		Description.Attachments[0].StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
 		Description.Attachments[1].Name = L"DepthBuffer";
 		Description.Attachments[1].Binding = BindingMode::DepthStencilAttachment;
-		Description.Attachments[1].LoadOp = RenderInterface::AttachmentLoadOp::Load;
-		Description.Attachments[1].StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
+		Description.Attachments[1].LoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		Description.Attachments[1].StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	}
 
 	const PassDesc& SkyboxPass::GetPassDescription() const
@@ -67,11 +65,12 @@ namespace Hermes
 		return Description;
 	}
 
-	void SkyboxPass::PassCallback(RenderInterface::CommandBuffer& CommandBuffer,
-	                              const RenderInterface::RenderPass& PassInstance,
+	void SkyboxPass::PassCallback(Vulkan::CommandBuffer& CommandBuffer,
+	                              const Vulkan::RenderPass& PassInstance,
 	                              const std::vector<std::pair<
-		                              const RenderInterface::Image*, const RenderInterface::ImageView*>>&,
-	                              const Scene& Scene, const GeometryList&, FrameMetrics& Metrics, bool ResourcesWereRecreated)
+		                              const Vulkan::Image*, const Vulkan::ImageView*>>&,
+	                              const Scene& Scene, const GeometryList&, FrameMetrics& Metrics,
+	                              bool ResourcesWereRecreated)
 	{
 		HERMES_PROFILE_FUNC();
 		if (ResourcesWereRecreated || !IsPipelineCreated)
@@ -91,13 +90,13 @@ namespace Hermes
 
 		const auto& ReflectionEnvmap = Scene.GetReflectionEnvmap();
 		DataDescriptorSet->UpdateWithImageAndSampler(0, 0, ReflectionEnvmap.GetDefaultView(), *EnvmapSampler,
-		                                             RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		CommandBuffer.BindPipeline(*Pipeline);
 		Metrics.PipelineBindCount++;
 		CommandBuffer.BindDescriptorSet(*DataDescriptorSet, *Pipeline, 0);
 		Metrics.DescriptorSetBindCount++;
-		CommandBuffer.UploadPushConstants(*Pipeline, RenderInterface::ShaderType::VertexShader, &ViewProjectionMatrix,
+		CommandBuffer.UploadPushConstants(*Pipeline, VK_SHADER_STAGE_VERTEX_BIT, &ViewProjectionMatrix,
 		                                  sizeof(ViewProjectionMatrix), 0);
 		// Drawing 36 vertices without bound vertex buffer because their coordinates
 		// are hardcoded in shader code
@@ -105,32 +104,35 @@ namespace Hermes
 		Metrics.DrawCallCount++;
 	}
 
-	void SkyboxPass::RecreatePipeline(const RenderInterface::RenderPass& Pass)
+	void SkyboxPass::RecreatePipeline(const Vulkan::RenderPass& Pass)
 	{
-		RenderInterface::PipelineDescription PipelineDescription = {};
+		Vulkan::PipelineDescription PipelineDescription = {};
 
-		PipelineDescription.PushConstants = { { RenderInterface::ShaderType::VertexShader, 0, sizeof(Mat4) } };
-
+		PipelineDescription.PushConstants = { { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Mat4) } };
 		PipelineDescription.ShaderStages = { VertexShader.get(), FragmentShader.get() };
+		PipelineDescription.DescriptorSetLayouts = { DataDescriptorLayout.get() };
 
-		PipelineDescription.DescriptorLayouts = { DataDescriptorLayout.get() };
+		PipelineDescription.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-		PipelineDescription.VertexInput.VertexAttributes = {};
-		PipelineDescription.VertexInput.VertexBindings = {};
+		PipelineDescription.Viewport.x = 0;
+		PipelineDescription.Viewport.y = 0;
+		PipelineDescription.Viewport.width = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().X);
+		PipelineDescription.Viewport.height = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().X);
+		PipelineDescription.Viewport.minDepth = 0.0f;
+		PipelineDescription.Viewport.maxDepth = 1.0f;
+		PipelineDescription.Scissor.offset = { 0, 0 };
+		PipelineDescription.Scissor.extent = {
+			Renderer::Get().GetSwapchain().GetDimensions().X, Renderer::Get().GetSwapchain().GetDimensions().Y
+		};
 
-		PipelineDescription.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
+		PipelineDescription.IsDepthTestEnabled = true;
+		PipelineDescription.DepthCompareOperator = VK_COMPARE_OP_GREATER_OR_EQUAL;
+		PipelineDescription.IsDepthWriteEnabled = false;
 
-		PipelineDescription.Viewport.Origin = { 0, 0 };
-		PipelineDescription.Viewport.Dimensions = Renderer::Get().GetSwapchain().GetSize();
+		PipelineDescription.CullMode = VK_CULL_MODE_BACK_BIT;
+		PipelineDescription.FaceDirection = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		PipelineDescription.PolygonMode = VK_POLYGON_MODE_FILL;
 
-		PipelineDescription.DepthStencilStage.IsDepthTestEnabled = true;
-		PipelineDescription.DepthStencilStage.ComparisonMode = RenderInterface::ComparisonOperator::GreaterOrEqual;
-		PipelineDescription.DepthStencilStage.IsDepthWriteEnabled = false;
-
-		PipelineDescription.Rasterizer.Cull = RenderInterface::CullMode::Back;
-		PipelineDescription.Rasterizer.Direction = RenderInterface::FaceDirection::CounterClockwise;
-		PipelineDescription.Rasterizer.Fill = RenderInterface::FillMode::Fill;
-
-		Pipeline = Device->CreatePipeline(Pass, PipelineDescription);
+		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Pass, PipelineDescription);
 	}
 }

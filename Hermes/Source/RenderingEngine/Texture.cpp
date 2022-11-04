@@ -5,18 +5,17 @@
 #include "AssetSystem/ImageAsset.h"
 #include "RenderingEngine/GPUInteractionUtilities.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderInterface/GenericRenderInterface/Descriptor.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
-#include "RenderInterface/GenericRenderInterface/Fence.h"
-#include "RenderInterface/GenericRenderInterface/Pipeline.h"
-#include "RenderInterface/GenericRenderInterface/Queue.h"
-#include "RenderInterface/GenericRenderInterface/Sampler.h"
-#include "RenderInterface/GenericRenderInterface/Shader.h"
+#include "Vulkan/Descriptor.h"
+#include "Vulkan/Image.h"
+#include "Vulkan/Device.h"
+#include "Vulkan/Fence.h"
+#include "Vulkan/Pipeline.h"
+#include "Vulkan/Queue.h"
+#include "Vulkan/Sampler.h"
 
 namespace Hermes
 {
-	static RenderInterface::DataFormat ChooseFormatFromImageType(ImageFormat Format, size_t BytesPerChannel, bool IsSRGB)
+	static VkFormat ChooseFormatFromImageType(ImageFormat Format, size_t BytesPerChannel, bool IsSRGB)
 	{
 		using FormatCombinationHashType = size_t;
 		constexpr auto ComputeHashForFormat = [](ImageFormat Format, uint8 BytesPerChannel,
@@ -25,29 +24,28 @@ namespace Hermes
 			return (static_cast<uint8>(Format) << 16) | (BytesPerChannel << 8) | static_cast<uint8>(IsSRGB);
 		};
 
-		static const std::unordered_map<FormatCombinationHashType, RenderInterface::DataFormat> FormatCombinations =
+		static const std::unordered_map<FormatCombinationHashType, VkFormat> FormatCombinations =
 		{
-			{ ComputeHashForFormat(ImageFormat::R, 1, true), RenderInterface::DataFormat::R8SRGB },
-			{ ComputeHashForFormat(ImageFormat::R, 1, false), RenderInterface::DataFormat::R8UnsignedNormalized },
-			{ ComputeHashForFormat(ImageFormat::R, 2, false), RenderInterface::DataFormat::R16UnsignedNormalized },
+			{ ComputeHashForFormat(ImageFormat::R, 1, true), VK_FORMAT_R8_SRGB },
+			{ ComputeHashForFormat(ImageFormat::R, 1, false), VK_FORMAT_R8_UNORM },
+			{ ComputeHashForFormat(ImageFormat::R, 2, false), VK_FORMAT_R16_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RG, 1, true), VK_FORMAT_R8G8_SRGB },
+			{ ComputeHashForFormat(ImageFormat::RG, 1, false), VK_FORMAT_R8G8_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RG, 2, false), VK_FORMAT_R16G16_UNORM },
 
-			{ ComputeHashForFormat(ImageFormat::RG, 1, true), RenderInterface::DataFormat::R8G8SRGB },
-			{ ComputeHashForFormat(ImageFormat::RG, 1, false), RenderInterface::DataFormat::R8G8UnsignedNormalized },
-			{ ComputeHashForFormat(ImageFormat::RG, 2, false), RenderInterface::DataFormat::R16G16UnsignedNormalized },
+			{ ComputeHashForFormat(ImageFormat::RA, 1, true), VK_FORMAT_R8G8_SRGB },
+			{ ComputeHashForFormat(ImageFormat::RA, 1, false), VK_FORMAT_R8G8_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RA, 2, false), VK_FORMAT_R16G16_UNORM },
 
-			{ ComputeHashForFormat(ImageFormat::RA, 1, true), RenderInterface::DataFormat::R8G8SRGB },
-			{ ComputeHashForFormat(ImageFormat::RA, 1, false), RenderInterface::DataFormat::R8G8UnsignedInteger },
-			{ ComputeHashForFormat(ImageFormat::RA, 2, false), RenderInterface::DataFormat::R16G16UnsignedNormalized },
+			{ ComputeHashForFormat(ImageFormat::RGBA, 1, true), VK_FORMAT_R8G8B8A8_SRGB },
+			{ ComputeHashForFormat(ImageFormat::RGBA, 1, false), VK_FORMAT_R8G8B8A8_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RGBA, 2, false), VK_FORMAT_R16G16B16A16_UNORM },
 
-			{ ComputeHashForFormat(ImageFormat::RGBA, 1, true), RenderInterface::DataFormat::R8G8B8A8SRGB },
-			{ ComputeHashForFormat(ImageFormat::RGBA, 1, false), RenderInterface::DataFormat::R8G8B8A8UnsignedNormalized },
-			{ ComputeHashForFormat(ImageFormat::RGBA, 2, false), RenderInterface::DataFormat::R16G16B16A16UnsignedNormalized },
+			{ ComputeHashForFormat(ImageFormat::RGBX, 1, true), VK_FORMAT_R8G8B8A8_SRGB },
+			{ ComputeHashForFormat(ImageFormat::RGBX, 1, false), VK_FORMAT_R8G8B8A8_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RGBX, 2, false), VK_FORMAT_R16G16B16A16_UNORM },
 
-			{ ComputeHashForFormat(ImageFormat::RGBX, 1, true), RenderInterface::DataFormat::R8G8B8A8SRGB },
-			{ ComputeHashForFormat(ImageFormat::RGBX, 1, false), RenderInterface::DataFormat::R8G8B8A8UnsignedNormalized },
-			{ ComputeHashForFormat(ImageFormat::RGBX, 2, false), RenderInterface::DataFormat::R16G16B16A16UnsignedNormalized },
-
-			{ ComputeHashForFormat(ImageFormat::HDR, 4, false), RenderInterface::DataFormat::R32G32B32SignedFloat }
+			{ ComputeHashForFormat(ImageFormat::HDR, 4, false), VK_FORMAT_R32G32B32_SFLOAT }
 		};
 
 		auto It = FormatCombinations.find(ComputeHashForFormat(Format, static_cast<uint8>(BytesPerChannel), IsSRGB));
@@ -55,7 +53,7 @@ namespace Hermes
 		{
 			HERMES_LOG_ERROR(L"Cannot choose data format for the folowing image properties: image format %hhu; %llu bytes per channel; %s color space",
 			                 static_cast<uint8>(Format), BytesPerChannel, (IsSRGB ? L"sRGB" : L"linear"));
-			return RenderInterface::DataFormat::Undefined;
+			return VK_FORMAT_UNDEFINED;
 		}
 		return It->second;
 	}
@@ -65,13 +63,13 @@ namespace Hermes
 		return std::shared_ptr<Texture>(new Texture(Source, UseAsSRGB, EnableMipMaps));
 	}
 
-	const RenderInterface::Image& Texture::GetRawImage() const
+	const Vulkan::Image& Texture::GetRawImage() const
 	{
 		HERMES_ASSERT(IsReady());
 		return *Image;
 	}
 
-	const RenderInterface::ImageView& Texture::GetDefaultView() const
+	const Vulkan::ImageView& Texture::GetDefaultView() const
 	{
 		return *DefaultView;
 	}
@@ -86,10 +84,10 @@ namespace Hermes
 		return Image->GetMipLevelsCount();
 	}
 
-	RenderInterface::DataFormat Texture::GetDataFormat() const
+	VkFormat Texture::GetDataFormat() const
 	{
 		if (!Image)
-			return RenderInterface::DataFormat::Undefined;
+			return VK_FORMAT_UNDEFINED;
 		return Image->GetDataFormat();
 	}
 
@@ -123,10 +121,9 @@ namespace Hermes
 
 		auto Format = ChooseFormatFromImageType(Source.GetImageFormat(), Source.GetBytesPerChannel(), UseAsSRGB);
 		Image = Renderer::Get().GetActiveDevice().CreateImage(Dimensions,
-		                                                      RenderInterface::ImageUsageType::Sampled |
-		                                                      RenderInterface::ImageUsageType::CopyDestination |
-		                                                      RenderInterface::ImageUsageType::CopySource, Format,
-		                                                      MipLevelCount, RenderInterface::ImageLayout::Undefined);
+		                                                      VK_IMAGE_USAGE_SAMPLED_BIT |
+		                                                      VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+		                                                      VK_IMAGE_USAGE_TRANSFER_DST_BIT, Format, MipLevelCount);
 
 		// NOTE : normally, after loading image we will move it into
 		// transfer source layout for further blitting to generate mip
@@ -135,19 +132,19 @@ namespace Hermes
 		// user does not want to generate mip maps or if they are
 		// precomputed(so we only upload them) then we have to perform
 		// transition to shader read only layout immediately ourselves
-		RenderInterface::ImageLayout LayoutAfterLoad;
+		VkImageLayout LayoutAfterLoad;
 		if (EnableMipMaps && !Source.HasPrecomputedMips())
 		{
-			LayoutAfterLoad = RenderInterface::ImageLayout::TransferSourceOptimal;
+			LayoutAfterLoad = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 		}
 		else
 		{
-			LayoutAfterLoad = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+			LayoutAfterLoad = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		}
 
 		GPUInteractionUtilities::UploadDataToGPUImage(Source.GetRawData(), { 0, 0 }, Dimensions,
 		                                              Source.GetBytesPerPixel(), 0, *Image,
-		                                              RenderInterface::ImageLayout::Undefined, LayoutAfterLoad);
+		                                              VK_IMAGE_LAYOUT_UNDEFINED, LayoutAfterLoad);
 
 		if (EnableMipMaps)
 		{
@@ -158,14 +155,14 @@ namespace Hermes
 					GPUInteractionUtilities::UploadDataToGPUImage(Source.GetRawData(MipLevel), { 0, 0 },
 					                                              Source.GetDimensions(MipLevel),
 					                                              Source.GetBytesPerPixel(), MipLevel, *Image,
-					                                              RenderInterface::ImageLayout::Undefined,
+					                                              VK_IMAGE_LAYOUT_UNDEFINED,
 					                                              LayoutAfterLoad);
 				}
 			}
 			else
 			{
-				GPUInteractionUtilities::GenerateMipMaps(*Image, RenderInterface::ImageLayout::TransferSourceOptimal,
-				                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+				GPUInteractionUtilities::GenerateMipMaps(*Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			}
 		}
 
@@ -174,25 +171,22 @@ namespace Hermes
 		DefaultView = Image->CreateDefaultImageView();
 	}
 
-	std::unique_ptr<CubemapTexture> CubemapTexture::CreateEmpty(Vec2ui InDimensions,
-	                                                            RenderInterface::DataFormat InFormat,
-	                                                            RenderInterface::ImageUsageType InUsage,
-	                                                            uint32 InMipLevelCount)
+	std::unique_ptr<CubemapTexture> CubemapTexture::CreateEmpty(Vec2ui InDimensions, VkFormat InFormat,
+	                                                            VkImageUsageFlags InUsage, uint32 InMipLevelCount)
 	{
 		return std::unique_ptr<CubemapTexture>(new CubemapTexture(InDimensions, InFormat, InUsage, InMipLevelCount));
 	}
 
 	std::unique_ptr<CubemapTexture> CubemapTexture::CreateFromEquirectangularTexture(
-		const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat, bool EnableMipMaps)
+		const Texture& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
 	{
 		return std::unique_ptr<CubemapTexture>(new CubemapTexture(EquirectangularTexture, PreferredFormat, EnableMipMaps));
 	}
 
-	CubemapTexture::CubemapTexture(Vec2ui InDimensions, RenderInterface::DataFormat InFormat,
-	                               RenderInterface::ImageUsageType InUsage, uint32 InMipLevelCount)
+	CubemapTexture::CubemapTexture(Vec2ui InDimensions, VkFormat InFormat, VkImageUsageFlags InUsage,
+	                               uint32 InMipLevelCount)
 	{
-		Image = Renderer::Get().GetActiveDevice().CreateCubemap(InDimensions, InUsage, InFormat, InMipLevelCount,
-		                                                        RenderInterface::ImageLayout::Undefined);
+		Image = Renderer::Get().GetActiveDevice().CreateCubemap(InDimensions, InUsage, InFormat, InMipLevelCount);
 
 		Dimensions = InDimensions;
 		DataUploadFinished = true;
@@ -200,8 +194,7 @@ namespace Hermes
 		DefaultView = Image->CreateDefaultImageView();
 	}
 
-	CubemapTexture::CubemapTexture(const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat,
-	                               bool EnableMipMaps)
+	CubemapTexture::CubemapTexture(const Texture& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
 	{
 		auto EquirectangularTextureDimensions = EquirectangularTexture.GetDimensions();
 
@@ -217,122 +210,132 @@ namespace Hermes
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 		Image = Device.CreateCubemap(CubemapDimensions,
-		                               RenderInterface::ImageUsageType::Sampled |
-		                               RenderInterface::ImageUsageType::CopySource |
-		                               RenderInterface::ImageUsageType::CopyDestination |
-		                               RenderInterface::ImageUsageType::ColorAttachment, CubemapFormat, MipMapCount,
-		                               RenderInterface::ImageLayout::Undefined);
+		                             VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+		                             VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		                             CubemapFormat, MipMapCount);
 
-		auto& Queue = Device.GetQueue(RenderInterface::QueueType::Render);
+		auto& Queue = Device.GetQueue(VK_QUEUE_GRAPHICS_BIT);
 		auto CommandBuffer = Queue.CreateCommandBuffer(true);
 
-		RenderInterface::RenderPassAttachment OutputAttachment = {};
-		OutputAttachment.Type = RenderInterface::AttachmentType::Color;
-		OutputAttachment.LoadOp = RenderInterface::AttachmentLoadOp::Clear;
-		OutputAttachment.StencilLoadOp = RenderInterface::AttachmentLoadOp::Undefined;
-		OutputAttachment.StoreOp = RenderInterface::AttachmentStoreOp::Store;
-		OutputAttachment.StencilStoreOp = RenderInterface::AttachmentStoreOp::Store;
-		OutputAttachment.Format = CubemapFormat;
-		OutputAttachment.LayoutAtStart = RenderInterface::ImageLayout::ColorAttachmentOptimal;
-		OutputAttachment.LayoutAtEnd = RenderInterface::ImageLayout::ColorAttachmentOptimal;
-		auto RenderPass = Device.CreateRenderPass({ OutputAttachment });
+		VkAttachmentDescription OutputAttachment = {};
+		OutputAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		OutputAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		OutputAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		OutputAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		OutputAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		OutputAttachment.format = CubemapFormat;
+		OutputAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		OutputAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		auto RenderPass = Device.CreateRenderPass({
+			                                          std::make_pair(OutputAttachment, Vulkan::AttachmentType::Color) 
+		                                          });
 
-		std::shared_ptr VertexShader = Device.CreateShader(L"Shaders/Bin/render_uniform_cube.glsl.spv",
-		                                                   RenderInterface::ShaderType::VertexShader);
-		std::shared_ptr FragmentShader = Device.CreateShader(L"Shaders/Bin/load_equirectangular_frag.glsl.spv",
-		                                                     RenderInterface::ShaderType::FragmentShader);
+		std::unique_ptr VertexShader = Device.CreateShader(L"Shaders/Bin/render_uniform_cube.glsl.spv",
+		                                                   VK_SHADER_STAGE_VERTEX_BIT);
+		std::unique_ptr FragmentShader = Device.CreateShader(L"Shaders/Bin/load_equirectangular_frag.glsl.spv",
+		                                                     VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		RenderInterface::SamplerDescription SamplerDescription = {};
-		SamplerDescription.AddressingModeU = RenderInterface::AddressingMode::Repeat;
-		SamplerDescription.AddressingModeV = RenderInterface::AddressingMode::Repeat;
-		SamplerDescription.MinificationFilteringMode = RenderInterface::FilteringMode::Nearest;
-		SamplerDescription.MagnificationFilteringMode = RenderInterface::FilteringMode::Nearest;
-		SamplerDescription.CoordinateSystem = RenderInterface::CoordinateSystem::Normalized;
-		SamplerDescription.MipMode = RenderInterface::MipmappingMode::Linear;
+		Vulkan::SamplerDescription SamplerDescription = {};
+		SamplerDescription.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		SamplerDescription.MinificationFilter = VK_FILTER_NEAREST;
+		SamplerDescription.MagnificationFilter = VK_FILTER_NEAREST;
+		SamplerDescription.CoordinateSystem = Vulkan::CoordinateSystem::Normalized;
+		SamplerDescription.MipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 		auto EquirectangularTextureSampler = Device.CreateSampler(SamplerDescription);
 
-		RenderInterface::DescriptorBinding TextureBinding = {};
-		TextureBinding.Index = 0;
-		TextureBinding.DescriptorCount = 1;
-		TextureBinding.Shader = RenderInterface::ShaderType::FragmentShader;
-		TextureBinding.Type = RenderInterface::DescriptorType::CombinedSampler;
+		VkDescriptorSetLayoutBinding TextureBinding = {};
+		TextureBinding.binding = 0;
+		TextureBinding.descriptorCount = 1;
+		TextureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		TextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		std::shared_ptr DescriptorLayout = Device.CreateDescriptorSetLayout({ TextureBinding });
 		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
 		DescriptorSet->UpdateWithImageAndSampler(0, 0, EquirectangularTexture.GetDefaultView(),
 		                                         *EquirectangularTextureSampler,
-		                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal);
+		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		RenderInterface::PipelineDescription PipelineDescription = {};
-		PipelineDescription.PushConstants = { { RenderInterface::ShaderType::VertexShader, 0, sizeof(Mat4) } };
+		Vulkan::PipelineDescription PipelineDescription = {};
+		PipelineDescription.PushConstants = { { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Mat4) } };
 		PipelineDescription.ShaderStages = { VertexShader.get(), FragmentShader.get() };
-		PipelineDescription.DescriptorLayouts = { DescriptorLayout.get() };
-		PipelineDescription.InputAssembler.Topology = RenderInterface::TopologyType::TriangleList;
-		PipelineDescription.Viewport.Dimensions = Image->GetSize();
-		PipelineDescription.Viewport.Origin = { 0, 0 };
-		PipelineDescription.Rasterizer.Cull = RenderInterface::CullMode::Back;
-		PipelineDescription.Rasterizer.Direction = RenderInterface::FaceDirection::CounterClockwise;
-		PipelineDescription.Rasterizer.Fill = RenderInterface::FillMode::Fill;
-		PipelineDescription.DepthStencilStage.IsDepthTestEnabled = false;
-		PipelineDescription.DepthStencilStage.IsDepthWriteEnabled = false;
+		PipelineDescription.DescriptorSetLayouts = { DescriptorLayout.get() };
+		PipelineDescription.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		PipelineDescription.Viewport.width = static_cast<float>(Image->GetDimensions().X);
+		PipelineDescription.Viewport.height = static_cast<float>(Image->GetDimensions().X);
+		PipelineDescription.Viewport.x = 0.0f;
+		PipelineDescription.Viewport.y = 0.0f;
+		PipelineDescription.Viewport.minDepth = 0.0f;
+		PipelineDescription.Viewport.maxDepth = 1.0f;
+		PipelineDescription.Scissor.offset = { 0, 0 };
+		PipelineDescription.Scissor.extent = { Image->GetDimensions().X, Image->GetDimensions().Y };
+		PipelineDescription.CullMode = VK_CULL_MODE_BACK_BIT;
+		PipelineDescription.FaceDirection = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		PipelineDescription.PolygonMode = VK_POLYGON_MODE_FILL;
+		PipelineDescription.IsDepthTestEnabled = false;
+		PipelineDescription.IsDepthWriteEnabled = false;
 		auto Pipeline = Device.CreatePipeline(*RenderPass, PipelineDescription);
 
 		auto RenderingFinishFence = Device.CreateFence();
 
-		constexpr RenderInterface::CubemapSide Sides[6] =
+		constexpr Vulkan::CubemapSide Sides[6] =
 		{
-			RenderInterface::CubemapSide::PositiveX, RenderInterface::CubemapSide::NegativeX,
-			RenderInterface::CubemapSide::PositiveY, RenderInterface::CubemapSide::NegativeY,
-			RenderInterface::CubemapSide::PositiveZ, RenderInterface::CubemapSide::NegativeZ
+			Vulkan::CubemapSide::PositiveX, Vulkan::CubemapSide::NegativeX,
+			Vulkan::CubemapSide::PositiveY, Vulkan::CubemapSide::NegativeY,
+			Vulkan::CubemapSide::PositiveZ, Vulkan::CubemapSide::NegativeZ
 		};
 
 		for (const auto Side : Sides)
 		{
-			RenderInterface::ImageViewDescription ViewDescription = {};
-			ViewDescription.Aspects = RenderInterface::ImageAspect::Color;
-			ViewDescription.BaseMipLevel = 0;
-			ViewDescription.MipLevelCount = 1;
-			auto CubemapView = Image->CreateCubemapImageView(ViewDescription, Side);
+			VkImageSubresourceRange Subresource = {};
+			Subresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			Subresource.baseMipLevel = 0;
+			Subresource.levelCount = 1;
+			Subresource.baseArrayLayer = CubemapSideToArrayLayer(Side);
+			Subresource.layerCount = 1;
+			auto CubemapView = Image->CreateImageView(Subresource);
 
-			std::vector<const RenderInterface::ImageView*> RenderTargetAttachments = { CubemapView.get() };
-			auto RenderTarget = Device.CreateRenderTarget(*RenderPass, RenderTargetAttachments, Image->GetSize());
+			std::vector<const Vulkan::ImageView*> FramebufferAttachments = { CubemapView.get() };
+			auto Framebuffer = Device.CreateFramebuffer(*RenderPass, FramebufferAttachments, Image->GetDimensions());
 			CommandBuffer->BeginRecording();
 
-			RenderInterface::ImageMemoryBarrier CubemapBarrier = {};
-			CubemapBarrier.OldLayout = RenderInterface::ImageLayout::Undefined;
-			CubemapBarrier.NewLayout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
-			CubemapBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::None;
-			CubemapBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::ColorAttachmentRead |
-				RenderInterface::AccessType::ColorAttachmentWrite;
-			CubemapBarrier.BaseMipLevel = 0;
-			CubemapBarrier.MipLevelCount = Image->GetMipLevelsCount();
-			CubemapBarrier.Side = Side;
-			CommandBuffer->InsertImageMemoryBarrier(*Image, CubemapBarrier,
-			                                        RenderInterface::PipelineStage::BottomOfPipe,
-			                                        RenderInterface::PipelineStage::ColorAttachmentOutput);
+			VkImageMemoryBarrier CubemapBarrier = {};
+			CubemapBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			CubemapBarrier.image = Image->GetImage();
+			CubemapBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			CubemapBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			CubemapBarrier.srcAccessMask = VK_ACCESS_NONE;
+			CubemapBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			CubemapBarrier.subresourceRange.baseMipLevel = 0;
+			CubemapBarrier.subresourceRange.levelCount = Image->GetMipLevelsCount();
+			CubemapBarrier.subresourceRange.baseArrayLayer = CubemapSideToArrayLayer(Side);
+			CubemapBarrier.subresourceRange.layerCount = 1;
+			CubemapBarrier.subresourceRange.aspectMask = Image->GetFullAspectMask();
+			CommandBuffer->InsertImageMemoryBarrier(CubemapBarrier, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+			                                        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 
-			CommandBuffer->BeginRenderPass(*RenderPass, *RenderTarget, { { 0.0f, 0.0f, 0.0f, 0.0f } });
+			VkClearValue ClearValue = { 0.0f, 0.0f, 0.0f, 0.0f };
+			CommandBuffer->BeginRenderPass(*RenderPass, *Framebuffer, { &ClearValue, 1 });
 			CommandBuffer->BindPipeline(*Pipeline);
 			CommandBuffer->BindDescriptorSet(*DescriptorSet, *Pipeline, 0);
 
 			Mat4 ViewMatrix;
 			switch (Side)
 			{
-			case RenderInterface::CubemapSide::PositiveX:
+			case Vulkan::CubemapSide::PositiveX:
 				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
 				break;
-			case RenderInterface::CubemapSide::NegativeX:
+			case Vulkan::CubemapSide::NegativeX:
 				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(-1.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
 				break;
-			case RenderInterface::CubemapSide::PositiveY:
+			case Vulkan::CubemapSide::PositiveY:
 				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 1.0f, 0.0f), Vec3(0.0f, 0.0f, -1.0f));
 				break;
-			case RenderInterface::CubemapSide::NegativeY:
+			case Vulkan::CubemapSide::NegativeY:
 				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, -1.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f));
 				break;
-			case RenderInterface::CubemapSide::PositiveZ:
+			case Vulkan::CubemapSide::PositiveZ:
 				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 0.0f, 1.0f), Vec3(0.0f, 1.0f, 0.0f));
 				break;
-			case RenderInterface::CubemapSide::NegativeZ:
+			case Vulkan::CubemapSide::NegativeZ:
 				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 0.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f));
 				break;
 			default:
@@ -342,7 +345,7 @@ namespace Hermes
 			auto ProjectionMatrix = Mat4::Perspective(Math::Pi / 2, AspectRatio, 0.1f, 10.0f);
 			auto ViewProjection = ProjectionMatrix * ViewMatrix;
 
-			CommandBuffer->UploadPushConstants(*Pipeline, RenderInterface::ShaderType::VertexShader, &ViewProjection,
+			CommandBuffer->UploadPushConstants(*Pipeline, VK_SHADER_STAGE_VERTEX_BIT, &ViewProjection,
 			                                   sizeof(ViewProjection), 0);
 			// NOTE : 36 vertices of cube should be encoded in the vertex shader
 			CommandBuffer->Draw(36, 1, 0, 0);
@@ -351,18 +354,20 @@ namespace Hermes
 			// NOTE : if we do not have to generate mip maps we have to manually perform layout transition
 			if (!EnableMipMaps)
 			{
-				RenderInterface::ImageMemoryBarrier Barrier = {};
-				Barrier.OldLayout = RenderInterface::ImageLayout::ColorAttachmentOptimal;
-				Barrier.NewLayout = RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
-				Barrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::ColorAttachmentWrite;
-				Barrier.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead |
-					RenderInterface::AccessType::MemoryWrite;
-				Barrier.BaseMipLevel = 0;
-				Barrier.MipLevelCount = 1;
-				Barrier.Side = Side;
-				CommandBuffer->InsertImageMemoryBarrier(*Image, Barrier,
-				                                        RenderInterface::PipelineStage::ColorAttachmentOutput,
-				                                        RenderInterface::PipelineStage::TopOfPipe);
+				VkImageMemoryBarrier Barrier = {};
+				Barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				Barrier.image = Image->GetImage();
+				Barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				Barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				Barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+				Barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+				Barrier.subresourceRange.baseMipLevel = 0;
+				Barrier.subresourceRange.levelCount = 1;
+				Barrier.subresourceRange.baseArrayLayer = CubemapSideToArrayLayer(Side);
+				Barrier.subresourceRange.layerCount = 1;
+				Barrier.subresourceRange.aspectMask = Image->GetFullAspectMask();
+				CommandBuffer->InsertImageMemoryBarrier(Barrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				                                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 			}
 
 			CommandBuffer->EndRecording();
@@ -374,8 +379,8 @@ namespace Hermes
 
 			if (EnableMipMaps)
 			{
-				GPUInteractionUtilities::GenerateMipMaps(*Image, RenderInterface::ImageLayout::ColorAttachmentOptimal,
-				                                         RenderInterface::ImageLayout::ShaderReadOnlyOptimal, Side);
+				GPUInteractionUtilities::GenerateMipMaps(*Image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Side);
 			}
 		}
 

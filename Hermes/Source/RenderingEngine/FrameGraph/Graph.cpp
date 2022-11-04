@@ -9,13 +9,13 @@
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Scene/Scene.h"
-#include "RenderInterface/GenericRenderInterface/Swapchain.h"
-#include "RenderInterface/GenericRenderInterface/Fence.h"
-#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
-#include "RenderInterface/GenericRenderInterface/RenderPass.h"
-#include "RenderInterface/GenericRenderInterface/Device.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
-#include "RenderInterface/GenericRenderInterface/Queue.h"
+#include "Vulkan/Swapchain.h"
+#include "Vulkan/Fence.h"
+#include "Vulkan/CommandBuffer.h"
+#include "Vulkan/RenderPass.h"
+#include "Vulkan/Device.h"
+#include "Vulkan/Image.h"
+#include "Vulkan/Queue.h"
 
 namespace Hermes
 {
@@ -29,19 +29,19 @@ namespace Hermes
 		                 ResourceName.end());
 	}
 
-	static RenderInterface::ImageLayout PickImageLayoutForBindingMode(BindingMode Mode)
+	static VkImageLayout PickImageLayoutForBindingMode(BindingMode Mode)
 	{
 		switch (Mode)
 		{
 		case BindingMode::DepthStencilAttachment:
-			return RenderInterface::ImageLayout::DepthStencilAttachmentOptimal;
+			return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		case BindingMode::ColorAttachment:
-			return RenderInterface::ImageLayout::ColorAttachmentOptimal;
+			return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		case BindingMode::InputAttachment:
-			return RenderInterface::ImageLayout::ShaderReadOnlyOptimal;
+			return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		}
 		HERMES_ASSERT(false);
-		return RenderInterface::ImageLayout::Undefined;
+		return VK_IMAGE_LAYOUT_UNDEFINED;
 	}
 
 	void FrameGraphScheme::AddPass(const String& Name, const PassDesc& Desc)
@@ -69,7 +69,7 @@ namespace Hermes
 	{
 		Resources.emplace_back(Name, Description, true);
 	}
-	
+
 	std::unique_ptr<FrameGraph> FrameGraphScheme::Compile() const
 	{
 		if (!Validate())
@@ -213,21 +213,21 @@ namespace Hermes
 		return true;
 	}
 
-	void FrameGraph::BindExternalResource(const String& Name, std::shared_ptr<RenderInterface::Image> Image,
-	                                      std::shared_ptr<RenderInterface::ImageView> View,
-	                                      RenderInterface::ImageLayout CurrentLayout)
+	void FrameGraph::BindExternalResource(const String& Name, std::shared_ptr<Vulkan::Image> Image,
+	                                      std::shared_ptr<Vulkan::ImageView> View,
+	                                      VkImageLayout CurrentLayout)
 	{
 		auto& Resource = Resources.at(Name);
 		HERMES_ASSERT_LOG(Resource.IsExternal, L"Trying to rebind non-external frame graph resource");
 
-		Resource.Image  = std::move(Image);
+		Resource.Image = std::move(Image);
 		Resource.View = std::move(View);
 		Resource.CurrentLayout = CurrentLayout;
 
 		// TODO : recreate render targets that were using this resource instead of all
 		// TODO : recreate render targets in Execute() on flag so that we do not recreate them multiple times
 		//        in the same frame if multiple resources were changed
-		RecreateRenderTargets();
+		RecreateFramebuffers();
 	}
 
 	FrameMetrics FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList)
@@ -235,10 +235,10 @@ namespace Hermes
 		HERMES_PROFILE_FUNC();
 		FrameMetrics Metrics = {};
 
-		if (RenderTargetsNeedsInitialization)
+		if (FramebuffersNeedsInitialization)
 		{
-			RecreateRenderTargets();
-			RenderTargetsNeedsInitialization = false;
+			RecreateFramebuffers();
+			FramebuffersNeedsInitialization = false;
 		}
 
 		auto& Swapchain = Renderer::Get().GetSwapchain();
@@ -246,15 +246,16 @@ namespace Hermes
 		auto SwapchainImageAcquiredFence = Renderer::Get().GetActiveDevice().CreateFence();
 
 		bool SwapchainWasRecreated = false;
-		auto SwapchainImageIndex = Swapchain.AcquireImage(UINT64_MAX, *SwapchainImageAcquiredFence, SwapchainWasRecreated);
+		auto SwapchainImageIndex = Swapchain.AcquireImage(UINT64_MAX, *SwapchainImageAcquiredFence,
+		                                                  SwapchainWasRecreated);
 		if (SwapchainWasRecreated)
 		{
 			RecreateResources();
-			RecreateRenderTargets();
+			RecreateFramebuffers();
 		}
 
-		auto& RenderQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Render);
-		
+		auto& GraphicsQueue = Renderer::Get().GetActiveDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
+
 		for (const auto& PassName : PassExecutionOrder)
 		{
 			HERMES_PROFILE_SCOPE("Hermes::FrameGraph::Execute per pass loop");
@@ -263,35 +264,40 @@ namespace Hermes
 			auto& CommandBuffer = Pass.CommandBuffer;
 			CommandBuffer->BeginRecording();
 
+			std::vector<VkImageMemoryBarrier> Barriers(Pass.AttachmentLayouts.size());
+			size_t BarrierIndex = 0;
 			for (const auto& Attachment : Pass.AttachmentLayouts)
 			{
 				auto& Resource = Resources[Attachment.first];
 
-				RenderInterface::ImageMemoryBarrier Barrier = {};
-				Barrier.BaseMipLevel = 0;
-				Barrier.MipLevelCount = Resource.Image->GetMipLevelsCount();
-				Barrier.OldLayout = Resource.CurrentLayout;
-				Barrier.NewLayout = Attachment.second;
+				Barriers[BarrierIndex].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				Barriers[BarrierIndex].image = Resource.Image->GetImage();
+
+				Barriers[BarrierIndex].subresourceRange = Resource.Image->GetFullSubresourceRange();
+				Barriers[BarrierIndex].oldLayout = Resource.CurrentLayout;
+				Barriers[BarrierIndex].newLayout = Attachment.second;
 
 				// TODO : this is a general solution that covers all required synchronization cases, but we should rather
 				// detect or require from user which types of operations would be performed and implement proper barrier
-				Barrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryWrite;
-				Barrier.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead | RenderInterface::AccessType::MemoryWrite;
-
-				// TODO: see above
-				auto SourceStages = RenderInterface::PipelineStage::ColorAttachmentOutput |
-					RenderInterface::PipelineStage::EarlyFragmentTests |
-					RenderInterface::PipelineStage::LateFragmentTests;
-
-				CommandBuffer->InsertImageMemoryBarrier(*Resource.Image, Barrier, SourceStages,
-				                                        RenderInterface::PipelineStage::TopOfPipe);
+				Barriers[BarrierIndex].srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+				Barriers[BarrierIndex].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
 
 				Resource.CurrentLayout = Attachment.second;
+				BarrierIndex++;
 			}
 
-			CommandBuffer->BeginRenderPass(*Pass.Pass, *Pass.RenderTarget, Pass.ClearColors);
+			VkPipelineStageFlags SourceStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			CommandBuffer->InsertImageMemoryBarriers({ Barriers.begin(), Barriers.end() }, SourceStages,
+			                                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
-			std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>> Attachments(Pass.Attachments.size());
+			CommandBuffer->BeginRenderPass(*Pass.Pass, *Pass.Framebuffer, {
+				                               // const_cast because vector::data() returns const pointer by default
+				                               const_cast<VkClearValue*>(Pass.ClearColors.data()),
+				                               Pass.ClearColors.size()
+			                               });
+
+			std::vector<std::pair<const Vulkan::Image*, const Vulkan::ImageView*>> Attachments(Pass.Attachments.size());
 			for (size_t AttachmentIndex = 0; AttachmentIndex < Attachments.size(); AttachmentIndex++)
 			{
 				Attachments[AttachmentIndex] = {
@@ -307,13 +313,13 @@ namespace Hermes
 			CommandBuffer->EndRenderPass();
 			CommandBuffer->EndRecording();
 
-			RenderQueue.SubmitCommandBuffer(*CommandBuffer, {});
+			GraphicsQueue.SubmitCommandBuffer(*CommandBuffer, {});
 		}
 
 		{
 			HERMES_PROFILE_SCOPE("Hermes::FrameGraph::Execute presentation");
-			auto& PresentQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Presentation);
-			auto BlitAndPresentCommandBuffer = PresentQueue.CreateCommandBuffer(true);
+			auto& Queue = Renderer::Get().GetActiveDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
+			auto BlitAndPresentCommandBuffer = Queue.CreateCommandBuffer(true);
 
 			auto& BlitToSwapchainResource = Resources[BlitToSwapchainResourceOwnName];
 
@@ -324,82 +330,93 @@ namespace Hermes
 				// Waiting for previously submitted rendering command buffers to finish
 				// execution on rendering queue
 				// TODO : any more efficient way to do this?
-				RenderQueue.WaitForIdle();
+				GraphicsQueue.WaitForIdle();
 				return Metrics; // Skip presentation of current frame
 			}
-			const auto SwapchainImage = Swapchain.GetImage(SwapchainImageIndex.value());
+			const auto& SwapchainImage = Swapchain.GetImage(SwapchainImageIndex.value());
 
 			BlitAndPresentCommandBuffer->BeginRecording();
-			
-			RenderInterface::ImageMemoryBarrier SourceImageToTransferSourceBarrier = {};
-			SourceImageToTransferSourceBarrier.BaseMipLevel = 0;
-			SourceImageToTransferSourceBarrier.MipLevelCount = 1;
-			SourceImageToTransferSourceBarrier.OldLayout = BlitToSwapchainResource.CurrentLayout;
-			SourceImageToTransferSourceBarrier.NewLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
-			SourceImageToTransferSourceBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryWrite;
-			SourceImageToTransferSourceBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferRead;
-			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(*BlitToSwapchainResource.Image,
-			                                                      SourceImageToTransferSourceBarrier,
-			                                                      RenderInterface::PipelineStage::ColorAttachmentOutput
-			                                                      | RenderInterface::PipelineStage::EarlyFragmentTests |
-			                                                      RenderInterface::PipelineStage::LateFragmentTests,
-			                                                      RenderInterface::PipelineStage::Transfer);
-			BlitToSwapchainResource.CurrentLayout = RenderInterface::ImageLayout::TransferSourceOptimal;
-			
-			RenderInterface::ImageMemoryBarrier SwapchainImageToTransferDestinationBarrier = {};
-			SwapchainImageToTransferDestinationBarrier.BaseMipLevel = 0;
-			SwapchainImageToTransferDestinationBarrier.MipLevelCount = 1;
-			SwapchainImageToTransferDestinationBarrier.OldLayout = RenderInterface::ImageLayout::Undefined;
-			SwapchainImageToTransferDestinationBarrier.NewLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
-			SwapchainImageToTransferDestinationBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::MemoryRead;
-			SwapchainImageToTransferDestinationBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::TransferWrite;
-			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(
-				*SwapchainImage, SwapchainImageToTransferDestinationBarrier,
-				RenderInterface::PipelineStage::BottomOfPipe, RenderInterface::PipelineStage::Transfer);
 
-			RenderInterface::ImageBlitRegion BlitRegion = {};
-			BlitRegion.SourceRegion.MipLevel = 0;
-			BlitRegion.SourceRegion.AspectMask = RenderInterface::ImageAspect::Color;
-			BlitRegion.SourceRegion.RectMin = { 0, 0 };
-			BlitRegion.SourceRegion.RectMax = BlitToSwapchainResource.Image->GetSize();
-			BlitRegion.DestinationRegion.MipLevel = 0;
-			BlitRegion.DestinationRegion.AspectMask = RenderInterface::ImageAspect::Color;
-			BlitRegion.DestinationRegion.RectMin = { 0, 0 };
-			BlitRegion.DestinationRegion.RectMax = SwapchainImage->GetSize();
+			VkImageMemoryBarrier SourceImageToTransferSourceBarrier = {};
+			SourceImageToTransferSourceBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			SourceImageToTransferSourceBarrier.image = BlitToSwapchainResource.Image->GetImage();
+			SourceImageToTransferSourceBarrier.oldLayout = BlitToSwapchainResource.CurrentLayout;
+			SourceImageToTransferSourceBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			SourceImageToTransferSourceBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+			SourceImageToTransferSourceBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			SourceImageToTransferSourceBarrier.subresourceRange = BlitToSwapchainResource.Image->GetFullSubresourceRange();
+			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(SourceImageToTransferSourceBarrier,
+			                                                      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+			                                                      VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+			                                                      VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+			                                                      VK_PIPELINE_STAGE_TRANSFER_BIT);
+			BlitToSwapchainResource.CurrentLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
-			BlitAndPresentCommandBuffer->BlitImage(
-				*BlitToSwapchainResource.Image, RenderInterface::ImageLayout::TransferSourceOptimal,
-				*SwapchainImage, RenderInterface::ImageLayout::TransferDestinationOptimal,
-				{ BlitRegion }, RenderInterface::FilteringMode::Linear);
+			VkImageMemoryBarrier SwapchainImageToTransferDestinationBarrier = {};
+			SwapchainImageToTransferDestinationBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			SwapchainImageToTransferDestinationBarrier.image = SwapchainImage.GetImage();
+			SwapchainImageToTransferDestinationBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			SwapchainImageToTransferDestinationBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			SwapchainImageToTransferDestinationBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+			SwapchainImageToTransferDestinationBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			SwapchainImageToTransferDestinationBarrier.subresourceRange = SwapchainImage.GetFullSubresourceRange();
+			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(SwapchainImageToTransferDestinationBarrier,
+			                                                      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+			                                                      VK_PIPELINE_STAGE_TRANSFER_BIT);
 
-			RenderInterface::ImageMemoryBarrier SwapchainImageToReadyForPresentationBarrier = {};
-			SwapchainImageToReadyForPresentationBarrier.BaseMipLevel = 0;
-			SwapchainImageToReadyForPresentationBarrier.MipLevelCount = 1;
-			SwapchainImageToReadyForPresentationBarrier.OldLayout = RenderInterface::ImageLayout::TransferDestinationOptimal;
-			SwapchainImageToReadyForPresentationBarrier.NewLayout = RenderInterface::ImageLayout::ReadyForPresentation;
-			SwapchainImageToReadyForPresentationBarrier.OperationsThatHaveToEndBefore = RenderInterface::AccessType::TransferWrite;
-			SwapchainImageToReadyForPresentationBarrier.OperationsThatCanStartAfter = RenderInterface::AccessType::MemoryRead;
-			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(
-				*SwapchainImage, SwapchainImageToReadyForPresentationBarrier,
-				RenderInterface::PipelineStage::Transfer, RenderInterface::PipelineStage::TopOfPipe);
+			VkImageBlit BlitRegion = {};
+			BlitRegion.srcSubresource.mipLevel = 0;
+			BlitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			BlitRegion.srcSubresource.layerCount = 1;
+			BlitRegion.srcOffsets[0] = { 0, 0, 0 };
+			BlitRegion.srcOffsets[1] = {
+				static_cast<int32>(BlitToSwapchainResource.Image->GetDimensions().X),
+				static_cast<int32>(BlitToSwapchainResource.Image->GetDimensions().Y),
+				1
+			};
+			BlitRegion.dstSubresource.mipLevel = 0;
+			BlitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			BlitRegion.dstSubresource.layerCount = 1;
+			BlitRegion.dstOffsets[0] = { 0, 0, 0 };
+			BlitRegion.dstOffsets[1] = {
+				static_cast<int32>(SwapchainImage.GetDimensions().X),
+				static_cast<int32>(SwapchainImage.GetDimensions().Y),
+				1
+			};
+
+			BlitAndPresentCommandBuffer->BlitImage(*BlitToSwapchainResource.Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			                                       SwapchainImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			                                       { &BlitRegion, 1 }, VK_FILTER_LINEAR);
+
+			VkImageMemoryBarrier SwapchainImageToReadyForPresentationBarrier = {};
+			SwapchainImageToReadyForPresentationBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			SwapchainImageToReadyForPresentationBarrier.image = SwapchainImage.GetImage();
+			SwapchainImageToReadyForPresentationBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			SwapchainImageToReadyForPresentationBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			SwapchainImageToReadyForPresentationBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			SwapchainImageToReadyForPresentationBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+			SwapchainImageToReadyForPresentationBarrier.subresourceRange = SwapchainImage.GetFullSubresourceRange();
+			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(SwapchainImageToReadyForPresentationBarrier,
+			                                                      VK_PIPELINE_STAGE_TRANSFER_BIT,
+			                                                      VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
 			BlitAndPresentCommandBuffer->EndRecording();
 			auto PresentationFence = Renderer::Get().GetActiveDevice().CreateFence();
-			PresentQueue.SubmitCommandBuffer(*BlitAndPresentCommandBuffer, PresentationFence.get());
+			Queue.SubmitCommandBuffer(*BlitAndPresentCommandBuffer, PresentationFence.get());
 			PresentationFence->Wait(UINT64_MAX);
 
 			Swapchain.Present(SwapchainImageIndex.value(), SwapchainWasRecreated);
 			if (SwapchainWasRecreated)
 			{
 				RecreateResources();
-				RecreateRenderTargets();
+				RecreateFramebuffers();
 			}
 		}
 
 		return Metrics;
 	}
 
-	const RenderInterface::RenderPass& FrameGraph::GetRenderPassObject(const String& Name) const
+	const Vulkan::RenderPass& FrameGraph::GetRenderPassObject(const String& Name) const
 	{
 		HERMES_ASSERT(Passes.contains(Name));
 		auto& Result = Passes.at(Name).Pass;
@@ -410,7 +427,7 @@ namespace Hermes
 	FrameGraph::FrameGraph(FrameGraphScheme InScheme)
 		: Scheme(std::move(InScheme))
 	{
-		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetSize();
+		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetDimensions();
 
 		bool ContainsExternalResources = false;
 		for (const auto& Resource : Scheme.Resources)
@@ -420,16 +437,17 @@ namespace Hermes
 			ResourceContainer Container = {};
 			if (!Resource.IsExternal)
 			{
-				auto Image = Renderer::Get().GetActiveDevice().CreateImage(
-					Resource.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
-					TraverseResourceUsageType(Resource.Name), Resource.Desc.Format,
-					Resource.Desc.MipLevels, RenderInterface::ImageLayout::Undefined);
-				
+				auto Image = Renderer::Get().GetActiveDevice().
+				                             CreateImage(Resource.Desc.Dimensions.
+				                                                  GetAbsoluteDimensions(SwapchainDimensions),
+				                                         TraverseResourceUsageType(Resource.Name), Resource.Desc.Format,
+				                                         Resource.Desc.MipLevels);
+
 				Container.Image = std::move(Image);
 				Container.View = Container.Image->CreateDefaultImageView();
 			}
-			
-			Container.CurrentLayout = RenderInterface::ImageLayout::Undefined;
+
+			Container.CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			Container.Desc = Resource.Desc;
 			Container.IsExternal = Resource.IsExternal;
 
@@ -438,59 +456,62 @@ namespace Hermes
 
 		for (const auto& Pass : Scheme.Passes)
 		{
-			std::vector<RenderInterface::RenderPassAttachment> RenderPassAttachments;
+			std::vector<std::pair<VkAttachmentDescription, Vulkan::AttachmentType>> RenderPassAttachments;
 			for (const auto& Attachment : Pass.second.Attachments)
 			{
 				auto FullAttachmentName = Pass.first + L'.' + Attachment.Name;
 				bool IsUsedLater = Scheme.ForwardLinks.contains(FullAttachmentName);
-				RenderInterface::RenderPassAttachment AttachmentDesc = {};
-				AttachmentDesc.Format = TraverseAttachmentDataFormat(FullAttachmentName);
+				VkAttachmentDescription AttachmentDesc = {};
+				AttachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
+				AttachmentDesc.format = TraverseAttachmentDataFormat(FullAttachmentName);
 				// NOTE : because the moment of layout transition after end of the render pass
 				// is not synchronized we won't use this feature and would rather perform
 				// layout transition ourselves using resource barriers
-				AttachmentDesc.LayoutAtStart = AttachmentDesc.LayoutAtEnd =
+				AttachmentDesc.initialLayout = AttachmentDesc.finalLayout =
 					PickImageLayoutForBindingMode(Attachment.Binding);
-				AttachmentDesc.LoadOp = Attachment.LoadOp;
-				AttachmentDesc.StencilLoadOp = Attachment.StencilLoadOp;
+				AttachmentDesc.loadOp = Attachment.LoadOp;
+				AttachmentDesc.stencilLoadOp = Attachment.StencilLoadOp;
 				if (IsUsedLater)
 				{
-					AttachmentDesc.StoreOp = RenderInterface::AttachmentStoreOp::Store;
-					AttachmentDesc.StencilStoreOp = RenderInterface::AttachmentStoreOp::Store;
+					AttachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+					AttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 				}
 				else
 				{
-					AttachmentDesc.StoreOp = RenderInterface::AttachmentStoreOp::Undefined;
-					AttachmentDesc.StencilStoreOp = RenderInterface::AttachmentStoreOp::Undefined;
+					AttachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+					AttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 				}
+
+				Vulkan::AttachmentType Type;
 				switch (Attachment.Binding)
 				{
 				case BindingMode::ColorAttachment:
-					AttachmentDesc.Type = RenderInterface::AttachmentType::Color;
+					Type = Vulkan::AttachmentType::Color;
 					break;
 				case BindingMode::DepthStencilAttachment:
-					AttachmentDesc.Type = RenderInterface::AttachmentType::DepthStencil;
+					Type = Vulkan::AttachmentType::DepthStencil;
 					break;
 				case BindingMode::InputAttachment:
-					AttachmentDesc.Type = RenderInterface::AttachmentType::Input;
+					Type = Vulkan::AttachmentType::Input;
 					break;
 				default:
 					HERMES_ASSERT_LOG(false, L"Unknown attachment binding mode");
 					break;
 				}
 
-				RenderPassAttachments.push_back(AttachmentDesc);
+				RenderPassAttachments.emplace_back(AttachmentDesc, Type);
 			}
 
-			const auto& RenderQueue = Renderer::Get().GetActiveDevice().GetQueue(RenderInterface::QueueType::Render);
+			const auto& GraphicsQueue = Renderer::Get().GetActiveDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
 			PassContainer NewPassContainer = {};
 			NewPassContainer.Pass = Renderer::Get().GetActiveDevice().CreateRenderPass(RenderPassAttachments);
-			NewPassContainer.CommandBuffer = RenderQueue.CreateCommandBuffer(true);
+			NewPassContainer.CommandBuffer = GraphicsQueue.CreateCommandBuffer(true);
 			NewPassContainer.Callback = Pass.second.Callback;
 
 			// TODO : clean this code up
-			std::vector<const RenderInterface::ImageView*> RenderTargetAttachments;
-			Vec2ui RenderTargetDimensions;
-			RenderTargetAttachments.reserve(Pass.second.Attachments.size());
+			std::vector<const Vulkan::ImageView*> FramebufferAttachments;
+			Vec2ui FramebufferDimensions;
+			FramebufferAttachments.reserve(Pass.second.Attachments.size());
 			NewPassContainer.ClearColors.reserve(Pass.second.Attachments.size());
 			NewPassContainer.AttachmentLayouts.reserve(Pass.second.Attachments.size());
 			for (const auto& Attachment : Pass.second.Attachments)
@@ -501,28 +522,32 @@ namespace Hermes
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
 
 				const auto& Resource = Resources[ResourceOwnName];
-				RenderTargetAttachments.push_back(Resource.View.get());
+				FramebufferAttachments.push_back(Resource.View.get());
 				if (!Resource.IsExternal)
 				{
-					HERMES_ASSERT(RenderTargetDimensions == Vec2ui{} || RenderTargetDimensions == Resource.Image->GetSize());
-					RenderTargetDimensions = Resource.Image->GetSize();
+					HERMES_ASSERT(FramebufferDimensions == Vec2ui{} || FramebufferDimensions == Resource.Image->
+					              GetDimensions());
+					FramebufferDimensions = Resource.Image->GetDimensions();
 				}
 
 				NewPassContainer.ClearColors.push_back(Attachment.ClearColor);
 
 				NewPassContainer.Attachments.push_back(Resource.Image.get());
 				NewPassContainer.Views.push_back(Resource.View.get());
-				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName, PickImageLayoutForBindingMode(Attachment.Binding));
+				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName,
+				                                                PickImageLayoutForBindingMode(Attachment.Binding));
 			}
 
 			if (!ContainsExternalResources)
 			{
-				NewPassContainer.RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
-					*NewPassContainer.Pass, RenderTargetAttachments, RenderTargetDimensions);
+				NewPassContainer.Framebuffer = Renderer::Get().GetActiveDevice().
+				                                               CreateFramebuffer(*NewPassContainer.Pass,
+					                                               FramebufferAttachments,
+					                                               FramebufferDimensions);
 			}
 			else
 			{
-				RenderTargetsNeedsInitialization = true;
+				FramebuffersNeedsInitialization = true;
 			}
 
 			Passes[Pass.first] = std::move(NewPassContainer);
@@ -613,9 +638,9 @@ namespace Hermes
 		return CurrentAttachmentName;
 	}
 
-	RenderInterface::ImageUsageType FrameGraph::TraverseResourceUsageType(const String& ResourceName) const
+	VkImageUsageFlags FrameGraph::TraverseResourceUsageType(const String& ResourceName) const
 	{
-		auto Result = static_cast<RenderInterface::ImageUsageType>(0);
+		VkImageUsageFlags Result = 0;
 		String CurrentAttachmentName = L"$." + ResourceName;
 		while (true)
 		{
@@ -627,26 +652,27 @@ namespace Hermes
 
 			if (NextAttachmentName == L"$.BLIT_TO_SWAPCHAIN")
 			{
-				Result |= RenderInterface::ImageUsageType::CopySource;
+				Result |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 				break;
 			}
 
 			auto CurrentAttachmentRenderPass = Scheme.Passes.at(CurrentAttachmentRenderPassName);
-			auto CurrentAttachment = std::ranges::find_if(CurrentAttachmentRenderPass.Attachments, [&](const Attachment& Element)
-			{
-				return Element.Name == CurrentAttachmentOwnName;
-			});
+			auto CurrentAttachment = std::ranges::find_if(CurrentAttachmentRenderPass.Attachments,
+			                                              [&](const Attachment& Element)
+			                                              {
+				                                              return Element.Name == CurrentAttachmentOwnName;
+			                                              });
 
 			switch (CurrentAttachment->Binding)
 			{
 			case BindingMode::ColorAttachment:
-				Result |= RenderInterface::ImageUsageType::ColorAttachment;
+				Result |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 				break;
 			case BindingMode::InputAttachment:
-				Result |= RenderInterface::ImageUsageType::InputAttachment;
+				Result |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 				break;
 			case BindingMode::DepthStencilAttachment:
-				Result |= RenderInterface::ImageUsageType::DepthStencilAttachment;
+				Result |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 				break;
 			default:
 				HERMES_ASSERT(false);
@@ -655,14 +681,14 @@ namespace Hermes
 
 			if (!Scheme.ForwardLinks.contains(NextAttachmentName))
 				break;
-			
+
 			CurrentAttachmentName = NextAttachmentName;
 		}
 
 		return Result;
 	}
 
-	RenderInterface::DataFormat FrameGraph::TraverseAttachmentDataFormat(const String& AttachmentName) const
+	VkFormat FrameGraph::TraverseAttachmentDataFormat(const String& AttachmentName) const
 	{
 		auto CurrentAttachment = Scheme.BackwardLinks.at(AttachmentName);
 		while (CurrentAttachment[0] != L'$')
@@ -680,31 +706,31 @@ namespace Hermes
 
 	void FrameGraph::RecreateResources()
 	{
-		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetSize();
+		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetDimensions();
 		for (auto& Resource : Resources)
 		{
 			if (Resource.second.Desc.Dimensions.IsRelative() && !Resource.second.IsExternal)
 			{
 				Resource.second.Image = Renderer::Get().GetActiveDevice().CreateImage(
-					Resource.second.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
-					TraverseResourceUsageType(Resource.first), Resource.second.Desc.Format,
-					Resource.second.Desc.MipLevels, RenderInterface::ImageLayout::Undefined);
+				 Resource.second.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
+				 TraverseResourceUsageType(Resource.first), Resource.second.Desc.Format,
+				 Resource.second.Desc.MipLevels);
 				Resource.second.View = Resource.second.Image->CreateDefaultImageView();
 
-				Resource.second.CurrentLayout = RenderInterface::ImageLayout::Undefined;
+				Resource.second.CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			}
 		}
 
 		ResourcesWereRecreated = true;
 	}
 
-	void FrameGraph::RecreateRenderTargets()
+	void FrameGraph::RecreateFramebuffers()
 	{
 		// TODO : only recreate render targets if their images were recreated
 		for (const auto& Pass : Scheme.Passes)
 		{
-			std::vector<const RenderInterface::ImageView*> Attachments;
-			Vec2ui RenderTargetDimensions = {};
+			std::vector<const Vulkan::ImageView*> Attachments;
+			Vec2ui FramebufferDimensions = {};
 			Attachments.reserve(Pass.second.Attachments.size());
 			Passes[Pass.first].Attachments.clear();
 			Passes[Pass.first].Views.clear();
@@ -719,14 +745,15 @@ namespace Hermes
 				Attachments.push_back(Resource.View.get());
 				if (!Resource.IsExternal)
 				{
-					HERMES_ASSERT(RenderTargetDimensions == Vec2ui{} || RenderTargetDimensions == Resource.Image->GetSize());
-					RenderTargetDimensions = Resource.Image->GetSize();
+					HERMES_ASSERT(FramebufferDimensions == Vec2ui{} || FramebufferDimensions == Resource.Image->
+					              GetDimensions());
+					FramebufferDimensions = Resource.Image->GetDimensions();
 				}
 				Passes[Pass.first].Attachments.push_back(Resource.Image.get());
 				Passes[Pass.first].Views.push_back(Resource.View.get());
 			}
-			Passes[Pass.first].RenderTarget = Renderer::Get().GetActiveDevice().CreateRenderTarget(
-				*Passes[Pass.first].Pass, Attachments, RenderTargetDimensions);
+			Passes[Pass.first].Framebuffer = Renderer::Get().GetActiveDevice().CreateFramebuffer(
+			 *Passes[Pass.first].Pass, Attachments, FramebufferDimensions);
 		}
 
 		ResourcesWereRecreated = true;

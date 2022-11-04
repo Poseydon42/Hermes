@@ -6,7 +6,8 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Math/Math.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
+#include "Vulkan/Image.h"
+#include "Vulkan/VulkanCore.h"
 
 namespace Hermes
 {
@@ -21,15 +22,15 @@ namespace Hermes
 	public:
 		static std::shared_ptr<Texture> CreateFromAsset(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps = true);
 
-		const RenderInterface::Image& GetRawImage() const;
+		const Vulkan::Image& GetRawImage() const;
 
-		const RenderInterface::ImageView& GetDefaultView() const;
+		const Vulkan::ImageView& GetDefaultView() const;
 
 		Vec2ui GetDimensions() const;
 
 		uint32 GetMipLevelsCount() const;
 
-		RenderInterface::DataFormat GetDataFormat() const;
+		VkFormat GetDataFormat() const;
 
 		bool IsReady() const;
 
@@ -40,8 +41,8 @@ namespace Hermes
 		Texture() = default;
 
 		bool DataUploadFinished = false;
-		std::unique_ptr<RenderInterface::Image> Image;
-		std::unique_ptr<RenderInterface::ImageView> DefaultView;
+		std::unique_ptr<Vulkan::Image> Image;
+		std::unique_ptr<Vulkan::ImageView> DefaultView;
 		Vec2ui Dimensions;
 	};
 
@@ -52,17 +53,17 @@ namespace Hermes
 		ADD_DEFAULT_VIRTUAL_DESTRUCTOR(CubemapTexture)
 
 	public:
-		static std::unique_ptr<CubemapTexture> CreateEmpty(Vec2ui InDimensions, RenderInterface::DataFormat InFormat,
-		                                                   RenderInterface::ImageUsageType InUsage, uint32 InMipLevelCount);
+		static std::unique_ptr<CubemapTexture> CreateEmpty(Vec2ui InDimensions, VkFormat InFormat,
+		                                                   VkImageUsageFlags InUsage, uint32 InMipLevelCount);
 
 		static std::unique_ptr<CubemapTexture> CreateFromEquirectangularTexture(
-			const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat,
+			const Texture& EquirectangularTexture, VkFormat PreferredFormat,
 			bool EnableMipMaps = true);
 
 	private:
-		CubemapTexture(Vec2ui InDimensions, RenderInterface::DataFormat InFormat,
-		               RenderInterface::ImageUsageType InUsage, uint32 InMipLevelCount);
+		CubemapTexture(Vec2ui InDimensions, VkFormat InFormat,
+		               VkImageUsageFlags InUsage, uint32 InMipLevelCount);
 
-		CubemapTexture(const Texture& EquirectangularTexture, RenderInterface::DataFormat PreferredFormat, bool EnableMipMaps);
+		CubemapTexture(const Texture& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps);
 	};
 }

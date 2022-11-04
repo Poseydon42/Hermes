@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "Core/Core.h"
-#include "RenderInterface/GenericRenderInterface/Descriptor.h"
-#include "RenderInterface/GenericRenderInterface/Forward.h"
+#include "Vulkan/Descriptor.h"
+#include "Vulkan/Forward.h"
 
 namespace Hermes
 {
@@ -15,23 +15,23 @@ namespace Hermes
 		MAKE_NON_COPYABLE(DescriptorAllocator)
 		ADD_DEFAULT_MOVE_CONSTRUCTOR(DescriptorAllocator)
 		ADD_DEFAULT_DESTRUCTOR(DescriptorAllocator)
-	public:
-		DescriptorAllocator(std::shared_ptr<RenderInterface::Device> InDevice);
 
-		std::unique_ptr<RenderInterface::DescriptorSet> Allocate(const RenderInterface::DescriptorSetLayout& Layout);
+	public:
+		DescriptorAllocator();
+
+		std::unique_ptr<Vulkan::DescriptorSet> Allocate(const Vulkan::DescriptorSetLayout& Layout);
 
 	private:
-		std::shared_ptr<RenderInterface::Device> Device;
-		std::vector<std::unique_ptr<RenderInterface::DescriptorSetPool>> PoolList;
+		std::vector<std::unique_ptr<Vulkan::DescriptorSetPool>> PoolList;
 
 		static constexpr uint32 DescriptorSetsPerPool = 1024;
-		static constexpr std::array<RenderInterface::SubpoolDescription, 5> Subpools =
+		static constexpr std::array<VkDescriptorPoolSize, 5> Subpools =
 		{
-			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::UniformBuffer, 2 * DescriptorSetsPerPool },
-			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::SampledImage, 4 * DescriptorSetsPerPool },
-			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::CombinedSampler, 2 * DescriptorSetsPerPool },
-			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::Sampler, 2 * DescriptorSetsPerPool },
-			RenderInterface::SubpoolDescription{ RenderInterface::DescriptorType::InputAttachment, 2 * DescriptorSetsPerPool }
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * DescriptorSetsPerPool },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1 * DescriptorSetsPerPool },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 * DescriptorSetsPerPool },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLER, 1 * DescriptorSetsPerPool },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 2 * DescriptorSetsPerPool }
 		};
 
 		void AllocateNewPool();

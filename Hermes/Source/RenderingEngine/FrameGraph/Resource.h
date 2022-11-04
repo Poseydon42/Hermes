@@ -2,9 +2,7 @@
 
 #include "Core/Core.h"
 #include "Math/Math.h"
-#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
-#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
-#include "RenderInterface/GenericRenderInterface/Forward.h"
+#include "Vulkan/VulkanCore.h"
 
 namespace Hermes
 {
@@ -41,7 +39,7 @@ namespace Hermes
 
 	struct ResourceDesc
 	{
-		RenderInterface::DataFormat Format = RenderInterface::DataFormat::Undefined;
+		VkFormat Format = VK_FORMAT_UNDEFINED;
 		SwapchainRelativeDimensions Dimensions;
 		uint32 MipLevels = 0;
 	};
@@ -56,9 +54,9 @@ namespace Hermes
 	struct Attachment
 	{
 		String Name;
-		RenderInterface::AttachmentLoadOp LoadOp;
-		RenderInterface::AttachmentLoadOp StencilLoadOp;
-		RenderInterface::ClearColor ClearColor;
+		VkAttachmentLoadOp LoadOp;
+		VkAttachmentLoadOp StencilLoadOp;
+		VkClearValue ClearColor;
 		BindingMode Binding;
 	};
 }

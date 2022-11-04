@@ -5,8 +5,8 @@
 #include "Core/Core.h"
 #include "RenderingEngine/Material/MaterialProperty.h"
 #include "RenderingEngine/Material/ShaderReflection.h"
-#include "RenderInterface/GenericRenderInterface/Descriptor.h"
-#include "RenderInterface/GenericRenderInterface/Pipeline.h"
+#include "Vulkan/Descriptor.h"
+#include "Vulkan/Pipeline.h"
 
 namespace Hermes
 {
@@ -28,15 +28,15 @@ namespace Hermes
 
 		const MaterialProperty* FindProperty(const String& Name) const;
 
-		const RenderInterface::DescriptorSetLayout& GetDescriptorSetLayout() const;
+		const Vulkan::DescriptorSetLayout& GetDescriptorSetLayout() const;
 
-		const RenderInterface::Pipeline& GetPipeline() const;
+		const Vulkan::Pipeline& GetPipeline() const;
 
 	private:
 		ShaderReflection Reflection;
 
-		std::unique_ptr<RenderInterface::DescriptorSetLayout> DescriptorSetLayout;
-		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
+		std::unique_ptr<Vulkan::DescriptorSetLayout> DescriptorSetLayout;
+		std::unique_ptr<Vulkan::Pipeline> Pipeline;
 
 		Material(const String& VertexShaderPath, const String& FragmentShaderPath);
 	};

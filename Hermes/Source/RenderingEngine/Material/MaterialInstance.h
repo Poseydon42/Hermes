@@ -6,8 +6,8 @@
 #include "Core/Core.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/Material/Material.h"
-#include "RenderInterface/GenericRenderInterface/Buffer.h"
-#include "RenderInterface/GenericRenderInterface/Descriptor.h"
+#include "Vulkan/Buffer.h"
+#include "Vulkan/Descriptor.h"
 
 namespace Hermes
 {
@@ -31,7 +31,7 @@ namespace Hermes
 
 		const Material& GetBaseMaterial() const;
 
-		const RenderInterface::DescriptorSet& GetMaterialDescriptorSet() const;
+		const Vulkan::DescriptorSet& GetMaterialDescriptorSet() const;
 
 	private:
 		mutable bool IsDirty = false;
@@ -39,8 +39,8 @@ namespace Hermes
 
 		std::shared_ptr<const Material> BaseMaterial;
 		std::vector<uint8> CPUBuffer;
-		std::unique_ptr<RenderInterface::DescriptorSet> DescriptorSet;
-		std::unique_ptr<RenderInterface::Buffer> UniformBuffer;
+		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
+		std::unique_ptr<Vulkan::Buffer> UniformBuffer;
 
 		MaterialInstance(std::shared_ptr<const Material> Material, size_t UniformBufferSize);
 

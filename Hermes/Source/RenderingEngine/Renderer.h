@@ -5,13 +5,14 @@
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
+#include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Passes/ForwardPass.h"
 #include "RenderingEngine/Passes/PostProcessingPass.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
-#include "RenderInterface/GenericRenderInterface/Forward.h"
-#include "RenderInterface/GenericRenderInterface/PhysicalDevice.h"
-#include "RenderInterface/GenericRenderInterface/CommonTypes.h"
+#include "Vulkan/Device.h"
+#include "Vulkan/Swapchain.h"
+#include "Vulkan/VulkanCore.h"
 
 namespace Hermes
 {
@@ -34,7 +35,7 @@ namespace Hermes
 	public:
 		static Renderer& Get();
 
-		bool Init(const RenderInterface::PhysicalDevice& GPU);
+		bool Init();
 
 		const GraphicsSettings& GetGraphicsSettings() const;
 
@@ -42,28 +43,29 @@ namespace Hermes
 
 		void RunFrame(const Scene& Scene);
 
-		RenderInterface::Device& GetActiveDevice();
+		Vulkan::Device& GetActiveDevice();
 
-		RenderInterface::Swapchain& GetSwapchain();
+		Vulkan::Swapchain& GetSwapchain();
 
 		DescriptorAllocator& GetDescriptorAllocator();
 
-		const RenderInterface::DescriptorSetLayout& GetGlobalDataDescriptorSetLayout() const;
+		const Vulkan::DescriptorSetLayout& GetGlobalDataDescriptorSetLayout() const;
 
-		const RenderInterface::RenderPass& GetGraphicsRenderPassObject() const;
+		const Vulkan::RenderPass& GetGraphicsRenderPassObject() const;
 
-		const RenderInterface::Sampler& GetDefaultSampler() const;
+		const Vulkan::Sampler& GetDefaultSampler() const;
 
 	private:
-		RenderInterface::DeviceProperties GPUProperties;
+		Vulkan::DeviceProperties GPUProperties;
 		GraphicsSettings CurrentSettings;
 
-		std::shared_ptr<RenderInterface::Device> RenderingDevice;
-		std::shared_ptr<RenderInterface::Swapchain> Swapchain;
+		std::unique_ptr<Vulkan::Instance> VulkanInstance;
+		std::unique_ptr<Vulkan::Device> Device;
+		std::unique_ptr<Vulkan::Swapchain> Swapchain;
 
-		std::shared_ptr<DescriptorAllocator> DescriptorAllocator;
-		std::unique_ptr<RenderInterface::DescriptorSetLayout> GlobalDataDescriptorSetLayout;
-		std::unique_ptr<RenderInterface::Sampler> DefaultSampler;
+		std::unique_ptr<DescriptorAllocator> DescriptorAllocator;
+		std::unique_ptr<Vulkan::DescriptorSetLayout> GlobalDataDescriptorSetLayout;
+		std::unique_ptr<Vulkan::Sampler> DefaultSampler;
 		
 		std::unique_ptr<FrameGraph> FrameGraph;
 		std::unique_ptr<ForwardPass> ForwardPass;
@@ -71,8 +73,8 @@ namespace Hermes
 		std::unique_ptr<SkyboxPass> SkyboxPass;
 
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
-		static constexpr RenderInterface::DataFormat ColorAttachmentFormat = RenderInterface::DataFormat::B8G8R8A8UnsignedNormalized;
-		static constexpr RenderInterface::DataFormat DepthAttachmentFormat = RenderInterface::DataFormat::D32SignedFloat;
+		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;
+		static constexpr VkFormat DepthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
 
 		void DumpGPUProperties() const;
 	};

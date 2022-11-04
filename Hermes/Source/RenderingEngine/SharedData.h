@@ -16,11 +16,15 @@
 #include "Core/Core.h"
 #include "Math/Math.h"
 
+#define ALIGNAS_16 alignas(16)
+
 #else
 
 #define uint32 uint
 #define Vec4 vec4
 #define Mat4 mat4
+
+#define ALIGNAS_16
 
 #endif
 
@@ -29,19 +33,19 @@ namespace Hermes
 {
 #endif
 
-	struct PointLight
+	struct ALIGNAS_16 PointLight
 	{
 		/* Only first 3 components are meaningful, 4th is added for alignment purposes */
 		Vec4 Position;
 		Vec4 Color;
 	};
 
-	struct GlobalDrawcallData
+	struct ALIGNAS_16 GlobalDrawcallData
 	{
 		Mat4 ModelMatrix;
 	};
 
-	struct GlobalSceneData
+	struct ALIGNAS_16 GlobalSceneData
 	{
 #define MAX_POINT_LIGHT_COUNT 256
 #ifndef _GLSL_

@@ -10,10 +10,10 @@
 #include "Core/Event/Event.h"
 #include "Math/Vector.h"
 #include "RenderingEngine/Scene/FPSCamera.h"
-#include "RenderInterface/GenericRenderInterface/Swapchain.h"
 #include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
 #include "RenderingEngine/Texture.h"
+#include "Vulkan/Swapchain.h"
 
 class SandboxApp : public Hermes::IApplication
 {
@@ -74,9 +74,8 @@ public:
 		PointLight.Position = { 0.0f, 3.0f, 3.0f, 0.0f };
 		Hermes::GGameLoop->GetScene().AddPointLight(PointLight);
 
-		Camera = std::make_unique<Hermes::FPSCamera>(
-			Hermes::Vec3(0.0f), 0.0f, 0.0f, 0.5f, 25.0f, 50.0f,
-			Hermes::Vec2(Hermes::Renderer::Get().GetSwapchain().GetSize()), true);
+		Camera = std::make_unique<Hermes::FPSCamera>(Hermes::Vec3(0.0f, 3.0f, 0.0f), 0.0f, 0.0f, 0.5f, 25.0f, 50.0f,
+		                                             Hermes::Vec2(Hermes::Renderer::Get().GetSwapchain().GetDimensions()), true);
 		Hermes::GGameLoop->GetScene().ChangeActiveCamera(Camera);
 
 		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe<SandboxApp, &SandboxApp::KeyEventHandler>(Hermes::KeyEvent::GetStaticType(), this);
@@ -90,6 +89,7 @@ public:
 		const auto& InputEngine = Hermes::GGameLoop->GetInputEngine();
 		
 		Hermes::Vec2 CameraMovementInput = {};
+#if 1
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::W))
 			CameraMovementInput.X += 1.0f;
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::S))
@@ -98,9 +98,14 @@ public:
 			CameraMovementInput.Y += 1.0f;
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::A))
 			CameraMovementInput.Y -= 1.0f;
-
+#endif
+		
 		Camera->ApplyMovementInput(CameraMovementInput, DeltaTime);
+#if 0
+		Camera->ApplyRotationInput({}, DeltaTime);
+#else
 		Camera->ApplyRotationInput(InputEngine.GetDeltaMousePosition(), DeltaTime);
+#endif
 
 		if (AnisotropyChanged)
 		{

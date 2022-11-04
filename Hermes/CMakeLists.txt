@@ -15,7 +15,7 @@ add_subdirectory(Source/Logging)
 add_subdirectory(Source/Math)
 add_subdirectory(Source/Platform)
 add_subdirectory(Source/RenderingEngine)
-add_subdirectory(Source/RenderInterface)
+add_subdirectory(Source/Vulkan)
 
 set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS ON CACHE BOOL "Instead of throwing exceptions assert.")
 set(SPIRV_CROSS_STATIC ON CACHE BOOL "Build the C and C++ API as static libraries.")
@@ -36,7 +36,7 @@ add_subdirectory(ThirdParty/tracy)
 include(CMakeCommon)
 
 add_executable(Hermes WIN32 Source/HermesExecutable.cpp)
-target_link_libraries(Hermes PRIVATE Hermes_ApplicationCore Hermes_AssetSystem Hermes_Core Hermes_Launch Hermes_Logging Hermes_Math Hermes_Platform Hermes_RenderingEngine Hermes_RenderInterface)
+target_link_libraries(Hermes PUBLIC Hermes_ApplicationCore Hermes_AssetSystem Hermes_Core Hermes_Launch Hermes_Logging Hermes_Math Hermes_Platform Hermes_RenderingEngine Hermes_Vulkan)
 if(MSVC)
     target_link_options(Hermes PRIVATE "/OPT:NOREF") # To prevent MSVC from removing some symbols from import lib
 endif()

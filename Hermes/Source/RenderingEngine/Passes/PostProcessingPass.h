@@ -6,7 +6,7 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
-#include "RenderInterface/GenericRenderInterface/Descriptor.h"
+#include "Vulkan/Descriptor.h"
 
 namespace Hermes
 {
@@ -24,21 +24,21 @@ namespace Hermes
 		const PassDesc& GetPassDescription() const;
 
 	private:
-		std::shared_ptr<RenderInterface::DescriptorSetLayout> DescriptorLayout;
-		std::unique_ptr<RenderInterface::DescriptorSet> DescriptorSet;
+		std::shared_ptr<Vulkan::DescriptorSetLayout> DescriptorLayout;
+		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
 
 		bool IsPipelineCreated = false;
-		std::unique_ptr<RenderInterface::Pipeline> Pipeline;
-		std::shared_ptr<RenderInterface::Shader> VertexShader, FragmentShader;
+		std::unique_ptr<Vulkan::Pipeline> Pipeline;
+		std::shared_ptr<Vulkan::Shader> VertexShader, FragmentShader;
 
 		PassDesc Description;
 
 		void PassCallback(
-			RenderInterface::CommandBuffer& CommandBuffer,
-			const RenderInterface::RenderPass& PassInstance,
-			const std::vector<std::pair<const RenderInterface::Image*, const RenderInterface::ImageView*>>& Attachments,
+			Vulkan::CommandBuffer& CommandBuffer,
+			const Vulkan::RenderPass& PassInstance,
+			const std::vector<std::pair<const Vulkan::Image*, const Vulkan::ImageView*>>& Attachments,
 			const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics, bool ResourcesWereRecreated);
 
-		void RecreatePipeline(const RenderInterface::RenderPass& Pass);
+		void RecreatePipeline(const Vulkan::RenderPass& Pass);
 	};
 }

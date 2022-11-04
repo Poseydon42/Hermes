@@ -6,10 +6,10 @@
 #include "Core/Core.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
-#include "RenderInterface/GenericRenderInterface/CommandBuffer.h"
-#include "RenderInterface/GenericRenderInterface/Image.h"
-#include "RenderInterface/GenericRenderInterface/RenderPass.h"
-#include "RenderInterface/GenericRenderInterface/RenderTarget.h"
+#include "Vulkan/CommandBuffer.h"
+#include "Vulkan/Image.h"
+#include "Vulkan/RenderPass.h"
+#include "Vulkan/Framebuffer.h"
 
 namespace Hermes
 {
@@ -65,13 +65,13 @@ namespace Hermes
 		ADD_DEFAULT_MOVE_CONSTRUCTOR(FrameGraph)
 		ADD_DEFAULT_DESTRUCTOR(FrameGraph)
 	public:
-		void BindExternalResource(const String& Name, std::shared_ptr<RenderInterface::Image> Image,
-		                          std::shared_ptr<RenderInterface::ImageView> View,
-		                          RenderInterface::ImageLayout CurrentLayout);
+		void BindExternalResource(const String& Name, std::shared_ptr<Vulkan::Image> Image,
+		                          std::shared_ptr<Vulkan::ImageView> View,
+		                          VkImageLayout CurrentLayout);
 
 		FrameMetrics Execute(const Scene& Scene, const GeometryList& GeometryList);
 
-		const RenderInterface::RenderPass& GetRenderPassObject(const String& Name) const;
+		const Vulkan::RenderPass& GetRenderPassObject(const String& Name) const;
 
 	private:
 		friend class FrameGraphScheme;
@@ -80,20 +80,20 @@ namespace Hermes
 
 		String TraverseResourceName(const String& FullAttachmentName);
 
-		RenderInterface::ImageUsageType TraverseResourceUsageType(const String& ResourceName) const;
+		VkImageUsageFlags TraverseResourceUsageType(const String& ResourceName) const;
 
-		RenderInterface::DataFormat TraverseAttachmentDataFormat(const String& AttachmentName) const;
+		VkFormat TraverseAttachmentDataFormat(const String& AttachmentName) const;
 
 		void RecreateResources();
-		void RecreateRenderTargets();
+		void RecreateFramebuffers();
 
 		FrameGraphScheme Scheme;
 
 		struct ResourceContainer
 		{
-			std::shared_ptr<RenderInterface::Image> Image;
-			std::shared_ptr<RenderInterface::ImageView> View;
-			RenderInterface::ImageLayout CurrentLayout = RenderInterface::ImageLayout::Undefined;
+			std::shared_ptr<Vulkan::Image> Image;
+			std::shared_ptr<Vulkan::ImageView> View;
+			VkImageLayout CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			ResourceDesc Desc;
 
 			bool IsExternal = false;
@@ -102,14 +102,14 @@ namespace Hermes
 
 		struct PassContainer
 		{
-			std::unique_ptr<RenderInterface::RenderPass> Pass;
-			std::unique_ptr<RenderInterface::RenderTarget> RenderTarget;
-			std::unique_ptr<RenderInterface::CommandBuffer> CommandBuffer;
-			std::vector<const RenderInterface::Image*> Attachments;
-			std::vector<const RenderInterface::ImageView*> Views;
+			std::unique_ptr<Vulkan::RenderPass> Pass;
+			std::unique_ptr<Vulkan::Framebuffer> Framebuffer;
+			std::unique_ptr<Vulkan::CommandBuffer> CommandBuffer;
+			std::vector<const Vulkan::Image*> Attachments;
+			std::vector<const Vulkan::ImageView*> Views;
 			// NOTE : pair<ResourceOwnName, LayoutAtStart>
-			std::vector<std::pair<String, RenderInterface::ImageLayout>> AttachmentLayouts;
-			std::vector<RenderInterface::ClearColor> ClearColors;
+			std::vector<std::pair<String, VkImageLayout>> AttachmentLayouts;
+			std::vector<VkClearValue> ClearColors;
 			PassDesc::RenderPassCallbackType Callback;
 		};
 		std::unordered_map<String, PassContainer> Passes;
@@ -119,6 +119,6 @@ namespace Hermes
 		String BlitToSwapchainResourceOwnName;
 
 		bool ResourcesWereRecreated = false;
-		bool RenderTargetsNeedsInitialization = false;
+		bool FramebuffersNeedsInitialization = false;
 	};
 }

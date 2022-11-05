@@ -25,7 +25,7 @@ namespace Hermes
 	void* WindowsLibrary::GetSymbolAddress(const String& Name)
 	{
 		std::string ANSIName = StringUtils::StringToANSI(Name);
-		return (void*)GetProcAddress(Library, ANSIName.c_str());
+		return static_cast<void*>(GetProcAddress(Library, ANSIName.c_str()));
 	}
 
 	bool WindowsLibrary::IsValid()
@@ -38,9 +38,9 @@ namespace Hermes
 		Library = LoadLibraryW(Path.c_str());
 	}
 
-	std::shared_ptr<IPlatformLibrary> IPlatformLibrary::Load(const String& Path)
+	std::unique_ptr<IPlatformLibrary> IPlatformLibrary::Load(const String& Path)
 	{
-		return std::make_shared<WindowsLibrary>(Path);
+		return std::make_unique<WindowsLibrary>(Path);
 	}
 }
 

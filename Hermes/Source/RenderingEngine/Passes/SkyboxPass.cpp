@@ -117,7 +117,7 @@ namespace Hermes
 		PipelineDescription.Viewport.x = 0;
 		PipelineDescription.Viewport.y = 0;
 		PipelineDescription.Viewport.width = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().X);
-		PipelineDescription.Viewport.height = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().X);
+		PipelineDescription.Viewport.height = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().Y);
 		PipelineDescription.Viewport.minDepth = 0.0f;
 		PipelineDescription.Viewport.maxDepth = 1.0f;
 		PipelineDescription.Scissor.offset = { 0, 0 };

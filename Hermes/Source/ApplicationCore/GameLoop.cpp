@@ -39,20 +39,15 @@ namespace Hermes
 		ApplicationWindow = IPlatformWindow::CreatePlatformWindow(L"Hermes Engine", { 1280, 720 });
 		if (!ApplicationWindow->IsValid())
 			return false;
+
 		InputEngine = std::make_shared<class InputEngine>();
 		ApplicationWindow->SetInputEngine(InputEngine);
 		ApplicationWindow->SetCursorVisibility(false);
-		if (auto WindowMessageQueue = ApplicationWindow->WindowQueue().lock())
-		{
-			WindowMessageQueue->Subscribe<GameLoop, &GameLoop::WindowCloseEventHandler>(WindowCloseEvent::GetStaticType(), this);
 
-			// DEBUG ONLY
-			InputEngine->GetEventQueue().Subscribe<GameLoop, &GameLoop::KeyEventHandler>(KeyEvent::GetStaticType(), this);
-		}
-		else
-		{
-			return false;
-		}
+		ApplicationWindow->GetWindowQueue().Subscribe<GameLoop, &GameLoop::WindowCloseEventHandler>(WindowCloseEvent::GetStaticType(), this);
+
+		// DEBUG ONLY
+		InputEngine->GetEventQueue().Subscribe<GameLoop, &GameLoop::KeyEventHandler>(KeyEvent::GetStaticType(), this);
 
 		Renderer::Get().Init();
 

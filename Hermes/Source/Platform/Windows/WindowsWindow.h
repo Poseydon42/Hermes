@@ -36,7 +36,7 @@ namespace Hermes
 
 		virtual bool IsValid() const override;
 
-		virtual std::weak_ptr<EventQueue> WindowQueue() const override;
+		virtual const EventQueue& GetWindowQueue() const override;
 
 		virtual void Run() const override;
 
@@ -51,7 +51,7 @@ namespace Hermes
 
 		String CurrentName;
 
-		std::shared_ptr<EventQueue> MessagePump;
+		std::unique_ptr<EventQueue> MessagePump;
 
 		WINDOWPLACEMENT PrevPlacement;
 

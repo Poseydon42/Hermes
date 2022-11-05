@@ -45,7 +45,7 @@ namespace Hermes
 		}
 
 		CurrentName = Name;
-		MessagePump = std::make_shared<EventQueue>();
+		MessagePump = std::make_unique<EventQueue>();
 
 		
 		Vec2ui WindowSize = ClientRectToWindowSize(Size, WindowStyle, ExStyle);
@@ -139,12 +139,12 @@ namespace Hermes
 
 	bool WindowsWindow::IsValid() const
 	{
-		return WindowHandle != 0;
+		return WindowHandle != nullptr;
 	}
 
-	std::weak_ptr<EventQueue> WindowsWindow::WindowQueue() const
+	const EventQueue& WindowsWindow::GetWindowQueue() const
 	{
-		return MessagePump;
+		return *MessagePump;
 	}
 
 	void WindowsWindow::Run() const

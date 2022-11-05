@@ -91,7 +91,7 @@ namespace Hermes
 		/**
 		 * Single queue for all window messages that game loop should handle
 		 */
-		virtual std::weak_ptr<EventQueue> WindowQueue() const = 0;
+		virtual const EventQueue& GetWindowQueue() const = 0;
 
 		/**
 		 * Returns underlying platform-specific handle

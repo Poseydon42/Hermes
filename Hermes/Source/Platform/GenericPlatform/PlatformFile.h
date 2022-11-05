@@ -105,7 +105,7 @@ namespace Hermes
 		/**
 		 * Opens a new file
 		 */
-		static std::shared_ptr<IPlatformFile> OpenFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode);
+		static std::unique_ptr<IPlatformFile> OpenFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode);
 
 		/**
 		 * Mounts all files and subdirectories from FolderPath to a virtual folder with path MountingPath

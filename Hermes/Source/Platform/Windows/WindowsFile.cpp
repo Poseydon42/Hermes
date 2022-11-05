@@ -151,7 +151,7 @@ namespace Hermes
 		return TryFindFile(Mounts, Path, true, TruePath);
 	}
 
-	std::shared_ptr<IPlatformFile> PlatformFilesystem::OpenFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode)
+	std::unique_ptr<IPlatformFile> PlatformFilesystem::OpenFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode)
 	{
 		auto FixedPath = Path;
 		if (FixedPath.empty() || FixedPath[0] != L'/')
@@ -161,8 +161,8 @@ namespace Hermes
 			(OpenMode == IPlatformFile::FileOpenMode::OpenExisting || 
 			 OpenMode == IPlatformFile::FileOpenMode::OpenExistingOverwrite);
 		if (TryFindFile(Mounts, FixedPath, AlwaysOpenExistingFile, TruePath))
-			return std::make_shared<WindowsFile>(TruePath, Access, OpenMode);
-		return std::make_shared<WindowsFile>(L"/", Access, OpenMode);
+			return std::make_unique<WindowsFile>(TruePath, Access, OpenMode);
+		return std::make_unique<WindowsFile>(L"/", Access, OpenMode);
 	}
 
 	void PlatformFilesystem::Mount(const String& FolderPath, const String& MountingPath, uint32 Priority)

@@ -105,6 +105,6 @@ namespace Hermes
 
 		virtual void SetCursorVisibility(bool IsVisible) = 0;
 
-		static std::shared_ptr<IPlatformWindow> CreatePlatformWindow(const String& Name, Vec2ui Size);
+		static std::unique_ptr<IPlatformWindow> CreatePlatformWindow(const String& Name, Vec2ui Size);
 	};
 }

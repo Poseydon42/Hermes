@@ -383,9 +383,9 @@ namespace Hermes
 		return Instance->MessageHandler(Window, Message, WParam, LParam);
 	}
 
-	std::shared_ptr<IPlatformWindow> IPlatformWindow::CreatePlatformWindow(const String& Name, Vec2ui Size)
+	std::unique_ptr<IPlatformWindow> IPlatformWindow::CreatePlatformWindow(const String& Name, Vec2ui Size)
 	{
-		return std::make_shared<WindowsWindow>(Name, Size);
+		return std::make_unique<WindowsWindow>(Name, Size);
 	}
 }
 

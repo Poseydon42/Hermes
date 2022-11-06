@@ -186,14 +186,16 @@ namespace Hermes::Vulkan
 
 	const Queue& Device::GetQueue(VkQueueFlags Type) const
 	{
-		// Only graphics and transfer queues are supported at the moment
-		HERMES_ASSERT((Type & VK_QUEUE_GRAPHICS_BIT) || (Type & VK_QUEUE_TRANSFER_BIT));
+		// Only graphics, compute and transfer queues are supported at the moment
+		HERMES_ASSERT((Type & VK_QUEUE_GRAPHICS_BIT) || (Type&VK_QUEUE_COMPUTE_BIT) || (Type & VK_QUEUE_TRANSFER_BIT));
 		// Check that only a single bit flag in the queue type is set since it is not required for
 		// a VkDevice to have a queue that has more than 1 type (e.g. graphics+transfer queue is not
 		// necessary present.
 		HERMES_ASSERT((Type & (Type - 1)) == 0);
 		if (Type & VK_QUEUE_GRAPHICS_BIT)
 			return *GraphicsQueue;
+		else if (Type & VK_QUEUE_COMPUTE_BIT)
+			return *ComputeQueue;
 		// Transfer queue is the only option left
 		return *TransferQueue;
 	}

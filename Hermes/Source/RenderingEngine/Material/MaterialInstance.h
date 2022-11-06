@@ -52,7 +52,7 @@ namespace Hermes
 	void MaterialInstance::SetNumericProperty(const String& Name, const ValueType& Value, size_t ArrayIndex)
 	{
 		auto* Property = BaseMaterial->FindProperty(Name);
-		HERMES_ASSERT_LOG(Property, L"Unknown material property '%s'", Name.c_str());
+		HERMES_ASSERT_LOG(Property, "Unknown material property '%s'", Name.c_str());
 
 		auto SizeOfSingleElement = Property->Size / Property->ArrayLength;
 		HERMES_ASSERT(sizeof(ValueType) <= SizeOfSingleElement);

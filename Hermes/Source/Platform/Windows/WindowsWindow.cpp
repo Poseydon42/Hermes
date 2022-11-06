@@ -40,17 +40,20 @@ namespace Hermes
 			WndClass.lpszClassName = ClassName;
 
 			bool Success = RegisterClassExW(&WndClass);
-			HERMES_ASSERT_LOG(Success, L"Failed to register window class! Error code: %#010X", GetLastError());
+			HERMES_ASSERT_LOG(Success, "Failed to register window class! Error code: %#010X", GetLastError());
 			ClassRegistered = Success;
 		}
 
 		CurrentName = Name;
 		MessagePump = std::make_unique<EventQueue>();
 
-		
+		static constexpr size_t MaxWindowNameLength = 8192;
+		wchar_t UTF16NameBuffer[MaxWindowNameLength];
+		MultiByteToWideChar(CP_UTF8, 0, Name.c_str(), -1, UTF16NameBuffer, MaxWindowNameLength);
+
 		Vec2ui WindowSize = ClientRectToWindowSize(Size, WindowStyle, ExStyle);
 		WindowHandle = CreateWindowExW(
-			ExStyle, ClassName, Name.c_str(), WindowStyle,
+			ExStyle, ClassName, UTF16NameBuffer, WindowStyle,
 			CW_USEDEFAULT, CW_USEDEFAULT, WindowSize.X, WindowSize.Y,
 			0, 0, AppInstance, this);
 		if (WindowHandle)
@@ -59,7 +62,7 @@ namespace Hermes
 		}
 		else
 		{
-			HERMES_LOG_ERROR(L"Failed to create Win32 window! Error code: %#010X", GetLastError());
+			HERMES_LOG_ERROR("Failed to create Win32 window! Error code: %#010X", GetLastError());
 		}
 	}
 
@@ -86,7 +89,10 @@ namespace Hermes
 
 	void WindowsWindow::UpdateName(const String& NewName)
 	{
-		if(SetWindowTextW(WindowHandle, NewName.c_str()))
+		static constexpr size_t MaxWindowNameLength = 8192;
+		wchar_t Buffer[MaxWindowNameLength];
+		MultiByteToWideChar(CP_UTF8, 0, NewName.c_str(), -1, Buffer, MaxWindowNameLength);
+		if(SetWindowTextW(WindowHandle, Buffer))
 			CurrentName = NewName;
 	}
 
@@ -179,7 +185,7 @@ namespace Hermes
 			else
 			{
 				DWORD ErrorCode = GetLastError();
-				HERMES_LOG_WARNING(L"GetCursorPos() or ScreenToClient() failed, error code: 0x%x", static_cast<uint32>(ErrorCode));
+				HERMES_LOG_WARNING("GetCursorPos() or ScreenToClient() failed, error code: 0x%x", static_cast<uint32>(ErrorCode));
 			}
 		}
 
@@ -358,7 +364,7 @@ namespace Hermes
 					auto Iterator = VKCodeToKeyCodeMap.find(VKCode);
 					if (Iterator == VKCodeToKeyCodeMap.end())
 					{
-						HERMES_LOG_DEBUG(L"Failed to translate VK code: 0x%02hhx", VKCode);
+						HERMES_LOG_DEBUG("Failed to translate VK code: 0x%02hhx", VKCode);
 						break;
 					}
 					KeyCode Code = Iterator->second;

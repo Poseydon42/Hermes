@@ -51,8 +51,8 @@ namespace Hermes
 		auto It = FormatCombinations.find(ComputeHashForFormat(Format, static_cast<uint8>(BytesPerChannel), IsSRGB));
 		if (It == FormatCombinations.end())
 		{
-			HERMES_LOG_ERROR(L"Cannot choose data format for the folowing image properties: image format %hhu; %llu bytes per channel; %s color space",
-			                 static_cast<uint8>(Format), BytesPerChannel, (IsSRGB ? L"sRGB" : L"linear"));
+			HERMES_LOG_ERROR("Cannot choose data format for the folowing image properties: image format %hhu; %llu bytes per channel; %s color space",
+			                 static_cast<uint8>(Format), BytesPerChannel, (IsSRGB ? "sRGB" : "linear"));
 			return VK_FORMAT_UNDEFINED;
 		}
 		return It->second;
@@ -230,9 +230,9 @@ namespace Hermes
 			                                          std::make_pair(OutputAttachment, Vulkan::AttachmentType::Color) 
 		                                          });
 
-		std::unique_ptr VertexShader = Device.CreateShader(L"Shaders/Bin/render_uniform_cube.glsl.spv",
+		std::unique_ptr VertexShader = Device.CreateShader("Shaders/Bin/render_uniform_cube.glsl.spv",
 		                                                   VK_SHADER_STAGE_VERTEX_BIT);
-		std::unique_ptr FragmentShader = Device.CreateShader(L"Shaders/Bin/load_equirectangular_frag.glsl.spv",
+		std::unique_ptr FragmentShader = Device.CreateShader("Shaders/Bin/load_equirectangular_frag.glsl.spv",
 		                                                     VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Vulkan::SamplerDescription SamplerDescription = {};

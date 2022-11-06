@@ -31,9 +31,9 @@ namespace Hermes
 
 		DataDescriptorSet = DescriptorAllocator.Allocate(*DataDescriptorLayout);
 
-		VertexShader = Device.CreateShader(L"Shaders/Bin/skybox_vert.glsl.spv",
+		VertexShader = Device.CreateShader("Shaders/Bin/skybox_vert.glsl.spv",
 		                                   VK_SHADER_STAGE_VERTEX_BIT);
-		FragmentShader = Device.CreateShader(L"Shaders/Bin/skybox_frag.glsl.spv",
+		FragmentShader = Device.CreateShader("Shaders/Bin/skybox_frag.glsl.spv",
 		                                     VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Vulkan::SamplerDescription SamplerDesc = {};
@@ -49,12 +49,12 @@ namespace Hermes
 		Description.Callback.Bind<SkyboxPass, &SkyboxPass::PassCallback>(this);
 
 		Description.Attachments.resize(2);
-		Description.Attachments[0].Name = L"ColorBuffer";
+		Description.Attachments[0].Name = "ColorBuffer";
 		Description.Attachments[0].Binding = BindingMode::ColorAttachment;
 		Description.Attachments[0].LoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		Description.Attachments[0].StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
-		Description.Attachments[1].Name = L"DepthBuffer";
+		Description.Attachments[1].Name = "DepthBuffer";
 		Description.Attachments[1].Binding = BindingMode::DepthStencilAttachment;
 		Description.Attachments[1].LoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		Description.Attachments[1].StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;

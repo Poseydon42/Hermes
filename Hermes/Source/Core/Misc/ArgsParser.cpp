@@ -1,15 +1,13 @@
 #include "ArgsParser.h"
 
-#include "StringUtils.h"
-
 namespace Hermes
 {
-	void ArgsParser::AddOption(const ANSIString& Name, std::optional<char> ShortName, bool* Value)
+	void ArgsParser::AddOption(const String& Name, std::optional<char> ShortName, bool* Value)
 	{
 		OptionalArguments.emplace_back(Name, ShortName, ValueType::Bool, Value);
 	}
 
-	void ArgsParser::AddOption(const ANSIString& Name, std::optional<char> ShortName, String* Value)
+	void ArgsParser::AddOption(const String& Name, std::optional<char> ShortName, String* Value)
 	{
 		OptionalArguments.emplace_back(Name, ShortName, ValueType::String, Value);
 	}
@@ -83,7 +81,7 @@ namespace Hermes
 					else if (*Argument == '=')
 					{
 						Argument++;
-						auto ArgumentValue = ANSIString(Argument);
+						auto ArgumentValue = String(Argument);
 						switch (Option.Type)
 						{
 						case ValueType::Bool:
@@ -92,7 +90,7 @@ namespace Hermes
 								*static_cast<bool*>(Option.ValuePtr) = true;
 							break;
 						case ValueType::String:
-							*static_cast<String*>(Option.ValuePtr) = StringUtils::ANSIToString(ArgumentValue);
+							*static_cast<String*>(Option.ValuePtr) = ArgumentValue;
 							break;
 						}
 					}
@@ -118,7 +116,7 @@ namespace Hermes
 					continue; // But there still might be some optional arguments that we should parse
 				}
 
-				*PositionalArguments[NextPositionalArgumentIndex++].second = StringUtils::ANSIToString(Argument);
+				*PositionalArguments[NextPositionalArgumentIndex++].second = Argument;
 			}
 		}
 		

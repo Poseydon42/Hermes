@@ -1,4 +1,4 @@
-#ifdef HERMES_PLATFORM_WINDOWS
+﻿#ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
 #include "Core/Profiling.h"
@@ -21,26 +21,26 @@ public:
 
 	bool Init() override
 	{
-		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load(L"sphere"));
+		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load("sphere"));
 		auto BoundingVolume = SphereMesh->GetBoundingVolume();
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
 
-		auto AlbedoTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_albedo"));
-		auto NormalTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_normal"));
-		auto MetallicTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_metallic"));
-		auto RoughnessTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load(L"pbr_test_roughness"));
+		auto AlbedoTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load("pbr_test_albedo"));
+		auto NormalTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load("pbr_test_normal"));
+		auto MetallicTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load("pbr_test_metallic"));
+		auto RoughnessTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load("pbr_test_roughness"));
 		AlbedoTexture = Hermes::Texture::CreateFromAsset(*AlbedoTextureAsset, true);
 		NormalTexture = Hermes::Texture::CreateFromAsset(*NormalTextureAsset, false);
 		MetallicTexture = Hermes::Texture::CreateFromAsset(*MetallicTextureAsset, false);
 		RoughnessTexture = Hermes::Texture::CreateFromAsset(*RoughnessTextureAsset, false);
 
-		TestMaterial = Hermes::Material::Create(L"Shaders/Bin/forward_vert.glsl.spv",
-		                                        L"Shaders/Bin/forward_frag.glsl.spv");
+		TestMaterial = Hermes::Material::Create("Shaders/Bin/forward_vert.glsl.spv",
+		                                        "Shaders/Bin/forward_frag.glsl.spv");
 		TestMaterialInstance = TestMaterial->CreateInstance();
-		TestMaterialInstance->SetTextureProperty(L"u_AlbedoTexture", *AlbedoTexture);
-		TestMaterialInstance->SetTextureProperty(L"u_RoughnessTexture", *RoughnessTexture);
-		TestMaterialInstance->SetTextureProperty(L"u_MetallicTexture", *MetallicTexture);
-		TestMaterialInstance->SetTextureProperty(L"u_NormalTexture", *NormalTexture);
+		TestMaterialInstance->SetTextureProperty("u_AlbedoTexture", *AlbedoTexture);
+		TestMaterialInstance->SetTextureProperty("u_RoughnessTexture", *RoughnessTexture);
+		TestMaterialInstance->SetTextureProperty("u_MetallicTexture", *MetallicTexture);
+		TestMaterialInstance->SetTextureProperty("u_NormalTexture", *NormalTexture);
 
 		static constexpr Hermes::int32 SphereCountInSingleDimension = 39;
 		for (Hermes::int32 SphereX = -SphereCountInSingleDimension / 2;

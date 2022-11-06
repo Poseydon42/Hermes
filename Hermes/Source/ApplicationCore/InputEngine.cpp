@@ -9,222 +9,222 @@ namespace Hermes
 		switch (Code)
 		{
 		case KeyCode::LeftMouseButton:
-			return L"LeftMouseButton";
+			return "LeftMouseButton";
 		case KeyCode::RightMouseButton:
-			return L"RightMouseButton";
+			return "RightMouseButton";
 		case KeyCode::MiddleMouseButton:
-			return L"MiddleMouseButton";
+			return "MiddleMouseButton";
 		case KeyCode::FourthMouseButton:
-			return L"FourthMouseButton";
+			return "FourthMouseButton";
 		case KeyCode::FifthMouseButton:
-			return L"FifthMouseButton";
+			return "FifthMouseButton";
 		case KeyCode::Backspace:
-			return L"Backspace";
+			return "Backspace";
 		case KeyCode::Space:
-			return L"Space";
+			return "Space";
 		case KeyCode::Tab:
-			return L"Tab";
+			return "Tab";
 		case KeyCode::Enter:
-			return L"Enter";
+			return "Enter";
 		case KeyCode::LeftShift:
-			return L"LeftShift";
+			return "LeftShift";
 		case KeyCode::RightShift:
-			return L"RightShift";
+			return "RightShift";
 		case KeyCode::LeftCtrl:
-			return L"LeftCtrl";
+			return "LeftCtrl";
 		case KeyCode::RightCtrl:
-			return L"RightCtrl";
+			return "RightCtrl";
 		case KeyCode::LeftAlt:
-			return L"LeftAlt";
+			return "LeftAlt";
 		case KeyCode::RightAlt:
-			return L"RightAlt";
+			return "RightAlt";
 		case KeyCode::Pause:
-			return L"Pause";
+			return "Pause";
 		case KeyCode::Esc:
-			return L"Esc";
+			return "Esc";
 		case KeyCode::PageUp:
-			return L"PageUp";
+			return "PageUp";
 		case KeyCode::PageDown:
-			return L"PageDown";
+			return "PageDown";
 		case KeyCode::End:
-			return L"End";
+			return "End";
 		case KeyCode::Home:
-			return L"Home";
+			return "Home";
 		case KeyCode::ArrowLeft:
-			return L"ArrowLeft";
+			return "ArrowLeft";
 		case KeyCode::ArrowRight:
-			return L"ArrowRight";
+			return "ArrowRight";
 		case KeyCode::ArrowUp:
-			return L"ArrowUp";
+			return "ArrowUp";
 		case KeyCode::ArrowDown:
-			return L"ArrowDown";
+			return "ArrowDown";
 		case KeyCode::PrintScreen:
-			return L"PrintScreen";
+			return "PrintScreen";
 		case KeyCode::Insert:
-			return L"Insert";
+			return "Insert";
 		case KeyCode::Delete:
-			return L"Delete";
+			return "Delete";
 		case KeyCode::Digit0:
-			return L"Digit0";
+			return "Digit0";
 		case KeyCode::Digit1:
-			return L"Digit1";
+			return "Digit1";
 		case KeyCode::Digit2:
-			return L"Digit2";
+			return "Digit2";
 		case KeyCode::Digit3:
-			return L"Digit3";
+			return "Digit3";
 		case KeyCode::Digit4:
-			return L"Digit4";
+			return "Digit4";
 		case KeyCode::Digit5:
-			return L"Digit5";
+			return "Digit5";
 		case KeyCode::Digit6:
-			return L"Digit6";
+			return "Digit6";
 		case KeyCode::Digit7:
-			return L"Digit7";
+			return "Digit7";
 		case KeyCode::Digit8:
-			return L"Digit8";
+			return "Digit8";
 		case KeyCode::Digit9:
-			return L"Digit9";
+			return "Digit9";
 		case KeyCode::A:
-			return L"A";
+			return "A";
 		case KeyCode::B:
-			return L"B";
+			return "B";
 		case KeyCode::C:
-			return L"C";
+			return "C";
 		case KeyCode::D:
-			return L"D";
+			return "D";
 		case KeyCode::E:
-			return L"E";
+			return "E";
 		case KeyCode::F:
-			return L"F";
+			return "F";
 		case KeyCode::G:
-			return L"G";
+			return "G";
 		case KeyCode::H:
-			return L"H";
+			return "H";
 		case KeyCode::I:
-			return L"I";
+			return "I";
 		case KeyCode::J:
-			return L"J";
+			return "J";
 		case KeyCode::K:
-			return L"K";
+			return "K";
 		case KeyCode::L:
-			return L"L";
+			return "";
 		case KeyCode::M:
-			return L"M";
+			return "M";
 		case KeyCode::N:
-			return L"N";
+			return "N";
 		case KeyCode::O:
-			return L"O";
+			return "O";
 		case KeyCode::P:
-			return L"P";
+			return "P";
 		case KeyCode::Q:
-			return L"Q";
+			return "Q";
 		case KeyCode::R:
-			return L"R";
+			return "R";
 		case KeyCode::S:
-			return L"S";
+			return "S";
 		case KeyCode::T:
-			return L"T";
+			return "T";
 		case KeyCode::U:
-			return L"U";
+			return "U";
 		case KeyCode::V:
-			return L"V";
+			return "V";
 		case KeyCode::W:
-			return L"W";
+			return "W";
 		case KeyCode::X:
-			return L"X";
+			return "X";
 		case KeyCode::Y:
-			return L"Y";
+			return "Y";
 		case KeyCode::Z:
-			return L"Z";
+			return "Z";
 		case KeyCode::LeftWindows:
-			return L"LeftWindows";
+			return "LeftWindows";
 		case KeyCode::RightWindows:
-			return L"RightWindows";
+			return "RightWindows";
 		case KeyCode::Num0:
-			return L"Num0";
+			return "Num0";
 		case KeyCode::Num1:
-			return L"Num1";
+			return "Num1";
 		case KeyCode::Num2:
-			return L"Num2";
+			return "Num2";
 		case KeyCode::Num3:
-			return L"Num3";
+			return "Num3";
 		case KeyCode::Num4:
-			return L"Num4";
+			return "Num4";
 		case KeyCode::Num5:
-			return L"Num5";
+			return "Num5";
 		case KeyCode::Num6:
-			return L"Num6";
+			return "Num6";
 		case KeyCode::Num7:
-			return L"Num7";
+			return "Num7";
 		case KeyCode::Num8:
-			return L"Num8";
+			return "Num8";
 		case KeyCode::Num9:
-			return L"Num9";
+			return "Num9";
 		case KeyCode::Multiply:
-			return L"Multiply";
+			return "Multiply";
 		case KeyCode::Add:
-			return L"Add";
+			return "Add";
 		case KeyCode::Subtract:
-			return L"Subtract";
+			return "Subtract";
 		case KeyCode::Decimal:
-			return L"Decimal";
+			return "Decimal";
 		case KeyCode::Divide:
-			return L"Divide";
+			return "Divide";
 		case KeyCode::F1:
-			return L"F1";
+			return "F1";
 		case KeyCode::F2:
-			return L"F2";
+			return "F2";
 		case KeyCode::F3:
-			return L"F3";
+			return "F3";
 		case KeyCode::F4:
-			return L"F4";
+			return "F4";
 		case KeyCode::F5:
-			return L"F5";
+			return "F5";
 		case KeyCode::F6:
-			return L"F6";
+			return "F6";
 		case KeyCode::F7:
-			return L"F7";
+			return "F7";
 		case KeyCode::F8:
-			return L"F8";
+			return "F8";
 		case KeyCode::F9:
-			return L"F9";
+			return "F9";
 		case KeyCode::F10:
-			return L"F10";
+			return "F10";
 		case KeyCode::F11:
-			return L"F11";
+			return "F11";
 		case KeyCode::F12:
-			return L"F12";
+			return "F12";
 		case KeyCode::F13:
-			return L"F13";
+			return "F13";
 		case KeyCode::F14:
-			return L"F14";
+			return "F14";
 		case KeyCode::F15:
-			return L"F15";
+			return "F15";
 		case KeyCode::F16:
-			return L"F16";
+			return "F16";
 		case KeyCode::F17:
-			return L"F17";
+			return "F17";
 		case KeyCode::F18:
-			return L"F18";
+			return "F18";
 		case KeyCode::F19:
-			return L"F19";
+			return "F19";
 		case KeyCode::F20:
-			return L"F20";
+			return "F20";
 		case KeyCode::F21:
-			return L"F21";
+			return "F21";
 		case KeyCode::F22:
-			return L"F22";
+			return "F22";
 		case KeyCode::F23:
-			return L"F23";
+			return "F23";
 		case KeyCode::F24:
-			return L"F24";
+			return "F24";
 		case KeyCode::NumLock:
-			return L"NumLock";
+			return "NumLock";
 		case KeyCode::ScrollLock:
-			return L"ScrollLock";
+			return "ScrollLock";
 		default:
 			HERMES_ASSERT(false);
-			return L"";
+			return "";
 		}
 	}
 
@@ -237,9 +237,10 @@ namespace Hermes
 	String KeyEvent::ToString() const
 	{
 		constexpr size_t BufferSize = 128;
-		wchar_t Buffer[BufferSize];
-		std::swprintf(Buffer, BufferSize, L"KeyEvent: %ls %ls", IsPressEvent() ? L"pressed" : L"released", KeyCodeToString(Code).c_str());
-		return String(Buffer);
+		char Buffer[BufferSize];
+		std::snprintf(Buffer, BufferSize, "KeyEvent: %s %s", IsPressEvent() ? "pressed" : "released",
+		              KeyCodeToString(Code).c_str());
+		return { Buffer };
 	}
 
 	KeyCode KeyEvent::GetKeyCode() const

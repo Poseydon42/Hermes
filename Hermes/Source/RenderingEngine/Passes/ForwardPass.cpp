@@ -46,7 +46,7 @@ namespace Hermes
 		Description.Callback.Bind<ForwardPass, &ForwardPass::PassCallback>(this);
 
 		Attachment Color = {};
-		Color.Name = L"Color";
+		Color.Name = "Color";
 		Color.LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		Color.StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		Color.ClearColor.color.float32[0] = 1.0f;
@@ -56,7 +56,7 @@ namespace Hermes
 		Color.Binding = BindingMode::ColorAttachment;
 
 		Attachment Depth = {};
-		Depth.Name = L"Depth";
+		Depth.Name = "Depth";
 		Depth.LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		Depth.StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		Depth.ClearColor.depthStencil.depth = 0.0f;
@@ -86,7 +86,7 @@ namespace Hermes
 		SceneData.ViewProjection = ViewProjectionMatrix;
 		SceneData.CameraLocation = Vec4(Camera.GetLocation(), 1.0f);
 		HERMES_ASSERT_LOG(Scene.GetPointLights().size() < GlobalSceneData::MaxPointLightCount,
-		                  L"There are more point lights in the scene than the shader can process, some of them will be ignored");
+		                  "There are more point lights in the scene than the shader can process, some of them will be ignored");
 		SceneData.PointLightCount = Math::Min<uint32>(static_cast<uint32>(Scene.GetPointLights().size()),
 		                                              GlobalSceneData::MaxPointLightCount);
 		for (uint32 LightIndex = 0; LightIndex < SceneData.PointLightCount; LightIndex++)
@@ -164,8 +164,8 @@ namespace Hermes
 		OutputAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		auto RenderPass = Device.CreateRenderPass({ { OutputAttachment, Vulkan::AttachmentType::Color } });
 
-		auto VertexShader = Device.CreateShader(L"Shaders/Bin/fs_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		auto FragmentShader = Device.CreateShader(L"Shaders/Bin/precompute_brdf.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+		auto VertexShader = Device.CreateShader("Shaders/Bin/fs_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
+		auto FragmentShader = Device.CreateShader("Shaders/Bin/precompute_brdf.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Vulkan::PipelineDescription PipelineDesc = {};
 		PipelineDesc.ShaderStages = { VertexShader.get(), FragmentShader.get() };

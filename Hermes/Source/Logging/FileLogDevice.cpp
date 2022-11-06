@@ -16,7 +16,7 @@ namespace Hermes
 	void FileLogDevice::WriteLine(LogLevel Level, const String& Text)
 	{
 		Write(Level, Text);
-		Write(Level, L"\n");
+		Write(Level, "\n");
 	}
 
 	LogLevel FileLogDevice::GetCurrentLogLevel()

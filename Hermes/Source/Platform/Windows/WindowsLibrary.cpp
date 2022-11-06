@@ -2,8 +2,6 @@
 
 #ifdef HERMES_PLATFORM_WINDOWS
 
-#include "Core/Misc/StringUtils.h"
-
 namespace Hermes
 {
 	WindowsLibrary::~WindowsLibrary()
@@ -16,7 +14,7 @@ namespace Hermes
 		std::swap(Library, Other.Library);
 	}
 
-	WindowsLibrary& Hermes::WindowsLibrary::operator=(WindowsLibrary&& Other)
+	WindowsLibrary& WindowsLibrary::operator=(WindowsLibrary&& Other)
 	{
 		std::swap(Library, Other.Library);
 		return *this;
@@ -24,8 +22,7 @@ namespace Hermes
 
 	void* WindowsLibrary::GetSymbolAddress(const String& Name)
 	{
-		std::string ANSIName = StringUtils::StringToANSI(Name);
-		return static_cast<void*>(GetProcAddress(Library, ANSIName.c_str()));
+		return static_cast<void*>(GetProcAddress(Library, Name.c_str()));
 	}
 
 	bool WindowsLibrary::IsValid()
@@ -35,7 +32,10 @@ namespace Hermes
 
 	WindowsLibrary::WindowsLibrary(const String& Path)
 	{
-		Library = LoadLibraryW(Path.c_str());
+		static constexpr size_t MaxLibraryPathLength = 8192;
+		wchar_t Buffer[MaxLibraryPathLength];
+		MultiByteToWideChar(CP_UTF8, 0, Path.c_str(), -1, Buffer, MaxLibraryPathLength);
+		Library = LoadLibraryW(Buffer);
 	}
 
 	std::unique_ptr<IPlatformLibrary> IPlatformLibrary::Load(const String& Path)

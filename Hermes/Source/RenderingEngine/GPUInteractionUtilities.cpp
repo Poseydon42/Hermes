@@ -70,7 +70,7 @@ namespace Hermes
 		size_t StagingBufferSize = CurrentStagingBuffer.GetSize();
 		size_t BytesPerRow = BytesPerPixel * Dimensions.X;
 		auto RowsPerSingleTransfer = static_cast<uint32>(StagingBufferSize / BytesPerRow);
-		HERMES_ASSERT_LOG(BytesPerRow <= StagingBufferSize, L"Trying to upload too large image to GPU; increase staging buffer size");
+		HERMES_ASSERT_LOG(BytesPerRow <= StagingBufferSize, "Trying to upload too large image to GPU; increase staging buffer size");
 
 		for (uint32 Row = 0; Row < Dimensions.Y; Row += RowsPerSingleTransfer)
 		{
@@ -260,7 +260,7 @@ namespace Hermes
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 		StagingBuffer = Device.CreateBuffer(StagingBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true);
-		HERMES_ASSERT_LOG(StagingBuffer, L"Failed to create staging buffer with size %ull", StagingBufferSize);
+		HERMES_ASSERT_LOG(StagingBuffer, "Failed to create staging buffer with size %ull", StagingBufferSize);
 		return *StagingBuffer;
 	}
 }

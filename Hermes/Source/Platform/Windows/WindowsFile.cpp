@@ -6,6 +6,9 @@
 
 namespace Hermes
 {
+	// TODO: do we need to expose it?
+	static constexpr size_t GMaxFilePathLength = 8192;
+
 	WindowsFile::~WindowsFile()
 	{
 		Close();
@@ -75,14 +78,14 @@ namespace Hermes
 		File = INVALID_HANDLE_VALUE;
 	}
 
-	WindowsFile::WindowsFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode)
+	WindowsFile::WindowsFile(const String& Path, FileAccessMode Access, FileOpenMode OpenMode)
 	{
 		DWORD Win32Access = 0;
-		if ((int)(Access & IPlatformFile::FileAccessMode::Read))
+		if (static_cast<int>(Access & FileAccessMode::Read))
 		{
 			Win32Access |= GENERIC_READ;
 		}
-		if ((int)(Access & IPlatformFile::FileAccessMode::Write))
+		if (static_cast<int>(Access & FileAccessMode::Write))
 		{
 			Win32Access |= GENERIC_WRITE;
 		}
@@ -103,11 +106,14 @@ namespace Hermes
 			Win32OpenMode = TRUNCATE_EXISTING;
 			break;
 		default:
-			HERMES_ASSERT_LOG(false, L"Unknown IPlatformFile::OpenMode value in WindowsFile::WindowsFile");
+			HERMES_ASSERT_LOG(false, "Unknown IPlatformFile::OpenMode value in WindowsFile::WindowsFile");
 			break;
 		}
 		// TODO : sharing?
-		File = CreateFileW(Path.c_str(), Win32Access, FILE_SHARE_READ, 0, Win32OpenMode, FILE_ATTRIBUTE_NORMAL, 0);
+		
+		wchar_t UTF16Path[GMaxFilePathLength];
+		MultiByteToWideChar(CP_UTF8, 0, Path.c_str(), -1, UTF16Path, GMaxFilePathLength);
+		File = CreateFileW(UTF16Path, Win32Access, FILE_SHARE_READ, nullptr, Win32OpenMode, FILE_ATTRIBUTE_NORMAL,		                   nullptr);
 	}
 
 	std::multiset<MountRecord> PlatformFilesystem::Mounts;
@@ -122,9 +128,13 @@ namespace Hermes
 			{
 				if (AlwaysSearchForFile)
 				{
-					Result = Record.From + L"/" + String(Path.begin() + static_cast<int32>(Record.To.length()), Path.end());
+					Result = Record.From + "/" + String(Path.begin() + static_cast<int32>(Record.To.length()), Path.end());
+					
+					wchar_t UTF16Result[GMaxFilePathLength];
+					MultiByteToWideChar(CP_UTF8, 0, Result.c_str(), -1, UTF16Result, GMaxFilePathLength);
+
 					WIN32_FIND_DATA FindData;
-					HANDLE FoundFile = FindFirstFileW(Result.c_str(), &FindData);
+					HANDLE FoundFile = FindFirstFileW(UTF16Result, &FindData);
 					if (FoundFile != INVALID_HANDLE_VALUE)
 					{
 						FindClose(FoundFile);
@@ -135,7 +145,7 @@ namespace Hermes
 				{
 					// We need to just find a suitable directory according to
 					// mounting table, not the specific file
-					Result = Record.From + L"/" + String(Path.begin() + static_cast<int32>(Record.To.length()), Path.end());
+					Result = Record.From + "/" + String(Path.begin() + static_cast<int32>(Record.To.length()), Path.end());
 					return true;
 				}
 			}
@@ -155,14 +165,14 @@ namespace Hermes
 	{
 		auto FixedPath = Path;
 		if (FixedPath.empty() || FixedPath[0] != L'/')
-			FixedPath = L"/" + FixedPath;
+			FixedPath = "/" + FixedPath;
 		String TruePath;
 		bool AlwaysOpenExistingFile = 
 			(OpenMode == IPlatformFile::FileOpenMode::OpenExisting || 
 			 OpenMode == IPlatformFile::FileOpenMode::OpenExistingOverwrite);
 		if (TryFindFile(Mounts, FixedPath, AlwaysOpenExistingFile, TruePath))
 			return std::make_unique<WindowsFile>(TruePath, Access, OpenMode);
-		return std::make_unique<WindowsFile>(L"/", Access, OpenMode);
+		return std::make_unique<WindowsFile>("/", Access, OpenMode);
 	}
 
 	void PlatformFilesystem::Mount(const String& FolderPath, const String& MountingPath, uint32 Priority)
@@ -184,7 +194,10 @@ namespace Hermes
 		String TruePath;
 		if (!TryFindFile(Mounts, Path, true, TruePath))
 			return false;
-		return DeleteFileW(TruePath.c_str());
+		
+		wchar_t UTF16Path[GMaxFilePathLength];
+		MultiByteToWideChar(CP_UTF8, 0, Path.c_str(), -1, UTF16Path, GMaxFilePathLength);
+		return DeleteFileW(UTF16Path);
 	}
 }
 

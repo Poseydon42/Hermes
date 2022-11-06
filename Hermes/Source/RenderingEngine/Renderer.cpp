@@ -73,41 +73,41 @@ namespace Hermes
 		SkyboxPass = std::make_unique<class SkyboxPass>();
 
 		FrameGraphScheme Scheme;		
-		Scheme.AddPass(L"ForwardPass", ForwardPass->GetPassDescription());
-		Scheme.AddPass(L"PostProcessingPass", PostProcessingPass->GetPassDescription());
-		Scheme.AddPass(L"SkyboxPass", SkyboxPass->GetPassDescription());
+		Scheme.AddPass("ForwardPass", ForwardPass->GetPassDescription());
+		Scheme.AddPass("PostProcessingPass", PostProcessingPass->GetPassDescription());
+		Scheme.AddPass("SkyboxPass", SkyboxPass->GetPassDescription());
 
 		ResourceDesc HDRColorBufferResource = {};
 		HDRColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
 		HDRColorBufferResource.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
 		HDRColorBufferResource.MipLevels = 1;
-		Scheme.AddResource(L"HDRColorBuffer", HDRColorBufferResource);
+		Scheme.AddResource("HDRColorBuffer", HDRColorBufferResource);
 
 		ResourceDesc ColorBufferResource = {};
 		ColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f });
 		ColorBufferResource.Format = VK_FORMAT_B8G8R8A8_SRGB;
 		ColorBufferResource.MipLevels = 1;
-		Scheme.AddResource(L"ColorBuffer", ColorBufferResource);
+		Scheme.AddResource("ColorBuffer", ColorBufferResource);
 
 		ResourceDesc DepthBufferResource = {};
 		DepthBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
 		DepthBufferResource.Format = VK_FORMAT_D32_SFLOAT;
 		DepthBufferResource.MipLevels = 1;
-		Scheme.AddResource(L"DepthBuffer", DepthBufferResource);
+		Scheme.AddResource("DepthBuffer", DepthBufferResource);
 
-		Scheme.AddLink(L"$.HDRColorBuffer", L"ForwardPass.Color");
-		Scheme.AddLink(L"$.DepthBuffer", L"ForwardPass.Depth");
+		Scheme.AddLink("$.HDRColorBuffer", "ForwardPass.Color");
+		Scheme.AddLink("$.DepthBuffer", "ForwardPass.Depth");
 
-		Scheme.AddLink(L"ForwardPass.Color", L"SkyboxPass.ColorBuffer");
-		Scheme.AddLink(L"ForwardPass.Depth", L"SkyboxPass.DepthBuffer");
+		Scheme.AddLink("ForwardPass.Color", "SkyboxPass.ColorBuffer");
+		Scheme.AddLink("ForwardPass.Depth", "SkyboxPass.DepthBuffer");
 
-		Scheme.AddLink(L"SkyboxPass.ColorBuffer", L"PostProcessingPass.InputColor");
-		Scheme.AddLink(L"$.ColorBuffer", L"PostProcessingPass.OutputColor");
+		Scheme.AddLink("SkyboxPass.ColorBuffer", "PostProcessingPass.InputColor");
+		Scheme.AddLink("$.ColorBuffer", "PostProcessingPass.OutputColor");
 
-		Scheme.AddLink(L"PostProcessingPass.OutputColor", L"$.BLIT_TO_SWAPCHAIN");
+		Scheme.AddLink("PostProcessingPass.OutputColor", "$.BLIT_TO_SWAPCHAIN");
 
 		FrameGraph = Scheme.Compile();
-		HERMES_ASSERT_LOG(FrameGraph, L"Failed to compile a frame graph");
+		HERMES_ASSERT_LOG(FrameGraph, "Failed to compile a frame graph");
 
 		return true;
 	}
@@ -155,7 +155,7 @@ namespace Hermes
 
 	const Vulkan::RenderPass& Renderer::GetGraphicsRenderPassObject() const
 	{
-		return FrameGraph->GetRenderPassObject(L"ForwardPass");
+		return FrameGraph->GetRenderPassObject("ForwardPass");
 	}
 
 	const Vulkan::Sampler& Renderer::GetDefaultSampler() const
@@ -165,8 +165,8 @@ namespace Hermes
 
 	void Renderer::DumpGPUProperties() const
 	{
-		HERMES_LOG_INFO(L"======== GPU Information ========");
-		HERMES_LOG_INFO(L"Name: %S", GPUProperties.Name.c_str());
-		HERMES_LOG_INFO(L"Anisotropy: %s, %f", GPUProperties.AnisotropySupport ? L"true" : L"false", GPUProperties.MaxAnisotropyLevel);
+		HERMES_LOG_INFO("======== GPU Information ========");
+		HERMES_LOG_INFO("Name: %S", GPUProperties.Name.c_str());
+		HERMES_LOG_INFO("Anisotropy: %s, %f", GPUProperties.AnisotropySupport ? "true" : "false", GPUProperties.MaxAnisotropyLevel);
 	}
 }

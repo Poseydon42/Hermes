@@ -17,7 +17,7 @@ namespace Hermes::Vulkan
 			{
 				if (DepthAttachmentWasFound)
 				{
-					HERMES_ASSERT_LOG(false, L"Trying to create render pass with more than one depth attachment");
+					HERMES_ASSERT_LOG(false, "Trying to create render pass with more than one depth attachment");
 				}
 				else
 				{

@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <utility>
 
-#include "Core/Misc/StringUtils.h"
 #include "Core/Profiling.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/Renderer.h"
@@ -46,14 +45,14 @@ namespace Hermes
 
 	void FrameGraphScheme::AddPass(const String& Name, const PassDesc& Desc)
 	{
-		HERMES_ASSERT_LOG(!Passes.contains(Name), L"Trying to duplicate pass with name %s", Name.c_str());
+		HERMES_ASSERT_LOG(!Passes.contains(Name), "Trying to duplicate pass with name %s", Name.c_str());
 		Passes[Name] = Desc;
 	}
 
 	void FrameGraphScheme::AddLink(const String& From, const String& To)
 	{
 		HERMES_ASSERT_LOG(!BackwardLinks.contains(To),
-		                  L"Trying to create link from %s to %s while link from %s to %s already exists",
+		                  "Trying to create link from %s to %s while link from %s to %s already exists",
 		                  From.c_str(), To.c_str(), BackwardLinks[To].c_str(), To.c_str());
 
 		BackwardLinks[To] = From;
@@ -88,13 +87,13 @@ namespace Hermes
 			// Pass name cannot have '$' character as it is reserved for pass that provides external resources
 			if (Pass.first.find(L'$') != String::npos)
 			{
-				HERMES_LOG_ERROR(L"Invalid render pass name %s", Pass.first.c_str());
+				HERMES_LOG_ERROR("Invalid render pass name %s", Pass.first.c_str());
 				return false;
 			}
 			// Pass name cannot have '.' character as it is used as separator between pass and attachment name
 			if (Pass.first.find(L'.') != String::npos)
 			{
-				HERMES_LOG_ERROR(L"Invalid render pass name %s", Pass.first.c_str());
+				HERMES_LOG_ERROR("Invalid render pass name %s", Pass.first.c_str());
 				return false;
 			}
 
@@ -105,7 +104,7 @@ namespace Hermes
 				// between pass and attachment name
 				if (Attachment.Name.find(L'.') != String::npos)
 				{
-					HERMES_LOG_ERROR(L"Invalid attachment name %s in render pas %s", Attachment.Name.c_str(),
+					HERMES_LOG_ERROR("Invalid attachment name %s in render pas %s", Attachment.Name.c_str(),
 					                 Pass.first.c_str());
 					return false;
 				}
@@ -116,7 +115,7 @@ namespace Hermes
 			// Resource name cannot have '.' character as it is used as separator between pass and attachment name
 			if (Resource.Name.find(L'.') != String::npos)
 			{
-				HERMES_LOG_ERROR(L"Invalid resource name %s", Resource.Name.c_str());
+				HERMES_LOG_ERROR("Invalid resource name %s", Resource.Name.c_str());
 				return false;
 			}
 		}
@@ -127,7 +126,7 @@ namespace Hermes
 			// There must be a dot in the link from and to names
 			if (Link.first.find(L'.') == String::npos || Link.second.find(L'.') == String::npos)
 			{
-				HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s'", Link.first.c_str(), Link.second.c_str());
+				HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s'", Link.first.c_str(), Link.second.c_str());
 				return false;
 			}
 
@@ -136,7 +135,7 @@ namespace Hermes
 			SplitResourceName(Link.second, SecondPassName, SecondAttachmentName);
 
 			// Checking the first resource name (link 'from')
-			if (FirstPassName == L"$")
+			if (FirstPassName == "$")
 			{
 				// If the first pass is the pass that contains external resources then check if
 				// such resource exists
@@ -145,7 +144,7 @@ namespace Hermes
 					return Element.Name == FirstAttachmentName;
 				}) == Resources.end())
 				{
-					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': resource '%s' does not exist",
+					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': resource '%s' does not exist",
 					                 Link.first.c_str(), Link.second.c_str(), FirstAttachmentName.c_str());
 					return false;
 				}
@@ -156,7 +155,7 @@ namespace Hermes
 				auto FirstPass = Passes.find(FirstPassName);
 				if (FirstPass == Passes.end())
 				{
-					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': pass '%s' does not exist", Link.first.c_str(),
+					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': pass '%s' does not exist", Link.first.c_str(),
 					                 Link.second.c_str(), FirstPassName.c_str());
 					return false;
 				}
@@ -165,7 +164,7 @@ namespace Hermes
 					return Element.Name == FirstAttachmentName;
 				}) == FirstPass->second.Attachments.end())
 				{
-					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': pass '%s' does not contain attachmet '%s'",
+					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': pass '%s' does not contain attachmet '%s'",
 					                 Link.first.c_str(), Link.second.c_str(), FirstPassName.c_str(),
 					                 FirstAttachmentName.c_str());
 					return false;
@@ -173,14 +172,14 @@ namespace Hermes
 			}
 
 			// Checking the second resource name (link 'to')
-			if (SecondPassName == L"$")
+			if (SecondPassName == "$")
 			{
 				// If the second pass is the external pass (pass that contains external resources)
 				// then check if the attachment name is equal to BLIT_TO_SWAPCHAIN as it is the
 				// only resource that can be pointed to by some render pass
-				if (SecondAttachmentName != L"BLIT_TO_SWAPCHAIN")
+				if (SecondAttachmentName != "BLIT_TO_SWAPCHAIN")
 				{
-					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': only BLIT_TO_SWAPCHAIN is allowed as attachment name for the external render pass",
+					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': only BLIT_TO_SWAPCHAIN is allowed as attachment name for the external render pass",
 					                 Link.first.c_str(), Link.second.c_str());
 					return false;
 				}
@@ -191,7 +190,7 @@ namespace Hermes
 				auto SecondPass = Passes.find(SecondPassName);
 				if (SecondPass == Passes.end())
 				{
-					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': pass '%s' does not exist", Link.first.c_str(),
+					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': pass '%s' does not exist", Link.first.c_str(),
 					                 Link.second.c_str(), SecondPassName.c_str());
 					return false;
 				}
@@ -200,7 +199,7 @@ namespace Hermes
 					return Element.Name == SecondAttachmentName;
 				}) == SecondPass->second.Attachments.end())
 				{
-					HERMES_LOG_ERROR(L"Ill-formed link from '%s' to '%s': pass '%s' does not contain attachmet '%s'",
+					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': pass '%s' does not contain attachmet '%s'",
 					                 Link.first.c_str(), Link.second.c_str(), SecondPassName.c_str(),
 					                 SecondAttachmentName.c_str());
 					return false;
@@ -218,7 +217,7 @@ namespace Hermes
 	                                      VkImageLayout CurrentLayout)
 	{
 		auto& Resource = Resources.at(Name);
-		HERMES_ASSERT_LOG(Resource.IsExternal, L"Trying to rebind non-external frame graph resource");
+		HERMES_ASSERT_LOG(Resource.IsExternal, "Trying to rebind non-external frame graph resource");
 
 		Resource.Image = std::move(Image);
 		Resource.View = std::move(View);
@@ -326,7 +325,7 @@ namespace Hermes
 			SwapchainImageAcquiredFence->Wait(UINT64_MAX);
 			if (!SwapchainImageIndex.has_value())
 			{
-				HERMES_LOG_ERROR(L"Swapchain did not return valid image index");
+				HERMES_LOG_ERROR("Swapchain did not return valid image index");
 				// Waiting for previously submitted rendering command buffers to finish
 				// execution on rendering queue
 				// TODO : any more efficient way to do this?
@@ -459,7 +458,7 @@ namespace Hermes
 			std::vector<std::pair<VkAttachmentDescription, Vulkan::AttachmentType>> RenderPassAttachments;
 			for (const auto& Attachment : Pass.second.Attachments)
 			{
-				auto FullAttachmentName = Pass.first + L'.' + Attachment.Name;
+				auto FullAttachmentName = Pass.first + '.' + Attachment.Name;
 				bool IsUsedLater = Scheme.ForwardLinks.contains(FullAttachmentName);
 				VkAttachmentDescription AttachmentDesc = {};
 				AttachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -495,7 +494,7 @@ namespace Hermes
 					Type = Vulkan::AttachmentType::Input;
 					break;
 				default:
-					HERMES_ASSERT_LOG(false, L"Unknown attachment binding mode");
+					HERMES_ASSERT_LOG(false, "Unknown attachment binding mode");
 					break;
 				}
 
@@ -516,7 +515,7 @@ namespace Hermes
 			NewPassContainer.AttachmentLayouts.reserve(Pass.second.Attachments.size());
 			for (const auto& Attachment : Pass.second.Attachments)
 			{
-				String FullResourceName = TraverseResourceName(Pass.first + L"." + Attachment.Name);
+				String FullResourceName = TraverseResourceName(Pass.first + "." + Attachment.Name);
 
 				String PassName, ResourceOwnName;
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
@@ -553,9 +552,9 @@ namespace Hermes
 			Passes[Pass.first] = std::move(NewPassContainer);
 		}
 
-		HERMES_ASSERT_LOG(Scheme.BackwardLinks.contains(L"$.BLIT_TO_SWAPCHAIN"),
-		                  L"Render graph scheme does not contain link that points to swapchain");
-		auto ResourceThatBlitsToSwapchain = TraverseResourceName(L"$.BLIT_TO_SWAPCHAIN");
+		HERMES_ASSERT_LOG(Scheme.BackwardLinks.contains("$.BLIT_TO_SWAPCHAIN"),
+		                  "Render graph scheme does not contain link that points to swapchain");
+		auto ResourceThatBlitsToSwapchain = TraverseResourceName("$.BLIT_TO_SWAPCHAIN");
 		String DummyDollarSign;
 		SplitResourceName(ResourceThatBlitsToSwapchain, DummyDollarSign, BlitToSwapchainResourceOwnName);
 
@@ -569,7 +568,7 @@ namespace Hermes
 		// Step 2: remove any links from and to the '$' render pass
 		for (auto Link = LocalForwardLinks.begin(); Link != LocalForwardLinks.end();)
 		{
-			if (Link->first.starts_with(L"$.") || Link->second.starts_with(L"$."))
+			if (Link->first.starts_with("$.") || Link->second.starts_with("$."))
 			{
 				Link = LocalForwardLinks.erase(Link);
 			}
@@ -589,7 +588,7 @@ namespace Hermes
 				bool HasOutgoingConnections = false;
 				for (const auto& Link : LocalForwardLinks)
 				{
-					if (Link.first.starts_with(CurrentPass->first + L"."))
+					if (Link.first.starts_with(CurrentPass->first + "."))
 					{
 						HasOutgoingConnections = true;
 						break;
@@ -606,7 +605,7 @@ namespace Hermes
 					// 2. Remove all links that point to it
 					for (auto Link = LocalForwardLinks.begin(); Link != LocalForwardLinks.end();)
 					{
-						if (Link->second.starts_with(CurrentPass->first + L"."))
+						if (Link->second.starts_with(CurrentPass->first + "."))
 						{
 							Link = LocalForwardLinks.erase(Link);
 						}
@@ -641,7 +640,7 @@ namespace Hermes
 	VkImageUsageFlags FrameGraph::TraverseResourceUsageType(const String& ResourceName) const
 	{
 		VkImageUsageFlags Result = 0;
-		String CurrentAttachmentName = L"$." + ResourceName;
+		String CurrentAttachmentName = "$." + ResourceName;
 		while (true)
 		{
 			if (!Scheme.ForwardLinks.contains(CurrentAttachmentName))
@@ -650,7 +649,7 @@ namespace Hermes
 			String CurrentAttachmentRenderPassName, CurrentAttachmentOwnName;
 			SplitResourceName(NextAttachmentName, CurrentAttachmentRenderPassName, CurrentAttachmentOwnName);
 
-			if (NextAttachmentName == L"$.BLIT_TO_SWAPCHAIN")
+			if (NextAttachmentName == "$.BLIT_TO_SWAPCHAIN")
 			{
 				Result |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 				break;
@@ -698,7 +697,7 @@ namespace Hermes
 
 		String ResourcePassName, ResourceOwnName;
 		SplitResourceName(CurrentAttachment, ResourcePassName, ResourceOwnName);
-		HERMES_ASSERT(ResourcePassName == L"$");
+		HERMES_ASSERT(ResourcePassName == "$");
 
 		const auto& Resource = Resources.at(ResourceOwnName);
 		return Resource.Desc.Format;
@@ -736,7 +735,7 @@ namespace Hermes
 			Passes[Pass.first].Views.clear();
 			for (const auto& Attachment : Pass.second.Attachments)
 			{
-				String FullResourceName = TraverseResourceName(Pass.first + L"." + Attachment.Name);
+				String FullResourceName = TraverseResourceName(Pass.first + "." + Attachment.Name);
 
 				String PassName, ResourceOwnName;
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);

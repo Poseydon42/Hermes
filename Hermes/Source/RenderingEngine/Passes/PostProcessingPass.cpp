@@ -23,17 +23,17 @@ namespace Hermes
 		DescriptorLayout = Device.CreateDescriptorSetLayout({ InputColorBinding });
 		DescriptorSet = DescriptorAllocator.Allocate(*DescriptorLayout);
 
-		VertexShader = Device.CreateShader(L"Shaders/Bin/fs_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		FragmentShader = Device.CreateShader(L"Shaders/Bin/fs_postprocessing_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+		VertexShader = Device.CreateShader("Shaders/Bin/fs_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
+		FragmentShader = Device.CreateShader("Shaders/Bin/fs_postprocessing_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Attachment InputColor = {};
-		InputColor.Name = L"InputColor";
+		InputColor.Name = "InputColor";
 		InputColor.LoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		InputColor.StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		InputColor.Binding = BindingMode::InputAttachment;
 
 		Attachment OutputColor = {};
-		OutputColor.Name = L"OutputColor";
+		OutputColor.Name = "OutputColor";
 		OutputColor.LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		OutputColor.StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		memset(&OutputColor.ClearColor, 0, sizeof(OutputColor.ClearColor));

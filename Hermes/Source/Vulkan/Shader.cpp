@@ -13,19 +13,19 @@ namespace Hermes::Vulkan
 			                             IPlatformFile::FileOpenMode::OpenExisting);
 		if (!SourceFile)
 		{
-			HERMES_LOG_ERROR(L"Failed to open file with shader source. Path: %s", Path.c_str());
+			HERMES_LOG_ERROR("Failed to open file with shader source. Path: %s", Path.c_str());
 			return;
 		}
 		size_t FileSize = SourceFile->Size();
 		auto* Source = static_cast<uint8*>(malloc(FileSize));
 		if (!Source)
 		{
-			HERMES_LOG_ERROR(L"Failed to allocate memory for shader source. Path: %s", Path.c_str());
+			HERMES_LOG_ERROR("Failed to allocate memory for shader source. Path: %s", Path.c_str());
 			return;
 		}
 		if (!SourceFile->Read(Source, FileSize))
 		{
-			HERMES_LOG_ERROR(L"Failed to read shader source file. Path: %s", Path.c_str());
+			HERMES_LOG_ERROR("Failed to read shader source file. Path: %s", Path.c_str());
 			return;
 		}
 

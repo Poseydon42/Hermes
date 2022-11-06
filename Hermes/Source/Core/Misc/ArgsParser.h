@@ -14,13 +14,13 @@ namespace Hermes
 		 * Adds boolean option argument. Value is set to true when --Name or -ShortName is present
 		 * in the argument list or if --Name= or -ShortName= is followed by 'true' or '1'(matching the case)
 		 */
-		void AddOption(const ANSIString& Name, std::optional<char> ShortName, bool* Value);
+		void AddOption(const String& Name, std::optional<char> ShortName, bool* Value);
 
 		/*
 		 * Adds string option argument. When --Name=... or -ShortName=... is met in the argument list,
 		 * the part after equality sign is assigned to Value
 		 */
-		void AddOption(const ANSIString& Name, std::optional<char> ShortName, String* Value);
+		void AddOption(const String& Name, std::optional<char> ShortName, String* Value);
 
 		/*
 		 * Adds positional argument. Values to the positional arguments are assigned in the order of
@@ -46,7 +46,7 @@ namespace Hermes
 
 		struct OptionalArgument
 		{
-			ANSIString Name;
+			String Name;
 			std::optional<char> ShortName;
 			ValueType Type;
 			void* ValuePtr;

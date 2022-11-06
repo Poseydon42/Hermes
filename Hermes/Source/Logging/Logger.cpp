@@ -1,7 +1,6 @@
 #include "Logger.h"
 
-#include <stdarg.h>
-#include <cwchar>
+#include <cstdarg>
 
 #include "Logging/ILogDevice.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
@@ -14,15 +13,15 @@ namespace Hermes
 
 	String Logger::CurrentFormat;
 
-	void Logger::LogImpl(LogLevel Level, const wchar_t* Filename, int32 Line, const wchar_t* Text, va_list Args)
+	void Logger::LogImpl(LogLevel Level, const char* Filename, int32 Line, const char* Text, va_list Args)
 	{
-		wchar_t MessageBuffer[BufferSize + 1];
-		wchar_t FinalBuffer[BufferSize + 1];
+		char MessageBuffer[BufferSize + 1];
+		char FinalBuffer[BufferSize + 1];
 
 		if (Level < CurrentLevel)
 			return;
 
-		vswprintf(MessageBuffer, BufferSize + 1, Text, Args);
+		std::vsnprintf(MessageBuffer, BufferSize + 1, Text, Args);
 		ApplyFormatting(Level, Filename, Line, FinalBuffer, BufferSize + 1, MessageBuffer);
 		for (auto Device : LogDevices)
 		{
@@ -30,111 +29,112 @@ namespace Hermes
 		}
 	}
 
-	void Logger::ApplyFormatting(LogLevel Level, const wchar_t* Filename, int32 Line, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message)
+	void Logger::ApplyFormatting(LogLevel Level, const char* Filename, int32 Line, char* Buffer, size_t BufferCount, const char* Message)
 	{
 		memset(Buffer, 0, BufferCount * sizeof(Buffer[0]));
-		const wchar_t* s = CurrentFormat.c_str();
-		wchar_t* t = Buffer;
-		while (*s)
+		const char* String = CurrentFormat.c_str();
+		char* Dest = Buffer;
+		// TODO: does this work well with UTF-8?
+		while (*String)
 		{
-			size_t SpaceLeft = BufferCount - (t - Buffer) - 1;
+			size_t SpaceLeft = BufferCount - (Dest - Buffer) - 1;
 			size_t SpaceTaken = 0;
 			if (SpaceLeft >= BufferCount)
 				return;
-			if (*s == L'%')
+			if (*String == '%')
 			{
-				s++;
-				switch (*s)
+				String++;
+				switch (*String)
 				{
-				case L'%':
+				case '%':
 					SpaceTaken = 1;
-					*t = L'%';
+					*Dest = '%';
 					break;
-				case L'v': // Actual message
+				case 'v': // Actual message
 				{
-					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%s", Message);
+					SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%s", Message);
 					break;
 				}
-				case L'l':
+				case 'l':
 				{
-					const wchar_t* Lookup[] = {
-						L"Trace",
-						L"Debug",
-						L"Info",
-						L"Warning",
-						L"Error",
-						L"Fatal"
+					const char* Lookup[] = {
+						"Trace",
+						"Debug",
+						"Info",
+						"Warning",
+						"Error",
+						"Fatal"
 					};
-					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%s", Lookup[(size_t)Level]);
+					SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%s", Lookup[static_cast<size_t>(Level)]);
 					break;
 				}
-				case L'h':
-				case L'm':
-				case L's':
-				case L'u':
-				case L'y':
-				case L'Y':
-				case L'M':
-				case L'd':
+				case 'h':
+				case 'm':
+				case 's':
+				case 'u':
+				case 'y':
+				case 'Y':
+				case 'M':
+				case 'd':
 				{
 					// Avoiding many calls to GetPlatformTime() as it may be very time consuming
 					PlatformDateTime Time = PlatformTime::GetPlatformTime();
-					switch (*s)
+					switch (*String)
 					{
-					case L'h':
-						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Hour);
+					case 'h':
+						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%02hu", Time.Hour);
 						break;
-					case L'm':
-						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Minute);
+					case 'm':
+						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%02hu", Time.Minute);
 						break;
-					case L's':
-						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Second);
+					case 's':
+						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%02hu", Time.Second);
 						break;
-					case L'u':
-						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%03hu", Time.Milisecond);
+					case 'u':
+						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%03hu", Time.Milisecond);
 						break;
-					case L'y':
-						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Year % 1000);
+					case 'y':
+						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%02hu", Time.Year % 1000);
 						break;
-					case L'Y':
-						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%04hu", Time.Year);
+					case 'Y':
+						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%04hu", Time.Year);
 						break;
-					case L'M':
-						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Month);
+					case 'M':
+						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%02hu", Time.Month);
 						break;
-					case L'd':
-						SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%02hu", Time.Day);
+					case 'd':
+						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%02hu", Time.Day);
 						break;
 					}
 					break;
 				}
-				case L'f':
-					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%s", Filename);
+				case 'f':
+					SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%s", Filename);
 					break;
-				case L'#':
-					SpaceTaken = swprintf_s(t, SpaceLeft + 1, L"%d", Line);
+				case '#':
+					SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%d", Line);
 					break;
 				}
 			}
 			else
 			{
-				*t = *s;
+				*Dest = *String;
 				SpaceTaken = 1;
 			}
-			t += SpaceTaken;
-			s++;
+			Dest += SpaceTaken;
+			String++;
 		}
 	}
 
-	void Logger::Log(LogLevel Level, const wchar_t* Text, ...)
+	void Logger::Log(LogLevel Level, const char* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(Level, L"", 0, Text, Args);
+		LogImpl(Level, "", 0, Text, Args);
 		va_end(Args);
 	}
 
-	void Logger::LogWithFilename(LogLevel Level, const wchar_t* Filename, int32 Line, const wchar_t* Text, ...)
+	void Logger::LogWithFilename(LogLevel Level, const char* Filename, int32 Line, const char* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
@@ -142,51 +142,51 @@ namespace Hermes
 		va_end(Args);
 	}
 
-	void Logger::Trace(const wchar_t* Text, ...)
+	void Logger::Trace(const char* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Trace, L"", 0, Text, Args);
+		LogImpl(LogLevel::Trace, "", 0, Text, Args);
 		va_end(Args);
 	}
 
-	void Logger::Debug(const wchar_t* Text, ...)
+	void Logger::Debug(const char* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Debug, L"", 0, Text, Args);
+		LogImpl(LogLevel::Debug, "", 0, Text, Args);
 		va_end(Args);
 	}
 
-	void Logger::Info(const wchar_t* Text, ...)
+	void Logger::Info(const char* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Info, L"", 0, Text, Args);
+		LogImpl(LogLevel::Info, "", 0, Text, Args);
 		va_end(Args);
 	}
 
-	void Logger::Warning(const wchar_t* Text, ...)
+	void Logger::Warning(const char* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Warning, L"", 0, Text, Args);
+		LogImpl(LogLevel::Warning, "", 0, Text, Args);
 		va_end(Args);
 	}
 
-	void Logger::Error(const wchar_t* Text, ...)
+	void Logger::Error(const char* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Error, L"", 0, Text, Args);
+		LogImpl(LogLevel::Error, "", 0, Text, Args);
 		va_end(Args);
 	}
 
-	void Logger::Fatal(const wchar_t* Text, ...)
+	void Logger::Fatal(const char* Text, ...)
 	{
 		va_list Args;
 		va_start(Args, Text);
-		LogImpl(LogLevel::Fatal, L"", 0, Text, Args);
+		LogImpl(LogLevel::Fatal, "", 0, Text, Args);
 		va_end(Args);
 	}
 

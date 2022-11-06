@@ -2,7 +2,6 @@
 
 #include <array>
 
-#include "Core/Misc/StringUtils.h"
 #include "Vulkan/Device.h"
 
 namespace Hermes::Vulkan
@@ -43,12 +42,10 @@ namespace Hermes::Vulkan
 		switch (Severity)
 		{
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-			HERMES_LOG_WARNING(L"Vulkan validation layer: %s",
-			                   StringUtils::ANSIToString(ANSIString(Data->pMessage)).c_str());
+			HERMES_LOG_WARNING("Vulkan validation layer: %s", Data->pMessage);
 			break;
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-			HERMES_LOG_ERROR(L"Vulkan validation layer: %s",
-			                 StringUtils::ANSIToString(ANSIString(Data->pMessage)).c_str());
+			HERMES_LOG_ERROR("Vulkan validation layer: %s", Data->pMessage);
 			break;
 		default:
 			break;
@@ -103,7 +100,7 @@ namespace Hermes::Vulkan
 		}
 		if (!ValidationLayersEnabled)
 		{
-			HERMES_LOG_WARNING(L"Vulkan instance does not support validation layers. Vulkan will be loaded without them");
+			HERMES_LOG_WARNING("Vulkan instance does not support validation layers. Vulkan will be loaded without them");
 		}
 #endif
 

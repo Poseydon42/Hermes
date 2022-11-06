@@ -138,7 +138,7 @@ namespace Hermes::Vulkan
 		uint32 FormatCount = 0;
 		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(Device->PhysicalDevice, Device->Instance->Surface, &
 			                FormatCount, nullptr));
-		HERMES_ASSERT_LOG(FormatCount > 0, L"vkGetPhysicalDeviceSurfaceFormatsKHR returned 0 available formats.");
+		HERMES_ASSERT_LOG(FormatCount > 0, "vkGetPhysicalDeviceSurfaceFormatsKHR returned 0 available formats.");
 		Formats.resize(FormatCount);
 		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(Device->PhysicalDevice, Device->Instance->Surface, &
 			                FormatCount, Formats.data()));
@@ -148,7 +148,7 @@ namespace Hermes::Vulkan
 		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(Device->PhysicalDevice, Device->Instance->Surface, &
 			                PresentModeCount, nullptr));
 		HERMES_ASSERT_LOG(PresentModeCount > 0,
-		                  L"vkGetPhysicalDeviceSurfacePresentModesKHR returned 0 available present modes.");
+		                  "vkGetPhysicalDeviceSurfacePresentModesKHR returned 0 available present modes.");
 		PresentModes.resize(PresentModeCount);
 		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(Device->PhysicalDevice, Device->Instance->Surface, &
 			                PresentModeCount, PresentModes.data()));

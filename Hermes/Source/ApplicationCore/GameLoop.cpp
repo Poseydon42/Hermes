@@ -6,7 +6,6 @@
 #include "Logging/Logger.h"
 #include "Logging/DebugLogDevice.h"
 #include "Logging/FileLogDevice.h"
-#include "Core/Misc/StringUtils.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
 
 namespace Hermes
@@ -18,15 +17,15 @@ namespace Hermes
 		, Paused(false)
 		, PrevFrameEndTimestamp{}
 	{
-		PlatformFilesystem::Mount(L"Hermes/Files", L"/", 0);
-		PlatformFilesystem::Mount(StringUtils::ANSIToString(HERMES_GAME_NAME) + L"/Files", L"/", 1);
+		PlatformFilesystem::Mount("Hermes/Files", "/", 0);
+		PlatformFilesystem::Mount(String(HERMES_GAME_NAME) + "/Files", "/", 1);
 
 		Logger::SetLogLevel(LogLevel::Debug);
-		Logger::SetLogFormat(L"[%Y-%M-%d %h:%m:%s:%u][%f:%#][%l] %v");
+		Logger::SetLogFormat("[%Y-%M-%d %h:%m:%s:%u][%f:%#][%l] %v");
 		Logger::AttachLogDevice(new DebugLogDevice());
-		Logger::AttachLogDevice(new FileLogDevice(L"TestLog.log", LogLevel::Info));
+		Logger::AttachLogDevice(new FileLogDevice("TestLog.log", LogLevel::Info));
 		
-		HERMES_LOG_INFO(L"Initializing game loop!");
+		HERMES_LOG_INFO("Initializing game loop!");
 
 		Application = std::unique_ptr<IApplication>(App);
 	}
@@ -36,7 +35,7 @@ namespace Hermes
 		HERMES_PROFILE_THREAD("MainThread");
 		PlatformTime::Init();
 
-		ApplicationWindow = IPlatformWindow::CreatePlatformWindow(L"Hermes Engine", { 1280, 720 });
+		ApplicationWindow = IPlatformWindow::CreatePlatformWindow("Hermes Engine", { 1280, 720 });
 		if (!ApplicationWindow->IsValid())
 			return false;
 
@@ -55,7 +54,7 @@ namespace Hermes
 
 		if (!Application->Init())
 		{
-			HERMES_LOG_FATAL(L"Application::Init() returned false. Exiting");
+			HERMES_LOG_FATAL("Application::Init() returned false. Exiting");
 			return false;
 		}
 
@@ -89,13 +88,13 @@ namespace Hermes
 
 	void GameLoop::RequestExit()
 	{
-		HERMES_LOG_INFO(L"Game loop received exit request");
+		HERMES_LOG_INFO("Game loop received exit request");
 		RequestedExit = true;
 	}
 
 	void GameLoop::SetPause(bool IsPaused)
 	{
-		HERMES_LOG_INFO(L"Game loop is%s paused now", IsPaused ? L"" : L" not");
+		HERMES_LOG_INFO("Game loop is%s paused now", IsPaused ? "" : " not");
 		Paused = IsPaused;
 	}
 
@@ -116,7 +115,7 @@ namespace Hermes
 
 	void GameLoop::WindowCloseEventHandler(const IEvent& Event)
 	{
-		HERMES_LOG_INFO(L"Window \"%s\" requested exit.", Event.ToString().c_str());
+		HERMES_LOG_INFO("Window \"%s\" requested exit.", Event.ToString().c_str());
 
 		RequestedExit = true;
 	}

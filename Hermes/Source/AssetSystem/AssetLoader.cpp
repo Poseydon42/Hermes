@@ -9,19 +9,19 @@ namespace Hermes
 {
 	std::shared_ptr<Asset> AssetLoader::Load(const String& Name)
 	{
-		String Filename = Name + L".hac";
+		String Filename = Name + ".hac";
 
 		auto File = PlatformFilesystem::OpenFile(Filename, IPlatformFile::FileAccessMode::Read, IPlatformFile::FileOpenMode::OpenExisting);
 		if (!File->IsValid())
 		{
-			HERMES_LOG_WARNING(L"Failed to open asset file %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to open asset file %s", Name.c_str());
 			return nullptr;
 		}
 
 		AssetHeader Header;
 		if (!File->Read(reinterpret_cast<uint8*>(&Header), sizeof(Header)))
 		{
-			HERMES_LOG_WARNING(L"Failed to read asset header from asset file %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to read asset header from asset file %s", Name.c_str());
 			return nullptr;
 		}
 
@@ -32,7 +32,7 @@ namespace Hermes
 		case AssetType::Mesh:
 			return LoadMesh(*File, Header, Name);
 		default:
-			HERMES_LOG_WARNING(L"Loading assets of type %02x is currently unsupported or it is unknown type", static_cast<uint8>(Header.Type));
+			HERMES_LOG_WARNING("Loading assets of type %02x is currently unsupported or it is unknown type", static_cast<uint8>(Header.Type));
 			return nullptr;
 		}
 	}
@@ -42,7 +42,7 @@ namespace Hermes
 		ImageAssetHeader Header;
 		if (!File.Read(reinterpret_cast<uint8*>(&Header), sizeof(Header)))
 		{
-			HERMES_LOG_WARNING(L"Failed to read image header from asset %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to read image header from asset %s", Name.c_str());
 			return nullptr;
 		}
 
@@ -51,7 +51,7 @@ namespace Hermes
 		std::vector<uint8> ImageData(TotalBytes, 0x00);
 		if (!File.Read(ImageData.data(), TotalBytes))
 		{
-			HERMES_LOG_WARNING(L"Failed to read image data from asset %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to read image data from asset %s", Name.c_str());
 			return nullptr;
 		}
 
@@ -76,7 +76,7 @@ namespace Hermes
 		MeshHeader Header;
 		if (!File.Read(reinterpret_cast<uint8*>(&Header), sizeof(Header)))
 		{
-			HERMES_LOG_WARNING(L"Failed to read mesh header from asset %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to read mesh header from asset %s", Name.c_str());
 			return nullptr;
 		}
 
@@ -85,7 +85,7 @@ namespace Hermes
 		if (!File.Read(reinterpret_cast<uint8*>(Vertices.data()), Header.VertexCount * sizeof(Vertex)) ||
 			!File.Read(reinterpret_cast<uint8*>(Indices.data()), Header.IndexCount * sizeof(uint32)))
 		{
-			HERMES_LOG_WARNING(L"Failed to read mesh data from asset %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to read mesh data from asset %s", Name.c_str());
 			return nullptr;
 		}
 

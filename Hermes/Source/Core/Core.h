@@ -18,12 +18,7 @@
 
 namespace Hermes
 {
-	/**
-	 * Hermes is UTF-16 only game engine
-	 * ANSI strings are supported only for accessing 3rd party code and API
-	 */
-	using String = std::wstring;
-	using ANSIString = std::string;
+	using String = std::string;
 
 	typedef uint8_t uint8;
 	typedef int8_t int8;

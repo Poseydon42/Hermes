@@ -28,13 +28,13 @@ namespace Hermes
 
 	uint32 MeshAsset::GetVertexCount() const
 	{
-		HERMES_ASSERT_LOG(Vertices.size() <= UINT32_MAX, L"Cant load meshes with more than 2^32 - 1 vertices");
+		HERMES_ASSERT_LOG(Vertices.size() <= UINT32_MAX, "Cant load meshes with more than 2^32 - 1 vertices");
 		return static_cast<uint32>(Vertices.size());
 	}
 
 	uint32 MeshAsset::GetIndexCount() const
 	{
-		HERMES_ASSERT_LOG(Indices.size() <= UINT32_MAX, L"Cant load meshes with more than 2^32 - 1 indices");
+		HERMES_ASSERT_LOG(Indices.size() <= UINT32_MAX, "Cant load meshes with more than 2^32 - 1 indices");
 		return static_cast<uint32>(Indices.size());
 	}
 

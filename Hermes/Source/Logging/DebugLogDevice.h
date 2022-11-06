@@ -20,7 +20,7 @@ namespace Hermes
 		inline void WriteLine(LogLevel Level, const String& Text) override
 		{
 			if (Level >= CurrentLogLevel)
-				PlatformDebug::PrintString(Text + L"\n");
+				PlatformDebug::PrintString(Text + "\n");
 		}
 
 		inline LogLevel GetCurrentLogLevel() override

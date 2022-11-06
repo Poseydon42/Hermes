@@ -14,7 +14,8 @@ int WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	HMODULE GameModule = LoadLibrary(GameModuleName.c_str());
 	if (GameModule)
 	{
-		auto* CreateApplicationInstanceImpl = (Hermes::CreateApplicationInstance)GetProcAddress(GameModule, "CreateApplicationInstance");
+		auto* CreateApplicationInstanceImpl = reinterpret_cast<Hermes::CreateApplicationInstance>(
+			GetProcAddress(GameModule, "CreateApplicationInstance"));
 		if (CreateApplicationInstanceImpl)
 		{
 			Hermes::IApplication* App = CreateApplicationInstanceImpl();

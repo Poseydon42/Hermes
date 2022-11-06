@@ -94,11 +94,11 @@ namespace Hermes::Vulkan
 
 		if (!SwapchainExtensionSupported)
 		{
-			PlatformMisc::ExitWithMessageBox(1, L"Vulkan error",
-			                                 L"Selected Vulkan device does not support VK_KHR_swapchain extension. Update your GPU driver and try again.");
+			PlatformMisc::ExitWithMessageBox(1, "Vulkan error",
+			                                 "Selected Vulkan device does not support VK_KHR_swapchain extension. Update your GPU driver and try again.");
 		}
-		HERMES_LOG_INFO(L"VK_EXT_memory_budget extension support: %s",
-		                MemoryBudgetExtensionSupported ? L"true" : L"false");
+		HERMES_LOG_INFO("VK_EXT_memory_budget extension support: %s",
+		                MemoryBudgetExtensionSupported ? "true" : "false");
 
 		VkDeviceCreateInfo CreateInfo = {};
 		CreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -124,8 +124,8 @@ namespace Hermes::Vulkan
 		}
 		if (GraphicsQueueFamilyIndex == -1)
 		{
-			PlatformMisc::ExitWithMessageBox(1, L"Vulkan error",
-			                                 L"Cannot find any render queue on the selected Vulkan device.");
+			PlatformMisc::ExitWithMessageBox(1, "Vulkan error",
+			                                 "Cannot find any render queue on the selected Vulkan device.");
 		}
 
 		VkBool32 IsPresentationSupported = false;
@@ -134,7 +134,7 @@ namespace Hermes::Vulkan
 		                                     &IsPresentationSupported);
 		if (!IsPresentationSupported)
 		{
-			PlatformMisc::ExitWithMessageBox(1, L"Vulkan error", L"Render queue does not support presentation.");
+			PlatformMisc::ExitWithMessageBox(1, "Vulkan error", "Render queue does not support presentation.");
 		}
 
 		VmaAllocatorCreateInfo AllocatorCreateInfo = {};

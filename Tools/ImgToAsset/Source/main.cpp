@@ -11,7 +11,6 @@
 #include "PNGLoader.h"
 #include "stb_image.h"
 
-#include "Core/Misc/StringUtils.h"
 #include "AssetSystem/AssetLoader.h"
 #include "AssetSystem/ImageAsset.h"
 
@@ -396,12 +395,12 @@ int main(int ArgCount, const char** ArgValues)
 
 	bool DisplayHelp = false;
 	bool GenerateMips = false;
-	Hermes::String InputFileNameArg;
+	Hermes::String InputFileName;
 
 	Hermes::ArgsParser Args;
 	Args.AddOption("help", 'h', &DisplayHelp);
 	Args.AddOption("generate-mips", 'm', &GenerateMips);
-	Args.AddPositional(true, &InputFileNameArg);
+	Args.AddPositional(true, &InputFileName);
 
 	bool ParsingSuccess = Args.Parse(ArgCount - 1, ArgValues + 1); // Skipping first argument as it's the name of the application
 	if (DisplayHelp)
@@ -409,7 +408,7 @@ int main(int ArgCount, const char** ArgValues)
 		DisplayHelpMessage();
 		return 0;
 	}
-	if (!ParsingSuccess || InputFileNameArg.empty())
+	if (!ParsingSuccess || InputFileName.empty())
 	{
 		std::cerr << "Invalid usage; use --help option for more information" << std::endl;
 		return 1;
@@ -422,8 +421,7 @@ int main(int ArgCount, const char** ArgValues)
 		PNG,
 		HDR
 	} FileType = FileType::Undefined;
-
-	Hermes::ANSIString InputFileName = Hermes::StringUtils::StringToANSI(InputFileNameArg);
+	
 	std::string InputFileNameWithoutExtension = InputFileName.substr(0, InputFileName.find_last_of('.'));
 	if (InputFileName.substr(InputFileName.find_last_of('.'),
 	                         InputFileName.length() - InputFileName.find_last_of('.') + 1) == ".tga")
@@ -440,7 +438,7 @@ int main(int ArgCount, const char** ArgValues)
 	{
 		FileType = FileType::HDR;
 	}
-	Hermes::ANSIString OutputFileName = InputFileNameWithoutExtension + ".hac";
+	auto OutputFileName = InputFileNameWithoutExtension + ".hac";
 
 	std::unique_ptr<Image> LoadedImage;
 	switch (FileType)

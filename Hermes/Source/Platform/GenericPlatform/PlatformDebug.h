@@ -10,6 +10,6 @@ namespace Hermes
 		 * Prints string to platform debug output
 		 * Not all platform can and will implement this
 		 */
-		static void PrintString(String Text);
+		static void PrintString(const String& Text);
 	};
 }

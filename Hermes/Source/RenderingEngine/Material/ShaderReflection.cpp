@@ -2,7 +2,6 @@
 
 #include <spirv_cross.hpp>
 
-#include "Core/Misc/StringUtils.h"
 #include "Logging/Logger.h"
 #include "Platform/GenericPlatform/PlatformFile.h"
 
@@ -15,7 +14,7 @@ namespace Hermes
 		case spirv_cross::SPIRType::Float:
 			return MaterialPropertyDataType::Float;
 		default:
-			HERMES_ASSERT_LOG(false, L"Unsupported SPIR-V type");
+			HERMES_ASSERT_LOG(false, "Unsupported SPIR-V type");
 			return MaterialPropertyDataType::Undefined;
 		}
 	}
@@ -52,8 +51,7 @@ namespace Hermes
 			SizeForUniformBuffer = Compiler.get_declared_struct_size(TypeContainer);
 			for (uint32 MemberIndex = 0; MemberIndex < TypeContainer.member_types.size(); MemberIndex++)
 			{
-				const auto& ANSIName = Compiler.get_member_name(TypeContainer.self, MemberIndex);
-				auto Name = StringUtils::ANSIToString(ANSIName);
+				const auto& Name = Compiler.get_member_name(TypeContainer.self, MemberIndex);
 
 				auto& NativeType = Compiler.get_type(TypeContainer.member_types[MemberIndex]);
 				auto DataType = SPIRVTypeToMaterialPropertyDataType(NativeType.basetype);
@@ -64,7 +62,7 @@ namespace Hermes
 				if (!NativeType.array.empty())
 					ArraySize = NativeType.array[0];
 				HERMES_ASSERT_LOG(NativeType.array.size() <= 1,
-				                  L"Multidimensional array as material properties are not currently supported.");
+				                  "Multidimensional array as material properties are not currently supported.");
 
 				auto Type = MaterialPropertyType::Undefined;
 				if (NativeType.vecsize == 1 && NativeType.columns == 1)
@@ -78,7 +76,7 @@ namespace Hermes
 				else
 				{
 					HERMES_ASSERT_LOG(NativeType.vecsize == NativeType.columns,
-					                  L"Reflection of non-square matrices is not supported");
+					                  "Reflection of non-square matrices is not supported");
 					Type = MaterialPropertyType::Matrix;
 				}
 
@@ -101,12 +99,11 @@ namespace Hermes
 			// NOTE: material properties are located only in descriptor set 1
 			if (Compiler.get_decoration(Texture.id, spv::DecorationDescriptorSet) != 1)
 				continue;
-
-			const auto& ANSIName = Compiler.get_name(Texture.id);
-			auto Name = StringUtils::ANSIToString(ANSIName);
+			
+			const auto& Name = Compiler.get_name(Texture.id);
 
 			HERMES_ASSERT_LOG(Compiler.get_type(Texture.type_id).array.empty(),
-			                  L"Arrays of textures as material properties are not supported");
+			                  "Arrays of textures as material properties are not supported");
 
 			auto Binding = Compiler.get_decoration(Texture.id, spv::DecorationBinding);
 

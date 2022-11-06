@@ -16,7 +16,7 @@ namespace Hermes::Vulkan
 	 */
 	struct DeviceProperties
 	{
-		ANSIString Name;
+		String Name;
 			
 		bool AnisotropySupport = false;
 		float MaxAnisotropyLevel = 0.0f;

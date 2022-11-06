@@ -30,21 +30,21 @@ namespace Hermes
 		 * Writes a log message to all available log devices with given log level
 		 * @param Text Text to print, could include format that is recognized by CRT sprintf
 		 */
-		static void Log(LogLevel CurrentLevel, const wchar_t* Text, ...);
+		static void Log(LogLevel CurrentLevel, const char* Text, ...);
 
-		static void LogWithFilename(LogLevel Level, const wchar_t* Filename, int32 Line, const wchar_t* Text, ...);
+		static void LogWithFilename(LogLevel Level, const char* Filename, int32 Line, const char* Text, ...);
 
-		static void Trace(const wchar_t* Text, ...);
+		static void Trace(const char* Text, ...);
 
-		static void Debug(const wchar_t* Text, ...);
+		static void Debug(const char* Text, ...);
 
-		static void Info(const wchar_t* Text, ...);
+		static void Info(const char* Text, ...);
 
-		static void Warning(const wchar_t* Text, ...);
+		static void Warning(const char* Text, ...);
 
-		static void Error(const wchar_t* Text, ...);
+		static void Error(const char* Text, ...);
 
-		static void Fatal(const wchar_t* Text, ...);
+		static void Fatal(const char* Text, ...);
 
 		static LogLevel GetLogLevel();
 
@@ -83,14 +83,15 @@ namespace Hermes
 		static void SetLogFormat(const String& NewFormat);
 
 		/**
-		 * Max size of log string after all formating
+		 * Max size of log string after all formatting
 		 * Everything that exceeds it will be trimmed
 		 */
-		static const size_t BufferSize = 4095; // + 1 symbol for null terminator
-	private:
-		static void LogImpl(LogLevel CurrentLevel, const wchar_t* Filename, int32 Line, const wchar_t* Text, va_list Args);
+		static constexpr size_t BufferSize = 4095; // + 1 symbol for null terminator
 
-		static void ApplyFormatting(LogLevel Level, const wchar_t* Filename, int32 Line, wchar_t* Buffer, size_t BufferCount, const wchar_t* Message);
+	private:
+		static void LogImpl(LogLevel Level, const char* Filename, int32 Line, const char* Text, va_list Args);
+
+		static void ApplyFormatting(LogLevel Level, const char* Filename, int32 Line, char* Buffer, size_t BufferCount, const char* Message);
 
 		static std::vector<ILogDevice*> LogDevices;
 
@@ -104,9 +105,9 @@ namespace Hermes
 #define MAKE_WIDE2(x) MAKE_WIDE1(x)
 #define __WFILE__ MAKE_WIDE2(__FILE__)
 
-#define HERMES_LOG_TRACE(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Trace, __WFILE__, __LINE__, (Text), __VA_ARGS__)
-#define HERMES_LOG_DEBUG(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Debug, __WFILE__, __LINE__, (Text), __VA_ARGS__)
-#define HERMES_LOG_INFO(Text, ...)    ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Info, __WFILE__, __LINE__, (Text), __VA_ARGS__)
-#define HERMES_LOG_WARNING(Text, ...) ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Warning, __WFILE__, __LINE__, (Text), __VA_ARGS__)
-#define HERMES_LOG_ERROR(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Error, __WFILE__, __LINE__, (Text), __VA_ARGS__)
-#define HERMES_LOG_FATAL(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Fatal, __WFILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_TRACE(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Trace, __FILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_DEBUG(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Debug, __FILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_INFO(Text, ...)    ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Info, __FILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_WARNING(Text, ...) ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Warning, __FILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_ERROR(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Error, __FILE__, __LINE__, (Text), __VA_ARGS__)
+#define HERMES_LOG_FATAL(Text, ...)   ::Hermes::Logger::LogWithFilename(::Hermes::LogLevel::Fatal, __FILE__, __LINE__, (Text), __VA_ARGS__)

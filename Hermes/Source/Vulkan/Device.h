@@ -88,6 +88,7 @@ namespace Hermes::Vulkan
 
 		std::unique_ptr<Queue> GraphicsQueue;
 		std::unique_ptr<Queue> TransferQueue;
+		std::unique_ptr<Queue> ComputeQueue;
 
 		friend class Buffer;
 		friend class CommandBuffer;

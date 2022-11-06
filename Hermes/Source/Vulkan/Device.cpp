@@ -39,7 +39,7 @@ namespace Hermes::Vulkan
 		vkGetPhysicalDeviceQueueFamilyProperties(Holder->PhysicalDevice, &QueueCount, QueueFamilies.data());
 		float QueuePriority = 1.0f;
 
-		int32 GraphicsQueueFamilyIndex = -1, TransferQueueFamilyIndex = -1;
+		int32 GraphicsQueueFamilyIndex = -1, TransferQueueFamilyIndex = -1, ComputeQueueFamilyIndex = -1;
 		for (size_t Index = 0; Index < QueueFamilies.size(); Index++)
 		{
 			const auto& QueueFamily = QueueFamilies[Index];
@@ -48,6 +48,12 @@ namespace Hermes::Vulkan
 				VK_QUEUE_GRAPHICS_BIT && !QueueUsed)
 			{
 				GraphicsQueueFamilyIndex = static_cast<int32>(Index);
+				QueueUsed = true;
+			}
+			if (TransferQueueFamilyIndex == -1 && (QueueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) ==
+				VK_QUEUE_COMPUTE_BIT && !QueueUsed)
+			{
+				ComputeQueueFamilyIndex = static_cast<int32>(Index);
 				QueueUsed = true;
 			}
 			if (TransferQueueFamilyIndex == -1 && (QueueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) ==
@@ -122,10 +128,23 @@ namespace Hermes::Vulkan
 			// We have to use render queue to perform transfer operations then
 			TransferQueueFamilyIndex = GraphicsQueueFamilyIndex;
 		}
+		if (ComputeQueueFamilyIndex == -1)
+		{
+			// Try to use graphics queue if it supports compute operations, otherwise exit with error
+			if (QueueFamilies[GraphicsQueueFamilyIndex].queueFlags & VK_QUEUE_COMPUTE_BIT)
+			{
+				ComputeQueueFamilyIndex = GraphicsQueueFamilyIndex;
+			}
+			else
+			{
+				PlatformMisc::ExitWithMessageBox(1, "Vulkan error",
+				                                 "Cannot find any compute queue on the selected Vulkan device.");
+			}
+		}
 		if (GraphicsQueueFamilyIndex == -1)
 		{
 			PlatformMisc::ExitWithMessageBox(1, "Vulkan error",
-			                                 "Cannot find any render queue on the selected Vulkan device.");
+			                                 "Cannot find any graphics queue on the selected Vulkan device.");
 		}
 
 		VkBool32 IsPresentationSupported = false;
@@ -149,6 +168,7 @@ namespace Hermes::Vulkan
 
 		GraphicsQueue = std::make_unique<Queue>(Holder, GraphicsQueueFamilyIndex);
 		TransferQueue = std::make_unique<Queue>(Holder, TransferQueueFamilyIndex);
+		ComputeQueue = std::make_unique<Queue>(Holder, ComputeQueueFamilyIndex);
 		// NOTE: render queue must always have presentation capabilities
 		vkGetDeviceQueue(Holder->Device, GraphicsQueueFamilyIndex, 0, &Holder->PresentationQueue);
 	}

@@ -69,10 +69,29 @@ public:
 			}
 		}
 
-		Hermes::PointLightProxy PointLight = {};
-		PointLight.Color = { 1.0f, 1.0f, 0.9f, 200.0f };
-		PointLight.Position = { 0.0f, 3.0f, 3.0f, 0.0f };
-		Hermes::GGameLoop->GetScene().AddPointLight(PointLight);
+		static constexpr Hermes::int32 PointLightCountInSingleDimension = 15;
+		static constexpr float GridDistanceBetweenPointLights = 25.0f;
+		static constexpr float LightHeight = 4.0f;
+		static constexpr float LightPower = 200.0f;
+		for (auto LightX = -PointLightCountInSingleDimension / 2;
+		     LightX <= PointLightCountInSingleDimension / 2;
+		     LightX++)
+		{
+			for (auto LightZ = -PointLightCountInSingleDimension / 2;
+			     LightZ <= PointLightCountInSingleDimension / 2;
+			     LightZ++)
+			{
+				Hermes::PointLightProxy PointLight = {};
+				PointLight.Color = { 1.0f, 1.0f, 0.9f, LightPower };
+				PointLight.Position = {
+					static_cast<float>(LightX) * GridDistanceBetweenPointLights,
+					LightHeight,
+					static_cast<float>(LightZ) * GridDistanceBetweenPointLights,
+					0.0f
+				};
+				Hermes::GGameLoop->GetScene().AddPointLight(PointLight);
+			}
+		}
 
 		Camera = std::make_unique<Hermes::FPSCamera>(Hermes::Vec3(0.0f, 3.0f, 0.0f), 0.0f, 0.0f, 0.5f, 25.0f, 50.0f,
 		                                             Hermes::Vec2(Hermes::Renderer::Get().GetSwapchain().GetDimensions()), true);

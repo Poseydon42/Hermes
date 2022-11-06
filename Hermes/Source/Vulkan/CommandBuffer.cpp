@@ -1,6 +1,7 @@
 ﻿#include "CommandBuffer.h"
 
 #include "Vulkan/Buffer.h"
+#include "Vulkan/ComputePipeline.h"
 #include "Vulkan/Descriptor.h"
 #include "Vulkan/Image.h"
 #include "Vulkan/Pipeline.h"
@@ -63,8 +64,12 @@ namespace Hermes::Vulkan
 
 	void CommandBuffer::BindPipeline(const Pipeline& Pipeline)
 	{
-		// TODO : compute pipelines
 		vkCmdBindPipeline(Handle, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline.GetPipeline());
+	}
+
+	void CommandBuffer::BindPipeline(const ComputePipeline& Pipeline)
+	{
+		vkCmdBindPipeline(Handle, VK_PIPELINE_BIND_POINT_COMPUTE, Pipeline.GetPipeline());
 	}
 
 	void CommandBuffer::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 VertexOffset, uint32 InstanceOffset)
@@ -76,6 +81,11 @@ namespace Hermes::Vulkan
 	                                int32 VertexOffset, uint32 InstanceOffset)
 	{
 		vkCmdDrawIndexed(Handle, IndexCount, InstanceCount, IndexOffset, VertexOffset, InstanceOffset);
+	}
+
+	void CommandBuffer::Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ)
+	{
+		vkCmdDispatch(Handle, GroupCountX, GroupCountY, GroupCountZ);
 	}
 
 	void CommandBuffer::BindVertexBuffer(const Buffer& Buffer)
@@ -95,6 +105,13 @@ namespace Hermes::Vulkan
 	{
 		auto DescriptorSet = Set.GetDescriptorSet();
 		vkCmdBindDescriptorSets(Handle, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline.GetPipelineLayout(), BindingIndex, 1,
+		                        &DescriptorSet, 0, nullptr);
+	}
+
+	void CommandBuffer::BindDescriptorSet(const DescriptorSet& Set, const ComputePipeline& Pipeline, uint32 BindingIndex)
+	{
+		auto DescriptorSet = Set.GetDescriptorSet();
+		vkCmdBindDescriptorSets(Handle, VK_PIPELINE_BIND_POINT_COMPUTE, Pipeline.GetPipelineLayout(), BindingIndex, 1,
 		                        &DescriptorSet, 0, nullptr);
 	}
 

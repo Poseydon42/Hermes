@@ -35,16 +35,22 @@ namespace Hermes::Vulkan
 
 		void BindPipeline(const Pipeline& Pipeline);
 
+		void BindPipeline(const ComputePipeline& Pipeline);
+
 		void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 VertexOffset, uint32 InstanceOffset);
 
 		void DrawIndexed(uint32 IndexCount, uint32 InstanceCount, uint32 IndexOffset, int32 VertexOffset,
 		                 uint32 InstanceOffset);
+
+		void Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ);
 
 		void BindVertexBuffer(const Buffer& Buffer);
 
 		void BindIndexBuffer(const Buffer& Buffer, VkIndexType IndexType);
 
 		void BindDescriptorSet(const DescriptorSet& Set, const Pipeline& Pipeline, uint32 BindingIndex);
+
+		void BindDescriptorSet(const DescriptorSet& Set, const ComputePipeline& Pipeline, uint32 BindingIndex);
 
 		void UploadPushConstants(const Pipeline& Pipeline, VkShaderStageFlags ShadersThatUse, const void* Data,
 		                         uint32 Size, uint32 Offset);

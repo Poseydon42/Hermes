@@ -60,6 +60,8 @@ namespace Hermes::Vulkan
 
 		std::unique_ptr<Sampler> CreateSampler(const SamplerDescription& Description) const;
 
+		std::unique_ptr<ComputePipeline> CreateComputePipeline(const std::vector<const DescriptorSetLayout*>& DescriptorSetLayouts, const Shader& Shader) const;
+
 		void WaitForIdle() const;
 
 		VmaAllocator GetAllocator() const { return Holder->Allocator; }
@@ -92,6 +94,7 @@ namespace Hermes::Vulkan
 
 		friend class Buffer;
 		friend class CommandBuffer;
+		friend class ComputePipeline;
 		friend class DescriptorSet;
 		friend class DescriptorSetLayout;
 		friend class DescriptorSetPool;

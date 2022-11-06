@@ -4,6 +4,7 @@ namespace Hermes::Vulkan
 {
 	class Buffer;
 	class CommandBuffer;
+	class ComputePipeline;
 	class DescriptorSet;
 	class DescriptorSetLayout;
 	class DescriptorSetPool;

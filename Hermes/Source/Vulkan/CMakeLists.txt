@@ -7,6 +7,8 @@ set(SOURCES
     Buffer.h
     CommandBuffer.cpp
     CommandBuffer.h
+    ComputePipeline.cpp
+    ComputePipeline.h
     Descriptor.cpp
     Descriptor.h
     Device.cpp

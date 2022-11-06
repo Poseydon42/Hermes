@@ -2,6 +2,7 @@
 
 #include "Platform/GenericPlatform/PlatformMisc.h"
 #include "Vulkan/Buffer.h"
+#include "Vulkan/ComputePipeline.h"
 #include "Vulkan/Descriptor.h"
 #include "Vulkan/Fence.h"
 #include "Vulkan/Framebuffer.h"
@@ -253,6 +254,11 @@ namespace Hermes::Vulkan
 	std::unique_ptr<Sampler> Device::CreateSampler(const SamplerDescription& Description) const
 	{
 		return std::make_unique<Sampler>(Holder, Description);
+	}
+
+	std::unique_ptr<ComputePipeline> Device::CreateComputePipeline(const std::vector<const DescriptorSetLayout*>& DescriptorSetLayouts, const Shader& Shader) const
+	{
+		return std::make_unique<ComputePipeline>(Holder, DescriptorSetLayouts, Shader);
 	}
 
 	std::unique_ptr<Image> Device::CreateImage(Vec2ui Dimensions, VkImageUsageFlags Usage, VkFormat Format,

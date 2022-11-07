@@ -59,14 +59,14 @@ namespace Hermes
 		ForwardLinks[From] = To;
 	}
 
-	void FrameGraphScheme::AddResource(const String& Name, const ResourceDesc& Description)
+	void FrameGraphScheme::AddResource(const String& Name, const ImageResourceDescription& Description)
 	{
-		Resources.emplace_back(Name, Description, false);
+		ImageResources.emplace_back(Name, Description, false);
 	}
 
-	void FrameGraphScheme::DeclareExternalResource(const String& Name, const ResourceDesc& Description)
+	void FrameGraphScheme::DeclareExternalResource(const String& Name, const ImageResourceDescription& Description)
 	{
-		Resources.emplace_back(Name, Description, true);
+		ImageResources.emplace_back(Name, Description, true);
 	}
 
 	std::unique_ptr<FrameGraph> FrameGraphScheme::Compile() const
@@ -110,7 +110,7 @@ namespace Hermes
 				}
 			}
 		}
-		for (const auto& Resource : Resources)
+		for (const auto& Resource : ImageResources)
 		{
 			// Resource name cannot have '.' character as it is used as separator between pass and attachment name
 			if (Resource.Name.find(L'.') != String::npos)
@@ -139,10 +139,10 @@ namespace Hermes
 			{
 				// If the first pass is the pass that contains external resources then check if
 				// such resource exists
-				if (std::ranges::find_if(Resources, [&](const auto& Element)
+				if (std::ranges::find_if(ImageResources, [&](const auto& Element)
 				{
 					return Element.Name == FirstAttachmentName;
-				}) == Resources.end())
+				}) == ImageResources.end())
 				{
 					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': resource '%s' does not exist",
 					                 Link.first.c_str(), Link.second.c_str(), FirstAttachmentName.c_str());
@@ -216,7 +216,7 @@ namespace Hermes
 	                                      std::shared_ptr<Vulkan::ImageView> View,
 	                                      VkImageLayout CurrentLayout)
 	{
-		auto& Resource = Resources.at(Name);
+		auto& Resource = ImageResources.at(Name);
 		HERMES_ASSERT_LOG(Resource.IsExternal, "Trying to rebind non-external frame graph resource");
 
 		Resource.Image = std::move(Image);
@@ -267,7 +267,7 @@ namespace Hermes
 			size_t BarrierIndex = 0;
 			for (const auto& Attachment : Pass.AttachmentLayouts)
 			{
-				auto& Resource = Resources[Attachment.first];
+				auto& Resource = ImageResources[Attachment.first];
 
 				Barriers[BarrierIndex].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 				Barriers[BarrierIndex].image = Resource.Image->GetImage();
@@ -320,7 +320,7 @@ namespace Hermes
 			auto& Queue = Renderer::Get().GetActiveDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
 			auto BlitAndPresentCommandBuffer = Queue.CreateCommandBuffer(true);
 
-			auto& BlitToSwapchainResource = Resources[BlitToSwapchainResourceOwnName];
+			auto& BlitToSwapchainResource = ImageResources[BlitToSwapchainResourceOwnName];
 
 			SwapchainImageAcquiredFence->Wait(UINT64_MAX);
 			if (!SwapchainImageIndex.has_value())
@@ -429,11 +429,11 @@ namespace Hermes
 		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetDimensions();
 
 		bool ContainsExternalResources = false;
-		for (const auto& Resource : Scheme.Resources)
+		for (const auto& Resource : Scheme.ImageResources)
 		{
 			ContainsExternalResources |= Resource.IsExternal;
 
-			ResourceContainer Container = {};
+			ImageResourceContainer Container = {};
 			if (!Resource.IsExternal)
 			{
 				auto Image = Renderer::Get().GetActiveDevice().
@@ -450,7 +450,7 @@ namespace Hermes
 			Container.Desc = Resource.Desc;
 			Container.IsExternal = Resource.IsExternal;
 
-			Resources[Resource.Name] = std::move(Container);
+			ImageResources[Resource.Name] = std::move(Container);
 		}
 
 		for (const auto& Pass : Scheme.Passes)
@@ -520,7 +520,7 @@ namespace Hermes
 				String PassName, ResourceOwnName;
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
 
-				const auto& Resource = Resources[ResourceOwnName];
+				const auto& Resource = ImageResources[ResourceOwnName];
 				FramebufferAttachments.push_back(Resource.View.get());
 				if (!Resource.IsExternal)
 				{
@@ -699,14 +699,14 @@ namespace Hermes
 		SplitResourceName(CurrentAttachment, ResourcePassName, ResourceOwnName);
 		HERMES_ASSERT(ResourcePassName == "$");
 
-		const auto& Resource = Resources.at(ResourceOwnName);
+		const auto& Resource = ImageResources.at(ResourceOwnName);
 		return Resource.Desc.Format;
 	}
 
 	void FrameGraph::RecreateResources()
 	{
 		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetDimensions();
-		for (auto& Resource : Resources)
+		for (auto& Resource : ImageResources)
 		{
 			if (Resource.second.Desc.Dimensions.IsRelative() && !Resource.second.IsExternal)
 			{
@@ -740,7 +740,7 @@ namespace Hermes
 				String PassName, ResourceOwnName;
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
 
-				const auto& Resource = Resources[ResourceOwnName];
+				const auto& Resource = ImageResources[ResourceOwnName];
 				Attachments.push_back(Resource.View.get());
 				if (!Resource.IsExternal)
 				{

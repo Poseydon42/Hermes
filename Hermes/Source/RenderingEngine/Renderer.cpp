@@ -77,19 +77,19 @@ namespace Hermes
 		Scheme.AddPass("PostProcessingPass", PostProcessingPass->GetPassDescription());
 		Scheme.AddPass("SkyboxPass", SkyboxPass->GetPassDescription());
 
-		ResourceDesc HDRColorBufferResource = {};
+		ImageResourceDescription HDRColorBufferResource = {};
 		HDRColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
 		HDRColorBufferResource.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
 		HDRColorBufferResource.MipLevels = 1;
 		Scheme.AddResource("HDRColorBuffer", HDRColorBufferResource);
 
-		ResourceDesc ColorBufferResource = {};
+		ImageResourceDescription ColorBufferResource = {};
 		ColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f });
 		ColorBufferResource.Format = VK_FORMAT_B8G8R8A8_SRGB;
 		ColorBufferResource.MipLevels = 1;
 		Scheme.AddResource("ColorBuffer", ColorBufferResource);
 
-		ResourceDesc DepthBufferResource = {};
+		ImageResourceDescription DepthBufferResource = {};
 		DepthBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
 		DepthBufferResource.Format = VK_FORMAT_D32_SFLOAT;
 		DepthBufferResource.MipLevels = 1;

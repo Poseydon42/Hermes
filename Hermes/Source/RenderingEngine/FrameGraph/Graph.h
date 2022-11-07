@@ -23,9 +23,9 @@ namespace Hermes
 
 		void AddLink(const String& From, const String& To);
 
-		void AddResource(const String& Name, const ResourceDesc& Description);
+		void AddResource(const String& Name, const ImageResourceDescription& Description);
 
-		void DeclareExternalResource(const String& Name, const ResourceDesc& Description);
+		void DeclareExternalResource(const String& Name, const ImageResourceDescription& Description);
 
 		std::unique_ptr<FrameGraph> Compile() const;
 
@@ -34,14 +34,14 @@ namespace Hermes
 
 		std::unordered_map<String, PassDesc> Passes;
 
-		struct ResourceContainer
+		struct ImageResourceContainer
 		{
 			String Name;
-			ResourceDesc Desc;
+			ImageResourceDescription Desc;
 
 			bool IsExternal = false;
 		};
-		std::vector<ResourceContainer> Resources;
+		std::vector<ImageResourceContainer> ImageResources;
 
 		// NOTE : ForwardLinks holds links between outputs of first render pass and inputs of the second
 		//        BackwardLinks is just a reversed version of it because STL does not have bidirectional map
@@ -89,16 +89,16 @@ namespace Hermes
 
 		FrameGraphScheme Scheme;
 
-		struct ResourceContainer
+		struct ImageResourceContainer
 		{
 			std::shared_ptr<Vulkan::Image> Image;
 			std::shared_ptr<Vulkan::ImageView> View;
 			VkImageLayout CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			ResourceDesc Desc;
+			ImageResourceDescription Desc;
 
 			bool IsExternal = false;
 		};
-		std::unordered_map<String, ResourceContainer> Resources;
+		std::unordered_map<String, ImageResourceContainer> ImageResources;
 
 		struct PassContainer
 		{

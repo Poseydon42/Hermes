@@ -37,7 +37,7 @@ namespace Hermes
 		};
 	};
 
-	struct ResourceDesc
+	struct ImageResourceDescription
 	{
 		VkFormat Format = VK_FORMAT_UNDEFINED;
 		SwapchainRelativeDimensions Dimensions;

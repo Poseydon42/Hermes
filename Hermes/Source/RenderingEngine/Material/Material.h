@@ -32,11 +32,16 @@ namespace Hermes
 
 		const Vulkan::Pipeline& GetPipeline() const;
 
+		/*
+		 * Returns a pipeline with vertex shader only that can be used for things like depth pass etc.
+		 */
+		const Vulkan::Pipeline& GetVertexPipeline() const;
+
 	private:
 		ShaderReflection Reflection;
 
 		std::unique_ptr<Vulkan::DescriptorSetLayout> DescriptorSetLayout;
-		std::unique_ptr<Vulkan::Pipeline> Pipeline;
+		std::unique_ptr<Vulkan::Pipeline> Pipeline, VertexPipeline;
 
 		Material(const String& VertexShaderPath, const String& FragmentShaderPath);
 	};

@@ -112,6 +112,10 @@ namespace Hermes
 
 		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetGraphicsRenderPassObject(),
 		                                                            PipelineDesc);
+		PipelineDesc.ShaderStages = { VertexShader.get() };
+		// NOTE: vertex shaders don't have any user-defined material properties for now
+		PipelineDesc.DescriptorSetLayouts = { &Renderer::Get().GetGlobalDataDescriptorSetLayout() };
+		VertexPipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetVertexRenderPassObject(), PipelineDesc);
 	}
 
 	std::shared_ptr<Material> Material::Create(const String& VertexShaderPath, const String& FragmentShaderPath)
@@ -138,5 +142,10 @@ namespace Hermes
 	const Vulkan::Pipeline& Material::GetPipeline() const
 	{
 		return *Pipeline;
+	}
+
+	const Vulkan::Pipeline& Material::GetVertexPipeline() const
+	{
+		return *VertexPipeline;
 	}
 }

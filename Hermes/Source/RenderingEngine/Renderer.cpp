@@ -162,6 +162,11 @@ namespace Hermes
 		return FrameGraph->GetRenderPassObject("ForwardPass");
 	}
 
+	const Vulkan::RenderPass& Renderer::GetVertexRenderPassObject() const
+	{
+		return FrameGraph->GetRenderPassObject("DepthPass");
+	}
+
 	const Vulkan::Sampler& Renderer::GetDefaultSampler() const
 	{
 		return *DefaultSampler;

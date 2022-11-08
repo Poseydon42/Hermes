@@ -54,6 +54,12 @@ namespace Hermes
 
 		const Vulkan::RenderPass& GetGraphicsRenderPassObject() const;
 
+		/*
+		 * Returns a render pass object that will be compatible with any render pass that
+		 * will utilize a 'vertex-only' pipeline of some material
+		 */
+		const Vulkan::RenderPass& GetVertexRenderPassObject() const;
+
 		const Vulkan::Sampler& GetDefaultSampler() const;
 
 	private:

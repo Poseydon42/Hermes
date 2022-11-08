@@ -16,7 +16,7 @@ namespace Hermes
 	class HERMES_API ForwardPass
 	{
 	public:
-		ForwardPass();
+		ForwardPass(bool ReuseDataInDepthBuffer);
 
 		const PassDesc& GetPassDescription() const;
 

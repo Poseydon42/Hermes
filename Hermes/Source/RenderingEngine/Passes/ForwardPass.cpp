@@ -24,7 +24,7 @@ namespace Hermes
 	std::unique_ptr<Vulkan::ImageView> ForwardPass::PrecomputedBRDFView;
 	std::unique_ptr<Vulkan::Sampler> ForwardPass::PrecomputedBRDFSampler;
 
-	ForwardPass::ForwardPass()
+	ForwardPass::ForwardPass(bool ReuseDataInDepthBuffer)
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
 
@@ -57,7 +57,7 @@ namespace Hermes
 
 		Attachment Depth = {};
 		Depth.Name = "Depth";
-		Depth.LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		Depth.LoadOp = ReuseDataInDepthBuffer ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
 		Depth.StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		Depth.ClearColor.depthStencil.depth = 0.0f;
 		Depth.Binding = BindingMode::DepthStencilAttachment;

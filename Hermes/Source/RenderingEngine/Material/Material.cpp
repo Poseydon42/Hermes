@@ -106,7 +106,7 @@ namespace Hermes
 		PipelineDesc.FaceDirection = VK_FRONT_FACE_CLOCKWISE;
 		PipelineDesc.PolygonMode = VK_POLYGON_MODE_FILL;
 
-		PipelineDesc.DepthCompareOperator = VK_COMPARE_OP_GREATER;
+		PipelineDesc.DepthCompareOperator = VK_COMPARE_OP_GREATER_OR_EQUAL;
 		PipelineDesc.IsDepthTestEnabled = true;
 		PipelineDesc.IsDepthWriteEnabled = true;
 

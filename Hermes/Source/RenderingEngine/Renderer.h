@@ -7,6 +7,7 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/FrameGraph/Graph.h"
+#include "RenderingEngine/Passes/DepthPass.h"
 #include "RenderingEngine/Passes/ForwardPass.h"
 #include "RenderingEngine/Passes/PostProcessingPass.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
@@ -68,6 +69,7 @@ namespace Hermes
 		std::unique_ptr<Vulkan::Sampler> DefaultSampler;
 		
 		std::unique_ptr<FrameGraph> FrameGraph;
+		std::unique_ptr<DepthPass> DepthPass;
 		std::unique_ptr<ForwardPass> ForwardPass;
 		std::unique_ptr<PostProcessingPass> PostProcessingPass;
 		std::unique_ptr<SkyboxPass> SkyboxPass;

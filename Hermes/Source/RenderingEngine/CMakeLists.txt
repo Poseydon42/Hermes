@@ -22,6 +22,8 @@ set(SOURCES
     Material/ShaderReflection.h
     MeshBuffer.cpp
     MeshBuffer.h
+    Passes/DepthPass.cpp
+    Passes/DepthPass.h
     Passes/ForwardPass.cpp
     Passes/ForwardPass.h
     Passes/PostProcessingPass.cpp

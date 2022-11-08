@@ -68,11 +68,13 @@ namespace Hermes
 		SamplerDesc.LODBias = 0.0f;
 		DefaultSampler = Device->CreateSampler(SamplerDesc);
 
-		ForwardPass = std::make_unique<class ForwardPass>();
+		DepthPass = std::make_unique<class DepthPass>();
+		ForwardPass = std::make_unique<class ForwardPass>(true);
 		PostProcessingPass = std::make_unique<class PostProcessingPass>();
 		SkyboxPass = std::make_unique<class SkyboxPass>();
 
-		FrameGraphScheme Scheme;		
+		FrameGraphScheme Scheme;
+		Scheme.AddPass("DepthPass", DepthPass->GetPassDescription());
 		Scheme.AddPass("ForwardPass", ForwardPass->GetPassDescription());
 		Scheme.AddPass("PostProcessingPass", PostProcessingPass->GetPassDescription());
 		Scheme.AddPass("SkyboxPass", SkyboxPass->GetPassDescription());
@@ -95,8 +97,10 @@ namespace Hermes
 		DepthBufferResource.MipLevels = 1;
 		Scheme.AddResource("DepthBuffer", DepthBufferResource);
 
+		Scheme.AddLink("$.DepthBuffer", "DepthPass.Depth");
+
 		Scheme.AddLink("$.HDRColorBuffer", "ForwardPass.Color");
-		Scheme.AddLink("$.DepthBuffer", "ForwardPass.Depth");
+		Scheme.AddLink("DepthPass.Depth", "ForwardPass.Depth");
 
 		Scheme.AddLink("ForwardPass.Color", "SkyboxPass.ColorBuffer");
 		Scheme.AddLink("ForwardPass.Depth", "SkyboxPass.DepthBuffer");

@@ -31,7 +31,12 @@ set(SPIRV_CROSS_ENABLE_C_API OFF CACHE BOOL "Enable C API wrapper support in sta
 set(SPIRV_CROSS_ENABLE_UTIL OFF CACHE BOOL "Enable util module support.")
 add_subdirectory(ThirdParty/SPIRV-Cross)
 
+set(TRACY_STATIC OFF CACHE BOOL "Build Tracy as a dynamic library because we need to use it from both the engine and the game DLL")
 add_subdirectory(ThirdParty/tracy)
+# Copy tracy.dll into the folder where Hermes.exe is located
+add_custom_target(CopyTracyDLL ALL
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:TracyClient> $<TARGET_FILE_DIR:Hermes>
+    DEPENDS TracyClient)
 
 include(CMakeCommon)
 

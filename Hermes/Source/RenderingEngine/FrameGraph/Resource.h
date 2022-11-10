@@ -59,4 +59,10 @@ namespace Hermes
 		VkClearValue ClearColor;
 		BindingMode Binding;
 	};
+
+	struct BufferInput
+	{
+		String Name;
+		bool ClearBeforePass = false;
+	};
 }

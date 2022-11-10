@@ -5,6 +5,7 @@
 #include "Logging/Logger.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/DescriptorAllocator.h"
+#include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"
 
 namespace Hermes
@@ -129,7 +130,11 @@ namespace Hermes
 	void Renderer::RunFrame(const Scene& Scene)
 	{
 		HERMES_PROFILE_FUNC();
+
+		FillSceneDataBuffer(Scene);
+
 		auto GeometryList = Scene.BakeGeometryList();
+
 		auto Metrics = FrameGraph->Execute(Scene, GeometryList);
 		HERMES_PROFILE_TAG("Draw call count", static_cast<int64>(Metrics.DrawCallCount));
 		HERMES_PROFILE_TAG("Pipeline bind count", static_cast<int64>(Metrics.PipelineBindCount));
@@ -167,6 +172,11 @@ namespace Hermes
 		return FrameGraph->GetRenderPassObject("DepthPass");
 	}
 
+	const GlobalSceneData& Renderer::GetSceneDataForCurrentFrame() const
+	{
+		return SceneDataForCurrentFrame;
+	}
+
 	const Vulkan::Sampler& Renderer::GetDefaultSampler() const
 	{
 		return *DefaultSampler;
@@ -177,5 +187,27 @@ namespace Hermes
 		HERMES_LOG_INFO("======== GPU Information ========");
 		HERMES_LOG_INFO("Name: %S", GPUProperties.Name.c_str());
 		HERMES_LOG_INFO("Anisotropy: %s, %f", GPUProperties.AnisotropySupport ? "true" : "false", GPUProperties.MaxAnisotropyLevel);
+	}
+
+	void Renderer::FillSceneDataBuffer(const Scene& Scene)
+	{
+		HERMES_PROFILE_FUNC();
+
+		auto& Camera = Scene.GetActiveCamera();
+
+		SceneDataForCurrentFrame = {};
+
+		SceneDataForCurrentFrame.ViewProjection = Camera.GetProjectionMatrix() * Camera.GetViewMatrix();
+		SceneDataForCurrentFrame.CameraLocation = { Camera.GetLocation(), 1.0f };
+
+		HERMES_ASSERT_LOG(Scene.GetPointLights().size() < GlobalSceneData::MaxPointLightCount,
+		                  "There are more point lights in the scene than the shader can process, some of them will be ignored");
+		SceneDataForCurrentFrame.PointLightCount = Math::Min<uint32>(static_cast<uint32>(Scene.GetPointLights().size()),
+		                                                             GlobalSceneData::MaxPointLightCount);
+		for (size_t Index = 0; Index < Scene.GetPointLights().size(); Index++)
+		{
+			SceneDataForCurrentFrame.PointLights[Index].Position = Scene.GetPointLights()[Index].Position;
+			SceneDataForCurrentFrame.PointLights[Index].Color = Scene.GetPointLights()[Index].Color;
+		}
 	}
 }

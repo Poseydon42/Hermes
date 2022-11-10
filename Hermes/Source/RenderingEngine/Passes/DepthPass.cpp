@@ -16,7 +16,8 @@ namespace Hermes
 		auto& Device = Renderer::Get().GetActiveDevice();
 		auto& DescriptorAllocator = Renderer::Get().GetDescriptorAllocator();
 
-		SceneUBO = Device.CreateBuffer(sizeof(GlobalSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, true);
+		SceneUBO = Device.CreateBuffer(sizeof(Renderer::Get().GetSceneDataForCurrentFrame()),
+		                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, true);
 		SceneUBODescriptorSet = DescriptorAllocator.Allocate(Renderer::Get().GetGlobalDataDescriptorSetLayout());
 
 		Description.Callback.Bind<DepthPass, &DepthPass::PassCallback>(this);
@@ -41,21 +42,9 @@ namespace Hermes
 		auto& Camera = Scene.GetActiveCamera();
 		auto ViewProjectionMatrix = Camera.GetProjectionMatrix() * Camera.GetViewMatrix();
 
-		GlobalSceneData SceneData = {};
-		SceneData.ViewProjection = ViewProjectionMatrix;
-		SceneData.CameraLocation = Vec4(Camera.GetLocation(), 1.0f);
-		HERMES_ASSERT_LOG(Scene.GetPointLights().size() < GlobalSceneData::MaxPointLightCount,
-		                  "There are more point lights in the scene than the shader can process, some of them will be ignored");
-		SceneData.PointLightCount = Math::Min<uint32>(static_cast<uint32>(Scene.GetPointLights().size()),
-		                                              GlobalSceneData::MaxPointLightCount);
-		for (uint32 LightIndex = 0; LightIndex < SceneData.PointLightCount; LightIndex++)
-		{
-			SceneData.PointLights[LightIndex].Color = Scene.GetPointLights()[LightIndex].Color;
-			SceneData.PointLights[LightIndex].Position = Scene.GetPointLights()[LightIndex].Position;
-		}
-
+		const auto& SceneUBOData = Renderer::Get().GetSceneDataForCurrentFrame();
 		auto* SceneDataMemory = SceneUBO->Map();
-		memcpy(SceneDataMemory, &SceneData, sizeof(SceneData));
+		memcpy(SceneDataMemory, &SceneUBOData, sizeof(SceneUBOData));
 		SceneUBO->Unmap();
 
 		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, *SceneUBO, 0, static_cast<uint32>(SceneUBO->GetSize()));

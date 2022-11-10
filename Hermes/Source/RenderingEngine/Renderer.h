@@ -11,6 +11,7 @@
 #include "RenderingEngine/Passes/ForwardPass.h"
 #include "RenderingEngine/Passes/PostProcessingPass.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
+#include "RenderingEngine/SharedData.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Swapchain.h"
 #include "Vulkan/VulkanCore.h"
@@ -60,6 +61,8 @@ namespace Hermes
 		 */
 		const Vulkan::RenderPass& GetVertexRenderPassObject() const;
 
+		const GlobalSceneData& GetSceneDataForCurrentFrame() const;
+
 		const Vulkan::Sampler& GetDefaultSampler() const;
 
 	private:
@@ -80,10 +83,14 @@ namespace Hermes
 		std::unique_ptr<PostProcessingPass> PostProcessingPass;
 		std::unique_ptr<SkyboxPass> SkyboxPass;
 
+		GlobalSceneData SceneDataForCurrentFrame = {};
+
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
 		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;
 		static constexpr VkFormat DepthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
 
 		void DumpGPUProperties() const;
+
+		void FillSceneDataBuffer(const Scene& Scene);
 	};
 }

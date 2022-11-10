@@ -34,10 +34,7 @@ namespace Hermes
 
 		PassDesc Description;
 
-		void PassCallback(Vulkan::CommandBuffer& CommandBuffer,
-		                  const Vulkan::RenderPass& PassInstance,
-		                  const std::vector<std::pair<const Vulkan::Image*, const Vulkan::ImageView*>>&,
-		                  const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics, bool ResourcesWereRecreated);
+		void PassCallback(const PassCallbackInfo& CallbackInfo);
 
 		void RecreatePipeline(const Vulkan::RenderPass& Pass);
 	};

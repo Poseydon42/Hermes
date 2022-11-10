@@ -295,18 +295,21 @@ namespace Hermes
 				                               const_cast<VkClearValue*>(Pass.ClearColors.data()),
 				                               Pass.ClearColors.size()
 			                               });
+			PassCallbackInfo CallbackInfo = {
+				*CommandBuffer,
+				Pass.Pass.get(),
 
-			std::vector<std::pair<const Vulkan::Image*, const Vulkan::ImageView*>> Attachments(Pass.Attachments.size());
-			for (size_t AttachmentIndex = 0; AttachmentIndex < Attachments.size(); AttachmentIndex++)
-			{
-				Attachments[AttachmentIndex] = {
-					Pass.Attachments[AttachmentIndex], Pass.Views[AttachmentIndex]
-				};
-			}
+				Pass.ResourceMap,
 
-			bool ResourcesWereRecreatedTmp = ResourcesWereRecreated; // TODO : better way to fix this maybe?
-			Pass.Callback(*CommandBuffer, *Pass.Pass, Attachments, Scene, GeometryList, Metrics,
-			              std::move(ResourcesWereRecreatedTmp));
+				Scene,
+				GeometryList,
+
+				Metrics,
+
+				ResourcesWereRecreated
+			};
+
+			Pass.Callback(CallbackInfo);
 			ResourcesWereRecreated = false;
 
 			CommandBuffer->EndRenderPass();
@@ -530,9 +533,8 @@ namespace Hermes
 				}
 
 				NewPassContainer.ClearColors.push_back(Attachment.ClearColor);
-
-				NewPassContainer.Attachments.push_back(Resource.Image.get());
-				NewPassContainer.Views.push_back(Resource.View.get());
+				
+				NewPassContainer.ResourceMap[Attachment.Name] = Resource.View.get();
 				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName,
 				                                                PickImageLayoutForBindingMode(Attachment.Binding));
 			}
@@ -731,8 +733,7 @@ namespace Hermes
 			std::vector<const Vulkan::ImageView*> Attachments;
 			Vec2ui FramebufferDimensions = {};
 			Attachments.reserve(Pass.second.Attachments.size());
-			Passes[Pass.first].Attachments.clear();
-			Passes[Pass.first].Views.clear();
+
 			for (const auto& Attachment : Pass.second.Attachments)
 			{
 				String FullResourceName = TraverseResourceName(Pass.first + "." + Attachment.Name);
@@ -748,8 +749,7 @@ namespace Hermes
 					              GetDimensions());
 					FramebufferDimensions = Resource.Image->GetDimensions();
 				}
-				Passes[Pass.first].Attachments.push_back(Resource.Image.get());
-				Passes[Pass.first].Views.push_back(Resource.View.get());
+				Passes[Pass.first].ResourceMap[Attachment.Name] = Resource.View.get();
 			}
 			Passes[Pass.first].Framebuffer = Renderer::Get().GetActiveDevice().CreateFramebuffer(
 			 *Passes[Pass.first].Pass, Attachments, FramebufferDimensions);

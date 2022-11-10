@@ -65,19 +65,19 @@ namespace Hermes
 		return Description;
 	}
 
-	void SkyboxPass::PassCallback(Vulkan::CommandBuffer& CommandBuffer,
-	                              const Vulkan::RenderPass& PassInstance,
-	                              const std::vector<std::pair<
-		                              const Vulkan::Image*, const Vulkan::ImageView*>>&,
-	                              const Scene& Scene, const GeometryList&, FrameMetrics& Metrics,
-	                              bool ResourcesWereRecreated)
+	void SkyboxPass::PassCallback(const PassCallbackInfo& CallbackInfo)
 	{
 		HERMES_PROFILE_FUNC();
-		if (ResourcesWereRecreated || !IsPipelineCreated)
+		if (CallbackInfo.ResourcesWereChanged || !IsPipelineCreated)
 		{
-			RecreatePipeline(PassInstance);
+			HERMES_ASSERT(CallbackInfo.RenderPass);
+			RecreatePipeline(*CallbackInfo.RenderPass);
 			IsPipelineCreated = true;
 		}
+
+		auto& CommandBuffer = CallbackInfo.CommandBuffer;
+		auto& Metrics = CallbackInfo.Metrics;
+		const auto& Scene = CallbackInfo.Scene;
 
 		const auto& Camera = Scene.GetActiveCamera();
 		auto FullViewMatrix = Camera.GetViewMatrix();

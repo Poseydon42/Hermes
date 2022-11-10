@@ -48,21 +48,23 @@ namespace Hermes
 		return Description;
 	}
 
-	void PostProcessingPass::PassCallback(Vulkan::CommandBuffer& CommandBuffer,
-	                                      const Vulkan::RenderPass& PassInstance,
-	                                      const std::vector<std::pair<const Vulkan::Image*, const Vulkan::ImageView*>>&
-	                                      Attachments, const Scene&, const GeometryList&, FrameMetrics& Metrics,
-	                                      bool ResourcesWereRecreated)
+	void PostProcessingPass::PassCallback(const PassCallbackInfo& CallbackInfo)
 	{
 		HERMES_PROFILE_FUNC();
-		if (ResourcesWereRecreated || !IsPipelineCreated)
+		if (CallbackInfo.ResourcesWereChanged || !IsPipelineCreated)
 		{
-			RecreatePipeline(PassInstance);
+			HERMES_ASSERT(CallbackInfo.RenderPass);
+			RecreatePipeline(*CallbackInfo.RenderPass);
 			IsPipelineCreated = true;
 		}
 
-		HERMES_ASSERT(Attachments.size() == 2 && Attachments[0].second != nullptr);
-		DescriptorSet->UpdateWithImage(0, 0, *Attachments[0].second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		auto& CommandBuffer = CallbackInfo.CommandBuffer;
+		auto& Metrics = CallbackInfo.Metrics;
+
+		HERMES_ASSERT(CallbackInfo.Resources.contains("InputColor"));
+		DescriptorSet->UpdateWithImage(0, 0,
+		                               *std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("InputColor")),
+		                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		CommandBuffer.BindPipeline(*Pipeline);
 		Metrics.PipelineBindCount++;

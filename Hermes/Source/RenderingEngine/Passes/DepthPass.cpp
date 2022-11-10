@@ -6,7 +6,6 @@
 #include "RenderingEngine/SharedData.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/GeometryList.h"
-#include "RenderingEngine/Scene/Scene.h"
 #include "RenderingEngine/Scene/SceneProxies.h"
 
 namespace Hermes
@@ -32,15 +31,12 @@ namespace Hermes
 		Description.Attachments = { std::move(DepthAttachment) };
 	}
 
-	void DepthPass::PassCallback(Vulkan::CommandBuffer& CommandBuffer, const Vulkan::RenderPass&,
-	                             const std::vector<std::pair<const Vulkan::Image*, const Vulkan::ImageView*>>&,
-	                             const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics, bool)
+	void DepthPass::PassCallback(const PassCallbackInfo& CallbackInfo)
 	{
 		HERMES_PROFILE_FUNC();
 
-		// TODO: do all of this once at the start of the frame in the global renderer
-		auto& Camera = Scene.GetActiveCamera();
-		auto ViewProjectionMatrix = Camera.GetProjectionMatrix() * Camera.GetViewMatrix();
+		auto& CommandBuffer = CallbackInfo.CommandBuffer;
+		auto& Metrics = CallbackInfo.Metrics;
 
 		const auto& SceneUBOData = Renderer::Get().GetSceneDataForCurrentFrame();
 		auto* SceneDataMemory = SceneUBO->Map();
@@ -49,7 +45,7 @@ namespace Hermes
 
 		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, *SceneUBO, 0, static_cast<uint32>(SceneUBO->GetSize()));
 
-		for (const auto& Mesh : GeometryList.GetMeshList())
+		for (const auto& Mesh : CallbackInfo.GeometryList.GetMeshList())
 		{
 			auto& Material = Mesh.Material;
 			auto& MaterialPipeline = Material->GetBaseMaterial().GetVertexPipeline();

@@ -1,13 +1,11 @@
 #include "ForwardPass.h"
 
 #include "Core/Profiling.h"
-#include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/SharedData.h"
-#include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/GeometryList.h"
 #include "RenderingEngine/Scene/Scene.h"
 #include "Vulkan/Buffer.h"
@@ -70,9 +68,7 @@ namespace Hermes
 		return Description;
 	}
 
-	void ForwardPass::PassCallback(Vulkan::CommandBuffer& CommandBuffer, const Vulkan::RenderPass&,
-	                               const std::vector<std::pair<const Vulkan::Image*, const Vulkan::ImageView*>>&,
-	                               const Scene& Scene, const GeometryList& GeometryList, FrameMetrics& Metrics, bool)
+	void ForwardPass::PassCallback(const PassCallbackInfo& CallbackInfo)
 	{
 		HERMES_PROFILE_FUNC();
 		if (!PrecomputedBRDFSampler || !PrecomputedBRDFView || !PrecomputedBRDFSampler)
@@ -80,8 +76,9 @@ namespace Hermes
 			EnsurePrecomputedBRDF();
 		}
 
-		auto& Camera = Scene.GetActiveCamera();
-		auto ViewProjectionMatrix = Camera.GetProjectionMatrix() * Camera.GetViewMatrix();
+		auto& CommandBuffer = CallbackInfo.CommandBuffer;
+		auto& Metrics = CallbackInfo.Metrics;
+		const auto& Scene = CallbackInfo.Scene;
 
 		const auto& SceneUBOData = Renderer::Get().GetSceneDataForCurrentFrame();
 		auto* SceneDataMemory = SceneUBOBuffer->Map();
@@ -96,7 +93,7 @@ namespace Hermes
 		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(3, 0, *PrecomputedBRDFView, *PrecomputedBRDFSampler,		                                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		for (const auto& Mesh : GeometryList.GetMeshList())
+		for (const auto& Mesh : CallbackInfo.GeometryList.GetMeshList())
 		{
 			auto& Material = Mesh.Material;
 			auto& MaterialPipeline = Material->GetBaseMaterial().GetPipeline();

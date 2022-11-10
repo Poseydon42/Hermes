@@ -105,12 +105,13 @@ namespace Hermes
 			std::unique_ptr<Vulkan::RenderPass> Pass;
 			std::unique_ptr<Vulkan::Framebuffer> Framebuffer;
 			std::unique_ptr<Vulkan::CommandBuffer> CommandBuffer;
-			std::vector<const Vulkan::Image*> Attachments;
-			std::vector<const Vulkan::ImageView*> Views;
+
+			std::unordered_map<String, PassResourceVariant> ResourceMap;
+
 			// NOTE : pair<ResourceOwnName, LayoutAtStart>
 			std::vector<std::pair<String, VkImageLayout>> AttachmentLayouts;
 			std::vector<VkClearValue> ClearColors;
-			PassDesc::RenderPassCallbackType Callback;
+			PassDesc::PassCallbackType Callback;
 		};
 		std::unordered_map<String, PassContainer> Passes;
 

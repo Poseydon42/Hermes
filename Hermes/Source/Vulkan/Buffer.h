@@ -23,9 +23,9 @@ namespace Hermes::Vulkan
 
 		~Buffer();
 
-		void* Map();
+		void* Map() const;
 
-		void Unmap();
+		void Unmap() const;
 
 		size_t GetSize() const;
 
@@ -37,7 +37,7 @@ namespace Hermes::Vulkan
 		VkBuffer Handle = VK_NULL_HANDLE;
 		VmaAllocation Allocation = VK_NULL_HANDLE;
 
-		bool IsMapped = false;
+		mutable bool IsMapped = false;
 		size_t Size = 0;
 	};
 }

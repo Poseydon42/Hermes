@@ -33,7 +33,7 @@ namespace Hermes::Vulkan
 		vmaDestroyBuffer(Allocator, Handle, Allocation);
 	}
 
-	void* Buffer::Map()
+	void* Buffer::Map() const
 	{
 		void* Result;
 		VmaAllocator Allocator = Device->Allocator;
@@ -42,7 +42,7 @@ namespace Hermes::Vulkan
 		return Result;
 	}
 
-	void Buffer::Unmap()
+	void Buffer::Unmap() const
 	{
 		VmaAllocator Allocator = Device->Allocator;
 		vmaUnmapMemory(Allocator, Allocation);

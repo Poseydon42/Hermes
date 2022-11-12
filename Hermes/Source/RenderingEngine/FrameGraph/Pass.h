@@ -14,6 +14,12 @@ namespace Hermes
 	class GeometryList;
 	class Scene;
 
+	enum class PassType
+	{
+		Graphics,
+		Compute
+	};
+
 	using PassResourceVariant = std::variant<const Vulkan::Buffer*, const Vulkan::ImageView*>;
 
 	struct PassCallbackInfo
@@ -38,5 +44,7 @@ namespace Hermes
 		std::vector<Attachment> Attachments;
 
 		PassCallbackType Callback;
+
+		PassType Type = PassType::Graphics;
 	};
 }

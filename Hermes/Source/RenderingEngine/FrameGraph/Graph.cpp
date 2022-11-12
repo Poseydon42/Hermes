@@ -253,12 +253,17 @@ namespace Hermes
 			RecreateFramebuffers();
 		}
 
-		auto& GraphicsQueue = Renderer::Get().GetActiveDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
-
 		for (const auto& PassName : PassExecutionOrder)
 		{
 			HERMES_PROFILE_SCOPE("Hermes::FrameGraph::Execute per pass loop");
 			const auto& Pass = Passes[PassName];
+
+			VkQueueFlags QueueType = 0;
+			if (Scheme.Passes[PassName].Type == PassType::Graphics)
+				QueueType = VK_QUEUE_GRAPHICS_BIT;
+			else if (Scheme.Passes[PassName].Type == PassType::Compute)
+				QueueType = VK_QUEUE_COMPUTE_BIT;
+			auto& Queue = Renderer::Get().GetActiveDevice().GetQueue(QueueType);
 
 			auto& CommandBuffer = Pass.CommandBuffer;
 			CommandBuffer->BeginRecording();
@@ -290,11 +295,15 @@ namespace Hermes
 			CommandBuffer->InsertImageMemoryBarriers({ Barriers.begin(), Barriers.end() }, SourceStages,
 			                                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
-			CommandBuffer->BeginRenderPass(*Pass.Pass, *Pass.Framebuffer, {
-				                               // const_cast because vector::data() returns const pointer by default
-				                               const_cast<VkClearValue*>(Pass.ClearColors.data()),
-				                               Pass.ClearColors.size()
-			                               });
+			if (Scheme.Passes[PassName].Type == PassType::Graphics)
+			{
+				CommandBuffer->BeginRenderPass(*Pass.Pass, *Pass.Framebuffer, {
+					                               // const_cast because vector::data() returns const pointer by default
+					                               const_cast<VkClearValue*>(Pass.ClearColors.data()),
+					                               Pass.ClearColors.size()
+				                               });
+			}
+
 			PassCallbackInfo CallbackInfo = {
 				*CommandBuffer,
 				Pass.Pass.get(),
@@ -312,10 +321,13 @@ namespace Hermes
 			Pass.Callback(CallbackInfo);
 			ResourcesWereRecreated = false;
 
-			CommandBuffer->EndRenderPass();
+			if (Scheme.Passes[PassName].Type == PassType::Graphics)
+			{
+				CommandBuffer->EndRenderPass();
+			}
 			CommandBuffer->EndRecording();
 
-			GraphicsQueue.SubmitCommandBuffer(*CommandBuffer, {});
+			Queue.SubmitCommandBuffer(*CommandBuffer, {});
 		}
 
 		{
@@ -332,7 +344,7 @@ namespace Hermes
 				// Waiting for previously submitted rendering command buffers to finish
 				// execution on rendering queue
 				// TODO : any more efficient way to do this?
-				GraphicsQueue.WaitForIdle();
+				Queue.WaitForIdle();
 				return Metrics; // Skip presentation of current frame
 			}
 			const auto& SwapchainImage = Swapchain.GetImage(SwapchainImageIndex.value());
@@ -506,7 +518,11 @@ namespace Hermes
 
 			const auto& GraphicsQueue = Renderer::Get().GetActiveDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
 			PassContainer NewPassContainer = {};
-			NewPassContainer.Pass = Renderer::Get().GetActiveDevice().CreateRenderPass(RenderPassAttachments);
+			if (Pass.second.Type == PassType::Graphics)
+			{
+				HERMES_ASSERT(RenderPassAttachments.size() > 0);
+				NewPassContainer.Pass = Renderer::Get().GetActiveDevice().CreateRenderPass(RenderPassAttachments);
+			}
 			NewPassContainer.CommandBuffer = GraphicsQueue.CreateCommandBuffer(true);
 			NewPassContainer.Callback = Pass.second.Callback;
 
@@ -539,16 +555,22 @@ namespace Hermes
 				                                                PickImageLayoutForBindingMode(Attachment.Binding));
 			}
 
-			if (!ContainsExternalResources)
 			{
-				NewPassContainer.Framebuffer = Renderer::Get().GetActiveDevice().
-				                                               CreateFramebuffer(*NewPassContainer.Pass,
-					                                               FramebufferAttachments,
-					                                               FramebufferDimensions);
 			}
-			else
+
+			if (Pass.second.Type == PassType::Graphics)
 			{
-				FramebuffersNeedsInitialization = true;
+				if (!ContainsExternalResources)
+				{
+					NewPassContainer.Framebuffer = Renderer::Get().GetActiveDevice().
+						CreateFramebuffer(*NewPassContainer.Pass,
+							FramebufferAttachments,
+							FramebufferDimensions);
+				}
+				else
+				{
+					FramebuffersNeedsInitialization = true;
+				}
 			}
 
 			Passes[Pass.first] = std::move(NewPassContainer);

@@ -35,6 +35,16 @@ namespace Hermes
 		return VerticalFOV;
 	}
 
+	float FPSCamera::GetNearZPlane() const
+	{
+		return NearPlane;
+	}
+
+	float FPSCamera::GetFarZPlane() const
+	{
+		return FarPlane;
+	}
+
 	void FPSCamera::UpdateViewportDimensions(Vec2 NewDimensions)
 	{
 		AspectRatio = NewDimensions.X / NewDimensions.Y;

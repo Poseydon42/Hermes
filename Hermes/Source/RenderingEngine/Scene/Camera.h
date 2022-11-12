@@ -23,6 +23,10 @@ namespace Hermes
 
 		virtual float GetVerticalFOV() const = 0;
 
+		virtual float GetNearZPlane() const = 0;
+
+		virtual float GetFarZPlane() const = 0;
+
 		virtual void UpdateViewportDimensions(Vec2 NewDimensions) = 0;
 
 		virtual Mat4 GetViewMatrix() const = 0;

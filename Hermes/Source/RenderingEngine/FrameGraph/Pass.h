@@ -10,6 +10,7 @@
 namespace Hermes
 {
 	struct Attachment;
+	struct BufferInput;
 	struct FrameMetrics;
 	class GeometryList;
 	class Scene;
@@ -42,6 +43,7 @@ namespace Hermes
 		using PassCallbackType = TDelegate<void, const PassCallbackInfo&>;
 
 		std::vector<Attachment> Attachments;
+		std::vector<BufferInput> BufferInputs;
 
 		PassCallbackType Callback;
 

@@ -25,6 +25,8 @@ namespace Hermes
 
 		void AddResource(const String& Name, const ImageResourceDescription& Description);
 
+		void AddResource(const String& Name, const BufferResourceDescription& Description);
+
 		void DeclareExternalResource(const String& Name, const ImageResourceDescription& Description);
 
 		std::unique_ptr<FrameGraph> Compile() const;
@@ -42,6 +44,13 @@ namespace Hermes
 			bool IsExternal = false;
 		};
 		std::vector<ImageResourceContainer> ImageResources;
+
+		struct BufferResourceContainer
+		{
+			String Name;
+			BufferResourceDescription Desc;
+		};
+		std::vector<BufferResourceContainer> BufferResources;
 
 		// NOTE : ForwardLinks holds links between outputs of first render pass and inputs of the second
 		//        BackwardLinks is just a reversed version of it because STL does not have bidirectional map
@@ -80,7 +89,11 @@ namespace Hermes
 
 		String TraverseResourceName(const String& FullAttachmentName);
 
-		VkImageUsageFlags TraverseResourceUsageType(const String& ResourceName) const;
+		VkImageUsageFlags TraverseImageResourceUsageType(const String& ResourceName) const;
+
+		VkBufferUsageFlags TraverseBufferResourceUsageType(const String& ResourceName) const;
+
+		bool TraverseCheckIfBufferIsMappable(const String& ResourceName) const;
 
 		VkFormat TraverseAttachmentDataFormat(const String& AttachmentName) const;
 
@@ -100,6 +113,13 @@ namespace Hermes
 		};
 		std::unordered_map<String, ImageResourceContainer> ImageResources;
 
+		struct BufferResourceContainer
+		{
+			std::unique_ptr<Vulkan::Buffer> Buffer;
+			BufferResourceDescription Desc;
+		};
+		std::unordered_map<String, BufferResourceContainer> BufferResources;
+
 		struct PassContainer
 		{
 			std::unique_ptr<Vulkan::RenderPass> Pass;
@@ -110,6 +130,8 @@ namespace Hermes
 
 			// NOTE : pair<ResourceOwnName, LayoutAtStart>
 			std::vector<std::pair<String, VkImageLayout>> AttachmentLayouts;
+			std::vector<String> InputBufferResourceNames;
+
 			std::vector<VkClearValue> ClearColors;
 			PassDesc::PassCallbackType Callback;
 		};

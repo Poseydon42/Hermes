@@ -8,6 +8,7 @@
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Scene/Scene.h"
+#include "Vulkan/Buffer.h"
 #include "Vulkan/Swapchain.h"
 #include "Vulkan/Fence.h"
 #include "Vulkan/CommandBuffer.h"
@@ -64,6 +65,11 @@ namespace Hermes
 		ImageResources.emplace_back(Name, Description, false);
 	}
 
+	void FrameGraphScheme::AddResource(const String& Name, const BufferResourceDescription& Description)
+	{
+		BufferResources.emplace_back(Name, Description);
+	}
+
 	void FrameGraphScheme::DeclareExternalResource(const String& Name, const ImageResourceDescription& Description)
 	{
 		ImageResources.emplace_back(Name, Description, true);
@@ -79,6 +85,7 @@ namespace Hermes
 		return std::unique_ptr<FrameGraph>(new FrameGraph(*this));
 	}
 
+	// TODO: check that images are linked to images and buffers are linked to buffers
 	bool FrameGraphScheme::Validate() const
 	{
 		// Step 1: check for any unacceptable names of passes, resources and attachments
@@ -130,22 +137,36 @@ namespace Hermes
 				return false;
 			}
 
-			String FirstPassName, FirstAttachmentName, SecondPassName, SecondAttachmentName;
-			SplitResourceName(Link.first, FirstPassName, FirstAttachmentName);
-			SplitResourceName(Link.second, SecondPassName, SecondAttachmentName);
+			String FirstPassName, FirstResourceName, SecondPassName, SecondResourceName;
+			SplitResourceName(Link.first, FirstPassName, FirstResourceName);
+			SplitResourceName(Link.second, SecondPassName, SecondResourceName);
 
 			// Checking the first resource name (link 'from')
 			if (FirstPassName == "$")
 			{
+				bool Found = false;
 				// If the first pass is the pass that contains external resources then check if
 				// such resource exists
 				if (std::ranges::find_if(ImageResources, [&](const auto& Element)
 				{
-					return Element.Name == FirstAttachmentName;
-				}) == ImageResources.end())
+					return Element.Name == FirstResourceName;
+				}) != ImageResources.end())
+				{
+					Found = true;
+				}
+				// Also check buffer resources
+				if (std::ranges::find_if(BufferResources, [&](const auto& Element)
+				{
+					return Element.Name == FirstResourceName;
+				}) != BufferResources.end())
+				{
+					Found = true;
+				}
+
+				if (!Found)
 				{
 					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': resource '%s' does not exist",
-					                 Link.first.c_str(), Link.second.c_str(), FirstAttachmentName.c_str());
+					                 Link.first.c_str(), Link.second.c_str(), FirstResourceName.c_str());
 					return false;
 				}
 			}
@@ -159,14 +180,30 @@ namespace Hermes
 					                 Link.second.c_str(), FirstPassName.c_str());
 					return false;
 				}
+
+				bool Found = false;
+				// Check attachments
 				if (std::ranges::find_if(FirstPass->second.Attachments, [&](const auto& Element)
 				{
-					return Element.Name == FirstAttachmentName;
-				}) == FirstPass->second.Attachments.end())
+					return Element.Name == FirstResourceName;
+				}) != FirstPass->second.Attachments.end())
+				{
+					Found = true;
+				}
+				// And buffer inputs
+				if (std::ranges::find_if(FirstPass->second.BufferInputs, [&](const auto& Element)
+				{
+					return Element.Name == FirstResourceName;
+				}) != FirstPass->second.BufferInputs.end())
+				{
+					Found = true;
+				}
+
+				if (!Found)
 				{
 					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': pass '%s' does not contain attachmet '%s'",
 					                 Link.first.c_str(), Link.second.c_str(), FirstPassName.c_str(),
-					                 FirstAttachmentName.c_str());
+					                 FirstResourceName.c_str());
 					return false;
 				}
 			}
@@ -177,7 +214,7 @@ namespace Hermes
 				// If the second pass is the external pass (pass that contains external resources)
 				// then check if the attachment name is equal to BLIT_TO_SWAPCHAIN as it is the
 				// only resource that can be pointed to by some render pass
-				if (SecondAttachmentName != "BLIT_TO_SWAPCHAIN")
+				if (SecondResourceName != "BLIT_TO_SWAPCHAIN")
 				{
 					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': only BLIT_TO_SWAPCHAIN is allowed as attachment name for the external render pass",
 					                 Link.first.c_str(), Link.second.c_str());
@@ -186,7 +223,7 @@ namespace Hermes
 			}
 			else
 			{
-				// Otherwise, check if the render pass and the attachment with such name exists
+				// Otherwise, check if the render pass and the resource with such name exists
 				auto SecondPass = Passes.find(SecondPassName);
 				if (SecondPass == Passes.end())
 				{
@@ -194,14 +231,30 @@ namespace Hermes
 					                 Link.second.c_str(), SecondPassName.c_str());
 					return false;
 				}
+
+				bool Found = false;
+				// Look in the attachment list
 				if (std::ranges::find_if(SecondPass->second.Attachments, [&](const auto& Element)
 				{
-					return Element.Name == SecondAttachmentName;
-				}) == SecondPass->second.Attachments.end())
+					return Element.Name == SecondResourceName;
+				}) != SecondPass->second.Attachments.end())
+				{
+					Found = true;
+				}
+				// And input buffer list
+				if (std::ranges::find_if(SecondPass->second.BufferInputs, [&](const auto& Element)
+				{
+					return Element.Name == SecondResourceName;
+				}) != SecondPass->second.BufferInputs.end())
+				{
+					Found = true;
+				}
+
+				if (!Found)
 				{
 					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': pass '%s' does not contain attachmet '%s'",
 					                 Link.first.c_str(), Link.second.c_str(), SecondPassName.c_str(),
-					                 SecondAttachmentName.c_str());
+					                 SecondResourceName.c_str());
 					return false;
 				}
 			}
@@ -289,11 +342,34 @@ namespace Hermes
 				Resource.CurrentLayout = Attachment.second;
 				BarrierIndex++;
 			}
-
-			VkPipelineStageFlags SourceStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+			VkPipelineStageFlags ImageBarrierSourceStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
 				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-			CommandBuffer->InsertImageMemoryBarriers({ Barriers.begin(), Barriers.end() }, SourceStages,
+			CommandBuffer->InsertImageMemoryBarriers({ Barriers.begin(), Barriers.end() }, ImageBarrierSourceStages,
 			                                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+
+			std::vector<VkBufferMemoryBarrier> BufferBarriers;
+			for (const auto& BufferName : Pass.InputBufferResourceNames)
+			{
+				const auto& Buffer = BufferResources[BufferName];
+
+				VkBufferMemoryBarrier Barrier = {};
+				Barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+				Barrier.buffer = Buffer.Buffer->GetBuffer();
+
+				// TODO : this is a general solution that covers all required synchronization cases, but we should rather
+				// detect or require from user which types of operations would be performed and implement proper barrier
+				Barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+				Barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+
+				Barrier.offset = 0;
+				Barrier.size = static_cast<uint32>(Buffer.Buffer->GetSize());
+
+				BufferBarriers.push_back(Barrier);
+			}
+
+			// TODO: do we need more? (also see the TODO above)
+			VkPipelineStageFlags BufferBarrierSourceStages = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
+			CommandBuffer->InsertBufferMemoryBarriers({ BufferBarriers.begin(), BufferBarriers.end() }, BufferBarrierSourceStages, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
 			if (Scheme.Passes[PassName].Type == PassType::Graphics)
 			{
@@ -454,7 +530,7 @@ namespace Hermes
 				auto Image = Renderer::Get().GetActiveDevice().
 				                             CreateImage(Resource.Desc.Dimensions.
 				                                                  GetAbsoluteDimensions(SwapchainDimensions),
-				                                         TraverseResourceUsageType(Resource.Name), Resource.Desc.Format,
+				                                         TraverseImageResourceUsageType(Resource.Name), Resource.Desc.Format,
 				                                         Resource.Desc.MipLevels);
 
 				Container.Image = std::move(Image);
@@ -466,6 +542,17 @@ namespace Hermes
 			Container.IsExternal = Resource.IsExternal;
 
 			ImageResources[Resource.Name] = std::move(Container);
+		}
+
+		for (const auto& Resource : Scheme.BufferResources)
+		{
+			BufferResourceContainer Container = {};
+
+			Container.Desc = Resource.Desc;
+
+			Container.Buffer = Renderer::Get().GetActiveDevice().CreateBuffer(Resource.Desc.Size, TraverseBufferResourceUsageType(Resource.Name), TraverseCheckIfBufferIsMappable(Resource.Name));
+
+			BufferResources[Resource.Name] = std::move(Container);
 		}
 
 		for (const auto& Pass : Scheme.Passes)
@@ -555,7 +642,16 @@ namespace Hermes
 				                                                PickImageLayoutForBindingMode(Attachment.Binding));
 			}
 
+			for (const auto& BufferInput : Pass.second.BufferInputs)
 			{
+				String FullResourceName = TraverseResourceName(Pass.first + "." + BufferInput.Name);
+
+				String PassName, ResourceOwnName;
+				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
+
+				NewPassContainer.ResourceMap[BufferInput.Name] = BufferResources.at(ResourceOwnName).Buffer.get();
+
+				NewPassContainer.InputBufferResourceNames.push_back(std::move(ResourceOwnName));
 			}
 
 			if (Pass.second.Type == PassType::Graphics)
@@ -661,7 +757,7 @@ namespace Hermes
 		return CurrentAttachmentName;
 	}
 
-	VkImageUsageFlags FrameGraph::TraverseResourceUsageType(const String& ResourceName) const
+	VkImageUsageFlags FrameGraph::TraverseImageResourceUsageType(const String& ResourceName) const
 	{
 		VkImageUsageFlags Result = 0;
 		String CurrentAttachmentName = "$." + ResourceName;
@@ -711,6 +807,65 @@ namespace Hermes
 		return Result;
 	}
 
+	VkBufferUsageFlags FrameGraph::TraverseBufferResourceUsageType(const String& ResourceName) const
+	{
+		VkBufferUsageFlags Result = 0;
+
+		auto CurrentResourceName = "$." + ResourceName;
+		while (true)
+		{
+			if (!Scheme.ForwardLinks.contains(CurrentResourceName))
+				break;
+
+			const auto& CurrentInputName = Scheme.ForwardLinks.at(CurrentResourceName);
+			String CurrentPassName, CurrentInputOwnName;
+			SplitResourceName(CurrentInputName, CurrentPassName, CurrentInputOwnName);
+
+			const auto& CurrentPass = Scheme.Passes.at(CurrentPassName);
+			const auto& CurrentBufferInput = std::ranges::find_if(CurrentPass.BufferInputs,
+			                                                      [&](const BufferInput& Value)
+			                                                      {
+				                                                      return Value.Name == CurrentInputOwnName;
+			                                                      });
+
+			Result |= CurrentBufferInput->Usage;
+			if (CurrentBufferInput->ClearBeforePass)
+				Result |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+			CurrentResourceName = Scheme.ForwardLinks.at(CurrentResourceName);
+		}
+
+		return Result;
+	}
+
+	bool FrameGraph::TraverseCheckIfBufferIsMappable(const String& ResourceName) const
+	{
+		auto CurrentResourceName = "$." + ResourceName;
+		while (true)
+		{
+			if (!Scheme.ForwardLinks.contains(CurrentResourceName))
+				break;
+
+			const auto& CurrentInputName = Scheme.ForwardLinks.at(CurrentResourceName);
+			String CurrentPassName, CurrentInputOwnName;
+			SplitResourceName(CurrentInputName, CurrentPassName, CurrentInputOwnName);
+
+			const auto& CurrentPass = Scheme.Passes.at(CurrentPassName);
+			const auto& CurrentBufferInput = std::ranges::find_if(CurrentPass.BufferInputs,
+			                                                      [&](const BufferInput& Value)
+			                                                      {
+				                                                      return Value.Name == CurrentInputOwnName;
+			                                                      });
+
+			if (CurrentBufferInput->RequiresMapping)
+				return true;
+
+			CurrentResourceName = Scheme.ForwardLinks.at(CurrentResourceName);
+		}
+
+		return false;
+	}
+
 	VkFormat FrameGraph::TraverseAttachmentDataFormat(const String& AttachmentName) const
 	{
 		auto CurrentAttachment = Scheme.BackwardLinks.at(AttachmentName);
@@ -736,7 +891,7 @@ namespace Hermes
 			{
 				Resource.second.Image = Renderer::Get().GetActiveDevice().CreateImage(
 				 Resource.second.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
-				 TraverseResourceUsageType(Resource.first), Resource.second.Desc.Format,
+				 TraverseImageResourceUsageType(Resource.first), Resource.second.Desc.Format,
 				 Resource.second.Desc.MipLevels);
 				Resource.second.View = Resource.second.Image->CreateDefaultImageView();
 

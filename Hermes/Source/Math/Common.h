@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 #include "Core/Core.h"
 
 namespace Hermes
@@ -118,6 +120,12 @@ namespace Hermes
 			}
 			HERMES_ASSERT(false);
 			return 0;
+		}
+
+		template<typename T1, typename T2>
+		T1 Pow(T1 Base, T2 Exponent)
+		{
+			return std::pow(Base, Exponent);
 		}
 	}
 }

@@ -44,6 +44,11 @@ namespace Hermes
 		uint32 MipLevels = 0;
 	};
 
+	struct BufferResourceDescription
+	{
+		uint32 Size = 0;
+	};
+
 	enum class BindingMode : uint32_t
 	{
 		InputAttachment = 0,

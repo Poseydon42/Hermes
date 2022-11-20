@@ -829,8 +829,6 @@ namespace Hermes
 			                                                      });
 
 			Result |= CurrentBufferInput->Usage;
-			if (CurrentBufferInput->ClearBeforePass)
-				Result |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
 			CurrentResourceName = Scheme.ForwardLinks.at(CurrentResourceName);
 		}

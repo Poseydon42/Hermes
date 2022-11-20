@@ -70,6 +70,5 @@ namespace Hermes
 		String Name;
 		VkBufferUsageFlags Usage = 0;
 		bool RequiresMapping = false;
-		bool ClearBeforePass = false;
 	};
 }

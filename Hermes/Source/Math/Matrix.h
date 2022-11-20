@@ -36,6 +36,13 @@ namespace Hermes
 		void operator+=(const Matrix& Rhs);
 		void operator-=(const Matrix& Rhs);
 
+		/*
+		 * Computes an inverse matrix if possible.
+		 *
+		 * If the original matrix is singular the result is undefined.
+		 */
+		Matrix Inverse() const;
+
 		template<int OutRows = Rows, int OutColumns = Columns>
 		static std::enable_if_t<OutRows == OutColumns, Matrix> Identity();
 
@@ -211,6 +218,65 @@ namespace Hermes
 		{
 			Data[Index] -= Rhs.Data[Index];
 		}
+	}
+
+	template<int Rows, int Columns, typename InternalType>
+	Matrix<Rows, Columns, InternalType> Matrix<Rows, Columns, InternalType>::Inverse() const
+	{
+		// Using Gauss-Jordan elimination
+		static_assert(Rows == Columns, "Inverse of a non-square matrix is undefined.");
+
+		// Create an augmented matrix that is twice the width of the original matrix and has the original matrix
+		// on the left and the identity matrix on the right
+		Matrix<Rows, 2 * Columns, InternalType> AugmentedMatrix;
+		for (int Row = 0; Row < Rows; Row++)
+		{
+			for (int Column = 0; Column < Columns; Column++)
+			{
+				AugmentedMatrix[Row][Column] = this->operator[](Row)[Column];
+			}
+			AugmentedMatrix[Row][Columns + Row] = 1;
+		}
+
+		/*
+		 * Loop over each row:
+		 *  1. Divide the row by its first element to make its first element 1
+		 *	2. Subtract the multiple of this row from all other rows to make their first N elements 0
+		 */
+		for (int Row = 0; Row < Rows; Row++)
+		{
+			// Dividing
+			InternalType Divisor = AugmentedMatrix[Row][Row];
+			for (int Column = 0; Column < 2 * Columns; Column++)
+			{
+				AugmentedMatrix[Row][Column] /= Divisor;
+			}
+
+			// Subtracting
+			for (int RowToSubtractFrom = 0; RowToSubtractFrom < Rows; RowToSubtractFrom++)
+			{
+				if (RowToSubtractFrom == Row)
+					continue;
+				InternalType Multiple = AugmentedMatrix[RowToSubtractFrom][Row];
+				// Starting with element [Row,Row] because the previous ones were became zero during previous iteration
+				for (int Column = Row; Column < 2 * Columns; Column++)
+				{
+					AugmentedMatrix[RowToSubtractFrom][Column] -= Multiple * AugmentedMatrix[Row][Column];
+				}
+			}
+		}
+
+		// Retrieving the resulting matrix
+		Matrix Result;
+		for (int Row = 0; Row < Rows; Row++)
+		{
+			for (int Column = 0; Column < Columns; Column++)
+			{
+				Result[Row][Column] = AugmentedMatrix[Row][Column + Columns];
+			}
+		}
+
+		return Result;
 	}
 
 	template <int Rows, int Columns, typename InternalType>

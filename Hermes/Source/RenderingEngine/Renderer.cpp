@@ -10,6 +10,19 @@
 
 namespace Hermes
 {
+	static size_t PickGPU(const std::vector<Vulkan::DeviceProperties>& GPUs)
+	{
+		for (size_t Index = 0; Index < GPUs.size(); Index++)
+		{
+			if (GPUs[Index].Type == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			{
+				return Index;
+			}
+		}
+
+		return 0;
+	}
+
 	Renderer& Renderer::Get()
 	{
 		static Renderer Instance;
@@ -19,9 +32,10 @@ namespace Hermes
 	bool Renderer::Init()
 	{
 		VulkanInstance = std::make_unique<Vulkan::Instance>(*GGameLoop->GetWindow());
-
-		constexpr size_t GPUIndex = 0;
-		GPUProperties = VulkanInstance->EnumerateAvailableDevices()[GPUIndex];
+		
+		const auto& AvailableGPUs = VulkanInstance->EnumerateAvailableDevices();
+		auto GPUIndex = PickGPU(AvailableGPUs);
+		GPUProperties = AvailableGPUs[GPUIndex];
 		Device = VulkanInstance->CreateDevice(GPUIndex);
 		if (!Device)
 			return false;

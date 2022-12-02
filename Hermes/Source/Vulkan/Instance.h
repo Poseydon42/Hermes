@@ -20,6 +20,8 @@ namespace Hermes::Vulkan
 			
 		bool AnisotropySupport = false;
 		float MaxAnisotropyLevel = 0.0f;
+
+		VkPhysicalDeviceType Type = VK_PHYSICAL_DEVICE_TYPE_OTHER;
 	};
 
 	/*

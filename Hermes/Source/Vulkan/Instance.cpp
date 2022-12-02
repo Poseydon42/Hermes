@@ -66,6 +66,7 @@ namespace Hermes::Vulkan
 		Result.Name = Properties.deviceName;
 		Result.AnisotropySupport = Features.samplerAnisotropy;
 		Result.MaxAnisotropyLevel = Properties.limits.maxSamplerAnisotropy;
+		Result.Type = Properties.deviceType;
 
 		return Result;
 	}

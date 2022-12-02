@@ -185,7 +185,7 @@ namespace Hermes
 	void Renderer::DumpGPUProperties() const
 	{
 		HERMES_LOG_INFO("======== GPU Information ========");
-		HERMES_LOG_INFO("Name: %S", GPUProperties.Name.c_str());
+		HERMES_LOG_INFO("Name: %s", GPUProperties.Name.c_str());
 		HERMES_LOG_INFO("Anisotropy: %s, %f", GPUProperties.AnisotropySupport ? "true" : "false", GPUProperties.MaxAnisotropyLevel);
 	}
 

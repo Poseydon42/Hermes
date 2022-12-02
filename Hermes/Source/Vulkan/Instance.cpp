@@ -117,6 +117,11 @@ namespace Hermes::Vulkan
 
 		VK_CHECK_RESULT(vkCreateInstance(&CreateInfo, GVulkanAllocator, &Holder->Instance));
 
+		if (ValidationLayersEnabled)
+		{
+			CreateDebugMessenger();
+		}
+
 		uint32 DeviceCount = 0;
 		VK_CHECK_RESULT(vkEnumeratePhysicalDevices(Holder->Instance, &DeviceCount, nullptr));
 		AvailableDeviceProperties.resize(DeviceCount);
@@ -127,12 +132,6 @@ namespace Hermes::Vulkan
 		{
 			AvailableDeviceProperties[Index] = GetPhysicalDeviceProperties(AvailableDevices[Index]);
 		}
-
-		if (ValidationLayersEnabled)
-		{
-			CreateDebugMessenger();
-		}
-
 
 		Holder->Surface = CreateSurface(Holder->Instance, Window);
 	}

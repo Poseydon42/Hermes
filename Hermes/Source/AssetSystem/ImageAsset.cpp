@@ -16,7 +16,6 @@ namespace Hermes
 		case ImageFormat::RA:
 			return 2;
 		case ImageFormat::HDR:
-			return 3;
 		case ImageFormat::RGBA:
 		case ImageFormat::RGBX:
 			return 4;
@@ -58,8 +57,33 @@ namespace Hermes
 		, BytesPerChannel(InBytesPerChannel)
 		, MipLevelCount(InMipLevelCount)
 	{
-		Data.resize(GetMemorySize(), 0x00);
-		std::copy_n(InData, GetMemorySize(), Data.data());
+		if (Format != ImageFormat::HDR)
+		{
+			Data.resize(GetMemorySize(), 0x00);
+			std::copy_n(InData, GetMemorySize(), Data.data());
+		}
+		else
+		{
+			// NOTE: because HDR assets are stored as R32G32B32 on the drive, but quite few GPUs support this format, so we need to unpack it into R32G32B32A32
+			UnpackHDRAsset(reinterpret_cast<const float*>(InData));
+		}
+	}
+
+	void ImageAsset::UnpackHDRAsset(const float* RawData)
+	{
+		Data.resize(static_cast<size_t>(Dimensions.X) * Dimensions.Y * sizeof(float) * 4);
+		auto* Dest = reinterpret_cast<float*>(Data.data());
+		for (uint32 Y = 0; Y < Dimensions.Y; Y++)
+		{
+			for (uint32 X = 0; X < Dimensions.X; X++)
+			{
+				*Dest++ = *RawData++;
+				*Dest++ = *RawData++;
+				*Dest++ = *RawData++;
+
+				*Dest++ = 1.0f;
+			}
+		}
 	}
 
 	bool ImageAsset::IsValid() const

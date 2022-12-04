@@ -92,5 +92,7 @@ namespace Hermes
 		ImageFormat Format;
 		size_t BytesPerChannel;
 		uint8 MipLevelCount;
+
+		void UnpackHDRAsset(const float* RawData);
 	};
 }

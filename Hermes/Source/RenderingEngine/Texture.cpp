@@ -45,7 +45,7 @@ namespace Hermes
 			{ ComputeHashForFormat(ImageFormat::RGBX, 1, false), VK_FORMAT_R8G8B8A8_UNORM },
 			{ ComputeHashForFormat(ImageFormat::RGBX, 2, false), VK_FORMAT_R16G16B16A16_UNORM },
 
-			{ ComputeHashForFormat(ImageFormat::HDR, 4, false), VK_FORMAT_R32G32B32_SFLOAT }
+			{ ComputeHashForFormat(ImageFormat::HDR, 4, false), VK_FORMAT_R32G32B32A32_SFLOAT }
 		};
 
 		auto It = FormatCombinations.find(ComputeHashForFormat(Format, static_cast<uint8>(BytesPerChannel), IsSRGB));

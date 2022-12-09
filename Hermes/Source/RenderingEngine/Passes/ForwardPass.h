@@ -22,7 +22,6 @@ namespace Hermes
 
 	private:
 		std::unique_ptr<Vulkan::DescriptorSet> SceneUBODescriptorSet;
-		std::unique_ptr<Vulkan::Buffer> SceneUBOBuffer;
 
 		std::unique_ptr<Vulkan::Sampler> EnvmapSampler;
 

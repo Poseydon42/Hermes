@@ -72,6 +72,8 @@ namespace Hermes
 			SceneUBOBinding, IrradianceCubemapBinding, SpecularCubemapBinding, PrecomputedBRDFBinding
 		});
 
+		GlobalSceneDataBuffer = Device->CreateBuffer(sizeof(GlobalSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, true);
+
 		Vulkan::SamplerDescription SamplerDesc = {};
 		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		SamplerDesc.MinificationFilter = VK_FILTER_LINEAR;
@@ -186,9 +188,9 @@ namespace Hermes
 		return FrameGraph->GetRenderPassObject("DepthPass");
 	}
 
-	const GlobalSceneData& Renderer::GetSceneDataForCurrentFrame() const
+	const Vulkan::Buffer& Renderer::GetGlobalSceneDataBuffer() const
 	{
-		return SceneDataForCurrentFrame;
+		return *GlobalSceneDataBuffer;
 	}
 
 	const Vulkan::Sampler& Renderer::GetDefaultSampler() const
@@ -209,19 +211,24 @@ namespace Hermes
 
 		auto& Camera = Scene.GetActiveCamera();
 
-		SceneDataForCurrentFrame = {};
+		auto* SceneDataForCurrentFrame = static_cast<GlobalSceneData*>(GlobalSceneDataBuffer->Map());
 
-		SceneDataForCurrentFrame.ViewProjection = Camera.GetProjectionMatrix() * Camera.GetViewMatrix();
-		SceneDataForCurrentFrame.CameraLocation = { Camera.GetLocation(), 1.0f };
+		auto ViewMatrix = Camera.GetViewMatrix();
+		auto ProjectionMatrix = Camera.GetProjectionMatrix();
+
+		SceneDataForCurrentFrame->ViewProjection = ProjectionMatrix * ViewMatrix;
+		SceneDataForCurrentFrame->CameraLocation = { Camera.GetLocation(), 1.0f };
 
 		HERMES_ASSERT_LOG(Scene.GetPointLights().size() < GlobalSceneData::MaxPointLightCount,
 		                  "There are more point lights in the scene than the shader can process, some of them will be ignored");
-		SceneDataForCurrentFrame.PointLightCount = Math::Min<uint32>(static_cast<uint32>(Scene.GetPointLights().size()),
+		SceneDataForCurrentFrame->PointLightCount = Math::Min<uint32>(static_cast<uint32>(Scene.GetPointLights().size()),
 		                                                             GlobalSceneData::MaxPointLightCount);
 		for (size_t Index = 0; Index < Scene.GetPointLights().size(); Index++)
 		{
-			SceneDataForCurrentFrame.PointLights[Index].Position = Scene.GetPointLights()[Index].Position;
-			SceneDataForCurrentFrame.PointLights[Index].Color = Scene.GetPointLights()[Index].Color;
+			SceneDataForCurrentFrame->PointLights[Index].Position = Scene.GetPointLights()[Index].Position;
+			SceneDataForCurrentFrame->PointLights[Index].Color = Scene.GetPointLights()[Index].Color;
 		}
+
+		GlobalSceneDataBuffer->Unmap();
 	}
 }

@@ -61,7 +61,7 @@ namespace Hermes
 		 */
 		const Vulkan::RenderPass& GetVertexRenderPassObject() const;
 
-		const GlobalSceneData& GetSceneDataForCurrentFrame() const;
+		const Vulkan::Buffer& GetGlobalSceneDataBuffer() const;
 
 		const Vulkan::Sampler& GetDefaultSampler() const;
 
@@ -75,6 +75,7 @@ namespace Hermes
 
 		std::unique_ptr<DescriptorAllocator> DescriptorAllocator;
 		std::unique_ptr<Vulkan::DescriptorSetLayout> GlobalDataDescriptorSetLayout;
+		std::unique_ptr<Vulkan::Buffer> GlobalSceneDataBuffer;
 		std::unique_ptr<Vulkan::Sampler> DefaultSampler;
 		
 		std::unique_ptr<FrameGraph> FrameGraph;
@@ -82,8 +83,6 @@ namespace Hermes
 		std::unique_ptr<ForwardPass> ForwardPass;
 		std::unique_ptr<PostProcessingPass> PostProcessingPass;
 		std::unique_ptr<SkyboxPass> SkyboxPass;
-
-		GlobalSceneData SceneDataForCurrentFrame = {};
 
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
 		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;

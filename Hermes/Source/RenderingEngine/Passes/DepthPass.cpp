@@ -12,11 +12,8 @@ namespace Hermes
 {
 	DepthPass::DepthPass()
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
 		auto& DescriptorAllocator = Renderer::Get().GetDescriptorAllocator();
 
-		SceneUBO = Device.CreateBuffer(sizeof(Renderer::Get().GetSceneDataForCurrentFrame()),
-		                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, true);
 		SceneUBODescriptorSet = DescriptorAllocator.Allocate(Renderer::Get().GetGlobalDataDescriptorSetLayout());
 
 		Description.Callback.Bind<DepthPass, &DepthPass::PassCallback>(this);
@@ -38,12 +35,8 @@ namespace Hermes
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
 		auto& Metrics = CallbackInfo.Metrics;
 
-		const auto& SceneUBOData = Renderer::Get().GetSceneDataForCurrentFrame();
-		auto* SceneDataMemory = SceneUBO->Map();
-		memcpy(SceneDataMemory, &SceneUBOData, sizeof(SceneUBOData));
-		SceneUBO->Unmap();
-
-		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, *SceneUBO, 0, static_cast<uint32>(SceneUBO->GetSize()));
+		const auto& GlobalSceneDataBuffer = Renderer::Get().GetGlobalSceneDataBuffer();
+		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
 
 		for (const auto& Mesh : CallbackInfo.GeometryList.GetMeshList())
 		{

@@ -28,8 +28,6 @@ namespace Hermes
 
 		SceneUBODescriptorSet = Renderer::Get().GetDescriptorAllocator().
 		                                        Allocate(Renderer::Get().GetGlobalDataDescriptorSetLayout());
-		SceneUBOBuffer = Device.CreateBuffer(sizeof(Renderer::Get().GetSceneDataForCurrentFrame()),
-		                                     VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, true);
 
 		Vulkan::SamplerDescription SamplerDesc = {};
 		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -80,13 +78,8 @@ namespace Hermes
 		auto& Metrics = CallbackInfo.Metrics;
 		const auto& Scene = CallbackInfo.Scene;
 
-		const auto& SceneUBOData = Renderer::Get().GetSceneDataForCurrentFrame();
-		auto* SceneDataMemory = SceneUBOBuffer->Map();
-		memcpy(SceneDataMemory, &SceneUBOData, sizeof(SceneUBOData));
-		SceneUBOBuffer->Unmap();
-
-		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, *SceneUBOBuffer, 0,
-		                                        static_cast<uint32>(SceneUBOBuffer->GetSize()));
+		const auto& GlobalSceneDataBuffer = Renderer::Get().GetGlobalSceneDataBuffer();
+		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(1, 0, Scene.GetIrradianceEnvmap().GetDefaultView(),
 		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(2, 0, Scene.GetSpecularEnvmap().GetDefaultView(),

@@ -14,7 +14,6 @@ namespace Hermes
 
 		const PassDesc& GetPassDescription() const;
 	private:
-		std::unique_ptr<Vulkan::Buffer> SceneUBO;
 		std::unique_ptr<Vulkan::DescriptorSet> SceneUBODescriptorSet;
 
 		PassDesc Description;

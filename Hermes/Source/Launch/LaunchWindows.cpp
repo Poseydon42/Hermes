@@ -3,7 +3,6 @@
 #include <Windows.h>
 #include <string>
 
-#include "Core/Core.h"
 #include "ApplicationCore/Application.h"
 #include "ApplicationCore/GameLoop.h"
 

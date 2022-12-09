@@ -5,7 +5,6 @@
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderingEngine/SharedData.h"
 #include "RenderingEngine/Scene/GeometryList.h"
 #include "RenderingEngine/Scene/Scene.h"
 #include "Vulkan/Buffer.h"

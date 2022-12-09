@@ -5,6 +5,7 @@
 #include "Logging/Logger.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/DescriptorAllocator.h"
+#include "RenderingEngine/SharedData.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"
 

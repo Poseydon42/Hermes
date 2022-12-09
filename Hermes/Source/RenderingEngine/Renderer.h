@@ -11,7 +11,6 @@
 #include "RenderingEngine/Passes/ForwardPass.h"
 #include "RenderingEngine/Passes/PostProcessingPass.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
-#include "RenderingEngine/SharedData.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Swapchain.h"
 #include "Vulkan/VulkanCore.h"

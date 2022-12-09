@@ -3,7 +3,6 @@
 #include "Core/Profiling.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderingEngine/SharedData.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/GeometryList.h"
 #include "RenderingEngine/Scene/SceneProxies.h"

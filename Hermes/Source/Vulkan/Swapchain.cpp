@@ -105,8 +105,8 @@ namespace Hermes::Vulkan
 		Info.swapchainCount = 1;
 		Info.waitSemaphoreCount = 0;
 		{
-			HERMES_PROFILE_FRAME();
 			vkQueuePresentKHR(Device->PresentationQueue, &Info);
+			HERMES_PROFILE_FRAME();
 		}
 		if (Info.pResults[0] == VK_SUBOPTIMAL_KHR || Info.pResults[0] == VK_ERROR_OUT_OF_DATE_KHR)
 		{

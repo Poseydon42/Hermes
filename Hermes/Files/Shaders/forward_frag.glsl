@@ -13,6 +13,16 @@ layout(set = 0, binding = 0, row_major) uniform GlobalSceneDataWrapper
 layout(set = 0, binding = 1) uniform samplerCube u_IrradianceMap;
 layout(set = 0, binding = 2) uniform samplerCube u_SpecularMap;
 layout(set = 0, binding = 3) uniform sampler2D u_PrecomputedBRDFMap;
+layout(set = 0, binding = 4) buffer ClusterList
+{
+    uvec2 Clusters[]; // NOTE: x - index of first light, y - number of lights
+} u_ClusterList;
+layout(set = 0, binding = 5) buffer LightIndexList
+{
+    uint IndexOfNextElement;
+    uint Indices[];
+} u_LightIndexList;
+
 
 // NOTE : set 1 - material data, updated for every material type; we can't use binding #0 because it can only be used for uniform buffer containing numeric properties
 
@@ -28,6 +38,17 @@ layout(location = 3) in mat3 i_TBNMatrix;
 
 layout(location = 0) out vec4 o_Color;
 
+float LinearDepth(float SampledDepth)
+{
+    float NearZ = u_SceneData.Data.CameraZBounds.x;
+    float FarZ  = u_SceneData.Data.CameraZBounds.y;
+
+    float Numerator = -NearZ * FarZ;
+    float Denominator = SampledDepth * (FarZ - NearZ) + NearZ;
+
+    return Numerator / Denominator;
+}
+
 vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
 {
     vec3 Result = vec3(0.0);
@@ -36,8 +57,33 @@ vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
     float Roughness = texture(u_RoughnessTexture, i_TextureCoordinates).r;
     float Metallic = texture(u_MetallicTexture, i_TextureCoordinates).r;
 
-    for (int LightIndex = 0;  LightIndex < u_SceneData.Data.PointLightCount; LightIndex++)
+    float NearZ = u_SceneData.Data.CameraZBounds.x;
+    float FarZ  = u_SceneData.Data.CameraZBounds.y;
+
+    // NOTE: we use negative here because even though depth in view space has negative values we need to use the positive value for indexing the cluster
+    float Depth = -LinearDepth(gl_FragCoord.z);
+
+    // FIXME: optimize this - coefficients can be calculated once on the CPU side
+    uint ClusterZIndex = clamp(uint(floor(u_SceneData.Data.NumberOfZClusters.x * log(Depth) / log(FarZ / NearZ) - u_SceneData.Data.NumberOfZClusters.x * log(NearZ) / log(FarZ / NearZ))), 0, u_SceneData.Data.NumberOfZClusters.x - 1);
+    uvec2 ClusterXYIndex = uvec2((gl_FragCoord.xy - 0.5) / u_SceneData.Data.MaxPixelsPerLightCluster);
+
+    uvec2 NumberOfXYClusters = uvec2(ceil(u_SceneData.Data.ScreenDimensions / u_SceneData.Data.MaxPixelsPerLightCluster));
+
+    uint LightClusterIndex = ClusterXYIndex.x + ClusterXYIndex.y * NumberOfXYClusters.x + ClusterZIndex * NumberOfXYClusters.x * NumberOfXYClusters.y;
+    if (LightClusterIndex >= u_ClusterList.Clusters.length())
+        discard;
+
+#define USE_CLUSTERED_LIGHTING 1
+#if defined(USE_CLUSTERED_LIGHTING) && USE_CLUSTERED_LIGHTING
+    uint FirstLight = u_ClusterList.Clusters[LightClusterIndex].x;
+    uint OnePastLastLight  = FirstLight + u_ClusterList.Clusters[LightClusterIndex].y;
+    for (uint Index = FirstLight; Index < OnePastLastLight; Index++)
     {
+        uint LightIndex = u_LightIndexList.Indices[Index];
+#else
+    for (uint LightIndex = 0; LightIndex < u_SceneData.Data.PointLightCount; LightIndex++)
+    {
+#endif
         PointLight Light = u_SceneData.Data.PointLights[LightIndex];
 
         vec3 LightDirection = normalize(Light.Position.xyz - Position);

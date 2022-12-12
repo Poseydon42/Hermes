@@ -3,9 +3,9 @@
 #include "ApplicationCore/GameLoop.h"
 #include "Core/Profiling.h"
 #include "Logging/Logger.h"
-#include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/SharedData.h"
+#include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"
 
@@ -68,9 +68,19 @@ namespace Hermes
 		PrecomputedBRDFBinding.descriptorCount = 1;
 		PrecomputedBRDFBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		PrecomputedBRDFBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		VkDescriptorSetLayoutBinding LightClusterListBinding = {};
+		LightClusterListBinding.binding = 4;
+		LightClusterListBinding.descriptorCount = 1;
+		LightClusterListBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		LightClusterListBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		VkDescriptorSetLayoutBinding LightIndexListBinding = {};
+		LightIndexListBinding.binding = 5;
+		LightIndexListBinding.descriptorCount = 1;
+		LightIndexListBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		LightIndexListBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 
 		GlobalDataDescriptorSetLayout = Device->CreateDescriptorSetLayout({
-			SceneUBOBinding, IrradianceCubemapBinding, SpecularCubemapBinding, PrecomputedBRDFBinding
+			SceneUBOBinding, IrradianceCubemapBinding, SpecularCubemapBinding, PrecomputedBRDFBinding, LightClusterListBinding, LightIndexListBinding
 		});
 
 		GlobalSceneDataBuffer = Device->CreateBuffer(sizeof(GlobalSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, true);
@@ -86,12 +96,14 @@ namespace Hermes
 		SamplerDesc.LODBias = 0.0f;
 		DefaultSampler = Device->CreateSampler(SamplerDesc);
 
+		LightCullingPass = std::make_unique<class LightCullingPass>();
 		DepthPass = std::make_unique<class DepthPass>();
 		ForwardPass = std::make_unique<class ForwardPass>(true);
 		PostProcessingPass = std::make_unique<class PostProcessingPass>();
 		SkyboxPass = std::make_unique<class SkyboxPass>();
 
 		FrameGraphScheme Scheme;
+		Scheme.AddPass("LightCullingPass", LightCullingPass->GetPassDescription());
 		Scheme.AddPass("DepthPass", DepthPass->GetPassDescription());
 		Scheme.AddPass("ForwardPass", ForwardPass->GetPassDescription());
 		Scheme.AddPass("PostProcessingPass", PostProcessingPass->GetPassDescription());
@@ -115,10 +127,24 @@ namespace Hermes
 		DepthBufferResource.MipLevels = 1;
 		Scheme.AddResource("DepthBuffer", DepthBufferResource);
 
+		BufferResourceDescription LightClusterListResource = {};
+		// FIXME: find a way to compute this value instead of guessing
+		LightClusterListResource.Size = 4 * 1024 * 1024;
+		Scheme.AddResource("LightClusterList", LightClusterListResource);
+
+		BufferResourceDescription LightIndexListResource = {};
+ 		LightIndexListResource.Size = 64 * 1024 * 1024; // FIXME: see above
+		Scheme.AddResource("LightIndexList", LightIndexListResource);
+
+		Scheme.AddLink("$.LightClusterList", "LightCullingPass.LightClusterList");
+		Scheme.AddLink("$.LightIndexList", "LightCullingPass.LightIndexList");
+
 		Scheme.AddLink("$.DepthBuffer", "DepthPass.Depth");
 
 		Scheme.AddLink("$.HDRColorBuffer", "ForwardPass.Color");
 		Scheme.AddLink("DepthPass.Depth", "ForwardPass.Depth");
+		Scheme.AddLink("LightCullingPass.LightClusterList", "ForwardPass.LightClusterList");
+		Scheme.AddLink("LightCullingPass.LightIndexList", "ForwardPass.LightIndexList");
 
 		Scheme.AddLink("ForwardPass.Color", "SkyboxPass.ColorBuffer");
 		Scheme.AddLink("ForwardPass.Depth", "SkyboxPass.DepthBuffer");

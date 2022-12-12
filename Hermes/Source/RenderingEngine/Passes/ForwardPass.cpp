@@ -58,6 +58,12 @@ namespace Hermes
 		Depth.ClearColor.depthStencil.depth = 0.0f;
 		Depth.Binding = BindingMode::DepthStencilAttachment;
 		Description.Attachments = { Color, Depth };
+
+		Description.BufferInputs =
+		{
+			{ "LightClusterList", VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false },
+			{ "LightIndexList", VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false }
+		};
 	}
 
 	const PassDesc& ForwardPass::GetPassDescription() const
@@ -78,12 +84,16 @@ namespace Hermes
 		const auto& Scene = CallbackInfo.Scene;
 
 		const auto& GlobalSceneDataBuffer = Renderer::Get().GetGlobalSceneDataBuffer();
+		const auto& LightClusterListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightClusterList"));
+		const auto& LightIndexListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightIndexList"));
 		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(1, 0, Scene.GetIrradianceEnvmap().GetDefaultView(),
 		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(2, 0, Scene.GetSpecularEnvmap().GetDefaultView(),
 		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		SceneUBODescriptorSet->UpdateWithImageAndSampler(3, 0, *PrecomputedBRDFView, *PrecomputedBRDFSampler,		                                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		SceneUBODescriptorSet->UpdateWithImageAndSampler(3, 0, *PrecomputedBRDFView, *PrecomputedBRDFSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		SceneUBODescriptorSet->UpdateWithBuffer(4, 0, LightClusterListBuffer, 0, static_cast<uint32>(LightClusterListBuffer.GetSize()));
+		SceneUBODescriptorSet->UpdateWithBuffer(5, 0, LightIndexListBuffer, 0, static_cast<uint32>(LightIndexListBuffer.GetSize()));
 
 		for (const auto& Mesh : CallbackInfo.GeometryList.GetMeshList())
 		{

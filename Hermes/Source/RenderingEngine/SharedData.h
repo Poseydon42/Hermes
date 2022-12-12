@@ -56,6 +56,8 @@ namespace Hermes
 #define MaxPointLightCount MAX_POINT_LIGHT_COUNT
 #endif
 
+#define MAX_POINT_LIGHTS_IN_CLUSTER 1024
+
 		Mat4 ViewProjection;
 		Mat4 View;
 		Mat4 InverseProjection;

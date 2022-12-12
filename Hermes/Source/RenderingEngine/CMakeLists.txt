@@ -26,6 +26,8 @@ set(SOURCES
     Passes/DepthPass.h
     Passes/ForwardPass.cpp
     Passes/ForwardPass.h
+    Passes/LightCullingPass.cpp
+    Passes/LightCullingPass.h
     Passes/PostProcessingPass.cpp
     Passes/PostProcessingPass.h
     Passes/SkyboxPass.cpp

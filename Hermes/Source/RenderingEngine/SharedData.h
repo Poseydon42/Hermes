@@ -21,6 +21,8 @@
 #else
 
 #define uint32 uint
+#define Vec2 vec2
+#define Vec2ui uvec2
 #define Vec4 vec4
 #define Mat4 mat4
 
@@ -55,7 +57,16 @@ namespace Hermes
 #endif
 
 		Mat4 ViewProjection;
+		Mat4 View;
+		Mat4 InverseProjection;
+
 		Vec4 CameraLocation;
+
+		Vec2 ScreenDimensions;
+		Vec2 MaxPixelsPerLightCluster;
+		Vec2 CameraZBounds; // X = NearZ, Y = FarZ
+		Vec2ui NumberOfZClusters; // Only X component is meaningful, Y is added for alignment purposes
+
 		PointLight PointLights[MaxPointLightCount];
 		uint32 PointLightCount;
 

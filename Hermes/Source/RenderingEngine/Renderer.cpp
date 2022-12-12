@@ -218,7 +218,16 @@ namespace Hermes
 		auto ProjectionMatrix = Camera.GetProjectionMatrix();
 
 		SceneDataForCurrentFrame->ViewProjection = ProjectionMatrix * ViewMatrix;
+		SceneDataForCurrentFrame->View = ViewMatrix;
+		SceneDataForCurrentFrame->InverseProjection = ProjectionMatrix.Inverse();
 		SceneDataForCurrentFrame->CameraLocation = { Camera.GetLocation(), 1.0f };
+
+		SceneDataForCurrentFrame->ScreenDimensions = static_cast<Vec2>(Swapchain->GetDimensions());
+		SceneDataForCurrentFrame->MaxPixelsPerLightCluster = static_cast<Vec2>(LightCullingPass->ClusterSizeInPixels);
+		SceneDataForCurrentFrame->CameraZBounds = { Camera.GetNearZPlane(), Camera.GetFarZPlane() };
+		SceneDataForCurrentFrame->NumberOfZClusters.X = LightCullingPass->NumberOfZSlices;
+
+
 
 		HERMES_ASSERT_LOG(Scene.GetPointLights().size() < GlobalSceneData::MaxPointLightCount,
 		                  "There are more point lights in the scene than the shader can process, some of them will be ignored");

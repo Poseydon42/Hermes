@@ -1,5 +1,6 @@
 #include "LightCullingPass.h"
 
+#include "Core/Profiling.h"
 #include "RenderingEngine/Renderer.h"
 
 namespace Hermes
@@ -36,6 +37,8 @@ namespace Hermes
 
 	void LightCullingPass::PassCallback(const PassCallbackInfo& CallbackInfo)
 	{
+		HERMES_PROFILE_FUNC();
+
 		const auto& GlobalSceneDataBuffer = Renderer::Get().GetGlobalSceneDataBuffer();
 		const auto& LightClusterListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightClusterList"));
 		const auto& LightIndexListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightIndexList"));

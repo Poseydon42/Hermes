@@ -47,7 +47,7 @@ namespace Hermes
 
 	struct ALIGNAS_16 GlobalSceneData
 	{
-#define MAX_POINT_LIGHT_COUNT 256
+#define MAX_POINT_LIGHT_COUNT 1024
 #ifndef _GLSL_
 		static constexpr uint32 MaxPointLightCount = MAX_POINT_LIGHT_COUNT;
 #else

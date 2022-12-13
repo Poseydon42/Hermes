@@ -49,6 +49,28 @@ float LinearDepth(float SampledDepth)
     return Numerator / Denominator;
 }
 
+vec3 AccumulatedColorFromLightSource(vec3 Normal, vec3 ViewVector, vec3 MedianVector, vec3 LightDirection, vec3 LightColor, float LightDistance, float LightPower, vec3 AlbedoColor, float Roughness, float Metallic)
+{
+    float Attenuation = 1.0 / (LightDistance * LightDistance);
+    vec3 Radiance = LightColor * Attenuation * LightPower;
+    float AngleCoefficient = max(dot(Normal, LightDirection), 0.0);
+
+    float NDF = NormalDistribution(Normal, MedianVector, Roughness);
+    float G = GeometrySmithFunction(Normal, ViewVector, LightDirection, Roughness);
+    vec3 F = FresnelSchlick(AlbedoColor, Metallic, max(dot(MedianVector, ViewVector), 0.0));
+
+    vec3 Numerator = NDF * G * F;
+    float Denominator = 4.0 * max(dot(Normal, ViewVector), 0.0) * max(dot(Normal, LightDirection), 0.0) + 0.00001;
+    vec3 Specular = Numerator / Denominator;
+
+    vec3 DiffuseCoef = vec3(1.0) - F;
+    DiffuseCoef *= 1.0 - Metallic;
+
+    vec3 Result = (DiffuseCoef * AlbedoColor / Pi + Specular) * Radiance * max(dot(Normal, LightDirection), 0.0);
+
+    return Result;
+}
+
 vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
 {
     vec3 Result = vec3(0.0);
@@ -87,25 +109,10 @@ vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
         PointLight Light = u_SceneData.Data.PointLights[LightIndex];
 
         vec3 LightDirection = normalize(Light.Position.xyz - Position);
+        float LightDistance = length(Light.Position.xyz - Position);
         vec3 MedianVector = normalize(LightDirection + ViewVector);
 
-        float Distance = length(Light.Position.xyz - Position);
-        float Attenuation = 1.0 / (Distance * Distance);
-        vec3 Radiance = Light.Color.rgb * Attenuation * Light.Color.w;
-        float AngleCoefficient = max(dot(Normal, LightDirection), 0.0);
-
-        float NDF = NormalDistribution(Normal, MedianVector, Roughness);
-        float G = GeometrySmithFunction(Normal, ViewVector, LightDirection, Roughness);
-        vec3 F = FresnelSchlick(AlbedoColor, Metallic, max(dot(MedianVector, ViewVector), 0.0));
-
-        vec3 Numerator = NDF * G * F;
-        float Denominator = 4.0 * max(dot(Normal, ViewVector), 0.0) * max(dot(Normal, LightDirection), 0.0) + 0.00001;
-        vec3 Specular = Numerator / Denominator;
-
-        vec3 DiffuseCoef = vec3(1.0) - F;
-        DiffuseCoef *= 1.0 - Metallic;
-
-        Result += (DiffuseCoef * AlbedoColor / Pi + Specular) * Radiance * max(dot(Normal, LightDirection), 0.0);
+        Result += AccumulatedColorFromLightSource(Normal, ViewVector, MedianVector, LightDirection, Light.Color.rgb, LightDistance, Light.Color.w, AlbedoColor, Roughness, Metallic);
     }
 
     vec3 F = FresnelSchlickRoughness(AlbedoColor, Metallic, Roughness, max(dot(Normal, ViewVector), 0.0));

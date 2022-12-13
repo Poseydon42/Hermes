@@ -93,6 +93,12 @@ public:
 			}
 		}
 
+		Hermes::DirectionalLightProxy DirectionalLight = {};
+		DirectionalLight.Direction = Hermes::Vec3(0.0f, -1.0f, -1.0f).Normalize();
+		DirectionalLight.Color = { 1.0f, 1.0f, 1.0f };
+		DirectionalLight.Intensity = 8.0f;
+		Hermes::GGameLoop->GetScene().AddDirectionalLight(DirectionalLight);
+
 		Camera = std::make_unique<Hermes::FPSCamera>(Hermes::Vec3(0.0f, 3.0f, 0.0f), 0.0f, 0.0f, 0.5f, 25.0f, 50.0f,
 		                                             Hermes::Vec2(Hermes::Renderer::Get().GetSwapchain().GetDimensions()), true);
 		Hermes::GGameLoop->GetScene().ChangeActiveCamera(Camera);

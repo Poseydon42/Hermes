@@ -24,4 +24,11 @@ namespace Hermes
 		Vec4 Position;
 		Vec4 Color;
 	};
+
+	struct HERMES_API DirectionalLightProxy
+	{
+		Vec3 Direction;
+		Vec3 Color;
+		float Intensity = 0.0f;
+	};
 }

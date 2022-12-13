@@ -33,6 +33,8 @@ namespace Hermes
 
 		void AddPointLight(PointLightProxy Proxy);
 
+		void AddDirectionalLight(DirectionalLightProxy Proxy);
+
 		void ChangeActiveCamera(std::shared_ptr<Camera> NewCamera);
 
 		Camera& GetActiveCamera() const;
@@ -43,6 +45,8 @@ namespace Hermes
 
 		const std::vector<PointLightProxy>& GetPointLights() const;
 
+		const std::vector<DirectionalLightProxy>& GetDirectionalLights() const;
+
 		const CubemapTexture& GetReflectionEnvmap() const;
 		const CubemapTexture& GetIrradianceEnvmap() const;
 		const CubemapTexture& GetSpecularEnvmap() const;
@@ -50,6 +54,7 @@ namespace Hermes
 	private:
 		std::vector<MeshProxy> Meshes;
 		std::vector<PointLightProxy> PointLights;
+		std::vector<DirectionalLightProxy> DirectionalLights;
 
 		std::unique_ptr<CubemapTexture> ReflectionEnvmap;
 		std::unique_ptr<CubemapTexture> IrradianceEnvmap;

@@ -423,6 +423,11 @@ namespace Hermes
 		return PointLights;
 	}
 
+	const std::vector<DirectionalLightProxy>& Scene::GetDirectionalLights() const
+	{
+		return DirectionalLights;
+	}
+
 	const CubemapTexture& Scene::GetReflectionEnvmap() const
 	{
 		return *ReflectionEnvmap;
@@ -446,6 +451,11 @@ namespace Hermes
 	void Scene::AddPointLight(PointLightProxy Proxy)
 	{
 		PointLights.push_back(Proxy);
+	}
+
+	void Scene::AddDirectionalLight(DirectionalLightProxy Proxy)
+	{
+		DirectionalLights.push_back(Proxy);
 	}
 
 	void Scene::ChangeActiveCamera(std::shared_ptr<Camera> NewCamera)

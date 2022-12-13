@@ -42,6 +42,12 @@ namespace Hermes
 		Vec4 Color;
 	};
 
+	struct ALIGNAS_16 DirectionalLight
+	{
+		Vec4 Direction;
+		Vec4 Color;
+	};
+
 	struct ALIGNAS_16 GlobalDrawcallData
 	{
 		Mat4 ModelMatrix;
@@ -54,6 +60,13 @@ namespace Hermes
 		static constexpr uint32 MaxPointLightCount = MAX_POINT_LIGHT_COUNT;
 #else
 #define MaxPointLightCount MAX_POINT_LIGHT_COUNT
+#endif
+
+#define MAX_DIRECTIONAL_LIGHT_COUNT 4
+#ifndef _GLSL_
+		static constexpr uint32 MaxDirectionalLightCount = MAX_DIRECTIONAL_LIGHT_COUNT;
+#else
+#define MaxDirectionalLightCount MAX_DIRECTIONAL_LIGHT_COUNT
 #endif
 
 #define MAX_POINT_LIGHTS_IN_CLUSTER 1024
@@ -70,9 +83,9 @@ namespace Hermes
 		Vec2ui NumberOfZClusters; // Only X component is meaningful, Y is added for alignment purposes
 
 		PointLight PointLights[MaxPointLightCount];
+		DirectionalLight DirectionalLights[MaxDirectionalLightCount];
 		uint32 PointLightCount;
-
-#undef MAX_POINT_LIGHT_COUNT
+		uint32 DirectionalLightCount;
 	};
 
 #ifndef _GLSL_

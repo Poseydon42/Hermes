@@ -115,6 +115,16 @@ vec4 CalculateLighting(vec3 Position, vec3 Normal, vec3 ViewVector)
         Result += AccumulatedColorFromLightSource(Normal, ViewVector, MedianVector, LightDirection, Light.Color.rgb, LightDistance, Light.Color.w, AlbedoColor, Roughness, Metallic);
     }
 
+    for (uint LightIndex = 0; LightIndex < u_SceneData.Data.DirectionalLightCount; LightIndex++)
+    {
+        DirectionalLight Light = u_SceneData.Data.DirectionalLights[LightIndex];
+
+        vec3 DirectionToLight = -Light.Direction.xyz;
+        vec3 MedianVector = normalize(DirectionToLight + ViewVector);
+
+        Result += AccumulatedColorFromLightSource(Normal, ViewVector, MedianVector, DirectionToLight, Light.Color.rgb, 1.0, Light.Color.w, AlbedoColor, Roughness, Metallic);
+    }
+
     vec3 F = FresnelSchlickRoughness(AlbedoColor, Metallic, Roughness, max(dot(Normal, ViewVector), 0.0));
 
     vec3 SpecularCoef = F;

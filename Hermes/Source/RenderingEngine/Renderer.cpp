@@ -253,8 +253,7 @@ namespace Hermes
 		SceneDataForCurrentFrame->CameraZBounds = { Camera.GetNearZPlane(), Camera.GetFarZPlane() };
 		SceneDataForCurrentFrame->NumberOfZClusters.X = LightCullingPass->NumberOfZSlices;
 
-
-
+		// FIXME: replace assert with log warning
 		HERMES_ASSERT_LOG(Scene.GetPointLights().size() < GlobalSceneData::MaxPointLightCount,
 		                  "There are more point lights in the scene than the shader can process, some of them will be ignored");
 		SceneDataForCurrentFrame->PointLightCount = Math::Min<uint32>(static_cast<uint32>(Scene.GetPointLights().size()),
@@ -263,6 +262,15 @@ namespace Hermes
 		{
 			SceneDataForCurrentFrame->PointLights[Index].Position = Scene.GetPointLights()[Index].Position;
 			SceneDataForCurrentFrame->PointLights[Index].Color = Scene.GetPointLights()[Index].Color;
+		}
+
+		const auto& DirectionalLights = Scene.GetDirectionalLights();
+		HERMES_ASSERT_LOG(DirectionalLights.size() < GlobalSceneData::MaxDirectionalLightCount, "There are more directional lights in the scene than the shader can process");
+		SceneDataForCurrentFrame->DirectionalLightCount = static_cast<uint32>(DirectionalLights.size());
+		for (size_t Index = 0; Index < DirectionalLights.size(); Index++)
+		{
+			SceneDataForCurrentFrame->DirectionalLights[Index].Direction = Vec4(DirectionalLights[Index].Direction, 0.0f);
+			SceneDataForCurrentFrame->DirectionalLights[Index].Color = Vec4(DirectionalLights[Index].Color, DirectionalLights[Index].Intensity);
 		}
 
 		GlobalSceneDataBuffer->Unmap();

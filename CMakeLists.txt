@@ -12,6 +12,21 @@ find_package(ZLIB REQUIRED)
 
 project(HermesWorkspace)
 
+option(HERMES_ENABLE_TESTING "Enable compiling and running tests for Hermes" ON)
+
+if(HERMES_ENABLE_TESTING)
+    include(FetchContent)
+
+    FetchContent_Declare(googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG 58d77fa8070e8cec2dc1ed015d66b454c8d78850
+    )
+
+    FetchContent_MakeAvailable(googletest)
+
+    enable_testing()
+endif()
+
 add_subdirectory(Hermes)
 add_subdirectory(Sandbox)
 add_subdirectory(Tools/ImgToAsset)

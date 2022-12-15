@@ -19,6 +19,7 @@
 namespace Hermes
 {
 	using String = std::string;
+	using StringView = std::string_view;
 
 	typedef uint8_t uint8;
 	typedef int8_t int8;

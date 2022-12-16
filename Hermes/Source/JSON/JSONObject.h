@@ -15,10 +15,10 @@ namespace Hermes
 		ADD_DEFAULT_MOVE_CONSTRUCTOR(JSONObject)
 		ADD_DEFAULT_DESTRUCTOR(JSONObject)
 
+	public:
 		using PropertiesContainerType = std::unordered_map<String, JSONValue>;
 		using PropertiesConstIterator = PropertiesContainerType::const_iterator;
 
-	public:
 		JSONObject() = default;
 
 		explicit JSONObject(PropertiesContainerType InProperties);

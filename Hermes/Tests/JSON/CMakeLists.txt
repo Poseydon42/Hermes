@@ -7,6 +7,7 @@ project(Test_JSON)
 
 set(SOURCES
     TestJSONObject.cpp
+    TestJSONParser.cpp
     TestJSONValue.cpp
 )
 

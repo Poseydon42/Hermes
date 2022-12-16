@@ -5,6 +5,8 @@ set(HERMES_SUBLIB_NAME Hermes_JSON)
 set(SOURCES
     JSONObject.cpp
     JSONObject.h
+    JSONParser.cpp
+    JSONParser.h
     JSONValue.cpp
     JSONValue.h
 )

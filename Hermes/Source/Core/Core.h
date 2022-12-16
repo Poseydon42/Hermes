@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <sstream>
 #include <stdint.h>
 
 #include "Core/Compiler/CompilerMSVC.h"
@@ -19,6 +20,7 @@
 namespace Hermes
 {
 	using String = std::string;
+	using StringStream = std::stringstream;
 	using StringView = std::string_view;
 
 	typedef uint8_t uint8;

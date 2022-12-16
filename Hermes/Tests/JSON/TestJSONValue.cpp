@@ -22,7 +22,7 @@ TEST(TestJSONValue, NumberValue)
 {
 	JSONValue Value(4.2);
 	EXPECT_TRUE(Value.Is(JSONValueType::Number));
-	EXPECT_EQ(Value.AsNumber(), 4.2);
+	EXPECT_NEAR(Value.AsNumber(), 4.2, 0.0001);
 	EXPECT_EQ(Value.AsInteger(), 4);
 }
 
@@ -46,9 +46,12 @@ TEST(TestJSONValue, ObjectValue)
 TEST(TestJSONValue, ArrayValue)
 {
 	auto InnerValue = JSONValue(4.2);
-	
-	JSONValue Value({ std::move(InnerValue) });
-	EXPECT_TRUE(Value.Is(JSONValueType::Array));
+
+	std::vector<JSONValue> Array;
+	Array.push_back(std::move(InnerValue));
+	JSONValue Value({ std::move(Array) });
+	ASSERT_TRUE(Value.Is(JSONValueType::Array));
+	ASSERT_EQ(Value.AsArray().size(), 1);
 	EXPECT_TRUE(Value.AsArray()[0].Is(JSONValueType::Number));
-	EXPECT_EQ(Value.AsArray()[0].AsNumber(), 4.2);
+	EXPECT_NEAR(Value.AsArray()[0].AsNumber(), 4.2, 0.0001);
 }

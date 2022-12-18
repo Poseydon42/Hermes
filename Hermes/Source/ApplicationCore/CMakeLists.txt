@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-set(HERMES_SUBLIB_NAME Hermes_ApplicationCore)
+include(HermesSublib)
 
 set(SOURCES
     Application.h
@@ -10,14 +10,6 @@ set(SOURCES
     InputEngine.h
 )
 
-include(CMakeCommon)
-
-add_library(${HERMES_SUBLIB_NAME} OBJECT ${SOURCES})
-
-target_compile_definitions(${HERMES_SUBLIB_NAME} PRIVATE HERMES_BUILD_ENGINE)
-target_compile_definitions(${HERMES_SUBLIB_NAME} PRIVATE HERMES_GAME_NAME="Sandbox") # TODO : expose as an CMake option later
-
-target_include_directories(${HERMES_SUBLIB_NAME} PRIVATE ${HERMES_SOURCE_DIR})
-target_link_libraries(${HERMES_SUBLIB_NAME} PRIVATE Hermes_Core)
-
-KeepFolderStructure(${CMAKE_CURRENT_SOURCE_DIR} "${SOURCES}")
+add_hermes_sublib(Hermes_ApplicationCore "${SOURCES}")
+target_link_libraries(Hermes_ApplicationCore PUBLIC Hermes_Core Hermes_Math Hermes_Platform Hermes_RenderingEngine)
+target_link_libraries(Hermes_ApplicationCore PRIVATE Hermes_Logging)

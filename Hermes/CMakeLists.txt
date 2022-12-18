@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(Hermes)
+project(Hermes C CXX)
 
 set(HERMES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 set(HERMES_THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty")
@@ -43,15 +43,36 @@ add_custom_target(CopyTracyDLL ALL
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:TracyClient> $<TARGET_FILE_DIR:Hermes>
     DEPENDS TracyClient)
 
-include(CMakeCommon)
+set(HERMES_SUBLIB_LIST
+    Hermes_ApplicationCore
+    Hermes_AssetSystem
+    Hermes_Core
+    Hermes_JSON
+    Hermes_Launch
+    Hermes_Logging
+    Hermes_Math
+    Hermes_Platform
+    Hermes_RenderingEngine
+    Hermes_Vulkan
+)
+
+include(CommonDefinitions)
 
 add_executable(Hermes WIN32 Source/HermesExecutable.cpp)
-target_link_libraries(Hermes PUBLIC Hermes_ApplicationCore Hermes_AssetSystem Hermes_Core Hermes_JSON Hermes_Launch Hermes_Logging Hermes_Math Hermes_Platform Hermes_RenderingEngine Hermes_Vulkan)
-if(MSVC)
-    target_link_options(Hermes PRIVATE "/OPT:NOREF") # To prevent MSVC from removing some symbols from import lib
-endif()
+add_common_definitions(Hermes)
+target_include_directories(Hermes PUBLIC ${HERMES_SOURCE_DIR})
+target_link_libraries(Hermes PRIVATE ${HERMES_SUBLIB_LIST})
+
+# FIXME: remove this once the game code will not have to include anything that itself includes Vulkan headers
+target_include_directories(Hermes PUBLIC "${HERMES_THIRD_PARTY_DIR}/VulkanMemoryAllocator/include")
+target_link_libraries(Hermes PUBLIC Vulkan::Vulkan)
 
 set_target_properties(Hermes PROPERTIES ENABLE_EXPORTS TRUE)
-add_compile_definitions(HERMES_GAME_NAME="Sandbox") # TODO : expose as an CMake option later
-
-target_include_directories(Hermes INTERFACE ${HERMES_SOURCE_DIR})
+if(MSVC)
+    # NOTE: this prevents MSVC from omitting symbols that are not used in the engine itself in the import lib
+    # FIXME: this feels hacky, can we do better?
+    target_link_options(Hermes PRIVATE "/OPT:NOREF")
+    foreach(SUBLIB IN LISTS HERMES_SUBLIB_LIST)
+        target_link_options(Hermes PRIVATE "/WHOLEARCHIVE:${SUBLIB}.lib")
+    endforeach(SUBLIB in ${HERMES_SUBLIB_LIST})
+endif()

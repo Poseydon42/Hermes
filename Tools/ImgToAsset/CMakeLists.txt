@@ -10,11 +10,12 @@ set(SOURCES
     Source/PNGLoader.h
 )
 
-include(CMakeCommon)
+include(CommonDefinitions)
 
 add_executable(ImgToAsset ${SOURCES})
+add_common_definitions(ImgToAsset)
 target_include_directories(ImgToAsset PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty ZLIB::ZLIB)
 target_compile_definitions(ImgToAsset PRIVATE HERMES_BUILD_TOOLS)
 target_link_libraries(ImgToAsset PRIVATE Hermes_Core Hermes_Math ZLIB::ZLIB)
 
-KeepFolderStructure(${CMAKE_CURRENT_SOURCE_DIR} "${SOURCES}")
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})

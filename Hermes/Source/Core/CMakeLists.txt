@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-set(HERMES_SUBLIB_NAME Hermes_Core)
+include(HermesSublib)
 
 set(SOURCES
     Compiler/CompilerMSVC.h
@@ -17,19 +17,6 @@ set(SOURCES
     Profiling.h
 )
 
-include(CMakeCommon)
-
-add_library(${HERMES_SUBLIB_NAME} OBJECT ${SOURCES})
-
-target_compile_definitions(${HERMES_SUBLIB_NAME} PRIVATE HERMES_BUILD_ENGINE)
-target_compile_definitions(${HERMES_SUBLIB_NAME} PRIVATE HERMES_GAME_NAME="Sandbox") # TODO : expose as an CMake option later
-
-target_include_directories(${HERMES_SUBLIB_NAME} PUBLIC ${HERMES_SOURCE_DIR})
-target_link_libraries(${HERMES_SUBLIB_NAME} PUBLIC $<$<CONFIG:Release>:Tracy::TracyClient>)
-target_compile_definitions(${HERMES_SUBLIB_NAME} PUBLIC $<$<CONFIG:Release>:HERMES_ENABLE_PROFILING>)
-
-# TODO: link Vulkan-specific libs to Hermes_Vulkan and add internal links between different Hermes_* libs
-target_include_directories(${HERMES_SUBLIB_NAME} PUBLIC "${HERMES_THIRD_PARTY_DIR}/VulkanMemoryAllocator/include")
-target_link_libraries(${HERMES_SUBLIB_NAME} PUBLIC Vulkan::Vulkan)
-
-KeepFolderStructure(${CMAKE_CURRENT_SOURCE_DIR} "${SOURCES}")
+add_hermes_sublib(Hermes_Core "${SOURCES}")
+target_link_libraries(Hermes_Core PUBLIC $<$<CONFIG:Release>:Tracy::TracyClient>)
+target_compile_definitions(Hermes_Core PUBLIC $<$<CONFIG:Release>:HERMES_ENABLE_PROFILING>)

@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
 
-set(HERMES_SUBLIB_NAME Hermes_Platform)
-
 set(SOURCES
     GenericPlatform/PlatformDebug.h
     GenericPlatform/PlatformFile.h
@@ -21,14 +19,8 @@ set(SOURCES
     Windows/WindowsWindow.h
 )
 
-include(CMakeCommon)
+include(HermesSublib)
 
-add_library(${HERMES_SUBLIB_NAME} OBJECT ${SOURCES})
-
-target_compile_definitions(${HERMES_SUBLIB_NAME} PRIVATE HERMES_BUILD_ENGINE)
-target_compile_definitions(${HERMES_SUBLIB_NAME} PRIVATE HERMES_GAME_NAME="Sandbox") # TODO : expose as an CMake option later
-
-target_include_directories(${HERMES_SUBLIB_NAME} PUBLIC ${HERMES_SOURCE_DIR})
-target_link_libraries(${HERMES_SUBLIB_NAME} PRIVATE Hermes_Core)
-
-KeepFolderStructure(${CMAKE_CURRENT_SOURCE_DIR} "${SOURCES}")
+add_hermes_sublib(Hermes_Platform "${SOURCES}")
+target_link_libraries(Hermes_Platform PUBLIC Hermes_Core)
+target_link_libraries(Hermes_Platform PRIVATE Hermes_ApplicationCore)

@@ -7,6 +7,7 @@
 #include "Logging/DebugLogDevice.h"
 #include "Logging/FileLogDevice.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
+#include "RenderingEngine/Renderer.h"
 
 namespace Hermes
 {

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-set(HERMES_SUBLIB_NAME Hermes_JSON)
+include(HermesSublib)
 
 set(SOURCES
     JSONObject.cpp
@@ -11,14 +11,6 @@ set(SOURCES
     JSONValue.h
 )
 
-include(CMakeCommon)
-
-add_library(${HERMES_SUBLIB_NAME} OBJECT ${SOURCES})
-
-target_compile_definitions(${HERMES_SUBLIB_NAME} PRIVATE HERMES_BUILD_ENGINE)
-target_compile_definitions(${HERMES_SUBLIB_NAME} PRIVATE HERMES_GAME_NAME="Sandbox") # TODO : expose as an CMake option later
-
-target_include_directories(${HERMES_SUBLIB_NAME} PUBLIC ${HERMES_SOURCE_DIR})
-target_link_libraries(${HERMES_SUBLIB_NAME} PRIVATE Hermes_Core Hermes_Logging)
-
-KeepFolderStructure(${CMAKE_CURRENT_SOURCE_DIR} "${SOURCES}")
+add_hermes_sublib(Hermes_JSON "${SOURCES}")
+target_link_libraries(Hermes_JSON PUBLIC Hermes_Core)
+target_link_libraries(Hermes_JSON PRIVATE Hermes_Logging)

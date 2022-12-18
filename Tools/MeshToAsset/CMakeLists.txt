@@ -6,8 +6,9 @@ set(SOURCES
     Source/main.cpp
 )
 
-include(CMakeCommon)
+include(CommonDefinitions)
 
 add_executable(MeshToAsset ${SOURCES})
+add_common_definitions(MeshToAsset)
 
-KeepFolderStructure(${CMAKE_CURRENT_SOURCE_DIR} "${SOURCES}")
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})

@@ -12,6 +12,7 @@
 #include "RenderingEngine/Scene/FPSCamera.h"
 #include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
+#include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Texture.h"
 #include "Vulkan/Swapchain.h"
 

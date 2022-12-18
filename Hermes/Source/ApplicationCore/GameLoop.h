@@ -6,7 +6,6 @@
 #include "ApplicationCore/Application.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
-#include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Scene.h"
 
 namespace Hermes

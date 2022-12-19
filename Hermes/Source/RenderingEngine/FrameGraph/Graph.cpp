@@ -926,8 +926,10 @@ namespace Hermes
 				}
 				Passes[Pass.first].ResourceMap[Attachment.Name] = Resource.View.get();
 			}
-			Passes[Pass.first].Framebuffer = Renderer::Get().GetActiveDevice().CreateFramebuffer(
-			 *Passes[Pass.first].Pass, Attachments, FramebufferDimensions);
+			if (Pass.second.Type == PassType::Graphics)
+			{
+				Passes[Pass.first].Framebuffer = Renderer::Get().GetActiveDevice().CreateFramebuffer(*Passes[Pass.first].Pass, Attachments, FramebufferDimensions);
+			}
 		}
 
 		ResourcesWereRecreated = true;

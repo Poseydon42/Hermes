@@ -37,6 +37,9 @@ namespace Hermes
 		const Vulkan::Pipeline& GetVertexPipeline() const;
 
 	private:
+		// FIXME: this means that a material will never be destroyed, perhaps we should try to destroy unused materials when we're close to being out of memory?
+		static std::unordered_map<String, std::shared_ptr<Material>> CreatedMaterials;
+
 		String VertexShaderName, FragmentShaderName;
 
 		std::unique_ptr<Vulkan::DescriptorSetLayout> DescriptorSetLayout;

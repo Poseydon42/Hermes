@@ -11,9 +11,10 @@
 
 namespace Hermes
 {
-	// FIXME: can this be done without double hash table lookup? (at the moment: first look up the shader
-	// reflection instance in shader cache, then look up properties in the reflection instance)
+	std::unordered_map<String, std::shared_ptr<Material>> Material::CreatedMaterials;
 
+	// FIXME: can this class be implemented without double hash table lookup? (at the moment: first look up the shader
+	// reflection instance in shader cache, then look up properties in the reflection instance)
 	Material::Material(String InVertexShaderPath, String InFragmentShaderPath)
 		: VertexShaderName(std::move(InVertexShaderPath))
 		, FragmentShaderName(std::move(InFragmentShaderPath))
@@ -125,7 +126,16 @@ namespace Hermes
 
 	std::shared_ptr<Material> Material::Create(const String& VertexShaderPath, const String& FragmentShaderPath)
 	{
-		return std::shared_ptr<Material>(new Material(VertexShaderPath, FragmentShaderPath));
+		auto MaterialHash = VertexShaderPath + FragmentShaderPath;
+		if (auto MaybeExistingMaterial = CreatedMaterials.find(MaterialHash); MaybeExistingMaterial != CreatedMaterials.end())
+		{
+			return MaybeExistingMaterial->second;
+		}
+
+		auto NewMaterial = std::shared_ptr<Material>(new Material(VertexShaderPath, FragmentShaderPath));
+		CreatedMaterials[MaterialHash] = NewMaterial;
+
+		return NewMaterial;
 	}
 
 	std::unique_ptr<MaterialInstance> Material::CreateInstance() const

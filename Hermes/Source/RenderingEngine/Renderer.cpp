@@ -200,6 +200,11 @@ namespace Hermes
 		return *DescriptorAllocator;
 	}
 
+	ShaderCache& Renderer::GetShaderCache()
+	{
+		return ShaderCache;
+	}
+
 	const Vulkan::DescriptorSetLayout& Renderer::GetGlobalDataDescriptorSetLayout() const
 	{
 		return *GlobalDataDescriptorSetLayout;

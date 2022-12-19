@@ -11,15 +11,20 @@
 
 namespace Hermes
 {
+	// FIXME: can this be done without double hash table lookup? (at the moment: first look up the shader
+	// reflection instance in shader cache, then look up properties in the reflection instance)
 
-	Material::Material(const String& VertexShaderPath, const String& FragmentShaderPath)
-		: Reflection(FragmentShaderPath)
+	Material::Material(String InVertexShaderPath, String InFragmentShaderPath)
+		: VertexShaderName(std::move(InVertexShaderPath))
+		, FragmentShaderName(std::move(InFragmentShaderPath))
 	{
-
 		auto& Device = Renderer::Get().GetActiveDevice();
 
 		std::vector<VkDescriptorSetLayoutBinding> PerMaterialDataBindings;
 
+		auto& ShaderCache = Renderer::Get().GetShaderCache();
+
+		const auto& Reflection = ShaderCache.GetShaderReflection(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
 		if (Reflection.RequiresUniformBuffer())
 		{
 			// Binding 0 is always material uniform buffer that stores numeric properties
@@ -47,12 +52,12 @@ namespace Hermes
 
 		DescriptorSetLayout = Device.CreateDescriptorSetLayout(PerMaterialDataBindings);
 
-		auto VertexShader = Device.CreateShader(VertexShaderPath, VK_SHADER_STAGE_VERTEX_BIT);
-		auto FragmentShader = Device.CreateShader(FragmentShaderPath, VK_SHADER_STAGE_FRAGMENT_BIT);
+		const auto& VertexShader = ShaderCache.GetShader(VertexShaderName, VK_SHADER_STAGE_VERTEX_BIT);
+		const auto& FragmentShader = ShaderCache.GetShader(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Vulkan::PipelineDescription PipelineDesc = {};
 		PipelineDesc.PushConstants.push_back({ VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GlobalDrawcallData) });
-		PipelineDesc.ShaderStages = { VertexShader.get(), FragmentShader.get() };
+		PipelineDesc.ShaderStages = { &VertexShader, &FragmentShader };
 		PipelineDesc.DescriptorSetLayouts = {
 			&Renderer::Get().GetGlobalDataDescriptorSetLayout(), DescriptorSetLayout.get()
 		};
@@ -112,7 +117,7 @@ namespace Hermes
 
 		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetGraphicsRenderPassObject(),
 		                                                            PipelineDesc);
-		PipelineDesc.ShaderStages = { VertexShader.get() };
+		PipelineDesc.ShaderStages = { &VertexShader };
 		// NOTE: vertex shaders don't have any user-defined material properties for now
 		PipelineDesc.DescriptorSetLayouts = { &Renderer::Get().GetGlobalDataDescriptorSetLayout() };
 		VertexPipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetVertexRenderPassObject(), PipelineDesc);
@@ -125,12 +130,17 @@ namespace Hermes
 
 	std::unique_ptr<MaterialInstance> Material::CreateInstance() const
 	{
-		return std::unique_ptr<MaterialInstance>(new MaterialInstance(shared_from_this(),
-		                                                              Reflection.GetTotalSizeForUniformBuffer()));
+		auto& ShaderCache = Renderer::Get().GetShaderCache();
+		const auto& Reflection = ShaderCache.GetShaderReflection(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+		return std::unique_ptr<MaterialInstance>(new MaterialInstance(shared_from_this(), Reflection.GetTotalSizeForUniformBuffer()));
 	}
 
 	const MaterialProperty* Material::FindProperty(const String& Name) const
 	{
+		auto& ShaderCache = Renderer::Get().GetShaderCache();
+		const auto& Reflection = ShaderCache.GetShaderReflection(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
+
 		return Reflection.FindProperty(Name);
 	}
 

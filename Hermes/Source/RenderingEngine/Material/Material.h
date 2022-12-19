@@ -4,7 +4,6 @@
 
 #include "Core/Core.h"
 #include "RenderingEngine/Material/MaterialProperty.h"
-#include "RenderingEngine/Material/ShaderReflection.h"
 #include "Vulkan/Descriptor.h"
 #include "Vulkan/Pipeline.h"
 
@@ -38,11 +37,11 @@ namespace Hermes
 		const Vulkan::Pipeline& GetVertexPipeline() const;
 
 	private:
-		ShaderReflection Reflection;
+		String VertexShaderName, FragmentShaderName;
 
 		std::unique_ptr<Vulkan::DescriptorSetLayout> DescriptorSetLayout;
 		std::unique_ptr<Vulkan::Pipeline> Pipeline, VertexPipeline;
 
-		Material(const String& VertexShaderPath, const String& FragmentShaderPath);
+		Material(String InVertexShaderPath, String InFragmentShaderPath);
 	};
 }

@@ -40,6 +40,8 @@ set(SOURCES
     Scene/Scene.cpp
     Scene/Scene.h
     Scene/SceneProxies.h
+    ShaderCache.cpp
+    ShaderCache.h
     SharedData.h
     Texture.cpp
     Texture.h

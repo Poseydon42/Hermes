@@ -6,8 +6,6 @@
 
 namespace Hermes
 {
-	// TODO: do we need to expose it?
-	static constexpr size_t GMaxFilePathLength = 8192;
 	static constexpr size_t GMaxFilePathLength = 4096;
 
 	WindowsFile::~WindowsFile()
@@ -21,7 +19,6 @@ namespace Hermes
 		Other.File = INVALID_HANDLE_VALUE;
 	}
 
-	WindowsFile& WindowsFile::operator=(WindowsFile&& Other)
 	WindowsFile& WindowsFile::operator=(WindowsFile&& Other) noexcept
 	{
 		std::swap(File, Other.File);
@@ -41,7 +38,6 @@ namespace Hermes
 			NewPosition = Size();
 
 		LARGE_INTEGER NewPointer;
-		NewPointer.QuadPart = NewPosition;
 		NewPointer.QuadPart = static_cast<LONGLONG>(NewPosition);
 		SetFilePointerEx(File, NewPointer, 0, FILE_BEGIN);
 	}
@@ -56,14 +52,12 @@ namespace Hermes
 		return CurrentPointer.QuadPart;
 	}
 
-	bool WindowsFile::Write(const uint8* Data, size_t Size)
 	bool WindowsFile::Write(const void* Data, size_t Size)
 	{
 		DWORD Dummy;
 		return WriteFile(File, Data, (DWORD)Size, &Dummy, 0);
 	}
 
-	bool WindowsFile::Read(uint8* Buffer, size_t Size)
 	bool WindowsFile::Read(void* Buffer, size_t Size)
 	{
 		DWORD Dummy;
@@ -139,12 +133,10 @@ namespace Hermes
 		while (Iterator != Mounts.rend())
 		{
 			auto& Record = *Iterator;
-			if (Path.rfind(Record.To, 0) != String::npos)
 			if (NormalizedPath.rfind(Record.To, 0) != String::npos)
 			{
 				if (AlwaysSearchForFile)
 				{
-					Result = Record.From + "/" + String(Path.begin() + static_cast<int32>(Record.To.length()), Path.end());
 					Result = Record.From + "/" + String(NormalizedPath.begin() + static_cast<int32>(Record.To.length()), NormalizedPath.end());
 					
 					wchar_t UTF16Result[GMaxFilePathLength];
@@ -162,7 +154,6 @@ namespace Hermes
 				{
 					// We need to just find a suitable directory according to
 					// mounting table, not the specific file
-					Result = Record.From + "/" + String(Path.begin() + static_cast<int32>(Record.To.length()), Path.end());
 					Result = Record.From + "/" + String(NormalizedPath.begin() + static_cast<int32>(Record.To.length()), NormalizedPath.end());
 					return true;
 				}
@@ -191,6 +182,19 @@ namespace Hermes
 		if (TryFindFile(Mounts, FixedPath, AlwaysOpenExistingFile, TruePath))
 			return std::make_unique<WindowsFile>(TruePath, Access, OpenMode);
 		return std::make_unique<WindowsFile>("/", Access, OpenMode);
+	}
+
+	std::optional<String> PlatformFilesystem::ReadFileAsString(StringView Path)
+	{
+		auto File = OpenFile(Path, IPlatformFile::FileAccessMode::Read, IPlatformFile::FileOpenMode::OpenExisting);
+		if (!File)
+			return {};
+
+		auto FileSize = File->Size();
+		String Result(FileSize, '\0');
+		File->Read(reinterpret_cast<void*>(Result.data()), FileSize);
+
+		return Result;
 	}
 
 	void PlatformFilesystem::Mount(StringView FolderPath, StringView MountingPath, uint32 Priority)

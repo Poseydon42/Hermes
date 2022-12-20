@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <set>
 
 #include "Core/Core.h"
@@ -55,7 +56,6 @@ namespace Hermes
 		 * Writes data to a file
 		 * @return true if operation succeeded
 		 */
-		virtual bool Write(const uint8* Data, size_t Size) = 0;
 		virtual bool Write(const void* Data, size_t Size) = 0;
 
 		/**
@@ -63,7 +63,6 @@ namespace Hermes
 		 * @param Buffer Pre-allocated buffer where data should be stored
 		 * @param Size Amount of bytes to read. If Tell() + Size > Size() then unavailable bytes will be untouched
 		 */
-		virtual bool Read(uint8* Buffer, size_t Size) = 0;
 		virtual bool Read(void* Buffer, size_t Size) = 0;
 
 		/**
@@ -108,6 +107,11 @@ namespace Hermes
 		 * Opens a new file
 		 */
 		static std::unique_ptr<IPlatformFile> OpenFile(StringView Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode);
+
+		/**
+		 * Reads the whole file as text file and returns its contents if the file can be opened.
+		 */
+		static std::optional<String> ReadFileAsString(StringView Path);
 
 		/**
 		 * Mounts all files and subdirectories from FolderPath to a virtual folder with path MountingPath

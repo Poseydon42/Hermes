@@ -118,7 +118,7 @@ namespace Hermes
 
 	std::multiset<MountRecord> PlatformFilesystem::Mounts;
 
-	static bool TryFindFile(const std::multiset<MountRecord>& Mounts, const String& Path, bool AlwaysSearchForFile, String& Result)
+	static bool TryFindFile(const std::multiset<MountRecord>& Mounts, StringView Path, bool AlwaysSearchForFile, String& Result)
 	{
 		auto Iterator = Mounts.rbegin();
 		while (Iterator != Mounts.rend())
@@ -155,15 +155,15 @@ namespace Hermes
 		return false;
 	}
 
-	bool PlatformFilesystem::FileExists(const String& Path)
+	bool PlatformFilesystem::FileExists(StringView Path)
 	{
 		String TruePath;
 		return TryFindFile(Mounts, Path, true, TruePath);
 	}
 
-	std::unique_ptr<IPlatformFile> PlatformFilesystem::OpenFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode)
+	std::unique_ptr<IPlatformFile> PlatformFilesystem::OpenFile(StringView Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode)
 	{
-		auto FixedPath = Path;
+		String FixedPath = String(Path);
 		if (FixedPath.empty() || FixedPath[0] != L'/')
 			FixedPath = "/" + FixedPath;
 		String TruePath;
@@ -175,7 +175,7 @@ namespace Hermes
 		return std::make_unique<WindowsFile>("/", Access, OpenMode);
 	}
 
-	void PlatformFilesystem::Mount(const String& FolderPath, const String& MountingPath, uint32 Priority)
+	void PlatformFilesystem::Mount(StringView FolderPath, StringView MountingPath, uint32 Priority)
 	{
 		MountRecord NewMount;
 		NewMount.From = FolderPath;
@@ -189,14 +189,14 @@ namespace Hermes
 		Mounts.clear();
 	}
 
-	bool PlatformFilesystem::RemoveFile(const String& Path)
+	bool PlatformFilesystem::RemoveFile(StringView Path)
 	{
 		String TruePath;
 		if (!TryFindFile(Mounts, Path, true, TruePath))
 			return false;
 		
 		wchar_t UTF16Path[GMaxFilePathLength];
-		MultiByteToWideChar(CP_UTF8, 0, Path.c_str(), -1, UTF16Path, GMaxFilePathLength);
+		MultiByteToWideChar(CP_UTF8, 0, Path.data(), -1, UTF16Path, GMaxFilePathLength);
 		return DeleteFileW(UTF16Path);
 	}
 }

@@ -86,7 +86,7 @@ namespace Hermes
 	{
 		String From;
 		String To;
-		uint32 Priority;
+		uint32 Priority = 0;
 
 		bool operator<(const MountRecord& Rhs) const { return Priority < Rhs.Priority; }
 	};
@@ -100,17 +100,17 @@ namespace Hermes
 		/**
 		 * @return True if file or directory at given path exists
 		 */
-		static bool FileExists(const String& Path);
+		static bool FileExists(StringView Path);
 
 		/**
 		 * Opens a new file
 		 */
-		static std::unique_ptr<IPlatformFile> OpenFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode);
+		static std::unique_ptr<IPlatformFile> OpenFile(StringView Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode);
 
 		/**
 		 * Mounts all files and subdirectories from FolderPath to a virtual folder with path MountingPath
 		 */
-		static void Mount(const String& FolderPath, const String& MountingPath, uint32 Priority);
+		static void Mount(StringView FolderPath, StringView MountingPath, uint32 Priority);
 
 		/**
 		 * Removes all previously mounted directories
@@ -123,7 +123,7 @@ namespace Hermes
 		 * Deletes a file
 		 * @return True if file was successfully deleted
 		 */
-		static bool RemoveFile(const String& Path);
+		static bool RemoveFile(StringView Path);
 
 	private:
 		static std::multiset<MountRecord> Mounts;

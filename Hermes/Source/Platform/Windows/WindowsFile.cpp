@@ -8,18 +8,21 @@ namespace Hermes
 {
 	// TODO: do we need to expose it?
 	static constexpr size_t GMaxFilePathLength = 8192;
+	static constexpr size_t GMaxFilePathLength = 4096;
 
 	WindowsFile::~WindowsFile()
 	{
 		Close();
 	}
 
-	WindowsFile::WindowsFile(WindowsFile&& Other) : File(Other.File)
+	WindowsFile::WindowsFile(WindowsFile&& Other) noexcept
+		: File(Other.File)
 	{
 		Other.File = INVALID_HANDLE_VALUE;
 	}
 
 	WindowsFile& WindowsFile::operator=(WindowsFile&& Other)
+	WindowsFile& WindowsFile::operator=(WindowsFile&& Other) noexcept
 	{
 		std::swap(File, Other.File);
 		return *this;
@@ -34,8 +37,12 @@ namespace Hermes
 
 	void WindowsFile::Seek(size_t NewPosition)
 	{
+		if (NewPosition > Size())
+			NewPosition = Size();
+
 		LARGE_INTEGER NewPointer;
 		NewPointer.QuadPart = NewPosition;
+		NewPointer.QuadPart = static_cast<LONGLONG>(NewPosition);
 		SetFilePointerEx(File, NewPointer, 0, FILE_BEGIN);
 	}
 
@@ -50,12 +57,14 @@ namespace Hermes
 	}
 
 	bool WindowsFile::Write(const uint8* Data, size_t Size)
+	bool WindowsFile::Write(const void* Data, size_t Size)
 	{
 		DWORD Dummy;
 		return WriteFile(File, Data, (DWORD)Size, &Dummy, 0);
 	}
 
 	bool WindowsFile::Read(uint8* Buffer, size_t Size)
+	bool WindowsFile::Read(void* Buffer, size_t Size)
 	{
 		DWORD Dummy;
 		return ReadFile(File, Buffer, (DWORD)Size, &Dummy, 0);

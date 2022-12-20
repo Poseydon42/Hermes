@@ -56,6 +56,7 @@ namespace Hermes
 		 * @return true if operation succeeded
 		 */
 		virtual bool Write(const uint8* Data, size_t Size) = 0;
+		virtual bool Write(const void* Data, size_t Size) = 0;
 
 		/**
 		 * Reads data from a file
@@ -63,6 +64,7 @@ namespace Hermes
 		 * @param Size Amount of bytes to read. If Tell() + Size > Size() then unavailable bytes will be untouched
 		 */
 		virtual bool Read(uint8* Buffer, size_t Size) = 0;
+		virtual bool Read(void* Buffer, size_t Size) = 0;
 
 		/**
 		 * Flushes all buffered writes and forces write to an underlying file storage

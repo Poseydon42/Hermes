@@ -7,6 +7,7 @@ function(add_common_definitions target_name)
         target_compile_definitions(${target_name} PRIVATE UNICODE _UNICODE)
         target_compile_definitions(${target_name} PRIVATE NOMINMAX)
         target_compile_definitions(${target_name} PRIVATE WIN32_LEAN_AND_MEAN)
+        target_compile_definitions(${target_name} PRIVATE HERMES_CURRENT_EXECUTABLE_DIR="$<TARGET_FILE_DIR:${target_name}>")
         target_compile_options(${target_name} PRIVATE "/MP")
         target_compile_options(${target_name} PRIVATE /W4 /WX) # Enable all warnings and treat them as errors
         target_compile_options(${target_name} PRIVATE /wd4251) # And disable warning C4251(... needs to have dll-interface to be used by clients of class ...)

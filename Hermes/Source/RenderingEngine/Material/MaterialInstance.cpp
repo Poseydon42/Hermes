@@ -1,5 +1,6 @@
 #include "MaterialInstance.h"
 
+#include "JSON/JSONParser.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Texture.h"
@@ -7,6 +8,99 @@
 
 namespace Hermes
 {
+	static std::optional<std::shared_ptr<Material>> CreateMaterialFromJSON(const JSONObject& Root)
+	{
+		if (!Root.Contains("shaders") || !Root.Get("shaders").Is(JSONValueType::Array))
+		{
+			HERMES_LOG_WARNING(R"(Failed to create material instance: no "shaders" value is present inside the root object or its type is not array.)");
+			return {};
+		}
+
+		String VertexShaderPath, FragmentShaderPath;
+
+		const auto& ShaderArray = Root.Get("shaders").AsArray();
+		for (const auto& ShaderArrayValue : ShaderArray)
+		{
+			if (!ShaderArrayValue.Is(JSONValueType::Object))
+				continue;
+
+			const auto& Shader = ShaderArrayValue.AsObject();
+			if (!Shader.Contains("type") || !Shader.Get("type").Is(JSONValueType::String))
+				continue;
+			if (!Shader.Contains("path") || !Shader.Get("path").Is(JSONValueType::String))
+				continue;
+
+			auto ShaderType = Shader.Get("type").AsString();
+			auto ShaderPath = Shader.Get("path").AsString();
+			if (ShaderType == "vertex")
+				VertexShaderPath = ShaderPath;
+			if (ShaderType == "fragment")
+				FragmentShaderPath = ShaderPath;
+		}
+
+		if (VertexShaderPath.empty() || FragmentShaderPath.empty())
+		{
+			HERMES_LOG_WARNING("Failed to create material instance: either vertex or fragment shader is not specified");
+			return {};
+		}
+
+		auto Material = Material::Create(VertexShaderPath, FragmentShaderPath);
+		if (!Material)
+		{
+			HERMES_LOG_WARNING("Failed to create material instance: material is null");
+			return {};
+		}
+
+		return Material;
+	}
+
+	static void SetPropertiesFromJSON(MaterialInstance& Instance, const JSONObject& PropertiesObject)
+	{
+		for (const auto& Property : PropertiesObject)
+		{
+			const auto& PropertyName = Property.first;
+			if (Instance.GetBaseMaterial().FindProperty(PropertyName) == nullptr)
+				HERMES_LOG_WARNING("Ignoring unknown property %s", PropertyName.c_str());
+
+			// FIXME: properly parse other types of properties (at the moment we assume that all properties are floats
+			HERMES_ASSERT(Property.second.Is(JSONValueType::Number));
+
+			auto Value = static_cast<float>(Property.second.AsNumber());
+			Instance.SetNumericProperty(PropertyName, Value);
+		}
+	}
+
+	std::optional<std::unique_ptr<MaterialInstance>> MaterialInstance::CreateFromJSON(StringView JSON)
+	{
+		auto MaybeRoot = JSONParser::FromString(JSON);
+		if (!MaybeRoot.has_value())
+		{
+			HERMES_LOG_WARNING("Failed to create material instance: JSON parsing failed.");
+			return {};
+		}
+
+		const auto& Root = *MaybeRoot.value();
+
+		auto MaybeMaterial = CreateMaterialFromJSON(Root);
+		if (!MaybeMaterial.has_value())
+		{
+			return {};
+		}
+
+		auto Material = MaybeMaterial.value();
+		auto Instance = Material->CreateInstance();
+		HERMES_ASSERT(Instance);
+
+		if (!Root.Contains("properties") || !Root.Get("properties").Is(JSONValueType::Object))
+			return Instance;
+
+		const auto& Properties = Root.Get("properties").AsObject();
+		SetPropertiesFromJSON(*Instance, Properties);
+
+		return Instance;
+	}
+
+
 	void MaterialInstance::SetTextureProperty(const String& Name, const Texture& Value)
 	{
 		auto* Property = BaseMaterial->FindProperty(Name);

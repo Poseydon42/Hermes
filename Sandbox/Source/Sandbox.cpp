@@ -9,6 +9,7 @@
 #include "ApplicationCore/InputEngine.h"
 #include "Core/Event/Event.h"
 #include "Math/Vector.h"
+#include "Platform/GenericPlatform/PlatformFile.h"
 #include "RenderingEngine/Scene/FPSCamera.h"
 #include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
@@ -35,13 +36,18 @@ public:
 		MetallicTexture = Hermes::Texture::CreateFromAsset(*MetallicTextureAsset, false);
 		RoughnessTexture = Hermes::Texture::CreateFromAsset(*RoughnessTextureAsset, false);
 
-		TestMaterial = Hermes::Material::Create("Shaders/Bin/forward_vert.glsl.spv",
+		TexturedMaterial = Hermes::Material::Create("Shaders/Bin/forward_vert.glsl.spv",
 		                                        "Shaders/Bin/forward_frag.glsl.spv");
-		TestMaterialInstance = TestMaterial->CreateInstance();
-		TestMaterialInstance->SetTextureProperty("u_AlbedoTexture", *AlbedoTexture);
-		TestMaterialInstance->SetTextureProperty("u_RoughnessTexture", *RoughnessTexture);
-		TestMaterialInstance->SetTextureProperty("u_MetallicTexture", *MetallicTexture);
-		TestMaterialInstance->SetTextureProperty("u_NormalTexture", *NormalTexture);
+		TexturedMaterialInstance = TexturedMaterial->CreateInstance();
+		TexturedMaterialInstance->SetTextureProperty("u_AlbedoTexture", *AlbedoTexture);
+		TexturedMaterialInstance->SetTextureProperty("u_RoughnessTexture", *RoughnessTexture);
+		TexturedMaterialInstance->SetTextureProperty("u_MetallicTexture", *MetallicTexture);
+		TexturedMaterialInstance->SetTextureProperty("u_NormalTexture", *NormalTexture);
+
+		SolidColorMaterial = Hermes::Material::Create("Shaders/Bin/forward_vert.glsl.spv", "Shaders/Bin/solid_color_frag.glsl.spv");
+		auto MaybeSolidColorMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::PlatformFilesystem::ReadFileAsString("test_solid_color.hmat").value_or(""));
+		HERMES_ASSERT(MaybeSolidColorMaterialInstance);
+		SolidColorMaterialInstance = std::move(MaybeSolidColorMaterialInstance.value());
 
 		static constexpr Hermes::int32 SphereCountInSingleDimension = 39;
 		for (Hermes::int32 SphereX = -SphereCountInSingleDimension / 2;
@@ -64,7 +70,7 @@ public:
 					Hermes::Mat4::Translation(SphereLocation),
 					BoundingVolume,
 					SphereMeshBuffer,
-					TestMaterialInstance
+					TexturedMaterialInstance
 				};
 				Hermes::GGameLoop->GetScene().AddMesh(SphereMeshProxy);
 			}
@@ -159,8 +165,8 @@ public:
 private:
 	bool AnisotropyEnabled = false, AnisotropyChanged = false;
 	std::shared_ptr<Hermes::FPSCamera> Camera;
-	std::shared_ptr<Hermes::Material> TestMaterial;
-	std::shared_ptr<Hermes::MaterialInstance> TestMaterialInstance;
+	std::shared_ptr<Hermes::Material> TexturedMaterial, SolidColorMaterial;
+	std::shared_ptr<Hermes::MaterialInstance> TexturedMaterialInstance, SolidColorMaterialInstance;
 	std::shared_ptr<Hermes::Texture> AlbedoTexture, NormalTexture, MetallicTexture, RoughnessTexture;
 
 	void KeyEventHandler(const Hermes::IEvent& Event)
@@ -172,6 +178,21 @@ private:
 			{
 				AnisotropyChanged = true;
 				AnisotropyEnabled = !AnisotropyEnabled;
+			}
+
+			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::E)
+			{
+				std::shared_ptr<Hermes::MaterialInstance> NewMaterialInstance = nullptr;
+				if (KeyEvent.IsPressEvent())
+					NewMaterialInstance = SolidColorMaterialInstance;
+				else
+					NewMaterialInstance = TexturedMaterialInstance;
+
+				auto& Scene = Hermes::GGameLoop->GetScene();
+				for (const auto& Mesh : Scene.GetMeshes())
+				{
+					const_cast<Hermes::MeshProxy&>(Mesh).Material = NewMaterialInstance;
+				}
 			}
 		}
 	}

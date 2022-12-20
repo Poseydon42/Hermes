@@ -50,5 +50,5 @@ set(SOURCES
 include(HermesSublib)
 
 add_hermes_sublib(Hermes_RenderingEngine "${SOURCES}")
-target_link_libraries(Hermes_RenderingEngine PUBLIC Hermes_AssetSystem Hermes_Core Hermes_Logging Hermes_Math Hermes_Vulkan)
+target_link_libraries(Hermes_RenderingEngine PUBLIC Hermes_AssetSystem Hermes_Core Hermes_JSON Hermes_Logging Hermes_Math Hermes_Vulkan)
 target_link_libraries(Hermes_RenderingEngine PRIVATE spirv-cross-cpp)

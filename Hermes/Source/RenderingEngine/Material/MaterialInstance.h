@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "Core/Core.h"
@@ -22,6 +23,8 @@ namespace Hermes
 	class HERMES_API MaterialInstance
 	{
 	public:
+		static std::optional<std::unique_ptr<MaterialInstance>> CreateFromJSON(StringView JSON);
+
 		template<typename ValueType>
 		void SetNumericProperty(const String& Name, const ValueType& Value, size_t ArrayIndex = 0);
 

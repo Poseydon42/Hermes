@@ -129,15 +129,23 @@ namespace Hermes
 
 	static bool TryFindFile(const std::multiset<MountRecord>& Mounts, StringView Path, bool AlwaysSearchForFile, String& Result)
 	{
+		String NormalizedPath;
+		if (Path.starts_with('/'))
+			NormalizedPath = Path; 
+		else
+			NormalizedPath = '/' + String(Path);
+
 		auto Iterator = Mounts.rbegin();
 		while (Iterator != Mounts.rend())
 		{
 			auto& Record = *Iterator;
 			if (Path.rfind(Record.To, 0) != String::npos)
+			if (NormalizedPath.rfind(Record.To, 0) != String::npos)
 			{
 				if (AlwaysSearchForFile)
 				{
 					Result = Record.From + "/" + String(Path.begin() + static_cast<int32>(Record.To.length()), Path.end());
+					Result = Record.From + "/" + String(NormalizedPath.begin() + static_cast<int32>(Record.To.length()), NormalizedPath.end());
 					
 					wchar_t UTF16Result[GMaxFilePathLength];
 					MultiByteToWideChar(CP_UTF8, 0, Result.c_str(), -1, UTF16Result, GMaxFilePathLength);
@@ -155,6 +163,7 @@ namespace Hermes
 					// We need to just find a suitable directory according to
 					// mounting table, not the specific file
 					Result = Record.From + "/" + String(Path.begin() + static_cast<int32>(Record.To.length()), Path.end());
+					Result = Record.From + "/" + String(NormalizedPath.begin() + static_cast<int32>(Record.To.length()), NormalizedPath.end());
 					return true;
 				}
 			}

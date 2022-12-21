@@ -3,6 +3,7 @@
 #include "Core/Core.h"
 #include "Math/Common.h"
 #include "Math/Vector.h"
+#include "Math/Vector2.h"
 #include <cmath>
 
 namespace Hermes
@@ -51,6 +52,9 @@ namespace Hermes
 		constexpr InternalType& operator[](size_t Index);
 		constexpr InternalType operator[](size_t Index) const;
 
+		constexpr Vec2 XY() const;
+		constexpr Vec3 XYZ() const;
+
 		/**
 		 * Dot product
 		 */
@@ -81,6 +85,18 @@ namespace Hermes
 		 */
 		constexpr bool IsCloseToZero(InternalType Epsilon = InternalType(FLT_EPSILON)) const;
 	};
+
+	template<typename InternalType>
+	constexpr Vec2 Vector4<InternalType>::XY() const
+	{
+		return { X, Y };
+	}
+
+	template<typename InternalType>
+	constexpr Vec3 Vector4<InternalType>::XYZ() const
+	{
+		return { X, Y, Z };
+	}
 
 	/**
 	 * Aliases for vectors of basic types

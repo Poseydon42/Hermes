@@ -50,6 +50,8 @@ namespace Hermes
 		constexpr InternalType& operator[](size_t Index);
 		constexpr InternalType operator[](size_t Index) const;
 
+		constexpr Vec2 XY() const;
+
 		/**
 		 * Cross product
 		 */
@@ -85,6 +87,12 @@ namespace Hermes
 		 */
 		constexpr bool IsCloseToZero(InternalType Epsilon = InternalType(FLT_EPSILON)) const;
 	};
+
+	template<typename InternalType>
+	constexpr Vec2 Vector3<InternalType>::XY() const
+	{
+		return { X, Y };
+	}
 
 	/**
 	 * Aliases for vectors of basic types

@@ -1,6 +1,7 @@
 #include "JSONParser.h"
 
 #include "Logging/Logger.h"
+#include "Math/FromString.h"
 
 namespace Hermes
 {
@@ -237,42 +238,15 @@ namespace Hermes
 	{
 		SkipWhitespaces();
 
-		bool Negative = false;
-		if (Peek() == '-')
+		auto Start = Current;
+		auto OnePastEnd = Start;
+		while (Peek().has_value() && (IsDigit(Peek().value()) || Peek() == '.' || Peek() == '-'))
 		{
-			Negative = true;
+			++OnePastEnd;
 			Consume();
 		}
 
-		uint64 WholePart = 0;
-		while (true)
-		{
-			if (!Peek().has_value() || !IsDigit(Peek().value()))
-				break;
-			WholePart = WholePart * 10 + (Peek().value() - '0');
-			Consume();
-		}
-
-		// No dot - no fractional part
-		if (!Peek().has_value() || Peek().value() != '.')
-		{
-			return static_cast<double>(WholePart) * (Negative ? -1.0 : 1.0);
-		}
-		Consume();
-
-		uint64 FractionalPart = 0;
-		double FractionalPartMultiplier = 1.0;
-		while (true)
-		{
-			if (!Peek().has_value() || !IsDigit(Peek().value()))
-				break;
-
-			FractionalPart = FractionalPart * 10 + (Peek().value() - '0');
-			FractionalPartMultiplier *= 0.1;
-			Consume();
-		}
-
-		return (Negative ? -1.0 : 1.0 ) * (static_cast<double>(WholePart) + static_cast<double>(FractionalPart) * FractionalPartMultiplier);
+		return FromString::Double(StringView(Start, OnePastEnd));
 	}
 
 	std::optional<std::vector<JSONValue>> JSONParser::ParseArray()

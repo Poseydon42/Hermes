@@ -4,6 +4,8 @@ set(SOURCES
     BoundingVolume.cpp
     BoundingVolume.h
     Common.h
+    FromString.cpp
+    FromString.h
     Frustum.cpp
     Frustum.h
     Math.h

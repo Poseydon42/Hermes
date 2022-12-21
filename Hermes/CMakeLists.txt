@@ -20,6 +20,7 @@ add_subdirectory(Source/Vulkan)
 
 if(HERMES_ENABLE_TESTING)
     add_subdirectory(Tests/JSON)
+    add_subdirectory(Tests/Math)
     add_subdirectory(Tests/Platform)
 endif()
 

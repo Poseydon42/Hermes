@@ -10,7 +10,7 @@ layout(set = 0, binding = 0) uniform GlobalSceneDataWrapper
 
 layout(set = 1, binding = 0) uniform MaterialData
 {
-    float Color;
+    vec3 Color;
 } u_MaterialData;
 
 layout(location = 0) in vec2 i_TextureCoordinates;
@@ -22,5 +22,5 @@ layout(location = 0) out vec4 o_Color;
 
 void main()
 {
-    o_Color = vec4(vec3(u_MaterialData.Color), 1.0);
+    o_Color = vec4(u_MaterialData.Color, 1.0);
 }

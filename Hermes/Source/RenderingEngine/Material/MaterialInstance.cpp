@@ -54,19 +54,91 @@ namespace Hermes
 		return Material;
 	}
 
+	static void SetScalarPropertyFromJSON(MaterialInstance& Material, const String& Name, const JSONValue& Value)
+	{
+		if (Value.Is(JSONValueType::Number))
+		{
+			Material.SetNumericProperty(Name, static_cast<float>(Value.AsNumber()));
+		}
+		else if (Value.Is(JSONValueType::String))
+		{
+			// FIXME: currently only floating-point properties are supported, so we don't need to do anything fancy here
+			float ParsedValue = std::stof(Value.AsString().data());
+			Material.SetNumericProperty(Name, ParsedValue);
+		}
+		else
+		{
+			HERMES_LOG_WARNING("Cannot set property %s from JSON: value cannot be parsed", Name.c_str());
+		}
+	}
+
+	static void SetVectorPropertyFromJSON(MaterialInstance& Material, const String& Name, const JSONValue& Value)
+	{
+		if (!Value.Is(JSONValueType::Array))
+		{
+			HERMES_LOG_WARNING("Cannot set property %s from JSON: value must be an array", Name.c_str());
+			return;
+		}
+		const auto& ValueAsArray = Value.AsArray();
+		if (ValueAsArray.size() < 2)
+		{
+			HERMES_LOG_WARNING("Cannot set property %s from JSON: number of elements in the array must be greater than 1", Name.c_str());
+			return;
+		}
+
+		float ParsedVector[4] = { 0.0f };
+		size_t ComponentCount = 0;
+		for (size_t ComponentIndex = 0; ComponentIndex < 4 && ComponentIndex < ValueAsArray.size(); ComponentIndex++)
+		{
+			if (!ValueAsArray[ComponentIndex].Is(JSONValueType::Number))
+			{
+				HERMES_LOG_WARNING("Cannot set property %s from JSON: one of the components is not a numeric value", Name.c_str());
+				return;
+			}
+
+			ParsedVector[ComponentIndex] = static_cast<float>(ValueAsArray[ComponentIndex].AsNumber());
+
+			ComponentCount++;
+		}
+
+		HERMES_ASSERT(ComponentCount > 1 && ComponentCount <= 4);
+
+		Vec4 Vector = { ParsedVector[0], ParsedVector[1], ParsedVector[2], ParsedVector[3] };
+		switch (ComponentCount)
+		{
+		case 2:
+			Material.SetNumericProperty<Vec2>(Name, Vector.XY());
+			break;
+		case 3:
+			Material.SetNumericProperty<Vec3>(Name, Vector.XYZ());
+			break;
+		case 4:
+			Material.SetNumericProperty<Vec4>(Name, Vector);
+			break;
+		}
+	}
+
 	static void SetPropertiesFromJSON(MaterialInstance& Instance, const JSONObject& PropertiesObject)
 	{
-		for (const auto& Property : PropertiesObject)
+		for (const auto& JSONProperty : PropertiesObject)
 		{
-			const auto& PropertyName = Property.first;
-			if (Instance.GetBaseMaterial().FindProperty(PropertyName) == nullptr)
+			const auto& PropertyName = JSONProperty.first;
+			const auto* Property = Instance.GetBaseMaterial().FindProperty(PropertyName);
+			if (Property == nullptr)
 				HERMES_LOG_WARNING("Ignoring unknown property %s", PropertyName.c_str());
 
-			// FIXME: properly parse other types of properties (at the moment we assume that all properties are floats
-			HERMES_ASSERT(Property.second.Is(JSONValueType::Number));
-
-			auto Value = static_cast<float>(Property.second.AsNumber());
-			Instance.SetNumericProperty(PropertyName, Value);
+			// FIXME: texture properties
+			switch (Property->Type)
+			{
+			case MaterialPropertyType::Value:
+				SetScalarPropertyFromJSON(Instance, PropertyName, JSONProperty.second);
+				break;
+			case MaterialPropertyType::Vector:
+				SetVectorPropertyFromJSON(Instance, PropertyName, JSONProperty.second);
+				break;
+			default:
+				HERMES_LOG_WARNING("Cannot set value of property %s from JSON: value of this type cannot be set", PropertyName.c_str());
+			}
 		}
 	}
 

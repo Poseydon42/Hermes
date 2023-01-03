@@ -11,7 +11,6 @@
 #include "Math/Vector.h"
 #include "Platform/GenericPlatform/PlatformFile.h"
 #include "RenderingEngine/Scene/FPSCamera.h"
-#include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Texture.h"
@@ -26,25 +25,11 @@ public:
 		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load("sphere"));
 		auto BoundingVolume = SphereMesh->GetBoundingVolume();
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
-
-		auto AlbedoTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load("pbr_test_albedo"));
-		auto NormalTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load("pbr_test_normal"));
-		auto MetallicTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load("pbr_test_metallic"));
-		auto RoughnessTextureAsset = Hermes::Asset::As<Hermes::ImageAsset>(Hermes::AssetLoader::Load("pbr_test_roughness"));
-		AlbedoTexture = Hermes::Texture::CreateFromAsset(*AlbedoTextureAsset, true);
-		NormalTexture = Hermes::Texture::CreateFromAsset(*NormalTextureAsset, false);
-		MetallicTexture = Hermes::Texture::CreateFromAsset(*MetallicTextureAsset, false);
-		RoughnessTexture = Hermes::Texture::CreateFromAsset(*RoughnessTextureAsset, false);
-
-		TexturedMaterial = Hermes::Material::Create("Shaders/Bin/forward_vert.glsl.spv",
-		                                        "Shaders/Bin/forward_frag.glsl.spv");
-		TexturedMaterialInstance = TexturedMaterial->CreateInstance();
-		TexturedMaterialInstance->SetTextureProperty("u_AlbedoTexture", *AlbedoTexture);
-		TexturedMaterialInstance->SetTextureProperty("u_RoughnessTexture", *RoughnessTexture);
-		TexturedMaterialInstance->SetTextureProperty("u_MetallicTexture", *MetallicTexture);
-		TexturedMaterialInstance->SetTextureProperty("u_NormalTexture", *NormalTexture);
-
-		SolidColorMaterial = Hermes::Material::Create("Shaders/Bin/forward_vert.glsl.spv", "Shaders/Bin/solid_color_frag.glsl.spv");
+		
+		auto MaybeTexturedMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::PlatformFilesystem::ReadFileAsString("pbr_test.hmat").value_or(""));
+		HERMES_ASSERT(MaybeTexturedMaterialInstance);
+		TexturedMaterialInstance = std::move(MaybeTexturedMaterialInstance.value());
+		
 		auto MaybeSolidColorMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::PlatformFilesystem::ReadFileAsString("test_solid_color.hmat").value_or(""));
 		HERMES_ASSERT(MaybeSolidColorMaterialInstance);
 		SolidColorMaterialInstance = std::move(MaybeSolidColorMaterialInstance.value());
@@ -165,9 +150,7 @@ public:
 private:
 	bool AnisotropyEnabled = false, AnisotropyChanged = false;
 	std::shared_ptr<Hermes::FPSCamera> Camera;
-	std::shared_ptr<Hermes::Material> TexturedMaterial, SolidColorMaterial;
 	std::shared_ptr<Hermes::MaterialInstance> TexturedMaterialInstance, SolidColorMaterialInstance;
-	std::shared_ptr<Hermes::Texture> AlbedoTexture, NormalTexture, MetallicTexture, RoughnessTexture;
 
 	void KeyEventHandler(const Hermes::IEvent& Event)
 	{

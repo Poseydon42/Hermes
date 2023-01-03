@@ -12,6 +12,8 @@
 
 namespace Hermes
 {
+	class JSONValue;
+	class JSONObject;
 	class Material;
 	class Texture;
 
@@ -28,7 +30,19 @@ namespace Hermes
 		template<typename ValueType>
 		void SetNumericProperty(const String& Name, const ValueType& Value, size_t ArrayIndex = 0);
 
+		/*
+		 * Sets a texture property using a direct reference to a Texture object.
+		 *
+		 * Reference counting and ensuring the lifetime of the texture is a responsibility of the user in this case.
+		 */
 		void SetTextureProperty(const String& Name, const Texture& Value);
+
+		/*
+		 * Sets a texture property using a texture name. The texture will be acquired from a global TextureCache object.
+		 *
+		 * Reference counting is implemented in the texture cache object and valid lifetime is guaranteed.
+		 */
+		void SetTextureProperty(const String& Name, const String& TextureName, bool IsSRGB);
 
 		void PrepareForRender() const;
 
@@ -41,11 +55,20 @@ namespace Hermes
 		bool HasUniformBuffer = false;
 
 		std::shared_ptr<const Material> BaseMaterial;
+		std::unordered_map<String, String> CurrentlyBoundRefCountedTextures;
 		std::vector<uint8> CPUBuffer;
 		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
 		std::unique_ptr<Vulkan::Buffer> UniformBuffer;
 
 		MaterialInstance(std::shared_ptr<const Material> Material, size_t UniformBufferSize);
+
+		void SetScalarPropertyFromJSON(const String& Name, const JSONValue& Value);
+
+		void SetVectorPropertyFromJSON(const String& Name, const JSONValue& Value);
+
+		void SetTexturePropertyFromJSON(const String& Name, const JSONValue& Value);
+
+		void SetPropertiesFromJSON(const JSONObject& PropertiesObject);
 
 		friend class Material;
 	};

@@ -7,21 +7,21 @@
 
 namespace Hermes
 {
-	std::shared_ptr<Asset> AssetLoader::Load(const String& Name)
+	std::shared_ptr<Asset> AssetLoader::Load(StringView Name)
 	{
-		String Filename = Name + ".hac";
+		String Filename = String(Name) + ".hac";
 
 		auto File = PlatformFilesystem::OpenFile(Filename, IPlatformFile::FileAccessMode::Read, IPlatformFile::FileOpenMode::OpenExisting);
 		if (!File->IsValid())
 		{
-			HERMES_LOG_WARNING("Failed to open asset file %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to open asset file %s", Name.data());
 			return nullptr;
 		}
 
 		AssetHeader Header;
 		if (!File->Read(reinterpret_cast<uint8*>(&Header), sizeof(Header)))
 		{
-			HERMES_LOG_WARNING("Failed to read asset header from asset file %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to read asset header from asset file %s", Name.data());
 			return nullptr;
 		}
 
@@ -37,12 +37,12 @@ namespace Hermes
 		}
 	}
 
-	std::shared_ptr<Asset> AssetLoader::LoadImage(IPlatformFile& File, const AssetHeader&, const String& Name)
+	std::shared_ptr<Asset> AssetLoader::LoadImage(IPlatformFile& File, const AssetHeader&, StringView Name)
 	{
 		ImageAssetHeader Header;
 		if (!File.Read(reinterpret_cast<uint8*>(&Header), sizeof(Header)))
 		{
-			HERMES_LOG_WARNING("Failed to read image header from asset %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to read image header from asset %s", Name.data());
 			return nullptr;
 		}
 
@@ -51,18 +51,18 @@ namespace Hermes
 		std::vector<uint8> ImageData(TotalBytes, 0x00);
 		if (!File.Read(ImageData.data(), TotalBytes))
 		{
-			HERMES_LOG_WARNING("Failed to read image data from asset %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to read image data from asset %s", Name.data());
 			return nullptr;
 		}
 
-		auto Result = std::shared_ptr<ImageAsset>(new ImageAsset(Name, Vec2ui { Header.Width, Header.Height },
+		auto Result = std::shared_ptr<ImageAsset>(new ImageAsset(String(Name), Vec2ui{Header.Width, Header.Height},
 		                                                         Header.Format, Header.BytesPerChannel, Header.MipLevelCount,
 		                                                         ImageData.data()));
 
 		return Result;
 	}
 
-	std::shared_ptr<Asset> AssetLoader::LoadMesh(IPlatformFile& File, const AssetHeader& AssetHeader, const String& Name)
+	std::shared_ptr<Asset> AssetLoader::LoadMesh(IPlatformFile& File, const AssetHeader& AssetHeader, StringView Name)
 	{
 		(void)AssetHeader;
 		PACKED_STRUCT_BEGIN
@@ -76,7 +76,7 @@ namespace Hermes
 		MeshHeader Header;
 		if (!File.Read(reinterpret_cast<uint8*>(&Header), sizeof(Header)))
 		{
-			HERMES_LOG_WARNING("Failed to read mesh header from asset %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to read mesh header from asset %s", Name.data());
 			return nullptr;
 		}
 
@@ -85,10 +85,10 @@ namespace Hermes
 		if (!File.Read(reinterpret_cast<uint8*>(Vertices.data()), Header.VertexCount * sizeof(Vertex)) ||
 			!File.Read(reinterpret_cast<uint8*>(Indices.data()), Header.IndexCount * sizeof(uint32)))
 		{
-			HERMES_LOG_WARNING("Failed to read mesh data from asset %s", Name.c_str());
+			HERMES_LOG_WARNING("Failed to read mesh data from asset %s", Name.data());
 			return nullptr;
 		}
 
-		return std::shared_ptr<MeshAsset>(new MeshAsset(Name, Vertices, Indices));
+		return std::shared_ptr<MeshAsset>(new MeshAsset(String(Name), Vertices, Indices));
 	}
 }

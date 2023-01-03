@@ -21,12 +21,12 @@ namespace Hermes
 	class HERMES_API AssetLoader
 	{
 	public:
-		static std::shared_ptr<Asset> Load(const String& Name);
+		static std::shared_ptr<Asset> Load(StringView Name);
 
 	private:
 
-		static std::shared_ptr<Asset> LoadImage(IPlatformFile& File, const AssetHeader& Header, const String& Name);
+		static std::shared_ptr<Asset> LoadImage(IPlatformFile& File, const AssetHeader& Header, StringView Name);
 
-		static std::shared_ptr<Asset> LoadMesh(IPlatformFile& File, const AssetHeader& AssetHeader, const String& Name);
+		static std::shared_ptr<Asset> LoadMesh(IPlatformFile& File, const AssetHeader& AssetHeader, StringView Name);
 	};
 }

@@ -47,6 +47,7 @@ namespace Hermes
 			return false;
 
 		DescriptorAllocator = std::make_unique<class DescriptorAllocator>();
+		TextureCache = std::make_unique<class TextureCache>();
 
 		VkDescriptorSetLayoutBinding SceneUBOBinding = {};
 		SceneUBOBinding.binding = 0;
@@ -203,6 +204,11 @@ namespace Hermes
 	ShaderCache& Renderer::GetShaderCache()
 	{
 		return ShaderCache;
+	}
+
+	TextureCache& Renderer::GetTextureCache()
+	{
+		return *TextureCache;
 	}
 
 	const Vulkan::DescriptorSetLayout& Renderer::GetGlobalDataDescriptorSetLayout() const

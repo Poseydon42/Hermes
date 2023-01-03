@@ -45,6 +45,8 @@ set(SOURCES
     SharedData.h
     Texture.cpp
     Texture.h
+    TextureCache.cpp
+    TextureCache.h
 )
 
 include(HermesSublib)

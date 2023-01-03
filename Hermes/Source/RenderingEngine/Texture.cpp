@@ -58,9 +58,9 @@ namespace Hermes
 		return It->second;
 	}
 
-	std::shared_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps)
+	std::unique_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps)
 	{
-		return std::shared_ptr<Texture>(new Texture(Source, UseAsSRGB, EnableMipMaps));
+		return std::unique_ptr<Texture>(new Texture(Source, UseAsSRGB, EnableMipMaps));
 	}
 
 	const Vulkan::Image& Texture::GetRawImage() const

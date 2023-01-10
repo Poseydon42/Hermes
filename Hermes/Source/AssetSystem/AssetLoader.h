@@ -3,20 +3,13 @@
 #include <memory>
 
 #include "AssetSystem/Asset.h"
+#include "AssetSystem/AssetHeaders.h"
 #include "AssetSystem/ImageAsset.h"
 #include "Core/Core.h"
 
 namespace Hermes
 {
 	class IPlatformFile;
-
-	PACKED_STRUCT_BEGIN
-	struct AssetHeader
-	{
-		AssetType Type;
-		// TODO : version, dependencies etc.
-	};
-	PACKED_STRUCT_END
 
 	class HERMES_API AssetLoader
 	{

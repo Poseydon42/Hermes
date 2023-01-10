@@ -65,15 +65,8 @@ namespace Hermes
 	std::shared_ptr<Asset> AssetLoader::LoadMesh(IPlatformFile& File, const AssetHeader& AssetHeader, StringView Name)
 	{
 		(void)AssetHeader;
-		PACKED_STRUCT_BEGIN
-		struct MeshHeader
-		{
-			uint32 VertexCount;
-			uint32 IndexCount;
-		};
-		PACKED_STRUCT_END
 
-		MeshHeader Header;
+		MeshAssetHeader Header;
 		if (!File.Read(reinterpret_cast<uint8*>(&Header), sizeof(Header)))
 		{
 			HERMES_LOG_WARNING("Failed to read mesh header from asset %s", Name.data());

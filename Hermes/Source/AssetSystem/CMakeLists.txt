@@ -5,6 +5,7 @@ include(HermesSublib)
 set(SOURCES
     Asset.cpp
     Asset.h
+    AssetHeaders.h
     AssetLoader.cpp
     AssetLoader.h
     ImageAsset.cpp

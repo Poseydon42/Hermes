@@ -1,6 +1,6 @@
 function(add_common_definitions target_name) 
     target_compile_definitions(${target_name} PRIVATE $<$<CONFIG:Debug>:HERMES_DEBUG>)
-    target_compile_definitions(${target_name} PRIVATE $<$<CONFIG:Release>:HERMES_RELEASE>)
+    target_compile_definitions(${target_name} PRIVATE $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:HERMES_RELEASE>)
 
     if (WIN32)
         target_compile_definitions(${target_name} PRIVATE HERMES_PLATFORM_WINDOWS)

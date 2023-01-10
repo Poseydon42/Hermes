@@ -187,7 +187,7 @@ namespace Hermes
 	std::optional<String> PlatformFilesystem::ReadFileAsString(StringView Path)
 	{
 		auto File = OpenFile(Path, IPlatformFile::FileAccessMode::Read, IPlatformFile::FileOpenMode::OpenExisting);
-		if (!File)
+		if (!File || !File->IsValid())
 			return {};
 
 		auto FileSize = File->Size();

@@ -14,6 +14,7 @@ set(SOURCES
     Misc/NonCopyableMovable.h
     Misc/ArgsParser.cpp
     Misc/ArgsParser.h
+    Misc/Version.h
     Profiling.h
 )
 

@@ -7,8 +7,12 @@ set(SOURCES
     Source/FileProcessor.h
     Source/InputFileReader.h
     Source/main.cpp
+    Source/Mesh.cpp
+    Source/Mesh.h
     Source/MeshWriter.cpp
     Source/MeshWriter.h
+    Source/Node.h
+    Source/Node.cpp
     Source/OBJReader.cpp
     Source/OBJReader.h
 )
@@ -16,6 +20,7 @@ set(SOURCES
 include(CommonDefinitions)
 
 add_executable(MeshToAsset ${SOURCES})
+target_include_directories(MeshToAsset PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 target_compile_definitions(MeshToAsset PRIVATE HERMES_BUILD_TOOLS)
 target_link_libraries(MeshToAsset PRIVATE Hermes_AssetSystem Hermes_Core Hermes_Logging Hermes_Math Hermes_Platform)
 add_common_definitions(MeshToAsset)

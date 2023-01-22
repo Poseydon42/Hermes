@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <iostream>
 
+#include "AssetSystem/MeshAsset.h"
+#include "Mesh.h"
+#include "Node.h"
 #include "Platform/GenericPlatform/PlatformFile.h"
 
 namespace Hermes::Tools
@@ -32,7 +35,30 @@ namespace Hermes::Tools
 		std::vector<Vec3> VertexPositions;
 		std::vector<Vec2> VertexTextureCoordinates;
 		std::vector<Vec3> VertexNormals;
-		std::vector<UniqueVertex> UniqueVertices;
+
+		String CurrentMeshName;
+		std::vector<UniqueVertex> CurrentMeshVertices;
+		std::vector<uint32> CurrentMeshIndices;
+
+		auto AddMeshAndResetBuffers = [&]()
+		{
+			std::vector<Vertex> ComputedVertices;
+			for (const auto& CurrentVertex : CurrentMeshVertices)
+			{
+				Vertex NewVertex = {};
+				NewVertex.Position = VertexPositions[CurrentVertex.PositionIndex];
+				NewVertex.TextureCoordinates = VertexTextureCoordinates[CurrentVertex.TextureCoordinatesIndex];
+				NewVertex.Normal = VertexNormals[CurrentVertex.NormalIndex];
+				ComputedVertices.push_back(NewVertex);
+			}
+
+			Meshes.emplace_back(CurrentMeshName, std::move(ComputedVertices), std::move(CurrentMeshIndices), false);
+
+			Root.AddChild(Node(CurrentMeshName, CurrentMeshName, NodePayloadType::Mesh));
+			
+			CurrentMeshVertices.clear();
+			CurrentMeshIndices.clear();
+		};
 
 		String CurrentLine;
 		// FIXME: validate the contents of the file instead of just returning garbage
@@ -49,7 +75,22 @@ namespace Hermes::Tools
 			if (ValueType.empty() || ValueType.find_first_of('#') == 0)
 				continue;
 
-			if (ValueType == "v")
+			if (ValueType == "o")
+			{
+				String NewMeshName;
+				LineStream >> NewMeshName;
+				if (CurrentMeshName.empty()) // NOTE: meaning that this is the first mesh declaration in the file
+				{
+					CurrentMeshName = NewMeshName;
+					continue;
+				}
+				else
+				{
+					AddMeshAndResetBuffers();
+					CurrentMeshName = NewMeshName;
+				}
+			}
+			else if (ValueType == "v")
 			{
 				Vec3 NewPosition;
 				LineStream >> NewPosition.X >> NewPosition.Y >> NewPosition.Z;
@@ -84,56 +125,41 @@ namespace Hermes::Tools
 					std::cerr << "Cannot parse OBJ file: met face with less than 3 vertices" << std::endl;
 					return false;
 				}
-				if (FaceVertices.size() > 3)
-				{
-					HasNonTriangleFaces = true;
-				}
 
 				auto InsertVertexAndIndex = [&](const UniqueVertex& CurrentVertex)
 				{
-					auto Iterator = std::ranges::find(UniqueVertices, CurrentVertex);
-					if (Iterator == UniqueVertices.end())
+					auto Iterator = std::ranges::find(CurrentMeshVertices, CurrentVertex);
+					if (Iterator == CurrentMeshVertices.end())
 					{
-						UniqueVertices.push_back(CurrentVertex);
-						Iterator = UniqueVertices.end() - 1;
+						CurrentMeshVertices.push_back(CurrentVertex);
+						Iterator = CurrentMeshVertices.end() - 1;
 					}
-					Indices.push_back(static_cast<uint32>(std::distance(UniqueVertices.begin(), Iterator)));
+					CurrentMeshIndices.push_back(static_cast<uint32>(std::distance(CurrentMeshVertices.begin(), Iterator)));
 				};
 
 				std::ranges::for_each(FaceVertices, InsertVertexAndIndex);
-				Indices.push_back(static_cast<uint32>(-1)); // Face separator
+				CurrentMeshIndices.push_back(static_cast<uint32>(-1)); // Face separator
 			}
+
 		}
 
-		for (const auto& CurrentVertex : UniqueVertices)
-		{
-			Vertex NewVertex = {};
-			NewVertex.Position = VertexPositions[CurrentVertex.PositionIndex];
-			NewVertex.TextureCoordinates = VertexTextureCoordinates[CurrentVertex.TextureCoordinatesIndex];
-			NewVertex.Normal = VertexNormals[CurrentVertex.NormalIndex];
-			Vertices.push_back(NewVertex);
-		}
+		AddMeshAndResetBuffers();
 
 		return true;
 	}
 
-	bool OBJReader::HasTangents() const
+	const Node& OBJReader::GetRootNode() const
 	{
-		return false;
+		return Root;
 	}
 
-	bool OBJReader::IsTriangulated() const
+	std::optional<const Mesh*> OBJReader::GetMesh(StringView MeshName) const
 	{
-		return !HasNonTriangleFaces;
-	}
-
-	std::span<const Vertex> OBJReader::GetVertices() const
-	{
-		return Vertices;
-	}
-
-	std::span<const uint32> OBJReader::GetIndices() const
-	{
-		return Indices;
+		for (const auto& Mesh : Meshes)
+		{
+			if (Mesh.GetName() == MeshName)
+				return &Mesh;
+		}
+		return {};
 	}
 }

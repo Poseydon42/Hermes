@@ -25,6 +25,8 @@ if(HERMES_ENABLE_TESTING)
     add_subdirectory(Tests/Platform)
 endif()
 
+add_subdirectory(Files/Shaders)
+
 set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS ON CACHE BOOL "Instead of throwing exceptions assert.")
 set(SPIRV_CROSS_STATIC ON CACHE BOOL "Build the C and C++ API as static libraries.")
 set(SPIRV_CROSS_SHARED OFF CACHE BOOL "Build the C API as a single shared library.")

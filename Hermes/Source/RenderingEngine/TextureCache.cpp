@@ -16,7 +16,7 @@ namespace Hermes
 		auto FallbackTextureAsset = AssetLoader::Load(FallbackTextureAssetPath);
 		HERMES_ASSERT_LOG(FallbackTextureAsset || !FallbackTextureAsset->IsValid() || FallbackTextureAsset->GetType() != AssetType::Image, "Could not load fallback texture asset %s", FallbackTextureAssetPath.data());
 
-		FallbackTexture = Texture::CreateFromAsset(*Asset::As<ImageAsset>(FallbackTextureAsset), true);
+		FallbackTexture = Texture::CreateFromAsset(Asset::As<ImageAsset>(*FallbackTextureAsset), true);
 	}
 
 	const Texture& TextureCache::Acquire(StringView Name, bool IsSRGB)
@@ -63,7 +63,7 @@ namespace Hermes
 			return nullptr;
 		}
 
-		auto ImageAsset = Asset::As<class ImageAsset>(Asset);
+		auto ImageAsset = Asset::As<class ImageAsset>(std::move(Asset));
 		auto Texture = Texture::CreateFromAsset(*ImageAsset, IsSRGB); // FIXME: UseAsSRGB/EnableMipMaps should also be exposed to the user
 
 		LoadedTexture LoadedTexture = { std::move(Texture), 1 };

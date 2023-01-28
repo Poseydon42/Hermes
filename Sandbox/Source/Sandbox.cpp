@@ -22,8 +22,9 @@ public:
 
 	bool Init() override
 	{
-		auto SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(Hermes::AssetLoader::Load("sphere"));
-		auto BoundingVolume = SphereMesh->GetBoundingVolume();
+		auto SphereMeshAsset = Hermes::AssetLoader::Load("sphere");
+		auto& SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(*SphereMeshAsset);
+		auto BoundingVolume = SphereMesh.GetBoundingVolume();
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
 		
 		auto MaybeTexturedMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::PlatformFilesystem::ReadFileAsString("pbr_test.hmat").value_or(""));

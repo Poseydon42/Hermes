@@ -24,6 +24,7 @@ namespace Hermes
 	class HERMES_API MeshAsset : public Asset
 	{
 	public:
+
 		virtual size_t GetMemorySize() const override;
 
 		virtual bool IsValid() const override;

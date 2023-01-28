@@ -36,18 +36,27 @@ namespace Hermes
 		virtual size_t GetMemorySize() const;
 		
 		template<class AssetType>
-		static std::shared_ptr<AssetType> As(std::shared_ptr<Asset> From);
+		static const AssetType& As(const Asset& From);
+
+		template<class AssetType>
+		static std::unique_ptr<AssetType> As(std::unique_ptr<Asset> From);
+
 	private:
 		String Name;
 		AssetType Type;
 	};
 }
 
-#define DEFINE_ASSET_TYPE(Type)                                                                 \
-	template<>                                                                                  \
-	HERMES_API std::shared_ptr<Type##Asset> Asset::As<Type##Asset>(std::shared_ptr<Asset> From) \
-	{                                                                                           \
-		if (From->GetType() == AssetType::Type)                                                 \
-			return std::reinterpret_pointer_cast<Type##Asset>(From);                            \
-		return nullptr;                                                                         \
-	}
+#define DEFINE_ASSET_TYPE(Type)                                                                        \
+	template<>                                                                                         \
+	HERMES_API const Type##Asset& Asset::As<Type##Asset>(const Asset& From)                            \
+	{                                                                                                  \
+		HERMES_ASSERT(From.GetType() == AssetType::Type);                                              \
+		return static_cast<const Type##Asset&>(From);                                                  \
+	}                                                                                                  \
+	template<>                                                                                         \
+	HERMES_API std::unique_ptr<Type##Asset> Asset::As<Type##Asset>(std::unique_ptr<Asset> From)        \
+	{                                                                                                  \
+		HERMES_ASSERT(From->GetType() == AssetType::Type);                                             \
+		return std::unique_ptr<Type##Asset>(static_cast<Type##Asset*>(From.release()));                \
+	}                                                                                                  \

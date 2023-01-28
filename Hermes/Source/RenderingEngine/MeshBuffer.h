@@ -11,7 +11,7 @@ namespace Hermes
 	class HERMES_API MeshBuffer
 	{
 	public:
-		static std::shared_ptr<MeshBuffer> CreateFromAsset(std::weak_ptr<MeshAsset> InAsset);
+		static std::shared_ptr<MeshBuffer> CreateFromAsset(const MeshAsset& Asset);
 
 		const Vulkan::Buffer& GetVertexBuffer() const;
 		const Vulkan::Buffer& GetIndexBuffer() const;
@@ -28,11 +28,10 @@ namespace Hermes
 		MeshDrawInformation GetDrawInformation() const;
 
 	private:
-		explicit MeshBuffer(std::weak_ptr<MeshAsset> InAsset);
+		explicit MeshBuffer(const MeshAsset& Asset);
 
 		bool DataUploadFinished;
 		uint32 IndexCount;
-		std::weak_ptr<MeshAsset> Asset;
 		std::shared_ptr<Vulkan::Buffer> VertexBuffer, IndexBuffer;
 	};
 }

@@ -1,9 +1,7 @@
 ﻿#include "Scene.h"
 
 #include "AssetSystem/AssetLoader.h"
-#include "AssetSystem/ImageAsset.h"
 #include "Core/Profiling.h"
-#include "Logging/Logger.h"
 #include "Math/Frustum.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
@@ -401,10 +399,9 @@ namespace Hermes
 	{
 		auto LoadCubemap = [](const String& Name)
 		{
-			auto RawReflectionEnvmapAsset = Asset::As<ImageAsset>(AssetLoader::Load(Name));
-			HERMES_ASSERT_LOG(RawReflectionEnvmapAsset, "Failed to load cubemap %s.", Name.c_str());
-			auto RawReflectionEnvmapTexture = Texture::CreateFromAsset(*RawReflectionEnvmapAsset, false, false);
-			return CubemapTexture::CreateFromEquirectangularTexture(*RawReflectionEnvmapTexture,
+			auto& TextureCache = Renderer::Get().GetTextureCache();
+			auto& RawReflectionEnvmapTexture = TextureCache.Acquire(Name, false);
+			return CubemapTexture::CreateFromEquirectangularTexture(RawReflectionEnvmapTexture,
 			                                                        VK_FORMAT_R16G16B16A16_SFLOAT, true);
 		};
 

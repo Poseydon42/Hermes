@@ -4,6 +4,7 @@
 
 #include "Core/Core.h"
 #include "ApplicationCore/Application.h"
+#include "AssetSystem/AssetCache.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
 #include "RenderingEngine/Scene/Scene.h"
@@ -37,6 +38,8 @@ namespace Hermes
 
 		const InputEngine& GetInputEngine() const;
 
+		AssetCache& GetAssetCache();
+
 		/*
 		 * DEBUG ONLY
 		 */
@@ -52,6 +55,8 @@ namespace Hermes
 		std::unique_ptr<IApplication> Application;
 		std::shared_ptr<IPlatformWindow> ApplicationWindow;
 		std::shared_ptr<InputEngine> InputEngine;
+
+		std::unique_ptr<AssetCache> AssetCache;
 
 		/*
 		 * DEBUG ONLY

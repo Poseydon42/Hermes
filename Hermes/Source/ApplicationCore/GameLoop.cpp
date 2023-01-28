@@ -49,6 +49,8 @@ namespace Hermes
 		// DEBUG ONLY
 		InputEngine->GetEventQueue().Subscribe<GameLoop, &GameLoop::KeyEventHandler>(KeyEvent::GetStaticType(), this);
 
+		AssetCache = std::make_unique<class AssetCache>();
+
 		Renderer::Get().Init();
 
 		GameScene = std::make_unique<Scene>();
@@ -107,6 +109,11 @@ namespace Hermes
 	const InputEngine& GameLoop::GetInputEngine() const
 	{
 		return *InputEngine;
+	}
+
+	AssetCache& GameLoop::GetAssetCache()
+	{
+		return *AssetCache;
 	}
 
 	Scene& GameLoop::GetScene()

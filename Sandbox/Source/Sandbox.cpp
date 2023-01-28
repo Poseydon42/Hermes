@@ -22,8 +22,10 @@ public:
 
 	bool Init() override
 	{
-		auto SphereMeshAsset = Hermes::AssetLoader::Load("sphere");
-		auto& SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(*SphereMeshAsset);
+		auto MaybeSphereMeshAsset = Hermes::GGameLoop->GetAssetCache().Get<Hermes::MeshAsset>("sphere");
+		if (!MaybeSphereMeshAsset.has_value() || MaybeSphereMeshAsset.value() == nullptr)
+			return false;
+		auto& SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(*MaybeSphereMeshAsset.value());
 		auto BoundingVolume = SphereMesh.GetBoundingVolume();
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
 		

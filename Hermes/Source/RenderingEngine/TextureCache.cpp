@@ -1,5 +1,6 @@
 #include "TextureCache.h"
 
+#include "ApplicationCore/GameLoop.h"
 #include "AssetSystem/AssetLoader.h"
 
 namespace Hermes
@@ -13,10 +14,12 @@ namespace Hermes
 
 	TextureCache::TextureCache()
 	{
-		auto FallbackTextureAsset = AssetLoader::Load(FallbackTextureAssetPath);
-		HERMES_ASSERT_LOG(FallbackTextureAsset || !FallbackTextureAsset->IsValid() || FallbackTextureAsset->GetType() != AssetType::Image, "Could not load fallback texture asset %s", FallbackTextureAssetPath.data());
+		auto& AssetCache = GGameLoop->GetAssetCache();
 
-		FallbackTexture = Texture::CreateFromAsset(Asset::As<ImageAsset>(*FallbackTextureAsset), true);
+		auto MaybeFallbackTextureAsset = AssetCache.Get<ImageAsset>(String(FallbackTextureAssetPath));
+		HERMES_ASSERT_LOG(MaybeFallbackTextureAsset.has_value() && MaybeFallbackTextureAsset.value() != nullptr, "Could not load fallback texture asset %s", FallbackTextureAssetPath.data());
+
+		FallbackTexture = Texture::CreateFromAsset(Asset::As<ImageAsset>(*MaybeFallbackTextureAsset.value()), true);
 	}
 
 	const Texture& TextureCache::Acquire(StringView Name, bool IsSRGB)
@@ -57,14 +60,16 @@ namespace Hermes
 
 	TextureCache::LoadedTexture* TextureCache::LoadNewTexture(StringView Name, bool IsSRGB)
 	{
-		auto Asset = AssetLoader::Load(Name);
-		if (!Asset || !Asset->IsValid() || Asset->GetType() != AssetType::Image)
+		auto& AssetCache = GGameLoop->GetAssetCache();
+
+		auto MaybeAsset = AssetCache.Get<ImageAsset>(String(Name));
+		if (!MaybeAsset.has_value() || MaybeAsset.value() == nullptr)
 		{
 			return nullptr;
 		}
 
-		auto ImageAsset = Asset::As<class ImageAsset>(std::move(Asset));
-		auto Texture = Texture::CreateFromAsset(*ImageAsset, IsSRGB); // FIXME: UseAsSRGB/EnableMipMaps should also be exposed to the user
+		const auto& Asset = *MaybeAsset.value();
+		auto Texture = Texture::CreateFromAsset(Asset, IsSRGB);
 
 		LoadedTexture LoadedTexture = { std::move(Texture), 1 };
 

@@ -218,7 +218,7 @@ namespace Hermes
 			return false;
 		
 		wchar_t UTF16Path[GMaxFilePathLength];
-		MultiByteToWideChar(CP_UTF8, 0, Path.data(), -1, UTF16Path, GMaxFilePathLength);
+		MultiByteToWideChar(CP_UTF8, 0, TruePath.data(), -1, UTF16Path, GMaxFilePathLength);
 		return DeleteFileW(UTF16Path);
 	}
 }

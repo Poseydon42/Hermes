@@ -16,6 +16,7 @@ add_subdirectory(Source/Logging)
 add_subdirectory(Source/Math)
 add_subdirectory(Source/Platform)
 add_subdirectory(Source/RenderingEngine)
+add_subdirectory(Source/VirtualFilesystem)
 add_subdirectory(Source/Vulkan)
 
 if(HERMES_ENABLE_TESTING)
@@ -23,6 +24,7 @@ if(HERMES_ENABLE_TESTING)
     add_subdirectory(Tests/JSON)
     add_subdirectory(Tests/Math)
     add_subdirectory(Tests/Platform)
+    add_subdirectory(Tests/VirtualFilesystem)
 endif()
 
 add_subdirectory(Files/Shaders)
@@ -58,6 +60,7 @@ set(HERMES_SUBLIB_LIST
     Hermes_Math
     Hermes_Platform
     Hermes_RenderingEngine
+    Hermes_VirtualFileSystem
     Hermes_Vulkan
 )
 

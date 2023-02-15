@@ -2,11 +2,11 @@
     "shaders": [
         {
             "type": "vertex",
-            "path": "Shaders/Bin/forward_vert.glsl.spv"
+            "path": "/Shaders/Bin/forward_vert.glsl.spv"
         },
         {
             "type": "fragment",
-            "path": "Shaders/Bin/solid_color_frag.glsl.spv"
+            "path": "/Shaders/Bin/solid_color_frag.glsl.spv"
         }
     ],
     "properties": {

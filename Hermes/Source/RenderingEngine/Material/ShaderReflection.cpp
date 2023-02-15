@@ -4,6 +4,7 @@
 
 #include "Logging/Logger.h"
 #include "Platform/GenericPlatform/PlatformFile.h"
+#include "VirtualFilesystem/VirtualFilesystem.h"
 
 namespace Hermes
 {
@@ -21,13 +22,12 @@ namespace Hermes
 
 	ShaderReflection::ShaderReflection(const String& ShaderPath)
 	{
-		auto ShaderFile = PlatformFilesystem::OpenFile(ShaderPath, IPlatformFile::FileAccessMode::Read,
-		                                               IPlatformFile::FileOpenMode::OpenExisting);
+		auto ShaderFile = VirtualFilesystem::Open(ShaderPath, FileOpenMode::OpenExisting, FileAccessMode::Read);
 		HERMES_ASSERT(ShaderFile);
 		HERMES_ASSERT(ShaderFile->Size() % 4 == 0); // NOTE : SPIR-V binary size must always be divisible by 4
 
 		std::vector<uint32> ShaderCode(ShaderFile->Size() / 4);
-		HERMES_ASSERT(ShaderFile->Read(reinterpret_cast<uint8*>(ShaderCode.data()), ShaderFile->Size()));
+		HERMES_ASSERT(ShaderFile->Read(ShaderCode.data(), ShaderFile->Size()));
 
 		spirv_cross::Compiler Compiler(std::move(ShaderCode));
 		const auto& UniformBuffers = Compiler.get_shader_resources().uniform_buffers;

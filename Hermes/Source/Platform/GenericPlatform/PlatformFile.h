@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <optional>
-#include <set>
 
 #include "Core/Core.h"
 #include "Core/Misc/EnumClassOperators.h"
@@ -71,26 +70,12 @@ namespace Hermes
 		virtual void Flush() = 0;
 
 		/**
-		 * @return True if object is valid file handle
-		 */
-		virtual bool IsValid() const = 0;
-
-		/**
 		 * Closes file and makes its handle invalid
 		 */
 		virtual void Close() = 0;
 	};
 
 	ENUM_CLASS_OPERATORS(IPlatformFile::FileAccessMode)
-
-	struct MountRecord
-	{
-		String From;
-		String To;
-		uint32 Priority = 0;
-
-		bool operator<(const MountRecord& Rhs) const { return Priority < Rhs.Priority; }
-	};
 
 	/**
 	 * Set of platform-independent functions for managing filesystem
@@ -114,24 +99,9 @@ namespace Hermes
 		static std::optional<String> ReadFileAsString(StringView Path);
 
 		/**
-		 * Mounts all files and subdirectories from FolderPath to a virtual folder with path MountingPath
-		 */
-		static void Mount(StringView FolderPath, StringView MountingPath, uint32 Priority);
-
-		/**
-		 * Removes all previously mounted directories
-		 * After using this function filesystem becomes completely unusable until you
-		 * new directories are mounted
-		 */
-		static void ClearMountedFolders();
-
-		/**
 		 * Deletes a file
 		 * @return True if file was successfully deleted
 		 */
 		static bool RemoveFile(StringView Path);
-
-	private:
-		static std::multiset<MountRecord> Mounts;
 	};
 }

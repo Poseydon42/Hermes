@@ -31,9 +31,9 @@ namespace Hermes
 
 		DataDescriptorSet = DescriptorAllocator.Allocate(*DataDescriptorLayout);
 
-		VertexShader = Device.CreateShader("Shaders/Bin/skybox_vert.glsl.spv",
+		VertexShader = Device.CreateShader("/Shaders/Bin/skybox_vert.glsl.spv",
 		                                   VK_SHADER_STAGE_VERTEX_BIT);
-		FragmentShader = Device.CreateShader("Shaders/Bin/skybox_frag.glsl.spv",
+		FragmentShader = Device.CreateShader("/Shaders/Bin/skybox_frag.glsl.spv",
 		                                     VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Vulkan::SamplerDescription SamplerDesc = {};

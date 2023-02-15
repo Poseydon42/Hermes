@@ -230,9 +230,9 @@ namespace Hermes
 			                                          std::make_pair(OutputAttachment, Vulkan::AttachmentType::Color) 
 		                                          });
 
-		std::unique_ptr VertexShader = Device.CreateShader("Shaders/Bin/render_uniform_cube.glsl.spv",
+		std::unique_ptr VertexShader = Device.CreateShader("/Shaders/Bin/render_uniform_cube.glsl.spv",
 		                                                   VK_SHADER_STAGE_VERTEX_BIT);
-		std::unique_ptr FragmentShader = Device.CreateShader("Shaders/Bin/load_equirectangular_frag.glsl.spv",
+		std::unique_ptr FragmentShader = Device.CreateShader("/Shaders/Bin/load_equirectangular_frag.glsl.spv",
 		                                                     VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Vulkan::SamplerDescription SamplerDescription = {};

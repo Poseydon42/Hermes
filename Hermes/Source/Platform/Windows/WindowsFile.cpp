@@ -8,6 +8,11 @@ namespace Hermes
 {
 	static constexpr size_t GMaxFilePathLength = 4096;
 
+	WindowsFile::WindowsFile(HANDLE InFile)
+		: File(InFile)
+	{
+	}
+
 	WindowsFile::~WindowsFile()
 	{
 		Close();
@@ -69,26 +74,34 @@ namespace Hermes
 		FlushFileBuffers(File);
 	}
 
-	bool WindowsFile::IsValid() const
-	{
-		return File != INVALID_HANDLE_VALUE;
-	}
-
 	void WindowsFile::Close()
 	{
-		if (IsValid())
-			CloseHandle(File);
+		CloseHandle(File);
 		File = INVALID_HANDLE_VALUE;
 	}
 
-	WindowsFile::WindowsFile(const String& Path, FileAccessMode Access, FileOpenMode OpenMode)
+	static DWORD GetFileAttributesImpl(StringView Path)
+	{
+		wchar_t UTF16Path[GMaxFilePathLength];
+		MultiByteToWideChar(CP_UTF8, 0, Path.data(), -1, UTF16Path, GMaxFilePathLength);
+
+		auto Attributes = GetFileAttributesW(UTF16Path);
+		return Attributes;
+	}
+	
+	bool PlatformFilesystem::FileExists(StringView Path)
+	{
+		return GetFileAttributesImpl(Path) != INVALID_FILE_ATTRIBUTES;
+	}
+
+	std::unique_ptr<IPlatformFile> PlatformFilesystem::OpenFile(StringView Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode)
 	{
 		DWORD Win32Access = 0;
-		if (static_cast<int>(Access & FileAccessMode::Read))
+		if (static_cast<int>(Access & IPlatformFile::FileAccessMode::Read))
 		{
 			Win32Access |= GENERIC_READ;
 		}
-		if (static_cast<int>(Access & FileAccessMode::Write))
+		if (static_cast<int>(Access & IPlatformFile::FileAccessMode::Write))
 		{
 			Win32Access |= GENERIC_WRITE;
 		}
@@ -96,16 +109,16 @@ namespace Hermes
 		DWORD Win32OpenMode = 0;
 		switch (OpenMode)
 		{
-		case FileOpenMode::Create:
+		case IPlatformFile::FileOpenMode::Create:
 			Win32OpenMode = CREATE_ALWAYS;
 			break;
-		case FileOpenMode::CreateAlways:
+		case IPlatformFile::FileOpenMode::CreateAlways:
 			Win32OpenMode = CREATE_NEW;
 			break;
-		case FileOpenMode::OpenExisting:
+		case IPlatformFile::FileOpenMode::OpenExisting:
 			Win32OpenMode = OPEN_EXISTING;
 			break;
-		case FileOpenMode::OpenExistingOverwrite:
+		case IPlatformFile::FileOpenMode::OpenExistingOverwrite:
 			Win32OpenMode = TRUNCATE_EXISTING;
 			break;
 		default:
@@ -113,112 +126,33 @@ namespace Hermes
 			break;
 		}
 		// TODO : sharing?
-		
+
 		wchar_t UTF16Path[GMaxFilePathLength];
-		MultiByteToWideChar(CP_UTF8, 0, Path.c_str(), -1, UTF16Path, GMaxFilePathLength);
-		File = CreateFileW(UTF16Path, Win32Access, FILE_SHARE_READ, nullptr, Win32OpenMode, FILE_ATTRIBUTE_NORMAL,		                   nullptr);
-	}
+		MultiByteToWideChar(CP_UTF8, 0, Path.data(), -1, UTF16Path, GMaxFilePathLength);
+		auto File = CreateFileW(UTF16Path, Win32Access, FILE_SHARE_READ, nullptr, Win32OpenMode, FILE_ATTRIBUTE_NORMAL, nullptr);
 
-	std::multiset<MountRecord> PlatformFilesystem::Mounts;
-
-	static bool TryFindFile(const std::multiset<MountRecord>& Mounts, StringView Path, bool AlwaysSearchForFile, String& Result)
-	{
-		String NormalizedPath;
-		if (Path.starts_with('/'))
-			NormalizedPath = Path; 
-		else
-			NormalizedPath = '/' + String(Path);
-
-		auto Iterator = Mounts.rbegin();
-		while (Iterator != Mounts.rend())
-		{
-			auto& Record = *Iterator;
-			if (NormalizedPath.rfind(Record.To, 0) != String::npos)
-			{
-				if (AlwaysSearchForFile)
-				{
-					Result = Record.From + "/" + String(NormalizedPath.begin() + static_cast<int32>(Record.To.length()), NormalizedPath.end());
-					
-					wchar_t UTF16Result[GMaxFilePathLength];
-					MultiByteToWideChar(CP_UTF8, 0, Result.c_str(), -1, UTF16Result, GMaxFilePathLength);
-
-					WIN32_FIND_DATA FindData;
-					HANDLE FoundFile = FindFirstFileW(UTF16Result, &FindData);
-					if (FoundFile != INVALID_HANDLE_VALUE)
-					{
-						FindClose(FoundFile);
-						return true;
-					}
-				}
-				else
-				{
-					// We need to just find a suitable directory according to
-					// mounting table, not the specific file
-					Result = Record.From + "/" + String(NormalizedPath.begin() + static_cast<int32>(Record.To.length()), NormalizedPath.end());
-					return true;
-				}
-			}
-
-			++Iterator;
-		}
-		return false;
-	}
-
-	bool PlatformFilesystem::FileExists(StringView Path)
-	{
-		String TruePath;
-		return TryFindFile(Mounts, Path, true, TruePath);
-	}
-
-	std::unique_ptr<IPlatformFile> PlatformFilesystem::OpenFile(StringView Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode)
-	{
-		String FixedPath = String(Path);
-		if (FixedPath.empty() || FixedPath[0] != L'/')
-			FixedPath = "/" + FixedPath;
-		String TruePath;
-		bool AlwaysOpenExistingFile = 
-			(OpenMode == IPlatformFile::FileOpenMode::OpenExisting || 
-			 OpenMode == IPlatformFile::FileOpenMode::OpenExistingOverwrite);
-		if (TryFindFile(Mounts, FixedPath, AlwaysOpenExistingFile, TruePath))
-			return std::make_unique<WindowsFile>(TruePath, Access, OpenMode);
-		return std::make_unique<WindowsFile>("/", Access, OpenMode);
+		if (File == INVALID_HANDLE_VALUE)
+			return nullptr;
+		return std::make_unique<WindowsFile>(File);
 	}
 
 	std::optional<String> PlatformFilesystem::ReadFileAsString(StringView Path)
 	{
 		auto File = OpenFile(Path, IPlatformFile::FileAccessMode::Read, IPlatformFile::FileOpenMode::OpenExisting);
-		if (!File || !File->IsValid())
+		if (!File)
 			return {};
 
 		auto FileSize = File->Size();
 		String Result(FileSize, '\0');
-		File->Read(reinterpret_cast<void*>(Result.data()), FileSize);
+		File->Read(Result.data(), FileSize);
 
 		return Result;
 	}
 
-	void PlatformFilesystem::Mount(StringView FolderPath, StringView MountingPath, uint32 Priority)
-	{
-		MountRecord NewMount;
-		NewMount.From = FolderPath;
-		NewMount.To = MountingPath;
-		NewMount.Priority = Priority;
-		Mounts.insert(NewMount);
-	}
-
-	void PlatformFilesystem::ClearMountedFolders()
-	{
-		Mounts.clear();
-	}
-
 	bool PlatformFilesystem::RemoveFile(StringView Path)
 	{
-		String TruePath;
-		if (!TryFindFile(Mounts, Path, true, TruePath))
-			return false;
-		
 		wchar_t UTF16Path[GMaxFilePathLength];
-		MultiByteToWideChar(CP_UTF8, 0, TruePath.data(), -1, UTF16Path, GMaxFilePathLength);
+		MultiByteToWideChar(CP_UTF8, 0, Path.data(), -1, UTF16Path, GMaxFilePathLength);
 		return DeleteFileW(UTF16Path);
 	}
 }

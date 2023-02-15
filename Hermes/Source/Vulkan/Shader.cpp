@@ -1,6 +1,7 @@
 #include "Shader.h"
 
 #include "Platform/GenericPlatform/PlatformFile.h"
+#include "VirtualFilesystem/VirtualFilesystem.h"
 
 namespace Hermes::Vulkan
 {
@@ -8,31 +9,17 @@ namespace Hermes::Vulkan
 		: Device(std::move(InDevice))
 		, Type(InType)
 	{
-		std::shared_ptr<IPlatformFile> SourceFile =
-			PlatformFilesystem::OpenFile(Path, IPlatformFile::FileAccessMode::Read,
-			                             IPlatformFile::FileOpenMode::OpenExisting);
-		if (!SourceFile)
+		auto Source = VirtualFilesystem::ReadFileAsBytes(Path);
+		if (!Source.has_value())
 		{
 			HERMES_LOG_ERROR("Failed to open file with shader source. Path: %s", Path.c_str());
-			return;
-		}
-		size_t FileSize = SourceFile->Size();
-		auto* Source = static_cast<uint8*>(malloc(FileSize));
-		if (!Source)
-		{
-			HERMES_LOG_ERROR("Failed to allocate memory for shader source. Path: %s", Path.c_str());
-			return;
-		}
-		if (!SourceFile->Read(Source, FileSize))
-		{
-			HERMES_LOG_ERROR("Failed to read shader source file. Path: %s", Path.c_str());
 			return;
 		}
 
 		VkShaderModuleCreateInfo CreateInfo = {};
 		CreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		CreateInfo.pCode = reinterpret_cast<const uint32*>(Source);
-		CreateInfo.codeSize = FileSize;
+		CreateInfo.pCode = reinterpret_cast<const uint32*>(Source.value().data());
+		CreateInfo.codeSize = Source.value().size();
 
 		VK_CHECK_RESULT(vkCreateShaderModule(Device->Device, &CreateInfo, GVulkanAllocator, &Handle));
 	}

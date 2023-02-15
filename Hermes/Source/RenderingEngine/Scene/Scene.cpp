@@ -64,9 +64,9 @@ namespace Hermes
 
 		auto CommandBuffer = Queue.CreateCommandBuffer(true);
 
-		auto VertexShader = Device.CreateShader("Shaders/Bin/render_uniform_cube.glsl.spv",
+		auto VertexShader = Device.CreateShader("/Shaders/Bin/render_uniform_cube.glsl.spv",
 		                                        VK_SHADER_STAGE_VERTEX_BIT);
-		auto FragmentShader = Device.CreateShader("Shaders/Bin/irradiance_convolution.glsl.spv",
+		auto FragmentShader = Device.CreateShader("/Shaders/Bin/irradiance_convolution.glsl.spv",
 		                                          VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Vulkan::SamplerDescription SamplerDesc = {};
@@ -228,9 +228,9 @@ namespace Hermes
 
 		auto CommandBuffer = Queue.CreateCommandBuffer(true);
 
-		auto VertexShader = Device.CreateShader("Shaders/Bin/render_uniform_cube.glsl.spv",
+		auto VertexShader = Device.CreateShader("/Shaders/Bin/render_uniform_cube.glsl.spv",
 		                                        VK_SHADER_STAGE_VERTEX_BIT);
-		auto FragmentShader = Device.CreateShader("Shaders/Bin/specular_prefilter.glsl.spv",
+		auto FragmentShader = Device.CreateShader("/Shaders/Bin/specular_prefilter.glsl.spv",
 		                                          VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Vulkan::SamplerDescription SamplerDesc = {};
@@ -405,7 +405,7 @@ namespace Hermes
 			                                                        VK_FORMAT_R16G16B16A16_SFLOAT, true);
 		};
 
-		ReflectionEnvmap = LoadCubemap("Textures/envmap");
+		ReflectionEnvmap = LoadCubemap("/Textures/envmap");
 		IrradianceEnvmap = ComputeIrradianceCubemap(*ReflectionEnvmap);
 		SpecularEnvmap = ComputeSpecularEnvmap(*ReflectionEnvmap);
 	}

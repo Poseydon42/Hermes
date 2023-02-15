@@ -18,7 +18,7 @@ namespace Hermes
 			});
 		DescriptorSet = DescriptorAllocator.Allocate(*DescriptorSetLayout);
 
-		auto Shader = Device.CreateShader("Shaders/Bin/light_culling.glsl.spv", VK_SHADER_STAGE_COMPUTE_BIT);
+		auto Shader = Device.CreateShader("/Shaders/Bin/light_culling.glsl.spv", VK_SHADER_STAGE_COMPUTE_BIT);
 		Pipeline = Device.CreateComputePipeline({ DescriptorSetLayout.get() }, *Shader);
 
 		PassDescription.Type = PassType::Compute;

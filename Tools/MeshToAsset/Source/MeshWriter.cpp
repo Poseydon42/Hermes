@@ -12,7 +12,7 @@ namespace Hermes::Tools
 	bool MeshWriter::Write(StringView FileName, const Mesh& Mesh)
 	{
 		auto File = PlatformFilesystem::OpenFile(FileName, IPlatformFile::FileAccessMode::Write, IPlatformFile::FileOpenMode::Create);
-		if (!File || !File->IsValid())
+		if (!File)
 		{
 			std::cerr << "Cannot open output file " << FileName << std::endl;
 			return false;

@@ -4,6 +4,7 @@
 #include "AssetSystem/ImageAsset.h"
 #include "AssetSystem/MeshAsset.h"
 #include "Logging/Logger.h"
+#include "VirtualFilesystem/VirtualFilesystem.h"
 
 namespace Hermes
 {
@@ -11,8 +12,8 @@ namespace Hermes
 	{
 		String Filename = String(Name) + ".hac";
 
-		auto File = PlatformFilesystem::OpenFile(Filename, IPlatformFile::FileAccessMode::Read, IPlatformFile::FileOpenMode::OpenExisting);
-		if (!File->IsValid())
+		auto File = VirtualFilesystem::Open(Filename, FileOpenMode::OpenExisting, FileAccessMode::Read);
+		if (!File)
 		{
 			HERMES_LOG_WARNING("Failed to open asset file %s", Name.data());
 			return nullptr;

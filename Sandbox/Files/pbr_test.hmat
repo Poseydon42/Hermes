@@ -2,20 +2,20 @@
     "shaders": [
         {
             "type": "vertex",
-            "path": "Shaders/Bin/forward_vert.glsl.spv"
+            "path": "/Shaders/Bin/forward_vert.glsl.spv"
         },
         {
             "type": "fragment",
-            "path": "Shaders/Bin/forward_frag.glsl.spv"
+            "path": "/Shaders/Bin/forward_frag.glsl.spv"
         }
     ],
     "properties": {
         "u_AlbedoTexture": {
-            "name": "pbr_test_albedo",
+            "name": "/pbr_test_albedo",
             "color_space": "srgb"
         },
-        "u_RoughnessTexture": "pbr_test_roughness",
-        "u_MetallicTexture": "pbr_test_metallic",
-        "u_NormalTexture": "pbr_test_normal"
+        "u_RoughnessTexture": "/pbr_test_roughness",
+        "u_MetallicTexture": "/pbr_test_metallic",
+        "u_NormalTexture": "/pbr_test_normal"
     }
 }

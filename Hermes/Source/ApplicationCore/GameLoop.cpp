@@ -8,6 +8,8 @@
 #include "Logging/FileLogDevice.h"
 #include "Platform/GenericPlatform/PlatformWindow.h"
 #include "RenderingEngine/Renderer.h"
+#include "VirtualFilesystem/DirectoryFSDevice.h"
+#include "VirtualFilesystem/VirtualFilesystem.h"
 
 namespace Hermes
 {
@@ -18,13 +20,13 @@ namespace Hermes
 		, Paused(false)
 		, PrevFrameEndTimestamp{}
 	{
-		PlatformFilesystem::Mount("Hermes/Files", "/", 0);
-		PlatformFilesystem::Mount(String(HERMES_GAME_NAME) + "/Files", "/", 1);
+		VirtualFilesystem::Mount("/", MountMode::ReadOnly, 0, std::make_unique<DirectoryFSDevice>("Hermes/Files"));
+		VirtualFilesystem::Mount("/", MountMode::ReadOnly, 1, std::make_unique<DirectoryFSDevice>(String(HERMES_GAME_NAME) + "/Files"));
 
 		Logger::SetLogLevel(LogLevel::Debug);
 		Logger::SetLogFormat("[%Y-%M-%d %h:%m:%s:%u][%f:%#][%l] %v");
 		Logger::AttachLogDevice(new DebugLogDevice());
-		Logger::AttachLogDevice(new FileLogDevice("TestLog.log", LogLevel::Info));
+		Logger::AttachLogDevice(new FileLogDevice("/log.log", LogLevel::Info));
 		
 		HERMES_LOG_INFO("Initializing game loop!");
 

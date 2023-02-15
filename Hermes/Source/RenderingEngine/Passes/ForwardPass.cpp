@@ -152,8 +152,8 @@ namespace Hermes
 		OutputAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		auto RenderPass = Device.CreateRenderPass({ { OutputAttachment, Vulkan::AttachmentType::Color } });
 
-		auto VertexShader = Device.CreateShader("Shaders/Bin/fs_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		auto FragmentShader = Device.CreateShader("Shaders/Bin/precompute_brdf.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+		auto VertexShader = Device.CreateShader("/Shaders/Bin/fs_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
+		auto FragmentShader = Device.CreateShader("/Shaders/Bin/precompute_brdf.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Vulkan::PipelineDescription PipelineDesc = {};
 		PipelineDesc.ShaderStages = { VertexShader.get(), FragmentShader.get() };

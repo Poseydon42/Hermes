@@ -9,11 +9,11 @@
 #include "ApplicationCore/InputEngine.h"
 #include "Core/Event/Event.h"
 #include "Math/Vector.h"
-#include "Platform/GenericPlatform/PlatformFile.h"
 #include "RenderingEngine/Scene/FPSCamera.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Texture.h"
+#include "VirtualFilesystem/VirtualFilesystem.h"
 #include "Vulkan/Swapchain.h"
 
 class SandboxApp : public Hermes::IApplication
@@ -22,18 +22,18 @@ public:
 
 	bool Init() override
 	{
-		auto MaybeSphereMeshAsset = Hermes::GGameLoop->GetAssetCache().Get<Hermes::MeshAsset>("sphere");
+		auto MaybeSphereMeshAsset = Hermes::GGameLoop->GetAssetCache().Get<Hermes::MeshAsset>("/sphere");
 		if (!MaybeSphereMeshAsset.has_value() || MaybeSphereMeshAsset.value() == nullptr)
 			return false;
 		auto& SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(*MaybeSphereMeshAsset.value());
 		auto BoundingVolume = SphereMesh.GetBoundingVolume();
 		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
 		
-		auto MaybeTexturedMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::PlatformFilesystem::ReadFileAsString("pbr_test.hmat").value_or(""));
+		auto MaybeTexturedMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::VirtualFilesystem::ReadFileAsString("/pbr_test.hmat").value_or(""));
 		HERMES_ASSERT(MaybeTexturedMaterialInstance);
 		TexturedMaterialInstance = std::move(MaybeTexturedMaterialInstance.value());
 		
-		auto MaybeSolidColorMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::PlatformFilesystem::ReadFileAsString("test_solid_color.hmat").value_or(""));
+		auto MaybeSolidColorMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::VirtualFilesystem::ReadFileAsString("/test_solid_color.hmat").value_or(""));
 		HERMES_ASSERT(MaybeSolidColorMaterialInstance);
 		SolidColorMaterialInstance = std::move(MaybeSolidColorMaterialInstance.value());
 

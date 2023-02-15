@@ -22,9 +22,6 @@ namespace Hermes::Tools
 
 	int Main(int ArgCount, char** ArgValues)
 	{
-		// FIXME: allow opening absolute paths after we move virtual filesystem out of platform filesystem
-		PlatformFilesystem::Mount(".", "/", 1); // Mount current working dir to the root
-
 		if (ArgCount < 2)
 		{
 			std::cerr << "You need to specify input file; use --help for help" << std::endl;

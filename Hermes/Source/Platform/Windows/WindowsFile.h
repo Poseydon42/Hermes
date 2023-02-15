@@ -12,7 +12,7 @@ namespace Hermes
 	class HERMES_API WindowsFile : public IPlatformFile
 	{
 	public:
-		WindowsFile(const String& Path, IPlatformFile::FileAccessMode Access, IPlatformFile::FileOpenMode OpenMode);
+		explicit WindowsFile(HANDLE InFile);
 		
 		~WindowsFile();
 
@@ -31,8 +31,6 @@ namespace Hermes
 		bool Read(void* Buffer, size_t Size) override;
 		
 		void Flush() override;
-
-		bool IsValid() const override;
 		
 		void Close() override;
 	private:

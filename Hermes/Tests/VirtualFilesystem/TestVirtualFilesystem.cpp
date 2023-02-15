@@ -65,11 +65,6 @@ public:
 	{
 	}
 
-	virtual bool IsValid() const override
-	{
-		return true;
-	}
-
 private:
 	std::vector<uint8>& Data;
 	bool IsReadonly;

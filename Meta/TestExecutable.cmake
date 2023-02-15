@@ -9,6 +9,7 @@ function(add_test_executable test_name test_sources dependencies)
     add_common_definitions(${test_name})
 
     target_compile_definitions(${test_name} PRIVATE HERMES_BUILD_TESTS)
+    target_compile_definitions(${test_name} PRIVATE HERMES_TEST_FILES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/Files")
     target_link_libraries(${test_name} ${dependencies} GTest::gtest_main GTest::gmock_main)
 
     source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${sources})

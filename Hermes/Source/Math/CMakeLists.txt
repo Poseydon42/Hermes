@@ -12,6 +12,8 @@ set(SOURCES
     Matrix.h
     Plane.h
     Plane.cpp
+    Transform.cpp
+    Transform.h
     Vector.h
     Vector2.h
     Vector4.h

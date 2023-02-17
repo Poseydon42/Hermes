@@ -55,7 +55,7 @@ public:
 
 				Hermes::MeshProxy SphereMeshProxy =
 				{
-					Hermes::Mat4::Translation(SphereLocation),
+					{ SphereLocation },
 					BoundingVolume,
 					SphereMeshBuffer,
 					TexturedMaterialInstance

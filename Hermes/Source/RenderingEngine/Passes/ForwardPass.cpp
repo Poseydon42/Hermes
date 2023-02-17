@@ -114,8 +114,11 @@ namespace Hermes
 			Metrics.BufferBindCount++;
 			CommandBuffer.BindIndexBuffer(MeshBuffer->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
 			Metrics.BufferBindCount++;
+
+			auto TransformationMatrix = Mesh.Transform.GetTransformationMatrix();
+
 			CommandBuffer.UploadPushConstants(MaterialPipeline, VK_SHADER_STAGE_VERTEX_BIT,
-			                                  &Mesh.TransformationMatrix, sizeof(Mesh.TransformationMatrix), 0);
+			                                  &TransformationMatrix, sizeof(TransformationMatrix), 0);
 			const auto& DrawInformation = MeshBuffer->GetDrawInformation();
 			CommandBuffer.DrawIndexed(DrawInformation.IndexCount, 1, DrawInformation.IndexOffset,
 			                          static_cast<int32>(DrawInformation.VertexOffset), 0);

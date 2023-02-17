@@ -473,7 +473,7 @@ namespace Hermes
 		auto Frustum = GetActiveCamera().GetFrustum();
 		for (const auto& Mesh : Meshes)
 		{
-			if (Frustum.IsInside(Mesh.BoundingVolume, Mesh.TransformationMatrix))
+			if (Frustum.IsInside(Mesh.BoundingVolume, Mesh.Transform.GetTransformationMatrix()))
 				CulledMeshes.push_back(Mesh);
 		}
 

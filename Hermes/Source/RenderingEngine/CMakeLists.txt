@@ -39,7 +39,8 @@ set(SOURCES
     Scene/GeometryList.h
     Scene/Scene.cpp
     Scene/Scene.h
-    Scene/SceneProxies.h
+    Scene/SceneNode.cpp
+    Scene/SceneNode.h
     ShaderCache.cpp
     ShaderCache.h
     SharedData.h

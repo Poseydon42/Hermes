@@ -1,5 +1,7 @@
 ﻿#include "Scene.h"
 
+#include <functional>
+
 #include "AssetSystem/AssetLoader.h"
 #include "Core/Profiling.h"
 #include "Math/Frustum.h"
@@ -410,19 +412,14 @@ namespace Hermes
 		SpecularEnvmap = ComputeSpecularEnvmap(*ReflectionEnvmap);
 	}
 
-	void Scene::AddMesh(MeshProxy Proxy)
+	SceneNode& Scene::GetRootNode()
 	{
-		Meshes.push_back(std::move(Proxy));
+		return RootNode;
 	}
 
-	const std::vector<PointLightProxy>& Scene::GetPointLights() const
+	const SceneNode& Scene::GetRootNode() const
 	{
-		return PointLights;
-	}
-
-	const std::vector<DirectionalLightProxy>& Scene::GetDirectionalLights() const
-	{
-		return DirectionalLights;
+		return RootNode;
 	}
 
 	const CubemapTexture& Scene::GetReflectionEnvmap() const
@@ -440,21 +437,6 @@ namespace Hermes
 		return *SpecularEnvmap;
 	}
 
-	const std::vector<MeshProxy>& Scene::GetMeshes() const
-	{
-		return Meshes;
-	}
-
-	void Scene::AddPointLight(PointLightProxy Proxy)
-	{
-		PointLights.push_back(Proxy);
-	}
-
-	void Scene::AddDirectionalLight(DirectionalLightProxy Proxy)
-	{
-		DirectionalLights.push_back(Proxy);
-	}
-
 	void Scene::ChangeActiveCamera(std::shared_ptr<Camera> NewCamera)
 	{
 		ActiveCamera = std::move(NewCamera);
@@ -468,15 +450,28 @@ namespace Hermes
 	GeometryList Scene::BakeGeometryList() const
 	{
 		HERMES_PROFILE_FUNC();
-		std::vector<MeshProxy> CulledMeshes;
+		std::vector<DrawableMesh> CulledMeshes;
 
 		auto Frustum = GetActiveCamera().GetFrustum();
-		for (const auto& Mesh : Meshes)
-		{
-			if (Frustum.IsInside(Mesh.BoundingVolume, Mesh.Transform.GetTransformationMatrix()))
-				CulledMeshes.push_back(Mesh);
-		}
 
-		return { std::move(CulledMeshes) };
+		std::function<void(const SceneNode&)> MeshTraversal = [&](const SceneNode& CurrentNode) -> void
+		{
+			for (size_t ChildIndex = 0; ChildIndex < CurrentNode.GetChildrenCount(); ChildIndex++)
+				MeshTraversal(CurrentNode.GetChild(ChildIndex));
+
+			if (CurrentNode.GetType() != SceneNodeType::Mesh)
+				return;
+
+			const auto& Mesh = static_cast<const MeshNode&>(CurrentNode);
+			auto TransformationMatrix = CurrentNode.GetWorldTransformationMatrix();
+
+			if (!Frustum.IsInside(Mesh.GetBoundingVolume(), TransformationMatrix))
+				return;
+
+			CulledMeshes.emplace_back(TransformationMatrix , &Mesh.GetMeshBuffer(), &Mesh.GetMaterialInstance());
+		};
+		MeshTraversal(RootNode);
+
+		return GeometryList(std::move(CulledMeshes));
 	}
 }

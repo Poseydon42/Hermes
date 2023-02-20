@@ -3,18 +3,29 @@
 #include <vector>
 
 #include "Core/Core.h"
-#include "RenderingEngine/Scene/SceneProxies.h"
+#include "Math/Matrix.h"
 
 namespace Hermes
 {
+	class MaterialInstance;
+	class MeshBuffer;
+
+	struct DrawableMesh
+	{
+		Mat4 TransformationMatrix;
+
+		const MeshBuffer* MeshBuffer;
+		const MaterialInstance* Material;
+	};
+
 	class HERMES_API GeometryList
 	{
 	public:
-		GeometryList(std::vector<MeshProxy> InMeshList);
+		explicit GeometryList(std::vector<DrawableMesh> InMeshList);
 
-		const std::vector<MeshProxy>& GetMeshList() const;
+		const std::vector<DrawableMesh>& GetMeshList() const;
 
 	private:
-		std::vector<MeshProxy> MeshList;
+		std::vector<DrawableMesh> MeshList;
 	};
 }

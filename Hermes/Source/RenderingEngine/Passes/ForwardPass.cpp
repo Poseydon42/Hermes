@@ -99,7 +99,7 @@ namespace Hermes
 		{
 			auto& Material = Mesh.Material;
 			auto& MaterialPipeline = Material->GetBaseMaterial().GetPipeline();
-			auto& MeshBuffer = Mesh.MeshData;
+			auto& MeshBuffer = Mesh.MeshBuffer;
 
 			// TODO : move it into the renderer?
 			Material->PrepareForRender();
@@ -115,7 +115,7 @@ namespace Hermes
 			CommandBuffer.BindIndexBuffer(MeshBuffer->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
 			Metrics.BufferBindCount++;
 
-			auto TransformationMatrix = Mesh.Transform.GetTransformationMatrix();
+			auto TransformationMatrix = Mesh.TransformationMatrix;
 
 			CommandBuffer.UploadPushConstants(MaterialPipeline, VK_SHADER_STAGE_VERTEX_BIT,
 			                                  &TransformationMatrix, sizeof(TransformationMatrix), 0);

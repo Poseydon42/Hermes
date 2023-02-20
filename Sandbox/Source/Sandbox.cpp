@@ -37,6 +37,8 @@ public:
 		HERMES_ASSERT(MaybeSolidColorMaterialInstance);
 		SolidColorMaterialInstance = std::move(MaybeSolidColorMaterialInstance.value());
 
+		auto& WorldTransformNode = Hermes::GGameLoop->GetScene().GetRootNode().AddChild<Hermes::SceneNode>(Hermes::SceneNodeType::None, Hermes::Transform{});
+
 		static constexpr Hermes::int32 SphereCountInSingleDimension = 39;
 		for (Hermes::int32 SphereX = -SphereCountInSingleDimension / 2;
 		     SphereX <= SphereCountInSingleDimension / 2;
@@ -52,21 +54,15 @@ public:
 					0.0f,
 					static_cast<float>(SphereZ) * DistanceBetweenSpheres
 				};
-
-				Hermes::MeshProxy SphereMeshProxy =
-				{
-					{ SphereLocation },
-					BoundingVolume,
-					SphereMeshBuffer,
-					TexturedMaterialInstance
-				};
-				Hermes::GGameLoop->GetScene().AddMesh(SphereMeshProxy);
+				
+				WorldTransformNode.AddChild<Hermes::MeshNode>(Hermes::Transform{ SphereLocation }, BoundingVolume, SphereMeshBuffer, TexturedMaterialInstance);
 			}
 		}
 
 		static constexpr Hermes::int32 PointLightCountInSingleDimension = 15;
 		static constexpr float GridDistanceBetweenPointLights = 25.0f;
 		static constexpr float LightHeight = 4.0f;
+		static constexpr Hermes::Vec3 LightColor = { 1.0f, 1.0f, 0.9f };
 		static constexpr float LightPower = 200.0f;
 		for (auto LightX = -PointLightCountInSingleDimension / 2;
 		     LightX <= PointLightCountInSingleDimension / 2;
@@ -76,23 +72,17 @@ public:
 			     LightZ <= PointLightCountInSingleDimension / 2;
 			     LightZ++)
 			{
-				Hermes::PointLightProxy PointLight = {};
-				PointLight.Color = { 1.0f, 1.0f, 0.9f, LightPower };
-				PointLight.Position = {
+				Hermes::Vec3 LightPosition = {
 					static_cast<float>(LightX) * GridDistanceBetweenPointLights,
 					LightHeight,
-					static_cast<float>(LightZ) * GridDistanceBetweenPointLights,
-					0.0f
+					static_cast<float>(LightZ) * GridDistanceBetweenPointLights
 				};
-				Hermes::GGameLoop->GetScene().AddPointLight(PointLight);
+				
+				Hermes::GGameLoop->GetScene().GetRootNode().AddChild<Hermes::PointLightNode>(Hermes::Transform{LightPosition}, LightColor, LightPower);
 			}
 		}
-
-		Hermes::DirectionalLightProxy DirectionalLight = {};
-		DirectionalLight.Direction = Hermes::Vec3(0.0f, -1.0f, -1.0f).Normalize();
-		DirectionalLight.Color = { 1.0f, 1.0f, 1.0f };
-		DirectionalLight.Intensity = 8.0f;
-		Hermes::GGameLoop->GetScene().AddDirectionalLight(DirectionalLight);
+		
+		Hermes::GGameLoop->GetScene().GetRootNode().AddChild<Hermes::DirectionalLightNode>(Hermes::Transform(), Hermes::Vec3(0.0f, -1.0f, -1.0f).Normalize(), Hermes::Vec3(1.0f, 1.0f, 1.0f), 8.0f);
 
 		Camera = std::make_unique<Hermes::FPSCamera>(Hermes::Vec3(0.0f, 3.0f, 0.0f), 0.0f, 0.0f, 0.5f, 25.0f, 50.0f,
 		                                             Hermes::Vec2(Hermes::Renderer::Get().GetSwapchain().GetDimensions()), true);
@@ -119,6 +109,19 @@ public:
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::A))
 			CameraMovementInput.Y -= 1.0f;
 #endif
+
+		float SphereDeltaX = 0.0f;
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::ArrowLeft))
+			SphereDeltaX -= 1.0f;
+		if (InputEngine.IsKeyPressed(Hermes::KeyCode::ArrowRight))
+			SphereDeltaX += 1.0f;
+		SphereDeltaX *= 2.0f * DeltaTime;
+
+		auto CurrentTransform = Hermes::GGameLoop->GetScene().GetRootNode().GetChild(0).GetLocalTransform();
+		CurrentTransform.Translation.X += SphereDeltaX;
+
+		Hermes::GGameLoop->GetScene().GetRootNode().GetChild(0).SetLocalTransform(CurrentTransform);
+		
 		
 		Camera->ApplyMovementInput(CameraMovementInput, DeltaTime);
 #if 0
@@ -133,17 +136,6 @@ public:
 			Settings.AnisotropyLevel = AnisotropyEnabled ? 16.0f : 0.0f;
 			Hermes::Renderer::Get().UpdateGraphicsSettings(Settings);
 		}
-
-		/* LIGHT DEBUG */
-		float DeltaLightPower = 0.0f;
-		if (InputEngine.IsKeyPressed(Hermes::KeyCode::ArrowUp))
-			DeltaLightPower += 1.0f;
-		if (InputEngine.IsKeyPressed(Hermes::KeyCode::ArrowDown))
-			DeltaLightPower -= 1.0f;
-		DeltaLightPower *= DeltaTime * 200.0f;
-		auto& Light = const_cast<Hermes::PointLightProxy&>(Hermes::GGameLoop->GetScene().GetPointLights()[0]);
-		Light.Color.W += DeltaLightPower;
-		Light.Color.W = Hermes::Math::Max(Light.Color.W, 0.0f);
 	}
 
 	void Shutdown() override
@@ -175,9 +167,12 @@ private:
 					NewMaterialInstance = TexturedMaterialInstance;
 
 				auto& Scene = Hermes::GGameLoop->GetScene();
-				for (const auto& Mesh : Scene.GetMeshes())
+				for (size_t Index = 0; Index < Scene.GetRootNode().GetChildrenCount(); Index++)
 				{
-					const_cast<Hermes::MeshProxy&>(Mesh).Material = NewMaterialInstance;
+					auto& Node = Scene.GetRootNode().GetChild(Index);
+					if (Node.GetType() != Hermes::SceneNodeType::Mesh)
+						continue;
+					static_cast<Hermes::MeshNode&>(Node).SetMaterialInstance(NewMaterialInstance);
 				}
 			}
 		}

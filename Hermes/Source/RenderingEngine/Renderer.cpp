@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include <functional>
+
 #include "ApplicationCore/GameLoop.h"
 #include "Core/Profiling.h"
 #include "Logging/Logger.h"
@@ -264,26 +266,54 @@ namespace Hermes
 		SceneDataForCurrentFrame->CameraZBounds = { Camera.GetNearZPlane(), Camera.GetFarZPlane() };
 		SceneDataForCurrentFrame->NumberOfZClusters.X = LightCullingPass->NumberOfZSlices;
 
-		// FIXME: replace assert with log warning
-		HERMES_ASSERT_LOG(Scene.GetPointLights().size() < GlobalSceneData::MaxPointLightCount,
-		                  "There are more point lights in the scene than the shader can process, some of them will be ignored");
-		SceneDataForCurrentFrame->PointLightCount = Math::Min<uint32>(static_cast<uint32>(Scene.GetPointLights().size()),
-		                                                             GlobalSceneData::MaxPointLightCount);
-		for (size_t Index = 0; Index < Scene.GetPointLights().size(); Index++)
+		size_t NextPointLightIndex = 0, NextDirectionalLightIndex = 0;
+		std::function<void(const SceneNode&)> TraverseSceneHierarchy = [&](const SceneNode& Node) -> void
 		{
-			SceneDataForCurrentFrame->PointLights[Index].Position = Scene.GetPointLights()[Index].Position;
-			SceneDataForCurrentFrame->PointLights[Index].Color = Scene.GetPointLights()[Index].Color;
-		}
+			for (size_t ChildIndex = 0; ChildIndex < Node.GetChildrenCount(); ChildIndex++)
+				TraverseSceneHierarchy(Node.GetChild(ChildIndex));
 
-		const auto& DirectionalLights = Scene.GetDirectionalLights();
-		HERMES_ASSERT_LOG(DirectionalLights.size() < GlobalSceneData::MaxDirectionalLightCount, "There are more directional lights in the scene than the shader can process");
-		SceneDataForCurrentFrame->DirectionalLightCount = static_cast<uint32>(DirectionalLights.size());
-		for (size_t Index = 0; Index < DirectionalLights.size(); Index++)
-		{
-			SceneDataForCurrentFrame->DirectionalLights[Index].Direction = Vec4(DirectionalLights[Index].Direction, 0.0f);
-			SceneDataForCurrentFrame->DirectionalLights[Index].Color = Vec4(DirectionalLights[Index].Color, DirectionalLights[Index].Intensity);
-		}
+			if (Node.GetType() == SceneNodeType::PointLight)
+			{
+				if (NextPointLightIndex > GlobalSceneData::MaxPointLightCount)
+					return;
+				
+				const auto& PointLight = static_cast<const PointLightNode&>(Node);
+				auto WorldTransform = PointLight.GetWorldTransformationMatrix();
+				Vec4 WorldPosition = { WorldTransform[0][3], WorldTransform[1][3], WorldTransform[2][3], 1.0f };
 
+				SceneDataForCurrentFrame->PointLights[NextPointLightIndex].Position = WorldPosition;
+				SceneDataForCurrentFrame->PointLights[NextPointLightIndex].Color = Vec4(PointLight.GetColor(), PointLight.GetIntensity());
+
+				NextPointLightIndex++;
+			}
+
+			if (Node.GetType() == SceneNodeType::DirectionalLight)
+			{
+				if (NextDirectionalLightIndex > GlobalSceneData::MaxDirectionalLightCount)
+					return;
+
+				const auto& DirectionalLight = static_cast<const DirectionalLightNode&>(Node);
+
+				auto WorldTransform = Node.GetWorldTransformationMatrix();
+				auto WorldDirection = WorldTransform * Vec4(DirectionalLight.GetDirection(), 0.0f);
+
+				SceneDataForCurrentFrame->DirectionalLights[NextDirectionalLightIndex].Direction = WorldDirection;
+				SceneDataForCurrentFrame->DirectionalLights[NextDirectionalLightIndex].Color = Vec4(DirectionalLight.GetColor(), DirectionalLight.GetIntensity());
+
+				NextDirectionalLightIndex++;
+			}
+		};
+
+		TraverseSceneHierarchy(Scene.GetRootNode());
+
+		if (NextPointLightIndex >= GlobalSceneData::MaxPointLightCount)
+			HERMES_LOG_WARNING("There are more point lights in the scene than the shader can process, some of them will be ignored");
+		if (NextDirectionalLightIndex >= GlobalSceneData::MaxDirectionalLightCount)
+			HERMES_LOG_WARNING("There are more directional lights in the scene than the shader can process, some of them will be ignored");
+
+		SceneDataForCurrentFrame->PointLightCount = static_cast<uint32>(NextPointLightIndex);
+		SceneDataForCurrentFrame->DirectionalLightCount = static_cast<uint32>(NextDirectionalLightIndex);
+		
 		GlobalSceneDataBuffer->Unmap();
 	}
 }

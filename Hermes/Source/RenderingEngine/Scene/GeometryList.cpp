@@ -2,12 +2,12 @@
 
 namespace Hermes
 {
-	GeometryList::GeometryList(std::vector<MeshProxy> InMeshList)
+	GeometryList::GeometryList(std::vector<DrawableMesh> InMeshList)
 		: MeshList(std::move(InMeshList))
 	{
 	}
 
-	const std::vector<MeshProxy>& GeometryList::GetMeshList() const
+	const std::vector<DrawableMesh>& GeometryList::GetMeshList() const
 	{
 		return MeshList;
 	}

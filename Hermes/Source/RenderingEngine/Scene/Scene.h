@@ -4,7 +4,7 @@
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "RenderingEngine/Scene/GeometryList.h"
-#include "RenderingEngine/Scene/SceneProxies.h"
+#include "RenderingEngine/Scene/SceneNode.h"
 #include "RenderingEngine/Texture.h"
 
 namespace Hermes
@@ -29,11 +29,8 @@ namespace Hermes
 	public:
 		Scene();
 
-		void AddMesh(MeshProxy Proxy);
-
-		void AddPointLight(PointLightProxy Proxy);
-
-		void AddDirectionalLight(DirectionalLightProxy Proxy);
+		SceneNode& GetRootNode();
+		const SceneNode& GetRootNode() const;
 
 		void ChangeActiveCamera(std::shared_ptr<Camera> NewCamera);
 
@@ -41,20 +38,12 @@ namespace Hermes
 
 		GeometryList BakeGeometryList() const;
 
-		const std::vector<MeshProxy>& GetMeshes() const;
-
-		const std::vector<PointLightProxy>& GetPointLights() const;
-
-		const std::vector<DirectionalLightProxy>& GetDirectionalLights() const;
-
 		const CubemapTexture& GetReflectionEnvmap() const;
 		const CubemapTexture& GetIrradianceEnvmap() const;
 		const CubemapTexture& GetSpecularEnvmap() const;
 
 	private:
-		std::vector<MeshProxy> Meshes;
-		std::vector<PointLightProxy> PointLights;
-		std::vector<DirectionalLightProxy> DirectionalLights;
+		SceneNode RootNode = SceneNode(SceneNodeType::None);
 
 		std::unique_ptr<CubemapTexture> ReflectionEnvmap;
 		std::unique_ptr<CubemapTexture> IrradianceEnvmap;

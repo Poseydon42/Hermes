@@ -2,10 +2,11 @@
 
 #include "Core/Profiling.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
+#include "RenderingEngine/Material/MaterialInstance.h"
+#include "RenderingEngine/MeshBuffer.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/GeometryList.h"
-#include "RenderingEngine/Scene/SceneProxies.h"
 
 namespace Hermes
 {
@@ -41,7 +42,7 @@ namespace Hermes
 		{
 			auto& Material = Mesh.Material;
 			auto& MaterialPipeline = Material->GetBaseMaterial().GetVertexPipeline();
-			auto& MeshBuffer = Mesh.MeshData;
+			auto& MeshBuffer = Mesh.MeshBuffer;
 			
 			Material->PrepareForRender();
 
@@ -54,7 +55,7 @@ namespace Hermes
 			CommandBuffer.BindIndexBuffer(MeshBuffer->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
 			Metrics.BufferBindCount++;
 
-			auto TransformationMatrix = Mesh.Transform.GetTransformationMatrix();
+			auto TransformationMatrix = Mesh.TransformationMatrix;
 
 			CommandBuffer.UploadPushConstants(MaterialPipeline, VK_SHADER_STAGE_VERTEX_BIT,
 			                                  &TransformationMatrix, sizeof(TransformationMatrix), 0);

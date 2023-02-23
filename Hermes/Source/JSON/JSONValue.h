@@ -51,7 +51,7 @@ namespace Hermes
 
 		double AsNumber() const;
 
-		uint64 AsInteger() const;
+		int64 AsInteger() const;
 
 		bool AsBool() const;
 

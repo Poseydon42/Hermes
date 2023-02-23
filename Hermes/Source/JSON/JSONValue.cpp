@@ -60,9 +60,9 @@ namespace Hermes
 		return NumberValue;
 	}
 
-	uint64 JSONValue::AsInteger() const
+	int64 JSONValue::AsInteger() const
 	{
-		return static_cast<uint64>(NumberValue);
+		return static_cast<int64>(NumberValue);
 	}
 
 	bool JSONValue::AsBool() const

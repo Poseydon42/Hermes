@@ -4,6 +4,7 @@
 #include <functional>
 #include <iostream>
 
+#include "GLTFReader.h"
 #include "Mesh.h"
 #include "MeshWriter.h"
 #include "Node.h"
@@ -19,6 +20,10 @@ namespace Hermes::Tools
 		if (Extension == "obj")
 		{
 			InputFileReader = std::make_unique<OBJReader>();
+		}
+		else if (Extension == "gltf")
+		{
+			InputFileReader = std::make_unique<GLTFReader>();
 		}
 	}
 

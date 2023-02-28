@@ -5,6 +5,8 @@ project(MeshToAsset)
 set(SOURCES
     Source/FileProcessor.cpp
     Source/FileProcessor.h
+    Source/GLTFReader.cpp
+    Source/GLTFReader.h
     Source/InputFileReader.h
     Source/main.cpp
     Source/Mesh.cpp

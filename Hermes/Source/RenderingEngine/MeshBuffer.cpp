@@ -22,6 +22,11 @@ namespace Hermes
 
 		IndexCount = Asset.GetIndexCount();
 		DataUploadFinished = true;
+
+		for (const auto& Primitive : Asset.GetPrimitives())
+		{
+			Primitives.emplace_back(Primitive.IndexBufferOffset, Primitive.IndexCount);
+		}
 	}
 
 	std::shared_ptr<MeshBuffer> MeshBuffer::CreateFromAsset(const MeshAsset& Asset)
@@ -44,16 +49,8 @@ namespace Hermes
 		return VertexBuffer && IndexBuffer && DataUploadFinished;
 	}
 
-	MeshBuffer::MeshDrawInformation MeshBuffer::GetDrawInformation() const
+	std::span<const MeshBuffer::PrimitiveDrawInformation> MeshBuffer::GetPrimitives() const
 	{
-		HERMES_ASSERT(IsReady());
-
-		MeshDrawInformation Result = {};
-		Result.IndexCount = IndexCount;
-		Result.IndexOffset = 0;
-		Result.VertexOffset = 0;
-
-		return Result;
+		return Primitives;
 	}
-
 }

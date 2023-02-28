@@ -74,15 +74,36 @@ namespace Hermes
 			return nullptr;
 		}
 
-		std::vector<Vertex> Vertices(Header.VertexCount);
-		std::vector<uint32> Indices(Header.IndexCount);
-		if (!File.Read(Vertices.data(), Header.VertexCount * sizeof(Vertex)) ||
-			!File.Read(Indices.data(), Header.IndexCount * sizeof(uint32)))
+		std::vector<MeshPrimitiveHeader> PrimitiveHeaders(Header.PrimitiveCount);
+		if (!File.Read(PrimitiveHeaders.data(), PrimitiveHeaders.size() * sizeof(PrimitiveHeaders[0])))
 		{
-			HERMES_LOG_WARNING("Failed to read mesh data from asset %s", Name.data());
+			HERMES_LOG_WARNING("Could not read mesh primitive list from mesh %s", Name.data());
 			return nullptr;
 		}
 
-		return std::unique_ptr<MeshAsset>(new MeshAsset(String(Name), Vertices, Indices));
+		std::vector<MeshAsset::Primitive> Primitives(PrimitiveHeaders.size());
+		for (size_t Index = 0; Index < Primitives.size(); Index++)
+		{
+			Primitives[Index].IndexBufferOffset = PrimitiveHeaders[Index].IndexBufferOffset;
+			Primitives[Index].IndexCount = PrimitiveHeaders[Index].IndexCount;
+		}
+
+		std::vector<Vertex> Vertices(Header.VertexBufferSize);
+		File.Seek(Header.VertexBufferOffset);
+		if (!File.Read(Vertices.data(), Vertices.size() * sizeof(Vertex)))
+		{
+			HERMES_LOG_WARNING("Could not read vertex buffer from mesh %s", Name.data());
+			return nullptr;
+		}
+
+		std::vector<uint32> Indices(Header.IndexBufferSize);
+		File.Seek(Header.IndexBufferOffset);
+		if (!File.Read(Indices.data(), Indices.size() * sizeof(Indices[0])))
+		{
+			HERMES_LOG_WARNING("Could not read index buffer from mesh %s", Name.data());
+			return nullptr;
+		}
+
+		return std::unique_ptr<MeshAsset>(new MeshAsset(String(Name), Vertices, Indices, Primitives));
 	}
 }

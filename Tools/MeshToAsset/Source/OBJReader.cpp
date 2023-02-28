@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 
 #include "AssetSystem/MeshAsset.h"
 #include "Mesh.h"
@@ -51,8 +52,11 @@ namespace Hermes::Tools
 				NewVertex.Normal = VertexNormals[CurrentVertex.NormalIndex];
 				ComputedVertices.push_back(NewVertex);
 			}
+			HERMES_ASSERT(ComputedVertices.size() < std::numeric_limits<uint32>::max());
 
-			Meshes.emplace_back(CurrentMeshName, std::move(ComputedVertices), std::move(CurrentMeshIndices), false);
+			MeshPrimitiveHeader Primitive = { .IndexBufferOffset = 0, .IndexCount = static_cast<uint32>(CurrentMeshIndices.size()) };
+
+			Meshes.emplace_back(CurrentMeshName, std::move(ComputedVertices), std::move(CurrentMeshIndices), std::vector{ Primitive }, false);
 
 			Root.AddChild(Node(CurrentMeshName, CurrentMeshName, NodePayloadType::Mesh));
 			

@@ -18,14 +18,13 @@ namespace Hermes
 
 		bool IsReady() const;
 
-		struct MeshDrawInformation
+		struct PrimitiveDrawInformation
 		{
-			uint32 IndexCount;
 			uint32 IndexOffset;
-			uint32 VertexOffset;
+			uint32 IndexCount;
 		};
 
-		MeshDrawInformation GetDrawInformation() const;
+		std::span<const PrimitiveDrawInformation> GetPrimitives() const;
 
 	private:
 		explicit MeshBuffer(const MeshAsset& Asset);
@@ -33,5 +32,7 @@ namespace Hermes
 		bool DataUploadFinished;
 		uint32 IndexCount;
 		std::shared_ptr<Vulkan::Buffer> VertexBuffer, IndexBuffer;
+
+		std::vector<PrimitiveDrawInformation> Primitives;
 	};
 }

@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <span>
 #include <vector>
 
 #include "AssetSystem/Asset.h"
@@ -16,14 +17,15 @@ namespace Hermes
 		Vec3 Normal;
 		Vec3 Tangent;
 	};
-
-	/*
-	 * In Hermes' representation, mesh is simply an array of raw vertex and index data for object to be
-	 * drawn on the screen. It does not contain any material, hierarchy or animation information.
-	 * */
+	
 	class HERMES_API MeshAsset : public Asset
 	{
 	public:
+		struct Primitive
+		{
+			uint32 IndexBufferOffset;
+			uint32 IndexCount;
+		};
 
 		virtual size_t GetMemorySize() const override;
 
@@ -37,6 +39,8 @@ namespace Hermes
 
 		uint32 GetIndexCount() const;
 
+		std::span<const Primitive> GetPrimitives() const;
+
 		uint32 GetTriangleCount() const;
 
 		size_t GetRequiredVertexBufferSize() const;
@@ -46,10 +50,12 @@ namespace Hermes
 		const SphereBoundingVolume& GetBoundingVolume() const;
 
 	private:
-		MeshAsset(const String& Name, std::vector<Vertex> VertexData, std::vector<uint32> IndexData);
+		MeshAsset(const String& Name, std::vector<Vertex> VertexData, std::vector<uint32> IndexData, std::vector<Primitive> InPrimitives);
 
 		std::vector<Vertex> Vertices;
 		std::vector<uint32> Indices;
+
+		std::vector<Primitive> Primitives;
 
 		SphereBoundingVolume BoundingVolume;
 

@@ -38,9 +38,19 @@ namespace Hermes
 		return static_cast<uint32>(Indices.size());
 	}
 
+	std::span<const MeshAsset::Primitive> MeshAsset::GetPrimitives() const
+	{
+		return Primitives;
+	}
+
 	uint32 MeshAsset::GetTriangleCount() const
 	{
-		return GetIndexCount() / 3;
+		uint32 Result = 0;
+		for (const auto& Primitive : Primitives)
+		{
+			Result += Primitive.IndexCount / 3;
+		}
+		return Result;
 	}
 
 	size_t MeshAsset::GetRequiredVertexBufferSize() const
@@ -58,10 +68,11 @@ namespace Hermes
 		return BoundingVolume;
 	}
 
-	MeshAsset::MeshAsset(const String& Name, std::vector<Vertex> VertexData, std::vector<uint32> IndexData)
+	MeshAsset::MeshAsset(const String& Name, std::vector<Vertex> VertexData, std::vector<uint32> IndexData, std::vector<Primitive> InPrimitives)
 		: Asset(Name, AssetType::Mesh)
 		, Vertices(std::move(VertexData))
 		, Indices(std::move(IndexData))
+		, Primitives(InPrimitives)
 		, BoundingVolume(CalculateMeshRadius())
 	{
 	}

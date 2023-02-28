@@ -2,6 +2,7 @@
 
 #include <optional>
 
+#include "AssetSystem/AssetHeaders.h"
 #include "AssetSystem/MeshAsset.h"
 #include "Core/Core.h"
 
@@ -10,7 +11,7 @@ namespace Hermes::Tools
 	class HERMES_API Mesh
 	{
 	public:
-		Mesh(String InName, std::vector<Vertex> InVertices, std::vector<uint32> InIndices, bool InAreTangentsComputed);
+		Mesh(String InName, std::vector<Vertex> InVertices, std::vector<uint32> InIndices, std::vector<MeshPrimitiveHeader> InPrimitives, bool InAreTangentsComputed);
 
 		/*
 		 * Returns true if the mesh has tangents defined for each vertex
@@ -35,12 +36,15 @@ namespace Hermes::Tools
 		StringView GetName() const;
 		const std::vector<Vertex>& GetVertices() const;
 		const std::vector<uint32>& GetIndices() const;
+		const std::vector<MeshPrimitiveHeader>& GetPrimitives() const;
 
 	private:
 		String Name;
 
 		std::vector<Vertex> Vertices;
 		std::vector<uint32> Indices;
+
+		std::vector<MeshPrimitiveHeader> Primitives;
 
 		bool CheckIfIsTriangulated() const;
 

@@ -59,10 +59,11 @@ namespace Hermes::Tools
 		return Result;
 	}
 
-	Mesh::Mesh(String InName, std::vector<Vertex> InVertices, std::vector<uint32> InIndices, bool InAreTangentsComputed)
+	Mesh::Mesh(String InName, std::vector<Vertex> InVertices, std::vector<uint32> InIndices, std::vector<MeshPrimitiveHeader> InPrimitives, bool InAreTangentsComputed)
 		: Name(std::move(InName))
 		, Vertices(std::move(InVertices))
 		, Indices(std::move(InIndices))
+		, Primitives(std::move(InPrimitives))
 		, HasBeenTriangulated(CheckIfIsTriangulated())
 		, AreTangentsComputed(InAreTangentsComputed)
 	{
@@ -140,6 +141,11 @@ namespace Hermes::Tools
 	const std::vector<uint32>& Mesh::GetIndices() const
 	{
 		return Indices;
+	}
+
+	const std::vector<MeshPrimitiveHeader>& Mesh::GetPrimitives() const
+	{
+		return Primitives;
 	}
 
 	bool Mesh::CheckIfIsTriangulated() const

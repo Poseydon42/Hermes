@@ -119,10 +119,12 @@ namespace Hermes
 
 			CommandBuffer.UploadPushConstants(MaterialPipeline, VK_SHADER_STAGE_VERTEX_BIT,
 			                                  &TransformationMatrix, sizeof(TransformationMatrix), 0);
-			const auto& DrawInformation = MeshBuffer->GetDrawInformation();
-			CommandBuffer.DrawIndexed(DrawInformation.IndexCount, 1, DrawInformation.IndexOffset,
-			                          static_cast<int32>(DrawInformation.VertexOffset), 0);
-			Metrics.DrawCallCount++;
+
+			for (const auto& Primitive : MeshBuffer->GetPrimitives())
+			{
+				CommandBuffer.DrawIndexed(Primitive.IndexCount, 1, Primitive.IndexOffset, 0, 0);
+				Metrics.DrawCallCount++;
+			}
 		}
 	}
 

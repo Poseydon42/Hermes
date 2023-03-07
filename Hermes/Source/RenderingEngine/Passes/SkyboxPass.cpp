@@ -89,7 +89,7 @@ namespace Hermes
 		auto ViewProjectionMatrix = ProjectionMatrix * ViewMatrix;
 
 		const auto& ReflectionEnvmap = Scene.GetReflectionEnvmap();
-		DataDescriptorSet->UpdateWithImageAndSampler(0, 0, ReflectionEnvmap.GetDefaultView(), *EnvmapSampler,
+		DataDescriptorSet->UpdateWithImageAndSampler(0, 0, ReflectionEnvmap.GetView(ColorSpace::Linear), *EnvmapSampler,
 		                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		CommandBuffer.BindPipeline(*Pipeline);

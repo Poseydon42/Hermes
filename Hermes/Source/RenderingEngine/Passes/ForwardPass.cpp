@@ -87,9 +87,9 @@ namespace Hermes
 		const auto& LightClusterListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightClusterList"));
 		const auto& LightIndexListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightIndexList"));
 		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
-		SceneUBODescriptorSet->UpdateWithImageAndSampler(1, 0, Scene.GetIrradianceEnvmap().GetDefaultView(),
+		SceneUBODescriptorSet->UpdateWithImageAndSampler(1, 0, Scene.GetIrradianceEnvmap().GetView(ColorSpace::Linear),
 		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		SceneUBODescriptorSet->UpdateWithImageAndSampler(2, 0, Scene.GetSpecularEnvmap().GetDefaultView(),
+		SceneUBODescriptorSet->UpdateWithImageAndSampler(2, 0, Scene.GetSpecularEnvmap().GetView(ColorSpace::Linear),
 		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(3, 0, *PrecomputedBRDFView, *PrecomputedBRDFSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		SceneUBODescriptorSet->UpdateWithBuffer(4, 0, LightClusterListBuffer, 0, static_cast<uint32>(LightClusterListBuffer.GetSize()));

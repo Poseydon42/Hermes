@@ -12,9 +12,9 @@ namespace Hermes
 	public:
 		TextureCache();
 
-		const Texture& Acquire(StringView Name, bool IsSRGB);
+		const Texture& Acquire(StringView Name);
 
-		void Release(StringView Name, bool IsSRGB);
+		void Release(StringView Name);
 
 	private:
 		struct LoadedTexture
@@ -28,6 +28,6 @@ namespace Hermes
 		std::unique_ptr<Texture> FallbackTexture;
 		std::unordered_map<String, LoadedTexture> LoadedTextures;
 
-		LoadedTexture* LoadNewTexture(StringView Name, bool IsSRGB);
+		LoadedTexture* LoadNewTexture(StringView Name);
 	};
 }

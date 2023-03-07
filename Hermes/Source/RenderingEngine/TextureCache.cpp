@@ -5,13 +5,6 @@
 
 namespace Hermes
 {
-	static String ComposeFullName(StringView Name, bool IsSRGB)
-	{
-		// FIXME: technically on Linux-based systems '?' is permitted in a file name,
-		// so we might need to find a better way to implement this to avoid any name collisions
-		return String(Name) + (IsSRGB ? "?srgb" : "?linear");
-	}
-
 	TextureCache::TextureCache()
 	{
 		auto& AssetCache = GGameLoop->GetAssetCache();
@@ -22,33 +15,30 @@ namespace Hermes
 		FallbackTexture = Texture::CreateFromAsset(Asset::As<ImageAsset>(*MaybeFallbackTextureAsset.value()), true);
 	}
 
-	const Texture& TextureCache::Acquire(StringView Name, bool IsSRGB)
+	const Texture& TextureCache::Acquire(StringView Name)
 	{
-		auto FullName = ComposeFullName(Name, IsSRGB);
-		if (auto MaybeTexture = LoadedTextures.find(FullName); MaybeTexture != LoadedTextures.end())
+		if (auto MaybeTexture = LoadedTextures.find(String(Name)); MaybeTexture != LoadedTextures.end())
 		{
 			auto& Texture = MaybeTexture->second;
 			Texture.UseCount++;
 			return *Texture.Texture;
 		}
 
-		auto* Texture = LoadNewTexture(Name, IsSRGB);
+		auto* Texture = LoadNewTexture(Name);
 		if (!Texture)
 		{
-			HERMES_LOG_WARNING("Could not load texture %s (color space: %s), using fallback texture instead", Name.data(), (IsSRGB ? "sRGB" : "linear"));
+			HERMES_LOG_WARNING("Could not load texture %s (color space: %s), using fallback texture instead", Name.data());
 			return *FallbackTexture;
 		}
 		return *Texture->Texture;
 	}
 
-	void TextureCache::Release(StringView Name, bool IsSRGB)
+	void TextureCache::Release(StringView Name)
 	{
-		auto FullName = ComposeFullName(Name, IsSRGB);
-
-		auto MaybeTexture = LoadedTextures.find(FullName);
+		auto MaybeTexture = LoadedTextures.find(String(Name));
 		if (MaybeTexture != LoadedTextures.end())
 		{
-			HERMES_LOG_WARNING("Trying to release texture %s (color space: %s) that was not previously loaded by this texture cache", Name.data(), (IsSRGB ? "sRGB" : "linear"));
+			HERMES_LOG_WARNING("Trying to release texture %s (color space: %s) that was not previously loaded by this texture cache", Name.data());
 			return;
 		}
 
@@ -58,7 +48,7 @@ namespace Hermes
 		}
 	}
 
-	TextureCache::LoadedTexture* TextureCache::LoadNewTexture(StringView Name, bool IsSRGB)
+	TextureCache::LoadedTexture* TextureCache::LoadNewTexture(StringView Name)
 	{
 		auto& AssetCache = GGameLoop->GetAssetCache();
 
@@ -69,12 +59,10 @@ namespace Hermes
 		}
 
 		const auto& Asset = *MaybeAsset.value();
-		auto Texture = Texture::CreateFromAsset(Asset, IsSRGB);
+		auto Texture = Texture::CreateFromAsset(Asset);
 
 		LoadedTexture LoadedTexture = { std::move(Texture), 1 };
-
-		auto FullName = ComposeFullName(Name, IsSRGB);
-		LoadedTextures[FullName] = std::move(LoadedTexture);
-		return &LoadedTextures.at(FullName);
+		
+		return &LoadedTextures.insert(std::make_pair(String(Name), std::move(LoadedTexture))).first->second;
 	}
 }

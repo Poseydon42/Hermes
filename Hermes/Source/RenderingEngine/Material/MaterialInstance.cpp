@@ -55,18 +55,18 @@ namespace Hermes
 	}
 
 	// Returns true if the given value indicates sRGB color space, otherwise returns false (linear color space by default)
-	static bool IsSRGBColorSpace(const JSONValue& ColorSpaceValue)
+	static ColorSpace ColorSpaceFromString(const JSONValue& ColorSpaceValue)
 	{
 		if (!ColorSpaceValue.Is(JSONValueType::String))
 		{
-			HERMES_LOG_WARNING("Cannot use color space defined in JSON: value must be a string");
-			return false;
+			HERMES_LOG_WARNING("Cannot use color space defined in JSON: value must be a string; defaulting to linear color space");
+			return ColorSpace::Linear;
 		}
 
 		auto Value = ColorSpaceValue.AsString();
 		if (Value == "srgb" || Value == "sRGB" || Value == "SRGB")
-			return true;
-		return false;
+			return ColorSpace::SRGB;
+		return ColorSpace::Linear;
 	}
 
 	std::optional<std::unique_ptr<MaterialInstance>> MaterialInstance::CreateFromJSON(StringView JSON)
@@ -100,25 +100,25 @@ namespace Hermes
 	}
 
 
-	void MaterialInstance::SetTextureProperty(const String& Name, const Texture& Value)
+	void MaterialInstance::SetTextureProperty(const String& Name, const Texture& Value, ColorSpace ColorSpace)
 	{
 		auto* Property = BaseMaterial->FindProperty(Name);
 		HERMES_ASSERT(Property);
 
-		DescriptorSet->UpdateWithImageAndSampler(Property->Binding, 0, Value.GetDefaultView(),
+		DescriptorSet->UpdateWithImageAndSampler(Property->Binding, 0, Value.GetView(ColorSpace),
 		                                         Renderer::Get().GetDefaultSampler(),
 		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
-	void MaterialInstance::SetTextureProperty(const String& Name, const String& TextureName, bool IsSRGB)
+	void MaterialInstance::SetTextureProperty(const String& Name, const String& TextureName, ColorSpace ColorSpace)
 	{
 		auto& TextureCache = Renderer::Get().GetTextureCache();
 
 		if (auto MaybeBoundTexture = CurrentlyBoundRefCountedTextures.find(Name); MaybeBoundTexture != CurrentlyBoundRefCountedTextures.end())
-			TextureCache.Release(MaybeBoundTexture->second, IsSRGB);
+			TextureCache.Release(MaybeBoundTexture->second);
 
-		auto& Texture = TextureCache.Acquire(TextureName, IsSRGB);
-		SetTextureProperty(Name, Texture);
+		auto& Texture = TextureCache.Acquire(TextureName);
+		SetTextureProperty(Name, Texture, ColorSpace);
 		CurrentlyBoundRefCountedTextures[Name] = TextureName;
 	}
 
@@ -233,7 +233,7 @@ namespace Hermes
 	void MaterialInstance::SetTexturePropertyFromJSON(const String& Name, const JSONValue& Value)
 	{
 		StringView TextureName;
-		bool IsSRGB = false; // Linear color space by default
+		ColorSpace ColorSpace = ColorSpace::Linear;
 
 		// NOTE: this is a simple texture property("property_name": "texture_name"). Color space is set to linear by default
 		if (Value.Is(JSONValueType::String))
@@ -261,7 +261,7 @@ namespace Hermes
 			if (FullTextureDefinition.Contains("color_space"))
 			{
 				const auto& ColorSpaceValue = FullTextureDefinition["color_space"];
-				IsSRGB = IsSRGBColorSpace(ColorSpaceValue);
+				ColorSpace = ColorSpaceFromString(ColorSpaceValue);
 			}
 		}
 		else
@@ -270,7 +270,7 @@ namespace Hermes
 			return;
 		}
 
-		SetTextureProperty(Name, String(TextureName), IsSRGB);
+		SetTextureProperty(Name, String(TextureName), ColorSpace);
 	}
 
 	void MaterialInstance::SetPropertiesFromJSON(const JSONObject& PropertiesObject)

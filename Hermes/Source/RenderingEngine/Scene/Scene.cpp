@@ -89,7 +89,7 @@ namespace Hermes
 		SourceTextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		auto DescriptorLayout = Device.CreateDescriptorSetLayout({ SourceTextureBinding });
 		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
-		DescriptorSet->UpdateWithImageAndSampler(0, 0, Source.GetDefaultView(), *Sampler,
+		DescriptorSet->UpdateWithImageAndSampler(0, 0, Source.GetView(ColorSpace::Linear), *Sampler,
 		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		VkAttachmentDescription OutputAttachmentDesc = {};
@@ -253,7 +253,7 @@ namespace Hermes
 		SourceTextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		auto DescriptorLayout = Device.CreateDescriptorSetLayout({ SourceTextureBinding });
 		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
-		DescriptorSet->UpdateWithImageAndSampler(0, 0, Source.GetDefaultView(), *Sampler,
+		DescriptorSet->UpdateWithImageAndSampler(0, 0, Source.GetView(ColorSpace::Linear), *Sampler,
 		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		VkAttachmentDescription OutputAttachmentDesc = {};
@@ -402,7 +402,7 @@ namespace Hermes
 		auto LoadCubemap = [](const String& Name)
 		{
 			auto& TextureCache = Renderer::Get().GetTextureCache();
-			auto& RawReflectionEnvmapTexture = TextureCache.Acquire(Name, false);
+			auto& RawReflectionEnvmapTexture = TextureCache.Acquire(Name);
 			return CubemapTexture::CreateFromEquirectangularTexture(RawReflectionEnvmapTexture,
 			                                                        VK_FORMAT_R16G16B16A16_SFLOAT, true);
 		};

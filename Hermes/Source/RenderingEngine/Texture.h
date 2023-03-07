@@ -13,6 +13,14 @@ namespace Hermes
 {
 	class ImageAsset;
 
+	enum class ColorSpace
+	{
+		Linear = 0,
+		SRGB,
+
+		Count_
+	};
+
 	class HERMES_API Texture
 	{
 		MAKE_NON_COPYABLE(Texture)
@@ -20,11 +28,11 @@ namespace Hermes
 		ADD_DEFAULT_VIRTUAL_DESTRUCTOR(Texture)
 
 	public:
-		static std::unique_ptr<Texture> CreateFromAsset(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps = true);
+		static std::unique_ptr<Texture> CreateFromAsset(const ImageAsset& Source, bool EnableMipMaps = true);
 
 		const Vulkan::Image& GetRawImage() const;
 
-		const Vulkan::ImageView& GetDefaultView() const;
+		const Vulkan::ImageView& GetView(ColorSpace ColorSpace) const;
 
 		Vec2ui GetDimensions() const;
 
@@ -35,14 +43,16 @@ namespace Hermes
 		bool IsReady() const;
 
 	private:
-		explicit Texture(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps = true);
+		explicit Texture(const ImageAsset& Source, bool EnableMipMaps = true);
+
+		Vulkan::ImageView& CreateView(ColorSpace ColorSpace) const;
 
 	protected:
 		Texture() = default;
 
 		bool DataUploadFinished = false;
 		std::unique_ptr<Vulkan::Image> Image;
-		std::unique_ptr<Vulkan::ImageView> DefaultView;
+		mutable std::unique_ptr<Vulkan::ImageView> Views[static_cast<size_t>(ColorSpace::Count_)];
 		Vec2ui Dimensions;
 	};
 

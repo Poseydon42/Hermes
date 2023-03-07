@@ -12,6 +12,7 @@
 
 namespace Hermes
 {
+	enum class ColorSpace;
 	class JSONValue;
 	class JSONObject;
 	class Material;
@@ -35,14 +36,14 @@ namespace Hermes
 		 *
 		 * Reference counting and ensuring the lifetime of the texture is a responsibility of the user in this case.
 		 */
-		void SetTextureProperty(const String& Name, const Texture& Value);
+		void SetTextureProperty(const String& Name, const Texture& Value, ColorSpace ColorSpace);
 
 		/*
 		 * Sets a texture property using a texture name. The texture will be acquired from a global TextureCache object.
 		 *
 		 * Reference counting is implemented in the texture cache object and valid lifetime is guaranteed.
 		 */
-		void SetTextureProperty(const String& Name, const String& TextureName, bool IsSRGB);
+		void SetTextureProperty(const String& Name, const String& TextureName, ColorSpace ColorSpace);
 
 		void PrepareForRender() const;
 

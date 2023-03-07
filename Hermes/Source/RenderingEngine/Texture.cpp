@@ -15,52 +15,104 @@
 
 namespace Hermes
 {
-	static VkFormat ChooseFormatFromImageType(ImageFormat Format, size_t BytesPerChannel, bool IsSRGB)
+	static VkFormat ChooseFormatFromImageType(ImageFormat Format, size_t BytesPerChannel)
 	{
 		using FormatCombinationHashType = size_t;
-		constexpr auto ComputeHashForFormat = [](ImageFormat Format, uint8 BytesPerChannel,
-		                               bool IsSRGB) -> FormatCombinationHashType
+		constexpr auto ComputeHashForFormat = [](ImageFormat Format, uint8 BytesPerChannel) -> FormatCombinationHashType
 		{
-			return (static_cast<uint8>(Format) << 16) | (BytesPerChannel << 8) | static_cast<uint8>(IsSRGB);
+			return (static_cast<uint8>(Format) << 16) | (BytesPerChannel << 8);
 		};
 
 		static const std::unordered_map<FormatCombinationHashType, VkFormat> FormatCombinations =
 		{
-			{ ComputeHashForFormat(ImageFormat::R, 1, true), VK_FORMAT_R8_SRGB },
-			{ ComputeHashForFormat(ImageFormat::R, 1, false), VK_FORMAT_R8_UNORM },
-			{ ComputeHashForFormat(ImageFormat::R, 2, false), VK_FORMAT_R16_UNORM },
-			{ ComputeHashForFormat(ImageFormat::RG, 1, true), VK_FORMAT_R8G8_SRGB },
-			{ ComputeHashForFormat(ImageFormat::RG, 1, false), VK_FORMAT_R8G8_UNORM },
-			{ ComputeHashForFormat(ImageFormat::RG, 2, false), VK_FORMAT_R16G16_UNORM },
+			{ ComputeHashForFormat(ImageFormat::R, 1), VK_FORMAT_R8_UNORM },
+			{ ComputeHashForFormat(ImageFormat::R, 2), VK_FORMAT_R16_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RG, 1), VK_FORMAT_R8G8_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RG, 2), VK_FORMAT_R16G16_UNORM },
 
-			{ ComputeHashForFormat(ImageFormat::RA, 1, true), VK_FORMAT_R8G8_SRGB },
-			{ ComputeHashForFormat(ImageFormat::RA, 1, false), VK_FORMAT_R8G8_UNORM },
-			{ ComputeHashForFormat(ImageFormat::RA, 2, false), VK_FORMAT_R16G16_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RA, 1), VK_FORMAT_R8G8_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RA, 2), VK_FORMAT_R16G16_UNORM },
 
-			{ ComputeHashForFormat(ImageFormat::RGBA, 1, true), VK_FORMAT_R8G8B8A8_SRGB },
-			{ ComputeHashForFormat(ImageFormat::RGBA, 1, false), VK_FORMAT_R8G8B8A8_UNORM },
-			{ ComputeHashForFormat(ImageFormat::RGBA, 2, false), VK_FORMAT_R16G16B16A16_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RGBA, 1), VK_FORMAT_R8G8B8A8_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RGBA, 2), VK_FORMAT_R16G16B16A16_UNORM },
 
-			{ ComputeHashForFormat(ImageFormat::RGBX, 1, true), VK_FORMAT_R8G8B8A8_SRGB },
-			{ ComputeHashForFormat(ImageFormat::RGBX, 1, false), VK_FORMAT_R8G8B8A8_UNORM },
-			{ ComputeHashForFormat(ImageFormat::RGBX, 2, false), VK_FORMAT_R16G16B16A16_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RGBX, 1), VK_FORMAT_R8G8B8A8_UNORM },
+			{ ComputeHashForFormat(ImageFormat::RGBX, 2), VK_FORMAT_R16G16B16A16_UNORM },
 
-			{ ComputeHashForFormat(ImageFormat::HDR, 4, false), VK_FORMAT_R32G32B32A32_SFLOAT }
+			{ ComputeHashForFormat(ImageFormat::HDR, 4), VK_FORMAT_R32G32B32A32_SFLOAT }
 		};
 
-		auto It = FormatCombinations.find(ComputeHashForFormat(Format, static_cast<uint8>(BytesPerChannel), IsSRGB));
+		auto It = FormatCombinations.find(ComputeHashForFormat(Format, static_cast<uint8>(BytesPerChannel)));
 		if (It == FormatCombinations.end())
 		{
-			HERMES_LOG_ERROR("Cannot choose data format for the folowing image properties: image format %hhu; %llu bytes per channel; %s color space",
-			                 static_cast<uint8>(Format), BytesPerChannel, (IsSRGB ? "sRGB" : "linear"));
+			HERMES_LOG_ERROR("Cannot choose data format for the folowing image properties: image format %hhu; %llu bytes per channel", static_cast<uint8>(Format), BytesPerChannel);
 			return VK_FORMAT_UNDEFINED;
 		}
 		return It->second;
 	}
 
-	std::unique_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps)
+	static VkFormat GetCorrespondingSRGBFormat(VkFormat BaseFormat)
 	{
-		return std::unique_ptr<Texture>(new Texture(Source, UseAsSRGB, EnableMipMaps));
+		switch (BaseFormat)
+		{
+		case VK_FORMAT_R8_SINT:
+		case VK_FORMAT_R8_SNORM:
+		case VK_FORMAT_R8_SSCALED:
+		case VK_FORMAT_R8_UINT:
+		case VK_FORMAT_R8_UNORM:
+		case VK_FORMAT_R8_USCALED:
+			return VK_FORMAT_R8_SRGB;
+		case VK_FORMAT_R8G8_SINT:
+		case VK_FORMAT_R8G8_SNORM:
+		case VK_FORMAT_R8G8_SSCALED:
+		case VK_FORMAT_R8G8_UINT:
+		case VK_FORMAT_R8G8_UNORM:
+		case VK_FORMAT_R8G8_USCALED:
+			return VK_FORMAT_R8G8_SRGB;
+		case VK_FORMAT_R8G8B8_SINT:
+		case VK_FORMAT_R8G8B8_SNORM:
+		case VK_FORMAT_R8G8B8_SSCALED:
+		case VK_FORMAT_R8G8B8_UINT:
+		case VK_FORMAT_R8G8B8_UNORM:
+		case VK_FORMAT_R8G8B8_USCALED:
+			return VK_FORMAT_R8G8B8_SRGB;
+		case VK_FORMAT_B8G8R8_SINT:
+		case VK_FORMAT_B8G8R8_SNORM:
+		case VK_FORMAT_B8G8R8_SSCALED:
+		case VK_FORMAT_B8G8R8_UINT:
+		case VK_FORMAT_B8G8R8_UNORM:
+		case VK_FORMAT_B8G8R8_USCALED:
+			return VK_FORMAT_B8G8R8_SRGB;
+		case VK_FORMAT_R8G8B8A8_SINT:
+		case VK_FORMAT_R8G8B8A8_SNORM:
+		case VK_FORMAT_R8G8B8A8_SSCALED:
+		case VK_FORMAT_R8G8B8A8_UINT:
+		case VK_FORMAT_R8G8B8A8_UNORM:
+		case VK_FORMAT_R8G8B8A8_USCALED:
+			return VK_FORMAT_R8G8B8A8_SRGB;
+		case VK_FORMAT_B8G8R8A8_SINT:
+		case VK_FORMAT_B8G8R8A8_SNORM:
+		case VK_FORMAT_B8G8R8A8_SSCALED:
+		case VK_FORMAT_B8G8R8A8_UINT:
+		case VK_FORMAT_B8G8R8A8_UNORM:
+		case VK_FORMAT_B8G8R8A8_USCALED:
+			return VK_FORMAT_B8G8R8A8_SRGB;
+		case VK_FORMAT_A8B8G8R8_SINT_PACK32:
+		case VK_FORMAT_A8B8G8R8_SNORM_PACK32:
+		case VK_FORMAT_A8B8G8R8_SSCALED_PACK32:
+		case VK_FORMAT_A8B8G8R8_UINT_PACK32:
+		case VK_FORMAT_A8B8G8R8_UNORM_PACK32:
+		case VK_FORMAT_A8B8G8R8_USCALED_PACK32:
+			return VK_FORMAT_A8B8G8R8_SRGB_PACK32;
+		default:
+			HERMES_LOG_WARNING("VkFormat %u has no corresponding sRGB format or it is not supported by the engine", static_cast<int32>(BaseFormat));
+			return VK_FORMAT_UNDEFINED;
+		}
+	}
+
+	std::unique_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source, bool EnableMipMaps)
+	{
+		return std::unique_ptr<Texture>(new Texture(Source, EnableMipMaps));
 	}
 
 	const Vulkan::Image& Texture::GetRawImage() const
@@ -69,9 +121,13 @@ namespace Hermes
 		return *Image;
 	}
 
-	const Vulkan::ImageView& Texture::GetDefaultView() const
+	const Vulkan::ImageView& Texture::GetView(ColorSpace ColorSpace) const
 	{
-		return *DefaultView;
+		HERMES_ASSERT(static_cast<size_t>(ColorSpace) < static_cast<size_t>(ColorSpace::Count_));
+		auto& MaybeView = Views[static_cast<size_t>(ColorSpace)];
+		if (!MaybeView)
+			return CreateView(ColorSpace);
+		return *MaybeView;
 	}
 
 	Vec2ui Texture::GetDimensions() const
@@ -96,7 +152,7 @@ namespace Hermes
 		return DataUploadFinished && Image != nullptr && Dimensions.LengthSq() > 0;
 	}
 
-	Texture::Texture(const ImageAsset& Source, bool UseAsSRGB, bool EnableMipMaps)
+	Texture::Texture(const ImageAsset& Source, bool EnableMipMaps)
 		: Dimensions(Source.GetDimensions())
 	{
 		uint32 BiggestDimension = Math::Max(Dimensions.X, Dimensions.Y);
@@ -119,7 +175,7 @@ namespace Hermes
 			MipLevelCount = 1;
 		}
 
-		auto Format = ChooseFormatFromImageType(Source.GetImageFormat(), Source.GetBytesPerChannel(), UseAsSRGB);
+		auto Format = ChooseFormatFromImageType(Source.GetImageFormat(), Source.GetBytesPerChannel());
 		Image = Renderer::Get().GetActiveDevice().CreateImage(Dimensions,
 		                                                      VK_IMAGE_USAGE_SAMPLED_BIT |
 		                                                      VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
@@ -167,8 +223,34 @@ namespace Hermes
 		}
 
 		DataUploadFinished = true;
+	}
 
-		DefaultView = Image->CreateDefaultImageView();
+	Vulkan::ImageView& Texture::CreateView(ColorSpace ColorSpace) const
+	{
+		VkFormat Format = VK_FORMAT_UNDEFINED;
+		switch (ColorSpace)
+		{
+		case ColorSpace::Linear:
+			Format = Image->GetDataFormat();
+			break;
+		case ColorSpace::SRGB:
+			Format = GetCorrespondingSRGBFormat(Image->GetDataFormat());
+			break;
+		default:
+			HERMES_ASSERT(false);
+		}
+		VkImageSubresourceRange SubresourceRange = {};
+		SubresourceRange.aspectMask = Image->GetFullAspectMask();
+		SubresourceRange.baseMipLevel = 0;
+		SubresourceRange.levelCount = Image->GetMipLevelsCount();
+		SubresourceRange.baseArrayLayer = 0;
+		SubresourceRange.layerCount = Image->IsCubemap() ? 6 : 1;
+		auto View = Image->IsCubemap() ? Image->CreateCubemapImageView(SubresourceRange, Format) : Image->CreateImageView(SubresourceRange, Format);
+
+		auto& Result = *View;
+		Views[static_cast<size_t>(ColorSpace)] = std::move(View);
+
+		return Result;
 	}
 
 	std::unique_ptr<CubemapTexture> CubemapTexture::CreateEmpty(Vec2ui InDimensions, VkFormat InFormat,
@@ -190,8 +272,6 @@ namespace Hermes
 
 		Dimensions = InDimensions;
 		DataUploadFinished = true;
-
-		DefaultView = Image->CreateDefaultImageView();
 	}
 
 	CubemapTexture::CubemapTexture(const Texture& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
@@ -250,7 +330,7 @@ namespace Hermes
 		TextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		std::shared_ptr DescriptorLayout = Device.CreateDescriptorSetLayout({ TextureBinding });
 		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
-		DescriptorSet->UpdateWithImageAndSampler(0, 0, EquirectangularTexture.GetDefaultView(),
+		DescriptorSet->UpdateWithImageAndSampler(0, 0, EquirectangularTexture.GetView(ColorSpace::Linear),
 		                                         *EquirectangularTextureSampler,
 		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -385,6 +465,5 @@ namespace Hermes
 		}
 
 		DataUploadFinished = true;
-		DefaultView = Image->CreateDefaultImageView();
 	}
 }

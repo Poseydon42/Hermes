@@ -92,6 +92,9 @@ namespace Hermes::Vulkan
 		CreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		CreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL; // TODO
 		CreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; // TODO: perhaps we should allow the user to change this?
+		// FIXME: this might have some impact on performance, we should only set this if it's reasonable to assume
+		//        that the image might be used with different formats (e.g. SRGB/UNORM)
+		CreateInfo.flags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
 		if (IsCubemapCompatible)
 			CreateInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 
@@ -106,13 +109,24 @@ namespace Hermes::Vulkan
 
 	std::unique_ptr<ImageView> Image::CreateImageView(const VkImageSubresourceRange& Range) const
 	{
-		return std::make_unique<ImageView>(Holder, Range, false);
+		return std::make_unique<ImageView>(Holder, Range, Holder->Format, false);
+	}
+
+	std::unique_ptr<ImageView> Image::CreateImageView(const VkImageSubresourceRange& Range, VkFormat ViewFormat) const
+	{
+		return std::make_unique<ImageView>(Holder, Range, ViewFormat, false);
 	}
 
 	std::unique_ptr<ImageView> Image::CreateCubemapImageView(const VkImageSubresourceRange& Range) const
 	{
 		HERMES_ASSERT(IsCubemapCompatible);
-		return std::make_unique<ImageView>(Holder, Range, true);
+		return std::make_unique<ImageView>(Holder, Range, Holder->Format, true);
+	}
+
+	std::unique_ptr<ImageView> Image::CreateCubemapImageView(const VkImageSubresourceRange& Range, VkFormat ViewFormat) const
+	{
+		HERMES_ASSERT(IsCubemapCompatible);
+		return std::make_unique<ImageView>(Holder, Range, ViewFormat, true);
 	}
 
 	std::unique_ptr<ImageView> Image::CreateDefaultImageView() const
@@ -124,7 +138,7 @@ namespace Hermes::Vulkan
 		Range.baseArrayLayer = 0;
 		Range.layerCount = IsCubemapCompatible ? 6 : 1;
 
-		return std::make_unique<ImageView>(Holder, Range, IsCubemapCompatible);
+		return std::make_unique<ImageView>(Holder, Range, Holder->Format, IsCubemapCompatible);
 	}
 
 	VkImageSubresourceRange Image::GetFullSubresourceRange() const
@@ -177,15 +191,14 @@ namespace Hermes::Vulkan
 		}
 	}
 
-	ImageView::ImageView(std::shared_ptr<Image::VkImageHolder> InImage, const VkImageSubresourceRange& Range,
-	                     bool IsCubemap)
+	ImageView::ImageView(std::shared_ptr<Image::VkImageHolder> InImage, const VkImageSubresourceRange& Range, VkFormat Format, bool IsCubemap)
 		: Image(std::move(InImage))
 	{
 		VkImageViewCreateInfo CreateInfo = {};
 		CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		CreateInfo.image = Image->Image;
 		CreateInfo.viewType = IsCubemap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
-		CreateInfo.format = Image->Format;
+		CreateInfo.format = Format;
 		CreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 		CreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 		CreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;

@@ -61,9 +61,21 @@ namespace Hermes::Vulkan
 		std::unique_ptr<ImageView> CreateImageView(const VkImageSubresourceRange& Range) const;
 
 		/*
+		 * Creates image view for given subresource range and with a particular format (that might be different
+		 * from the format of the image itself)
+		 */
+		std::unique_ptr<ImageView> CreateImageView(const VkImageSubresourceRange& Range, VkFormat ViewFormat) const;
+
+		/*
 		 * Creates cubemap image view for given subresource range
 		 */
 		std::unique_ptr<ImageView> CreateCubemapImageView(const VkImageSubresourceRange& Range) const;
+
+		/*
+		 * Creates cubemap image view for given subresource range and a particular format (that might be different
+		 * from the format of the image itself)
+		 */
+		std::unique_ptr<ImageView> CreateCubemapImageView(const VkImageSubresourceRange& Range, VkFormat ViewFormat) const;
 
 		/*
 		 * Creates a 'default' image view
@@ -127,7 +139,7 @@ namespace Hermes::Vulkan
 		MAKE_NON_MOVABLE(ImageView)
 
 	public:
-		ImageView(std::shared_ptr<Image::VkImageHolder> InImage, const VkImageSubresourceRange& Range, bool IsCubemap);
+		ImageView(std::shared_ptr<Image::VkImageHolder> InImage, const VkImageSubresourceRange& Range, VkFormat Format, bool IsCubemap);
 
 		~ImageView();
 

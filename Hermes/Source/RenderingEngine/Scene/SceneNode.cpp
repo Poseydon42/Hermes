@@ -68,6 +68,14 @@ namespace Hermes
 		return Parent->GetWorldTransformationMatrix() * GetLocalTransformationMatrix();
 	}
 
+	void SceneNode::RemoveChild(size_t ChildIndex)
+	{
+		if (ChildIndex >= Children.size())
+			return;
+
+		Children.erase(Children.begin() + ChildIndex);
+	}
+
 	void SceneNode::SetParent(SceneNode* NewParent)
 	{
 		Parent = NewParent;

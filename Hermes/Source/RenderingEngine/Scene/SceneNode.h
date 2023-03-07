@@ -59,6 +59,8 @@ namespace Hermes
 		requires (std::derived_from<ChildType, SceneNode> && std::constructible_from<ChildType, ArgsType...>)
 		SceneNode& AddChild(ArgsType... Args);
 
+		void RemoveChild(size_t ChildIndex);
+
 		void SetParent(SceneNode* NewParent);
 
 	private:

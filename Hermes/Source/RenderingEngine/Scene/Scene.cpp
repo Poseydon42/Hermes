@@ -422,6 +422,16 @@ namespace Hermes
 		return RootNode;
 	}
 
+	void Scene::Reset()
+	{
+		HERMES_PROFILE_FUNC();
+
+		while (RootNode.GetChildrenCount() > 0)
+			RootNode.RemoveChild(0);
+		RootNode.SetLocalTransform({});
+		ActiveCamera = nullptr;
+	}
+	
 	const CubemapTexture& Scene::GetReflectionEnvmap() const
 	{
 		return *ReflectionEnvmap;

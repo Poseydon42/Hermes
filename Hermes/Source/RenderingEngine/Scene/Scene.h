@@ -32,6 +32,8 @@ namespace Hermes
 		SceneNode& GetRootNode();
 		const SceneNode& GetRootNode() const;
 
+		void Reset();
+
 		void ChangeActiveCamera(std::shared_ptr<Camera> NewCamera);
 
 		Camera& GetActiveCamera() const;

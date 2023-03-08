@@ -1,9 +1,12 @@
 #include "MaterialInstance.h"
 
+#include "ApplicationCore/GameLoop.h"
+#include "AssetSystem/AssetCache.h"
+#include "AssetSystem/ImageAsset.h"
 #include "JSON/JSONParser.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderingEngine/Texture.h"
+#include "RenderingEngine/Resource/TextureResource.h"
 #include "Vulkan/Device.h"
 
 namespace Hermes
@@ -69,6 +72,7 @@ namespace Hermes
 		return ColorSpace::Linear;
 	}
 
+	// FIXME: shouldn't be here
 	std::optional<std::unique_ptr<MaterialInstance>> MaterialInstance::CreateFromJSON(StringView JSON)
 	{
 		auto MaybeRoot = JSONParser::FromString(JSON);
@@ -100,7 +104,7 @@ namespace Hermes
 	}
 
 
-	void MaterialInstance::SetTextureProperty(const String& Name, const Texture& Value, ColorSpace ColorSpace)
+	void MaterialInstance::SetTextureProperty(const String& Name, const Texture2DResource& Value, ColorSpace ColorSpace)
 	{
 		auto* Property = BaseMaterial->FindProperty(Name);
 		HERMES_ASSERT(Property);
@@ -112,13 +116,28 @@ namespace Hermes
 
 	void MaterialInstance::SetTextureProperty(const String& Name, const String& TextureName, ColorSpace ColorSpace)
 	{
-		auto& TextureCache = Renderer::Get().GetTextureCache();
+		auto& AssetCache = GGameLoop->GetAssetCache();
 
 		if (auto MaybeBoundTexture = CurrentlyBoundRefCountedTextures.find(Name); MaybeBoundTexture != CurrentlyBoundRefCountedTextures.end())
-			TextureCache.Release(MaybeBoundTexture->second);
+			AssetCache.Release(MaybeBoundTexture->second);
 
-		auto& Texture = TextureCache.Acquire(TextureName);
-		SetTextureProperty(Name, Texture, ColorSpace);
+		auto TextureAsset = AssetCache.Get<ImageAsset>(TextureName);
+		if (!TextureAsset || !TextureAsset.value())
+		{
+			HERMES_LOG_WARNING("Cannot set material instance property %s to texture %s because the texture cannot be found", Name.c_str(), TextureName.c_str());
+			return;
+		}
+
+		const auto* Resource = TextureAsset.value()->GetResource();
+		if (Resource->GetType() != ResourceType::Texture2D)
+		{
+			HERMES_LOG_WARNING("Cannot assign resource %s (type %u) to texture property %s", Resource->GetName().data(), static_cast<uint32>(Resource->GetType()), Name.c_str());
+		}
+
+		const auto* Texture = static_cast<const Texture2DResource*>(Resource);
+		HERMES_ASSERT(Texture);
+
+		SetTextureProperty(Name, *Texture, ColorSpace);
 		CurrentlyBoundRefCountedTextures[Name] = TextureName;
 	}
 

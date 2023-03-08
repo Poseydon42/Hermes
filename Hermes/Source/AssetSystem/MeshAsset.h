@@ -7,6 +7,7 @@
 #include "Core/Core.h"
 #include "Math/BoundingVolume.h"
 #include "Math/Math.h"
+#include "RenderingEngine/Resource/MeshResource.h"
 
 namespace Hermes
 {
@@ -30,6 +31,8 @@ namespace Hermes
 		virtual size_t GetMemorySize() const override;
 
 		virtual bool IsValid() const override;
+
+		virtual const Resource* GetResource() const override;
 
 		const Vertex* GetRawVertexData() const;
 
@@ -56,6 +59,8 @@ namespace Hermes
 		std::vector<uint32> Indices;
 
 		std::vector<Primitive> Primitives;
+
+		std::unique_ptr<MeshResource> Resource;
 
 		SphereBoundingVolume BoundingVolume;
 

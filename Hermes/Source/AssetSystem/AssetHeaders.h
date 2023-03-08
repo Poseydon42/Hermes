@@ -1,11 +1,21 @@
 #pragma once
 
 #include "AssetSystem/Asset.h"
-#include "AssetSystem/ImageAsset.h"
 #include "Core/Core.h"
 
 namespace Hermes
 {
+	enum class ImageFormat : uint8
+	{
+		Undefined = 0x00,
+		R = 0x01,
+		RA = 0x09,
+		RG = 0x03,
+		RGBX = 0x07,
+		RGBA = 0x0F,
+		HDR = 0x10
+	};
+
 	PACKED_STRUCT_BEGIN
 	struct AssetHeader
 	{

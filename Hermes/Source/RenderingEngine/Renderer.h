@@ -13,7 +13,6 @@
 #include "RenderingEngine/Passes/PostProcessingPass.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/ShaderCache.h"
-#include "RenderingEngine/TextureCache.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Swapchain.h"
 #include "Vulkan/VulkanCore.h"
@@ -54,7 +53,6 @@ namespace Hermes
 		DescriptorAllocator& GetDescriptorAllocator();
 
 		ShaderCache& GetShaderCache();
-		TextureCache& GetTextureCache();
 
 		const Vulkan::DescriptorSetLayout& GetGlobalDataDescriptorSetLayout() const;
 
@@ -84,7 +82,6 @@ namespace Hermes
 		std::unique_ptr<Vulkan::Sampler> DefaultSampler;
 
 		ShaderCache ShaderCache;
-		std::unique_ptr<TextureCache> TextureCache;
 		
 		std::unique_ptr<FrameGraph> FrameGraph;
 		std::unique_ptr<LightCullingPass> LightCullingPass;

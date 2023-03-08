@@ -1,14 +1,14 @@
-﻿#include "MeshBuffer.h"
+﻿#include "MeshResource.h"
 
+#include "AssetSystem/MeshAsset.h"
 #include "RenderingEngine/GPUInteractionUtilities.h"
 #include "RenderingEngine/Renderer.h"
 #include "Vulkan/Device.h"
 
 namespace Hermes
 {
-	MeshBuffer::MeshBuffer(const MeshAsset& Asset)
-		: DataUploadFinished(false)
-		, IndexCount(0)
+	MeshResource::MeshResource(const MeshAsset& Asset)
+		: Resource(Asset.GetName(), ResourceType::Mesh)
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
 
@@ -20,36 +20,28 @@ namespace Hermes
 		GPUInteractionUtilities::UploadDataToGPUBuffer(Asset.GetRawVertexData(), Asset.GetRequiredVertexBufferSize(), 0, *VertexBuffer);
 		GPUInteractionUtilities::UploadDataToGPUBuffer(Asset.GetRawIndexData(), Asset.GetRequiredIndexBufferSize(), 0, *IndexBuffer);
 
-		IndexCount = Asset.GetIndexCount();
-		DataUploadFinished = true;
-
 		for (const auto& Primitive : Asset.GetPrimitives())
 		{
 			Primitives.emplace_back(Primitive.IndexBufferOffset, Primitive.IndexCount);
 		}
 	}
 
-	std::shared_ptr<MeshBuffer> MeshBuffer::CreateFromAsset(const MeshAsset& Asset)
+	std::unique_ptr<MeshResource> MeshResource::CreateFromAsset(const MeshAsset& Asset)
 	{
-		return std::shared_ptr<MeshBuffer>(new MeshBuffer(Asset));
+		return std::unique_ptr<MeshResource>(new MeshResource(Asset));
 	}
 
-	const Vulkan::Buffer& MeshBuffer::GetVertexBuffer() const
+	const Vulkan::Buffer& MeshResource::GetVertexBuffer() const
 	{
 		return *VertexBuffer;
 	}
 
-	const Vulkan::Buffer& MeshBuffer::GetIndexBuffer() const
+	const Vulkan::Buffer& MeshResource::GetIndexBuffer() const
 	{
 		return *IndexBuffer;
 	}
 
-	bool MeshBuffer::IsReady() const
-	{
-		return VertexBuffer && IndexBuffer && DataUploadFinished;
-	}
-
-	std::span<const MeshBuffer::PrimitiveDrawInformation> MeshBuffer::GetPrimitives() const
+	std::span<const MeshResource::PrimitiveDrawInformation> MeshResource::GetPrimitives() const
 	{
 		return Primitives;
 	}

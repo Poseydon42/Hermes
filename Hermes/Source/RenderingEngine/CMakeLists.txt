@@ -18,8 +18,6 @@ set(SOURCES
     Material/MaterialProperty.h
     Material/ShaderReflection.cpp
     Material/ShaderReflection.h
-    MeshBuffer.cpp
-    MeshBuffer.h
     Passes/DepthPass.cpp
     Passes/DepthPass.h
     Passes/ForwardPass.cpp
@@ -32,6 +30,12 @@ set(SOURCES
     Passes/SkyboxPass.h
     Renderer.cpp
     Renderer.h
+    Resource/MeshResource.cpp
+    Resource/MeshResource.h
+    Resource/Resource.cpp
+    Resource/Resource.h
+    Resource/TextureResource.cpp
+    Resource/TextureResource.h
     Scene/Camera.h
     Scene/FPSCamera.cpp
     Scene/FPSCamera.h
@@ -44,10 +48,6 @@ set(SOURCES
     ShaderCache.cpp
     ShaderCache.h
     SharedData.h
-    Texture.cpp
-    Texture.h
-    TextureCache.cpp
-    TextureCache.h
 )
 
 include(HermesSublib)

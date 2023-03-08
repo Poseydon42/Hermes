@@ -9,12 +9,10 @@
 
 namespace Hermes
 {
-	class CubemapTexture;
 	struct FrameMetrics;
 	class ImageAsset;
 	struct PassDesc;
 	class Scene;
-	class Texture;
 
 	class HERMES_API SkyboxPass
 	{

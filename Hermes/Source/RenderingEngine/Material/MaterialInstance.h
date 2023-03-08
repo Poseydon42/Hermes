@@ -16,7 +16,7 @@ namespace Hermes
 	class JSONValue;
 	class JSONObject;
 	class Material;
-	class Texture;
+	class Texture2DResource;
 
 	/*
 	 * An instantiation of a material that stores the values of every material property.
@@ -36,7 +36,7 @@ namespace Hermes
 		 *
 		 * Reference counting and ensuring the lifetime of the texture is a responsibility of the user in this case.
 		 */
-		void SetTextureProperty(const String& Name, const Texture& Value, ColorSpace ColorSpace);
+		void SetTextureProperty(const String& Name, const Texture2DResource& Value, ColorSpace ColorSpace);
 
 		/*
 		 * Sets a texture property using a texture name. The texture will be acquired from a global TextureCache object.

@@ -1,6 +1,7 @@
 ﻿#include "MeshAsset.h"
 
 #include "Logging/Logger.h"
+#include "RenderingEngine/Resource/MeshResource.h"
 
 namespace Hermes
 {
@@ -14,6 +15,11 @@ namespace Hermes
 	bool MeshAsset::IsValid() const
 	{
 		return (Indices.size() % 3 == 0 && !Indices.empty() && !Vertices.empty());
+	}
+
+	const Resource* MeshAsset::GetResource() const
+	{
+		return Resource.get();
 	}
 
 	const Vertex* MeshAsset::GetRawVertexData() const
@@ -75,6 +81,7 @@ namespace Hermes
 		, Primitives(InPrimitives)
 		, BoundingVolume(CalculateMeshRadius())
 	{
+		Resource = MeshResource::CreateFromAsset(*this);
 	}
 
 	float MeshAsset::CalculateMeshRadius() const

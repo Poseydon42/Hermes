@@ -1,5 +1,10 @@
 #include "Instance.h"
 
+#ifdef HERMES_PLATFORM_WINDOWS
+#include <Windows.h>
+#include <vulkan/vulkan_win32.h>
+#endif
+
 #include <array>
 
 #include "Vulkan/Device.h"

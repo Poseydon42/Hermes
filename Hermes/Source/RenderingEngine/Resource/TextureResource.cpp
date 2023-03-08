@@ -1,4 +1,4 @@
-﻿#include "Texture.h"
+﻿#include "TextureResource.h"
 
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
@@ -110,18 +110,17 @@ namespace Hermes
 		}
 	}
 
-	std::unique_ptr<Texture> Texture::CreateFromAsset(const ImageAsset& Source, bool EnableMipMaps)
+	std::unique_ptr<Texture2DResource> Texture2DResource::CreateFromAsset(const ImageAsset& Source, bool EnableMipMaps)
 	{
-		return std::unique_ptr<Texture>(new Texture(Source, EnableMipMaps));
+		return std::unique_ptr<Texture2DResource>(new Texture2DResource(Source, EnableMipMaps));
 	}
 
-	const Vulkan::Image& Texture::GetRawImage() const
+	const Vulkan::Image& Texture2DResource::GetRawImage() const
 	{
-		HERMES_ASSERT(IsReady());
 		return *Image;
 	}
 
-	const Vulkan::ImageView& Texture::GetView(ColorSpace ColorSpace) const
+	const Vulkan::ImageView& Texture2DResource::GetView(ColorSpace ColorSpace) const
 	{
 		HERMES_ASSERT(static_cast<size_t>(ColorSpace) < static_cast<size_t>(ColorSpace::Count_));
 		auto& MaybeView = Views[static_cast<size_t>(ColorSpace)];
@@ -130,31 +129,28 @@ namespace Hermes
 		return *MaybeView;
 	}
 
-	Vec2ui Texture::GetDimensions() const
+	Vec2ui Texture2DResource::GetDimensions() const
 	{
-		return Dimensions;
+		return Image->GetDimensions();
 	}
 
-	uint32 Texture::GetMipLevelsCount() const
+	uint32 Texture2DResource::GetMipLevelsCount() const
 	{
 		return Image->GetMipLevelsCount();
 	}
 
-	VkFormat Texture::GetDataFormat() const
+	VkFormat Texture2DResource::GetDataFormat() const
 	{
 		if (!Image)
 			return VK_FORMAT_UNDEFINED;
 		return Image->GetDataFormat();
 	}
 
-	bool Texture::IsReady() const
+	Texture2DResource::Texture2DResource(const ImageAsset& Source, bool EnableMipMaps)
+		: Resource(Source.GetName(), ResourceType::Texture2D)
 	{
-		return DataUploadFinished && Image != nullptr && Dimensions.LengthSq() > 0;
-	}
+		auto Dimensions = Source.GetDimensions();
 
-	Texture::Texture(const ImageAsset& Source, bool EnableMipMaps)
-		: Dimensions(Source.GetDimensions())
-	{
 		uint32 BiggestDimension = Math::Max(Dimensions.X, Dimensions.Y);
 		HERMES_ASSERT(BiggestDimension > 0);
 
@@ -221,11 +217,9 @@ namespace Hermes
 				                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			}
 		}
-
-		DataUploadFinished = true;
 	}
 
-	Vulkan::ImageView& Texture::CreateView(ColorSpace ColorSpace) const
+	Vulkan::ImageView& Texture2DResource::CreateView(ColorSpace ColorSpace) const
 	{
 		VkFormat Format = VK_FORMAT_UNDEFINED;
 		switch (ColorSpace)
@@ -253,34 +247,55 @@ namespace Hermes
 		return Result;
 	}
 
-	std::unique_ptr<CubemapTexture> CubemapTexture::CreateEmpty(Vec2ui InDimensions, VkFormat InFormat,
-	                                                            VkImageUsageFlags InUsage, uint32 InMipLevelCount)
+	std::unique_ptr<TextureCubeResource> TextureCubeResource::CreateEmpty(String Name, Vec2ui InDimensions, VkFormat InFormat, VkImageUsageFlags InUsage, uint32 InMipLevelCount)
 	{
-		return std::unique_ptr<CubemapTexture>(new CubemapTexture(InDimensions, InFormat, InUsage, InMipLevelCount));
+		return std::unique_ptr<TextureCubeResource>(new TextureCubeResource(Name, InDimensions, InFormat, InUsage, InMipLevelCount));
 	}
 
-	std::unique_ptr<CubemapTexture> CubemapTexture::CreateFromEquirectangularTexture(
-		const Texture& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
+	std::unique_ptr<TextureCubeResource> TextureCubeResource::CreateFromEquirectangularTexture(String Name, const Texture2DResource& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
 	{
-		return std::unique_ptr<CubemapTexture>(new CubemapTexture(EquirectangularTexture, PreferredFormat, EnableMipMaps));
+		return std::unique_ptr<TextureCubeResource>(new TextureCubeResource(Name, EquirectangularTexture, PreferredFormat, EnableMipMaps));
 	}
 
-	CubemapTexture::CubemapTexture(Vec2ui InDimensions, VkFormat InFormat, VkImageUsageFlags InUsage,
-	                               uint32 InMipLevelCount)
+	const Vulkan::Image& TextureCubeResource::GetRawImage() const
+	{
+		return *Image;
+	}
+
+	const Vulkan::ImageView& TextureCubeResource::GetView() const
+	{
+		return *View;
+	}
+
+	Vec2ui TextureCubeResource::GetDimensions() const
+	{
+		return Image->GetDimensions();
+	}
+
+	uint32 TextureCubeResource::GetMipLevelsCount() const
+	{
+		return Image->GetMipLevelsCount();
+	}
+
+	VkFormat TextureCubeResource::GetDataFormat() const
+	{
+		return Image->GetDataFormat();
+	}
+
+	TextureCubeResource::TextureCubeResource(String Name, Vec2ui InDimensions, VkFormat InFormat, VkImageUsageFlags InUsage, uint32 InMipLevelCount)
+		: Resource(std::move(Name), ResourceType::TextureCube)
 	{
 		Image = Renderer::Get().GetActiveDevice().CreateCubemap(InDimensions, InUsage, InFormat, InMipLevelCount);
-
-		Dimensions = InDimensions;
-		DataUploadFinished = true;
+		View = Image->CreateDefaultImageView();
 	}
 
-	CubemapTexture::CubemapTexture(const Texture& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
+	TextureCubeResource::TextureCubeResource(String Name, const Texture2DResource& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
+		: Resource(std::move(Name), ResourceType::TextureCube)
 	{
-		auto EquirectangularTextureDimensions = EquirectangularTexture.GetDimensions();
+		auto EquirectangularTextureResourceDimensions = EquirectangularTexture.GetDimensions();
 
 		// NOTE : cubemap is 4 times narrower and 2 times shorter
-		auto CubemapDimensions = EquirectangularTextureDimensions / Vec2ui { 4, 2 };
-		Dimensions = CubemapDimensions;
+		auto CubemapDimensions = EquirectangularTextureResourceDimensions / Vec2ui { 4, 2 };
 		
 		auto CubemapFormat = PreferredFormat;
 
@@ -321,17 +336,17 @@ namespace Hermes
 		SamplerDescription.MagnificationFilter = VK_FILTER_NEAREST;
 		SamplerDescription.CoordinateSystem = Vulkan::CoordinateSystem::Normalized;
 		SamplerDescription.MipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		auto EquirectangularTextureSampler = Device.CreateSampler(SamplerDescription);
+		auto EquirectangularTextureResourceSampler = Device.CreateSampler(SamplerDescription);
 
-		VkDescriptorSetLayoutBinding TextureBinding = {};
-		TextureBinding.binding = 0;
-		TextureBinding.descriptorCount = 1;
-		TextureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		TextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		std::shared_ptr DescriptorLayout = Device.CreateDescriptorSetLayout({ TextureBinding });
+		VkDescriptorSetLayoutBinding TextureResourceBinding = {};
+		TextureResourceBinding.binding = 0;
+		TextureResourceBinding.descriptorCount = 1;
+		TextureResourceBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		TextureResourceBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		std::shared_ptr DescriptorLayout = Device.CreateDescriptorSetLayout({ TextureResourceBinding });
 		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
 		DescriptorSet->UpdateWithImageAndSampler(0, 0, EquirectangularTexture.GetView(ColorSpace::Linear),
-		                                         *EquirectangularTextureSampler,
+		                                         *EquirectangularTextureResourceSampler,
 		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		Vulkan::PipelineDescription PipelineDescription = {};
@@ -464,6 +479,6 @@ namespace Hermes
 			}
 		}
 
-		DataUploadFinished = true;
+		View = Image->CreateDefaultImageView();
 	}
 }

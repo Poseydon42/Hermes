@@ -1,5 +1,8 @@
 #include "SceneNode.h"
 
+#include "ApplicationCore/GameLoop.h"
+#include "AssetSystem/MeshAsset.h"
+
 namespace Hermes
 {
 	SceneNode::SceneNode(SceneNodeType InType, Hermes::Transform InTransform)
@@ -73,7 +76,7 @@ namespace Hermes
 		if (ChildIndex >= Children.size())
 			return;
 
-		Children.erase(Children.begin() + ChildIndex);
+		Children.erase(Children.begin() + static_cast<ptrdiff_t>(ChildIndex));
 	}
 
 	void SceneNode::SetParent(SceneNode* NewParent)
@@ -88,28 +91,38 @@ namespace Hermes
 		return *Children.back();
 	}
 
-	MeshNode::MeshNode(Transform Transform, SphereBoundingVolume InBoundingVolume, std::shared_ptr<MeshBuffer> InMesh, std::shared_ptr<MaterialInstance> InMaterial)
+	MeshNode::MeshNode(Transform Transform, String InMeshName, std::shared_ptr<MaterialInstance> InMaterial)
 		: SceneNode(SceneNodeType::Mesh, Transform)
-		, BoundingVolume(InBoundingVolume)
-		, Mesh(std::move(InMesh))
+		, MeshName(std::move(InMeshName))
 		, Material(std::move(InMaterial))
 	{
 	}
 
 	const SphereBoundingVolume& MeshNode::GetBoundingVolume() const
 	{
-		return BoundingVolume;
+		auto& AssetCache = GGameLoop->GetAssetCache();
+
+		auto Asset = AssetCache.Get<MeshAsset>(MeshName);
+		HERMES_ASSERT(Asset);
+
+		return Asset.value()->GetBoundingVolume();
 	}
 
-	const MeshBuffer& MeshNode::GetMeshBuffer() const
+	const MeshResource& MeshNode::GetMesh() const
 	{
-		HERMES_ASSERT(Mesh);
-		return *Mesh;
+		auto& AssetCache = GGameLoop->GetAssetCache();
+
+		auto Asset = AssetCache.Get<MeshAsset>(MeshName);
+		HERMES_ASSERT(Asset);
+
+		const auto* Resource = Asset.value()->GetResource();
+		HERMES_ASSERT(Resource && Resource->GetType() == ResourceType::Mesh);
+		return *static_cast<const MeshResource*>(Resource);
 	}
 
-	void MeshNode::SetMeshBuffer(std::shared_ptr<MeshBuffer> NewMesh)
+	void MeshNode::SetMeshBuffer(String NewMeshName)
 	{
-		Mesh = std::move(NewMesh);
+		MeshName = std::move(NewMeshName);
 	}
 
 	void MeshNode::SetMaterialInstance(std::shared_ptr<MaterialInstance> NewMaterialInstance)

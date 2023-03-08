@@ -3,7 +3,7 @@
 #include <optional>
 #include <vector>
 
-#include "AssetSystem/ImageAsset.h"
+#include "AssetSystem/AssetHeaders.h"
 
 /*
  * Wrapper around underlying image data

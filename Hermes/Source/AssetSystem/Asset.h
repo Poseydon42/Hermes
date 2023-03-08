@@ -14,6 +14,8 @@ namespace Hermes
 		Mesh = 2
 	};
 
+	class Resource;
+
 	/*
 	 * A generic asset representation
 	 * Hermes assumes every file that is loaded by engine to be asset(with exceptions being dynamically linked libraries and configuration files)
@@ -34,6 +36,8 @@ namespace Hermes
 		virtual bool IsValid() const;
 
 		virtual size_t GetMemorySize() const;
+
+		virtual const Resource* GetResource() const;
 		
 		template<class AssetType>
 		static const AssetType& As(const Asset& From);

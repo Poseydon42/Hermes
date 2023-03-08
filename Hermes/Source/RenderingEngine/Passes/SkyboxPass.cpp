@@ -4,7 +4,7 @@
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderingEngine/Texture.h"
+#include "RenderingEngine/Resource/TextureResource.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"
 #include "Vulkan/Descriptor.h"
@@ -89,7 +89,7 @@ namespace Hermes
 		auto ViewProjectionMatrix = ProjectionMatrix * ViewMatrix;
 
 		const auto& ReflectionEnvmap = Scene.GetReflectionEnvmap();
-		DataDescriptorSet->UpdateWithImageAndSampler(0, 0, ReflectionEnvmap.GetView(ColorSpace::Linear), *EnvmapSampler,
+		DataDescriptorSet->UpdateWithImageAndSampler(0, 0, ReflectionEnvmap.GetView(), *EnvmapSampler,
 		                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		CommandBuffer.BindPipeline(*Pipeline);

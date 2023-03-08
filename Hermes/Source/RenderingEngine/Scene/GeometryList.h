@@ -8,13 +8,13 @@
 namespace Hermes
 {
 	class MaterialInstance;
-	class MeshBuffer;
+	class MeshResource;
 
 	struct DrawableMesh
 	{
 		Mat4 TransformationMatrix;
 
-		const MeshBuffer* MeshBuffer;
+		const MeshResource* Mesh;
 		const MaterialInstance* Material;
 	};
 

@@ -11,8 +11,7 @@
 #include "PNGLoader.h"
 #include "stb_image.h"
 
-#include "AssetSystem/AssetLoader.h"
-#include "AssetSystem/ImageAsset.h"
+#include "Math/Math.h"
 
 /*
  * TODO : setup our build so that we can use our own platform layer

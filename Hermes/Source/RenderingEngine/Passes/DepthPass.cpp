@@ -3,7 +3,7 @@
 #include "Core/Profiling.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
-#include "RenderingEngine/MeshBuffer.h"
+#include "RenderingEngine/Resource/MeshResource.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/GeometryList.h"
@@ -42,7 +42,10 @@ namespace Hermes
 		{
 			auto& Material = Mesh.Material;
 			auto& MaterialPipeline = Material->GetBaseMaterial().GetVertexPipeline();
-			auto& MeshBuffer = Mesh.MeshBuffer;
+			const auto* MeshBuffer = Mesh.Mesh;
+
+			if (!MeshBuffer)
+				continue;
 			
 			Material->PrepareForRender();
 

@@ -5,12 +5,11 @@
 #include "Core/Misc/NonCopyableMovable.h"
 #include "RenderingEngine/Scene/GeometryList.h"
 #include "RenderingEngine/Scene/SceneNode.h"
-#include "RenderingEngine/Texture.h"
+#include "RenderingEngine/Resource/TextureResource.h"
 
 namespace Hermes
 {
 	class Camera;
-	class CubemapTexture;
 
 	/*
 	 * NOTE : this all is 'the beginning' of a long looong journey
@@ -40,16 +39,16 @@ namespace Hermes
 
 		GeometryList BakeGeometryList() const;
 
-		const CubemapTexture& GetReflectionEnvmap() const;
-		const CubemapTexture& GetIrradianceEnvmap() const;
-		const CubemapTexture& GetSpecularEnvmap() const;
+		const TextureCubeResource& GetReflectionEnvmap() const;
+		const TextureCubeResource& GetIrradianceEnvmap() const;
+		const TextureCubeResource& GetSpecularEnvmap() const;
 
 	private:
 		SceneNode RootNode = SceneNode(SceneNodeType::None);
 
-		std::unique_ptr<CubemapTexture> ReflectionEnvmap;
-		std::unique_ptr<CubemapTexture> IrradianceEnvmap;
-		std::unique_ptr<CubemapTexture> SpecularEnvmap;
+		std::unique_ptr<TextureCubeResource> ReflectionEnvmap;
+		std::unique_ptr<TextureCubeResource> IrradianceEnvmap;
+		std::unique_ptr<TextureCubeResource> SpecularEnvmap;
 
 		std::shared_ptr<Camera> ActiveCamera;
 	};

@@ -12,7 +12,8 @@
 #include "RenderingEngine/Scene/FPSCamera.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderingEngine/Texture.h"
+#include "RenderingEngine/Resource/MeshResource.h"
+#include "RenderingEngine/Resource/TextureResource.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 #include "Vulkan/Swapchain.h"
 
@@ -21,14 +22,7 @@ class SandboxApp : public Hermes::IApplication
 public:
 
 	bool Init() override
-	{
-		auto MaybeSphereMeshAsset = Hermes::GGameLoop->GetAssetCache().Get<Hermes::MeshAsset>("/sphere");
-		if (!MaybeSphereMeshAsset.has_value() || MaybeSphereMeshAsset.value() == nullptr)
-			return false;
-		auto& SphereMesh = Hermes::Asset::As<Hermes::MeshAsset>(*MaybeSphereMeshAsset.value());
-		auto BoundingVolume = SphereMesh.GetBoundingVolume();
-		auto SphereMeshBuffer = Hermes::MeshBuffer::CreateFromAsset(SphereMesh);
-		
+	{		
 		auto MaybeTexturedMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::VirtualFilesystem::ReadFileAsString("/pbr_test.hmat").value_or(""));
 		HERMES_ASSERT(MaybeTexturedMaterialInstance);
 		TexturedMaterialInstance = std::move(MaybeTexturedMaterialInstance.value());
@@ -55,7 +49,7 @@ public:
 					static_cast<float>(SphereZ) * DistanceBetweenSpheres
 				};
 				
-				WorldTransformNode.AddChild<Hermes::MeshNode>(Hermes::Transform{ SphereLocation }, BoundingVolume, SphereMeshBuffer, TexturedMaterialInstance);
+				WorldTransformNode.AddChild<Hermes::MeshNode>(Hermes::Transform{ SphereLocation }, "/sphere", TexturedMaterialInstance);
 			}
 		}
 

@@ -22,7 +22,6 @@ namespace Hermes
 		default:
 			HERMES_ASSERT(false);
 		}
-		return 0;
 	}
 
 	size_t CalculateTotalPixelCount(size_t Width, size_t Height, size_t MipLevelCount)
@@ -67,6 +66,8 @@ namespace Hermes
 			// NOTE: because HDR assets are stored as R32G32B32 on the drive, but quite few GPUs support this format, so we need to unpack it into R32G32B32A32
 			UnpackHDRAsset(reinterpret_cast<const float*>(InData));
 		}
+
+		Texture = Texture2DResource::CreateFromAsset(*this);
 	}
 
 	void ImageAsset::UnpackHDRAsset(const float* RawData)
@@ -94,6 +95,12 @@ namespace Hermes
 	size_t ImageAsset::GetMemorySize() const
 	{
 		return CalculateTotalPixelCount(Dimensions.X, Dimensions.Y, MipLevelCount) * GetBytesPerPixel();
+	}
+
+	const Resource* ImageAsset::GetResource() const
+	{
+		HERMES_ASSERT(Texture);
+		return Texture.get();
 	}
 
 	const uint8* ImageAsset::GetRawData(uint8 MipLevel) const

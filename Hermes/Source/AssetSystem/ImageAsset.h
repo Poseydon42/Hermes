@@ -2,9 +2,11 @@
 
 #include <vector>
 
-#include "Core/Core.h"
 #include "AssetSystem/Asset.h"
+#include "AssetSystem/AssetHeaders.h"
+#include "Core/Core.h"
 #include "Math/Vector2.h"
+#include "RenderingEngine/Resource/TextureResource.h"
 
 namespace Hermes
 {
@@ -23,28 +25,18 @@ namespace Hermes
 	 * for both width and height
 	 */
 
-	enum class ImageFormat : uint8
-	{
-		Undefined = 0x00,
-		R = 0x01,
-		RA = 0x09,
-		RG = 0x03,
-		RGBX = 0x07,
-		RGBA = 0x0F,
-		HDR = 0x10
-	};
-
 	size_t NumberOfChannelInImageFormat(ImageFormat Format);
 
 	size_t CalculateTotalPixelCount(size_t Width, size_t Height, size_t MipLevelCount);
 
-	class HERMES_API ImageAsset final : public Asset
+	class HERMES_API ImageAsset : public Asset
 	{
 	public:
-
 		virtual bool IsValid() const override;
 
 		virtual size_t GetMemorySize() const override;
+
+		virtual const Resource* GetResource() const override;
 
 		const uint8* GetRawData(uint8 MipLevel = 0) const;
 		uint8* GetRawData(uint8 MipLevel = 0);
@@ -81,6 +73,8 @@ namespace Hermes
 		ImageFormat Format;
 		size_t BytesPerChannel;
 		uint8 MipLevelCount;
+
+		std::unique_ptr<Texture2DResource> Texture;
 
 		void UnpackHDRAsset(const float* RawData);
 	};

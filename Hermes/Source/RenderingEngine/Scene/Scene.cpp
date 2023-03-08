@@ -2,7 +2,8 @@
 
 #include <functional>
 
-#include "AssetSystem/AssetLoader.h"
+#include "ApplicationCore/GameLoop.h"
+#include "AssetSystem/ImageAsset.h"
 #include "Core/Profiling.h"
 #include "Math/Frustum.h"
 #include "RenderingEngine/DescriptorAllocator.h"
@@ -35,13 +36,11 @@ namespace Hermes
 		case Vulkan::CubemapSide::NegativeZ:
 			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f });
 		default:
-			HERMES_ASSERT(false);
-			break;
+			HERMES_ASSERT(false)
 		}
-		return Mat4::Identity();
 	}
 
-	static std::unique_ptr<CubemapTexture> ComputeIrradianceCubemap(const CubemapTexture& Source)
+	static std::unique_ptr<TextureCubeResource> ComputeIrradianceCubemap(const TextureCubeResource& Source)
 	{
 		constexpr Vec2ui Dimensions = { 16 };
 
@@ -57,9 +56,7 @@ namespace Hermes
 			Mat4 MVP;
 		};
 
-		std::unique_ptr<CubemapTexture> Result = CubemapTexture::CreateEmpty(Dimensions, VK_FORMAT_R32G32B32A32_SFLOAT,
-		                                                                     VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-		                                                                     VK_IMAGE_USAGE_SAMPLED_BIT, 1);
+		std::unique_ptr<TextureCubeResource> Result = TextureCubeResource::CreateEmpty("IrradianceEnvmap", Dimensions, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 1);
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 		auto& Queue = Device.GetQueue(VK_QUEUE_GRAPHICS_BIT);
@@ -89,7 +86,7 @@ namespace Hermes
 		SourceTextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		auto DescriptorLayout = Device.CreateDescriptorSetLayout({ SourceTextureBinding });
 		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
-		DescriptorSet->UpdateWithImageAndSampler(0, 0, Source.GetView(ColorSpace::Linear), *Sampler,
+		DescriptorSet->UpdateWithImageAndSampler(0, 0, Source.GetView(), *Sampler,
 		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		VkAttachmentDescription OutputAttachmentDesc = {};
@@ -200,7 +197,7 @@ namespace Hermes
 		return Result;
 	}
 
-	static std::unique_ptr<CubemapTexture> ComputeSpecularEnvmap(const CubemapTexture& Source)
+	static std::unique_ptr<TextureCubeResource> ComputeSpecularEnvmap(const TextureCubeResource& Source)
 	{
 		constexpr uint32 MipLevelCount = 5;
 		constexpr Vec2ui Dimensions { 256 };
@@ -221,9 +218,7 @@ namespace Hermes
 			float RoughnessLevel;
 		};
 
-		auto Result = CubemapTexture::CreateEmpty(Dimensions, VK_FORMAT_R32G32B32A32_SFLOAT,
-		                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		                                          MipLevelCount);
+		auto Result = TextureCubeResource::CreateEmpty("SpecularEnvmap", Dimensions, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, MipLevelCount);
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 		auto& Queue = Device.GetQueue(VK_QUEUE_GRAPHICS_BIT);
@@ -253,8 +248,7 @@ namespace Hermes
 		SourceTextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		auto DescriptorLayout = Device.CreateDescriptorSetLayout({ SourceTextureBinding });
 		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
-		DescriptorSet->UpdateWithImageAndSampler(0, 0, Source.GetView(ColorSpace::Linear), *Sampler,
-		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		DescriptorSet->UpdateWithImageAndSampler(0, 0, Source.GetView(), *Sampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		VkAttachmentDescription OutputAttachmentDesc = {};
 		OutputAttachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -399,15 +393,14 @@ namespace Hermes
 
 	Scene::Scene()
 	{
-		auto LoadCubemap = [](const String& Name)
-		{
-			auto& TextureCache = Renderer::Get().GetTextureCache();
-			auto& RawReflectionEnvmapTexture = TextureCache.Acquire(Name);
-			return CubemapTexture::CreateFromEquirectangularTexture(RawReflectionEnvmapTexture,
-			                                                        VK_FORMAT_R16G16B16A16_SFLOAT, true);
-		};
+		static constexpr auto EnvmapName = "/Textures/envmap";
 
-		ReflectionEnvmap = LoadCubemap("/Textures/envmap");
+		auto& AssetCache = GGameLoop->GetAssetCache();
+		auto RawReflectionEnvmapAsset = AssetCache.Get<ImageAsset>(EnvmapName);
+		HERMES_ASSERT_LOG(RawReflectionEnvmapAsset && RawReflectionEnvmapAsset.value()->GetResource() && RawReflectionEnvmapAsset.value()->GetResource()->GetType() == ResourceType::Texture2D, "Cannot load envmap %s", EnvmapName);
+
+		const auto* RawReflectionEnvmap = static_cast<const Texture2DResource*>(RawReflectionEnvmapAsset.value()->GetResource());
+		ReflectionEnvmap = TextureCubeResource::CreateFromEquirectangularTexture("ReflectionEnvmap", *RawReflectionEnvmap, VK_FORMAT_R16G16B16A16_SFLOAT, true);
 		IrradianceEnvmap = ComputeIrradianceCubemap(*ReflectionEnvmap);
 		SpecularEnvmap = ComputeSpecularEnvmap(*ReflectionEnvmap);
 	}
@@ -432,17 +425,17 @@ namespace Hermes
 		ActiveCamera = nullptr;
 	}
 	
-	const CubemapTexture& Scene::GetReflectionEnvmap() const
+	const TextureCubeResource& Scene::GetReflectionEnvmap() const
 	{
 		return *ReflectionEnvmap;
 	}
 
-	const CubemapTexture& Scene::GetIrradianceEnvmap() const
+	const TextureCubeResource& Scene::GetIrradianceEnvmap() const
 	{
 		return *IrradianceEnvmap;
 	}
 
-	const CubemapTexture& Scene::GetSpecularEnvmap() const
+	const TextureCubeResource& Scene::GetSpecularEnvmap() const
 	{
 		return *SpecularEnvmap;
 	}
@@ -478,7 +471,7 @@ namespace Hermes
 			if (!Frustum.IsInside(Mesh.GetBoundingVolume(), TransformationMatrix))
 				return;
 
-			CulledMeshes.emplace_back(TransformationMatrix , &Mesh.GetMeshBuffer(), &Mesh.GetMaterialInstance());
+			CulledMeshes.emplace_back(TransformationMatrix , &Mesh.GetMesh(), &Mesh.GetMaterialInstance());
 		};
 		MeshTraversal(RootNode);
 

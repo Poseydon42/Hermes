@@ -87,9 +87,9 @@ namespace Hermes
 		const auto& LightClusterListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightClusterList"));
 		const auto& LightIndexListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightIndexList"));
 		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
-		SceneUBODescriptorSet->UpdateWithImageAndSampler(1, 0, Scene.GetIrradianceEnvmap().GetView(ColorSpace::Linear),
+		SceneUBODescriptorSet->UpdateWithImageAndSampler(1, 0, Scene.GetIrradianceEnvmap().GetView(),
 		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		SceneUBODescriptorSet->UpdateWithImageAndSampler(2, 0, Scene.GetSpecularEnvmap().GetView(ColorSpace::Linear),
+		SceneUBODescriptorSet->UpdateWithImageAndSampler(2, 0, Scene.GetSpecularEnvmap().GetView(),
 		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(3, 0, *PrecomputedBRDFView, *PrecomputedBRDFSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		SceneUBODescriptorSet->UpdateWithBuffer(4, 0, LightClusterListBuffer, 0, static_cast<uint32>(LightClusterListBuffer.GetSize()));
@@ -99,7 +99,10 @@ namespace Hermes
 		{
 			auto& Material = Mesh.Material;
 			auto& MaterialPipeline = Material->GetBaseMaterial().GetPipeline();
-			auto& MeshBuffer = Mesh.MeshBuffer;
+			const auto* MeshBuffer = Mesh.Mesh;
+
+			if (!MeshBuffer)
+				continue;
 
 			// TODO : move it into the renderer?
 			Material->PrepareForRender();

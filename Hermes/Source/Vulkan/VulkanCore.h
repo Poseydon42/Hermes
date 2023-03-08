@@ -4,14 +4,11 @@
 #include "Logging/Logger.h"
 #include "Platform/GenericPlatform/PlatformMisc.h"
 
-#ifdef HERMES_PLATFORM_WINDOWS
-#define VK_USE_PLATFORM_WIN32_KHR
-#endif
 // !!!!! DON'T SWAP THESE TWO INCLUDES. vk_mem_alloc.h causes lots of build error if it
 // is included after Vulkan headers !!!!!
 SUPPRESS_ALL_WARNINGS_BEGIN
 #include <vk_mem_alloc.h>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 SUPPRESS_ALL_WARNINGS_END
 
 namespace Hermes::Vulkan

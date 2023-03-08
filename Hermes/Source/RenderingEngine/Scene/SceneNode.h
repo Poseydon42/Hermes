@@ -8,7 +8,7 @@
 #include "Math/BoundingVolume.h"
 #include "Math/Transform.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
-#include "RenderingEngine/MeshBuffer.h"
+#include "RenderingEngine/Resource/MeshResource.h"
 
 namespace Hermes
 {
@@ -94,19 +94,18 @@ namespace Hermes
 	public:
 		virtual ~MeshNode() override = default;
 
-		MeshNode(Transform Transform, SphereBoundingVolume InBoundingVolume, std::shared_ptr<MeshBuffer> InMesh, std::shared_ptr<MaterialInstance> InMaterial);
+		MeshNode(Transform Transform, String InMeshName, std::shared_ptr<MaterialInstance> InMaterial);
 
 		const SphereBoundingVolume& GetBoundingVolume() const;
 
-		const MeshBuffer& GetMeshBuffer() const;
-		void SetMeshBuffer(std::shared_ptr<MeshBuffer> NewMesh);
+		const MeshResource& GetMesh() const;
+		void SetMeshBuffer(String NewMeshName);
 
 		const MaterialInstance& GetMaterialInstance() const;
 		void SetMaterialInstance(std::shared_ptr<MaterialInstance> NewMaterialInstance);
 
 	private:
-		SphereBoundingVolume BoundingVolume;
-		std::shared_ptr<MeshBuffer> Mesh;
+		String MeshName; // FIXME: replace with asset handle once it is implemented
 		std::shared_ptr<MaterialInstance> Material;
 	};
 

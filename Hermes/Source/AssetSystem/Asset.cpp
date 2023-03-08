@@ -28,4 +28,9 @@ namespace Hermes
 	{
 		return 0;
 	}
+
+	const Resource* Asset::GetResource() const
+	{
+		return nullptr;
+	}
 }

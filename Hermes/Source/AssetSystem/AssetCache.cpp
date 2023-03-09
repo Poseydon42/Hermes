@@ -4,21 +4,6 @@
 
 namespace Hermes
 {
-	void AssetCache::Release(const String& Name)
-	{
-		if (!LoadedAssets.contains(Name))
-			return;
-
-		auto& Entry = LoadedAssets.at(Name);
-		HERMES_ASSERT(Entry.UseCount > 0);
-		Entry.UseCount--;
-
-		// TODO: unload asset when it's no longer used
-		// TODO: have different strategies for unloading assets (e.g.
-		//       do not unload assets that are no longer referenced if
-		//       there's still plenty of RAM available
-	}
-
 	std::optional<const Asset*> AssetCache::GetImpl(const String& Name)
 	{
 		if (LoadedAssets.contains(Name))

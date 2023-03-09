@@ -118,9 +118,6 @@ namespace Hermes
 	{
 		auto& AssetCache = GGameLoop->GetAssetCache();
 
-		if (auto MaybeBoundTexture = CurrentlyBoundRefCountedTextures.find(Name); MaybeBoundTexture != CurrentlyBoundRefCountedTextures.end())
-			AssetCache.Release(MaybeBoundTexture->second);
-
 		auto TextureAsset = AssetCache.Get<ImageAsset>(TextureName);
 		if (!TextureAsset || !TextureAsset.value())
 		{

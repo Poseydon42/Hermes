@@ -24,8 +24,6 @@ namespace Hermes
 		requires (std::derived_from<AssetClass, Asset>)
 		std::optional<const AssetClass*> Get(const String& Name);
 
-		void Release(const String& Name);
-
 	private:
 		struct CacheEntry
 		{

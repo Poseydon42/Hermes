@@ -4,6 +4,7 @@
 #include <span>
 #include <vector>
 
+#include "AssetSystem/AssetCache.h"
 #include "Core/Core.h"
 #include "Math/BoundingVolume.h"
 #include "Math/Transform.h"
@@ -94,18 +95,18 @@ namespace Hermes
 	public:
 		virtual ~MeshNode() override = default;
 
-		MeshNode(Transform Transform, String InMeshName, std::shared_ptr<MaterialInstance> InMaterial);
+		MeshNode(Transform Transform, AssetHandle InMeshHandle, std::shared_ptr<MaterialInstance> InMaterial);
 
 		const SphereBoundingVolume& GetBoundingVolume() const;
 
-		const MeshResource& GetMesh() const;
-		void SetMeshBuffer(String NewMeshName);
+		AssetHandle GetMesh() const;
+		void SetMesh(AssetHandle NewMeshHandle);
 
 		const MaterialInstance& GetMaterialInstance() const;
 		void SetMaterialInstance(std::shared_ptr<MaterialInstance> NewMaterialInstance);
 
 	private:
-		String MeshName; // FIXME: replace with asset handle once it is implemented
+		AssetHandle MeshHandle;
 		std::shared_ptr<MaterialInstance> Material;
 	};
 

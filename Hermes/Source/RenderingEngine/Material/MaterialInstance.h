@@ -4,6 +4,7 @@
 #include <optional>
 #include <vector>
 
+#include "AssetSystem/AssetCache.h"
 #include "Core/Core.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/Material/Material.h"
@@ -43,7 +44,7 @@ namespace Hermes
 		 *
 		 * Reference counting is implemented in the texture cache object and valid lifetime is guaranteed.
 		 */
-		void SetTextureProperty(const String& Name, const String& TextureName, ColorSpace ColorSpace);
+		void SetTextureProperty(const String& Name, AssetHandle TextureHandle, ColorSpace ColorSpace);
 
 		void PrepareForRender() const;
 
@@ -56,7 +57,7 @@ namespace Hermes
 		bool HasUniformBuffer = false;
 
 		std::shared_ptr<const Material> BaseMaterial;
-		std::unordered_map<String, String> CurrentlyBoundRefCountedTextures;
+		std::unordered_map<String, AssetHandle> CurrentlyBoundRefCountedTextures;
 		std::vector<uint8> CPUBuffer;
 		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
 		std::unique_ptr<Vulkan::Buffer> UniformBuffer;

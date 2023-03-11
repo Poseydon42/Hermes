@@ -91,9 +91,9 @@ namespace Hermes
 		return *Children.back();
 	}
 
-	MeshNode::MeshNode(Transform Transform, String InMeshName, std::shared_ptr<MaterialInstance> InMaterial)
+	MeshNode::MeshNode(Transform Transform, AssetHandle InMeshHandle, std::shared_ptr<MaterialInstance> InMaterial)
 		: SceneNode(SceneNodeType::Mesh, Transform)
-		, MeshName(std::move(InMeshName))
+		, MeshHandle(InMeshHandle)
 		, Material(std::move(InMaterial))
 	{
 	}
@@ -102,27 +102,20 @@ namespace Hermes
 	{
 		auto& AssetCache = GGameLoop->GetAssetCache();
 
-		auto Asset = AssetCache.Get<MeshAsset>(MeshName);
+		auto Asset = AssetCache.Get<MeshAsset>(MeshHandle);
 		HERMES_ASSERT(Asset);
 
 		return Asset.value()->GetBoundingVolume();
 	}
 
-	const MeshResource& MeshNode::GetMesh() const
+	AssetHandle MeshNode::GetMesh() const
 	{
-		auto& AssetCache = GGameLoop->GetAssetCache();
-
-		auto Asset = AssetCache.Get<MeshAsset>(MeshName);
-		HERMES_ASSERT(Asset);
-
-		const auto* Resource = Asset.value()->GetResource();
-		HERMES_ASSERT(Resource && Resource->GetType() == ResourceType::Mesh);
-		return *static_cast<const MeshResource*>(Resource);
+		return MeshHandle;
 	}
 
-	void MeshNode::SetMeshBuffer(String NewMeshName)
+	void MeshNode::SetMesh(AssetHandle NewMeshHandle)
 	{
-		MeshName = std::move(NewMeshName);
+		MeshHandle = NewMeshHandle;
 	}
 
 	void MeshNode::SetMaterialInstance(std::shared_ptr<MaterialInstance> NewMaterialInstance)

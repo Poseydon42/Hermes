@@ -114,14 +114,14 @@ namespace Hermes
 		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
-	void MaterialInstance::SetTextureProperty(const String& Name, const String& TextureName, ColorSpace ColorSpace)
+	void MaterialInstance::SetTextureProperty(const String& Name, AssetHandle TextureHandle, ColorSpace ColorSpace)
 	{
 		auto& AssetCache = GGameLoop->GetAssetCache();
 
-		auto TextureAsset = AssetCache.Get<ImageAsset>(TextureName);
+		auto TextureAsset = AssetCache.Get<ImageAsset>(TextureHandle);
 		if (!TextureAsset || !TextureAsset.value())
 		{
-			HERMES_LOG_WARNING("Cannot set material instance property %s to texture %s because the texture cannot be found", Name.c_str(), TextureName.c_str());
+			HERMES_LOG_WARNING("Cannot set material instance property %s because the texture cannot be found", Name.c_str());
 			return;
 		}
 
@@ -135,7 +135,7 @@ namespace Hermes
 		HERMES_ASSERT(Texture);
 
 		SetTextureProperty(Name, *Texture, ColorSpace);
-		CurrentlyBoundRefCountedTextures[Name] = TextureName;
+		CurrentlyBoundRefCountedTextures[Name] = TextureHandle;
 	}
 
 	void MaterialInstance::PrepareForRender() const
@@ -286,7 +286,10 @@ namespace Hermes
 			return;
 		}
 
-		SetTextureProperty(Name, String(TextureName), ColorSpace);
+		auto& AssetCache = GGameLoop->GetAssetCache();
+		auto Handle = AssetCache.Create(TextureName);
+
+		SetTextureProperty(Name, Handle, ColorSpace);
 	}
 
 	void MaterialInstance::SetPropertiesFromJSON(const JSONObject& PropertiesObject)

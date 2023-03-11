@@ -11,7 +11,9 @@ namespace Hermes
 	enum class AssetType : uint8
 	{
 		Image = 1,
-		Mesh = 2
+		Mesh = 2,
+
+		Invalid = 0xFF
 	};
 
 	class Resource;

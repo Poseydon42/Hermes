@@ -4,10 +4,12 @@
 
 #include "ApplicationCore/GameLoop.h"
 #include "AssetSystem/ImageAsset.h"
+#include "AssetSystem/MeshAsset.h"
 #include "Core/Profiling.h"
 #include "Math/Frustum.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
+#include "RenderingEngine/Resource/MeshResource.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "Vulkan/CommandBuffer.h"
 #include "Vulkan/Device.h"
@@ -457,6 +459,8 @@ namespace Hermes
 
 		auto Frustum = GetActiveCamera().GetFrustum();
 
+		auto& AssetCache = GGameLoop->GetAssetCache();
+
 		std::function<void(const SceneNode&)> MeshTraversal = [&](const SceneNode& CurrentNode) -> void
 		{
 			for (size_t ChildIndex = 0; ChildIndex < CurrentNode.GetChildrenCount(); ChildIndex++)
@@ -465,13 +469,19 @@ namespace Hermes
 			if (CurrentNode.GetType() != SceneNodeType::Mesh)
 				return;
 
-			const auto& Mesh = static_cast<const MeshNode&>(CurrentNode);
+			// NOTE: using static_cast<const class MeshNode&> causes an internal compiler error on MSVC as of March of 2023
+			const auto& CurrentMeshNode = static_cast<const MeshNode&>(CurrentNode);
 			auto TransformationMatrix = CurrentNode.GetWorldTransformationMatrix();
 
-			if (!Frustum.IsInside(Mesh.GetBoundingVolume(), TransformationMatrix))
+			if (!Frustum.IsInside(CurrentMeshNode.GetBoundingVolume(), TransformationMatrix))
 				return;
 
-			CulledMeshes.emplace_back(TransformationMatrix , &Mesh.GetMesh(), &Mesh.GetMaterialInstance());
+			auto MaybeMeshAsset = AssetCache.Get<MeshAsset>(CurrentMeshNode.GetMesh());
+			if (!MaybeMeshAsset.has_value() || !MaybeMeshAsset.value() || !MaybeMeshAsset.value()->GetResource())
+				return;
+
+			const auto* Mesh = static_cast<const MeshResource*>(MaybeMeshAsset.value()->GetResource());
+			CulledMeshes.emplace_back(TransformationMatrix, Mesh, &CurrentMeshNode.GetMaterialInstance());
 		};
 		MeshTraversal(RootNode);
 

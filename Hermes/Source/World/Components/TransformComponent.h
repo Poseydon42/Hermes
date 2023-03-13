@@ -11,5 +11,5 @@ namespace Hermes
 		Transform Transform;
 	};
 
-	HERMES_DECLARE_COMPONENT(TransformComponent);
+	HERMES_DECLARE_ENGINE_COMPONENT(TransformComponent);
 }

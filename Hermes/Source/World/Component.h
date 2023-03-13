@@ -1,25 +1,18 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Logging/Logger.h"
 
 namespace Hermes
 {
-	struct MeshComponent;
-	struct TransformComponent;
 	using ComponentID = uint8;
 	using ComponentBitmask = size_t;
 
 	namespace ComponentIDCounterInternal
 	{
-		inline ComponentID GNextComponentID = 0;
+		extern HERMES_API ComponentID GNextComponentID;
 		
-		inline ComponentID AllocateComponentID()
-		{
-			auto Result = GNextComponentID++;
-			HERMES_ASSERT_LOG(GNextComponentID > Result, "Reached maximum component count for given component ID data type");
-
-			return Result;
-		}
+		HERMES_API ComponentID AllocateComponentID();
 	}
 
 	template<typename ComponentType>
@@ -48,11 +41,25 @@ namespace Hermes
 		return GetComponentBitmask<First>() | GetComponentPackBitmask<Second, Rest...>();
 	}
 
-#define HERMES_DECLARE_COMPONENT(Name)                                      \
-	template<> inline HERMES_API ComponentID GetComponentID<Name>()                \
-	{                                                                       \
+#ifdef HERMES_BUILD_ENGINE
+#define HERMES_DECLARE_ENGINE_COMPONENT(Name)                                                \
+	template<> inline HERMES_API ::Hermes::ComponentID Hermes::GetComponentID<Name>()        \
+	{                                                                                        \
+		static auto ID = ::Hermes::ComponentIDCounterInternal::AllocateComponentID();        \
+		return ID;                                                                           \
+	}                                                                                        
+#elif defined(HERMES_BUILD_APPLICATION)
+#define HERMES_DECLARE_ENGINE_COMPONENT(Name)                                          \
+	template<> inline HERMES_API ::Hermes::ComponentID Hermes::GetComponentID<Name>();
+#endif
+
+#ifdef HERMES_BUILD_APPLICATION
+#define HERMES_DECLARE_APPLICATION_COMPONENT(Name)                                    \
+	template<> inline ::Hermes::ComponentID Hermes::GetComponentID<Name>()            \
+	{                                                                                 \
 		static auto ID = ::Hermes::ComponentIDCounterInternal::AllocateComponentID(); \
-		return ID;                                                          \
+		return ID;                                                                    \
 	}
+#endif
 
 }

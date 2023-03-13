@@ -53,7 +53,7 @@ public:
 				LightTransform.Transform.Translation.Y = 10.0f;
 
 				auto& PointLightComponent = World.AddComponent<Hermes::PointLightComponent>(PointLightEntity);
-				PointLightComponent.Color = { 0.0f, 0.3f, 1.0f };
+				PointLightComponent.Color = { 1.0f, 1.0f, 1.0f };
 				PointLightComponent.Intensity = 50.0f;
 			}
 		}

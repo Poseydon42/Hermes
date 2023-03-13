@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 include(HermesSublib)
 
 set(SOURCES
+    Component.cpp
     Component.h
     Components/DirectionalLightComponent.h
     Components/MeshComponent.h

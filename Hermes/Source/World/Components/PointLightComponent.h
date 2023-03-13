@@ -12,5 +12,5 @@ namespace Hermes
 		float Intensity = 0.0f;
 	};
 
-	HERMES_DECLARE_COMPONENT(PointLightComponent);
+	HERMES_DECLARE_ENGINE_COMPONENT(PointLightComponent);
 }

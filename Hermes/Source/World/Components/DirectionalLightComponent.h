@@ -13,5 +13,5 @@ namespace Hermes
 		float Intensity = 0.0f;
 	};
 
-	HERMES_DECLARE_COMPONENT(DirectionalLightComponent);
+	HERMES_DECLARE_ENGINE_COMPONENT(DirectionalLightComponent);
 }

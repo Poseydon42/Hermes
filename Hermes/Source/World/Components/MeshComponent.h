@@ -12,5 +12,5 @@ namespace Hermes
 		const MaterialInstance* Material = nullptr; // FIXME: this is unsafe
 	};
 
-	HERMES_DECLARE_COMPONENT(MeshComponent);
+	HERMES_DECLARE_ENGINE_COMPONENT(MeshComponent);
 }

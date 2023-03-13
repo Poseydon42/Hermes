@@ -91,7 +91,7 @@ namespace Hermes
 		return *Children.back();
 	}
 
-	MeshNode::MeshNode(Transform Transform, AssetHandle InMeshHandle, std::shared_ptr<MaterialInstance> InMaterial)
+	MeshNode::MeshNode(Transform Transform, AssetHandle InMeshHandle, const MaterialInstance* InMaterial)
 		: SceneNode(SceneNodeType::Mesh, Transform)
 		, MeshHandle(InMeshHandle)
 		, Material(std::move(InMaterial))
@@ -118,7 +118,7 @@ namespace Hermes
 		MeshHandle = NewMeshHandle;
 	}
 
-	void MeshNode::SetMaterialInstance(std::shared_ptr<MaterialInstance> NewMaterialInstance)
+	void MeshNode::SetMaterialInstance(const MaterialInstance* NewMaterialInstance)
 	{
 		Material = std::move(NewMaterialInstance);
 	}

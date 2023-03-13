@@ -7,7 +7,7 @@
 #include "AssetSystem/AssetCache.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
-#include "RenderingEngine/Scene/Scene.h"
+#include "World/World.h"
 
 namespace Hermes
 {
@@ -40,10 +40,14 @@ namespace Hermes
 
 		AssetCache& GetAssetCache();
 
+		World& GetWorld();
+
+
 		/*
 		 * DEBUG ONLY
 		 */
-		Scene& GetScene();
+		void SetCamera(std::shared_ptr<Camera> NewCamera);
+
 	private:
 		void WindowCloseEventHandler(const IEvent& Event);
 
@@ -58,10 +62,12 @@ namespace Hermes
 
 		std::unique_ptr<AssetCache> AssetCache;
 
+		std::unique_ptr<World> GameWorld;
+
 		/*
 		 * DEBUG ONLY
 		 */
-		std::unique_ptr<Scene> GameScene;
+		std::shared_ptr<Camera> Camera;
 		void KeyEventHandler(const IEvent& Event);
 		bool IsFullscreen = false;
 	};

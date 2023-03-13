@@ -5,6 +5,7 @@
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Renderer.h"
+#include "RenderingEngine/Resource/MeshResource.h"
 #include "RenderingEngine/Scene/GeometryList.h"
 #include "RenderingEngine/Scene/Scene.h"
 #include "Vulkan/Buffer.h"
@@ -99,9 +100,9 @@ namespace Hermes
 		{
 			auto& Material = Mesh.Material;
 			auto& MaterialPipeline = Material->GetBaseMaterial().GetPipeline();
-			const auto* MeshBuffer = Mesh.Mesh;
+			const auto* MeshResource = Mesh.Mesh;
 
-			if (!MeshBuffer)
+			if (!MeshResource)
 				continue;
 
 			// TODO : move it into the renderer?
@@ -113,9 +114,9 @@ namespace Hermes
 			Metrics.DescriptorSetBindCount++;
 			CommandBuffer.BindDescriptorSet(Material->GetMaterialDescriptorSet(), MaterialPipeline, 1);
 			Metrics.DescriptorSetBindCount++;
-			CommandBuffer.BindVertexBuffer(MeshBuffer->GetVertexBuffer());
+			CommandBuffer.BindVertexBuffer(MeshResource->GetVertexBuffer());
 			Metrics.BufferBindCount++;
-			CommandBuffer.BindIndexBuffer(MeshBuffer->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
+			CommandBuffer.BindIndexBuffer(MeshResource->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
 			Metrics.BufferBindCount++;
 
 			auto TransformationMatrix = Mesh.TransformationMatrix;
@@ -123,7 +124,7 @@ namespace Hermes
 			CommandBuffer.UploadPushConstants(MaterialPipeline, VK_SHADER_STAGE_VERTEX_BIT,
 			                                  &TransformationMatrix, sizeof(TransformationMatrix), 0);
 
-			for (const auto& Primitive : MeshBuffer->GetPrimitives())
+			for (const auto& Primitive : MeshResource->GetPrimitives())
 			{
 				CommandBuffer.DrawIndexed(Primitive.IndexCount, 1, Primitive.IndexOffset, 0, 0);
 				Metrics.DrawCallCount++;

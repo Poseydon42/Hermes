@@ -11,5 +11,5 @@ set(SOURCES
 )
 
 add_hermes_sublib(Hermes_ApplicationCore "${SOURCES}")
-target_link_libraries(Hermes_ApplicationCore PUBLIC Hermes_Core Hermes_Math Hermes_Platform Hermes_RenderingEngine)
+target_link_libraries(Hermes_ApplicationCore PUBLIC Hermes_Core Hermes_Math Hermes_Platform Hermes_RenderingEngine Hermes_World)
 target_link_libraries(Hermes_ApplicationCore PRIVATE Hermes_Logging)

@@ -10,6 +10,8 @@
 #include "RenderingEngine/Renderer.h"
 #include "VirtualFilesystem/DirectoryFSDevice.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
+#include "World/Systems/LightRenderingSystem.h"
+#include "World/Systems/MeshRenderingSystem.h"
 
 namespace Hermes
 {
@@ -55,7 +57,7 @@ namespace Hermes
 
 		Renderer::Get().Init();
 
-		GameScene = std::make_unique<Scene>();
+		GameWorld = std::make_unique<World>();
 
 		if (!Application->Init())
 		{
@@ -65,6 +67,10 @@ namespace Hermes
 
 		PrevFrameEndTimestamp = PlatformTime::GetCurrentTimestamp();
 
+		// FIXME: this should be done automatically
+		GameWorld->AddSystem(std::make_unique<MeshRenderingSystem>());
+		GameWorld->AddSystem(std::make_unique<LightRenderingSystem>());
+
 		return true;
 	}
 
@@ -72,18 +78,25 @@ namespace Hermes
 	{
 		while (!RequestedExit)
 		{
+			HERMES_PROFILE_SCOPE("GameLoop");
 			ApplicationWindow->Run();
 			if (!Paused && !RequestedExit)
 			{
-				HERMES_PROFILE_SCOPE("GameLoop");
 				auto CurrentTimestamp = PlatformTime::GetCurrentTimestamp();
 				float DeltaTime = PlatformTime::ToSeconds(CurrentTimestamp - PrevFrameEndTimestamp);
+
+				GameWorld->Update(DeltaTime);
 
 				Application->Run(DeltaTime);
 				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
 
 				auto& Renderer = Renderer::Get();
-				Renderer.RunFrame(*GameScene);
+				auto& Scene = GameWorld->GetScene();
+
+				// FIXME: change this ASAP (when camera component is implemented)
+				const_cast<class Scene&>(Scene).ChangeActiveCamera(Camera);
+
+				Renderer.RunFrame(Scene);
 
 				PrevFrameEndTimestamp = CurrentTimestamp;
 			}
@@ -118,9 +131,14 @@ namespace Hermes
 		return *AssetCache;
 	}
 
-	Scene& GameLoop::GetScene()
+	World& GameLoop::GetWorld()
 	{
-		return *GameScene;
+		return *GameWorld;
+	}
+
+	void GameLoop::SetCamera(std::shared_ptr<Hermes::Camera> NewCamera)
+	{
+		Camera = NewCamera;
 	}
 
 	void GameLoop::WindowCloseEventHandler(const IEvent& Event)

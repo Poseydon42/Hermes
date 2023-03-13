@@ -9,7 +9,6 @@
 #include "Math/BoundingVolume.h"
 #include "Math/Transform.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
-#include "RenderingEngine/Resource/MeshResource.h"
 
 namespace Hermes
 {
@@ -95,7 +94,7 @@ namespace Hermes
 	public:
 		virtual ~MeshNode() override = default;
 
-		MeshNode(Transform Transform, AssetHandle InMeshHandle, std::shared_ptr<MaterialInstance> InMaterial);
+		MeshNode(Transform Transform, AssetHandle InMeshHandle, const MaterialInstance* InMaterial);
 
 		const SphereBoundingVolume& GetBoundingVolume() const;
 
@@ -103,11 +102,11 @@ namespace Hermes
 		void SetMesh(AssetHandle NewMeshHandle);
 
 		const MaterialInstance& GetMaterialInstance() const;
-		void SetMaterialInstance(std::shared_ptr<MaterialInstance> NewMaterialInstance);
+		void SetMaterialInstance(const MaterialInstance* NewMaterialInstance);
 
 	private:
 		AssetHandle MeshHandle;
-		std::shared_ptr<MaterialInstance> Material;
+		const MaterialInstance* Material; // FIXME: replace with refcounted pointers or asset handle
 	};
 
 	class HERMES_API PointLightNode : public SceneNode

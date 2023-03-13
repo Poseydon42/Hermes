@@ -2,6 +2,7 @@
 
 #include "ApplicationCore/GameLoop.h"
 #include "ApplicationCore/InputEngine.h"
+#include "Core/Profiling.h"
 #include "Logging/Logger.h"
 
 #ifdef HERMES_PLATFORM_WINDOWS
@@ -155,8 +156,9 @@ namespace Hermes
 
 	void WindowsWindow::Run() const
 	{
-		MSG Message;
+		HERMES_PROFILE_FUNC();
 
+		MSG Message;
 		while (PeekMessageW(&Message, WindowHandle, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&Message);

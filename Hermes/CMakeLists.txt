@@ -18,6 +18,7 @@ add_subdirectory(Source/Platform)
 add_subdirectory(Source/RenderingEngine)
 add_subdirectory(Source/VirtualFilesystem)
 add_subdirectory(Source/Vulkan)
+add_subdirectory(Source/World)
 
 if(HERMES_ENABLE_TESTING)
     add_subdirectory(Tests/Core)
@@ -62,6 +63,7 @@ set(HERMES_SUBLIB_LIST
     Hermes_RenderingEngine
     Hermes_VirtualFileSystem
     Hermes_Vulkan
+    Hermes_World
 )
 
 include(CommonDefinitions)

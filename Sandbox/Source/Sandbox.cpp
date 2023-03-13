@@ -12,6 +12,10 @@
 #include "RenderingEngine/Renderer.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 #include "Vulkan/Swapchain.h"
+#include "World/Components/DirectionalLightComponent.h"
+#include "World/Components/MeshComponent.h"
+#include "World/Components/PointLightComponent.h"
+#include "World/Components/TransformComponent.h"
 
 class SandboxApp : public Hermes::IApplication
 {
@@ -25,61 +29,45 @@ public:
 		auto MaybeTexturedMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::VirtualFilesystem::ReadFileAsString("/pbr_test.hmat").value_or(""));
 		HERMES_ASSERT(MaybeTexturedMaterialInstance);
 		TexturedMaterialInstance = std::move(MaybeTexturedMaterialInstance.value());
-		
-		auto MaybeSolidColorMaterialInstance = Hermes::MaterialInstance::CreateFromJSON(Hermes::VirtualFilesystem::ReadFileAsString("/test_solid_color.hmat").value_or(""));
-		HERMES_ASSERT(MaybeSolidColorMaterialInstance);
-		SolidColorMaterialInstance = std::move(MaybeSolidColorMaterialInstance.value());
 
-		auto& WorldTransformNode = Hermes::GGameLoop->GetScene().GetRootNode().AddChild<Hermes::SceneNode>(Hermes::SceneNodeType::None, Hermes::Transform{});
+		auto& World = Hermes::GGameLoop->GetWorld();
 
-		static constexpr Hermes::int32 SphereCountInSingleDimension = 39;
-		for (Hermes::int32 SphereX = -SphereCountInSingleDimension / 2;
-		     SphereX <= SphereCountInSingleDimension / 2;
-		     SphereX++)
+		static constexpr int SphereCountInOneDirection = 19;
+		static constexpr float SphereSpacing = 15.0f;
+		for (int X = -SphereCountInOneDirection / 2; X <= SphereCountInOneDirection / 2; X++)
 		{
-			for (Hermes::int32 SphereZ = -SphereCountInSingleDimension / 2;
-			     SphereZ <= SphereCountInSingleDimension / 2;
-			     SphereZ++)
+			for (int Y = -SphereCountInOneDirection / 2; Y <= SphereCountInOneDirection / 2; Y++)
 			{
-				static constexpr float DistanceBetweenSpheres = 10.0f;
-				Hermes::Vec3 SphereLocation = {
-					static_cast<float>(SphereX) * DistanceBetweenSpheres,
-					0.0f,
-					static_cast<float>(SphereZ) * DistanceBetweenSpheres
-				};
-				
-				WorldTransformNode.AddChild<Hermes::MeshNode>(Hermes::Transform{ SphereLocation }, SphereAssetHandle, TexturedMaterialInstance);
+				auto SphereEntity = World.CreateEntity();
+
+				auto& Transform = World.AddComponent<Hermes::TransformComponent>(SphereEntity);
+				Transform.Transform.Translation = { static_cast<float>(X) * SphereSpacing, 0, static_cast<float>(Y) * SphereSpacing };
+
+				auto& SphereMeshComponent = World.AddComponent<Hermes::MeshComponent>(SphereEntity);
+				SphereMeshComponent.Mesh = SphereAssetHandle;
+				SphereMeshComponent.Material = TexturedMaterialInstance.get();
+
+				auto PointLightEntity = World.CreateEntity();
+				auto& LightTransform = World.AddComponent<Hermes::TransformComponent>(PointLightEntity);
+				LightTransform.Transform = Transform.Transform;
+				LightTransform.Transform.Translation.Y = 10.0f;
+
+				auto& PointLightComponent = World.AddComponent<Hermes::PointLightComponent>(PointLightEntity);
+				PointLightComponent.Color = { 0.0f, 0.3f, 1.0f };
+				PointLightComponent.Intensity = 50.0f;
 			}
 		}
 
-		static constexpr Hermes::int32 PointLightCountInSingleDimension = 15;
-		static constexpr float GridDistanceBetweenPointLights = 25.0f;
-		static constexpr float LightHeight = 4.0f;
-		static constexpr Hermes::Vec3 LightColor = { 1.0f, 1.0f, 0.9f };
-		static constexpr float LightPower = 200.0f;
-		for (auto LightX = -PointLightCountInSingleDimension / 2;
-		     LightX <= PointLightCountInSingleDimension / 2;
-		     LightX++)
-		{
-			for (auto LightZ = -PointLightCountInSingleDimension / 2;
-			     LightZ <= PointLightCountInSingleDimension / 2;
-			     LightZ++)
-			{
-				Hermes::Vec3 LightPosition = {
-					static_cast<float>(LightX) * GridDistanceBetweenPointLights,
-					LightHeight,
-					static_cast<float>(LightZ) * GridDistanceBetweenPointLights
-				};
-				
-				Hermes::GGameLoop->GetScene().GetRootNode().AddChild<Hermes::PointLightNode>(Hermes::Transform{LightPosition}, LightColor, LightPower);
-			}
-		}
-		
-		Hermes::GGameLoop->GetScene().GetRootNode().AddChild<Hermes::DirectionalLightNode>(Hermes::Transform(), Hermes::Vec3(0.0f, -1.0f, -1.0f).Normalize(), Hermes::Vec3(1.0f, 1.0f, 1.0f), 8.0f);
+		auto DirectionalLightEntity = World.CreateEntity();
+		auto& DirectionalLight = World.AddComponent<Hermes::DirectionalLightComponent>(DirectionalLightEntity);
+		DirectionalLight.Direction = { -1.0f, -1.0f, -1.0f };
+		DirectionalLight.Direction.Normalize();
+		DirectionalLight.Color = { 1.0f, 1.0f, 1.0f };
+		DirectionalLight.Intensity = 10.0f;
 
 		Camera = std::make_unique<Hermes::FPSCamera>(Hermes::Vec3(0.0f, 3.0f, 0.0f), 0.0f, 0.0f, 0.5f, 25.0f, 50.0f,
 		                                             Hermes::Vec2(Hermes::Renderer::Get().GetSwapchain().GetDimensions()), true);
-		Hermes::GGameLoop->GetScene().ChangeActiveCamera(Camera);
+		Hermes::GGameLoop->SetCamera(Camera);
 
 		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe<SandboxApp, &SandboxApp::KeyEventHandler>(Hermes::KeyEvent::GetStaticType(), this);
 
@@ -102,19 +90,6 @@ public:
 		if (InputEngine.IsKeyPressed(Hermes::KeyCode::A))
 			CameraMovementInput.Y -= 1.0f;
 #endif
-
-		float SphereDeltaX = 0.0f;
-		if (InputEngine.IsKeyPressed(Hermes::KeyCode::ArrowLeft))
-			SphereDeltaX -= 1.0f;
-		if (InputEngine.IsKeyPressed(Hermes::KeyCode::ArrowRight))
-			SphereDeltaX += 1.0f;
-		SphereDeltaX *= 2.0f * DeltaTime;
-
-		auto CurrentTransform = Hermes::GGameLoop->GetScene().GetRootNode().GetChild(0).GetLocalTransform();
-		CurrentTransform.Translation.X += SphereDeltaX;
-
-		Hermes::GGameLoop->GetScene().GetRootNode().GetChild(0).SetLocalTransform(CurrentTransform);
-		
 		
 		Camera->ApplyMovementInput(CameraMovementInput, DeltaTime);
 #if 0
@@ -138,7 +113,7 @@ public:
 private:
 	bool AnisotropyEnabled = false, AnisotropyChanged = false;
 	std::shared_ptr<Hermes::FPSCamera> Camera;
-	std::shared_ptr<Hermes::MaterialInstance> TexturedMaterialInstance, SolidColorMaterialInstance;
+	std::shared_ptr<Hermes::MaterialInstance> TexturedMaterialInstance;
 
 	void KeyEventHandler(const Hermes::IEvent& Event)
 	{
@@ -149,24 +124,6 @@ private:
 			{
 				AnisotropyChanged = true;
 				AnisotropyEnabled = !AnisotropyEnabled;
-			}
-
-			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::E)
-			{
-				std::shared_ptr<Hermes::MaterialInstance> NewMaterialInstance = nullptr;
-				if (KeyEvent.IsPressEvent())
-					NewMaterialInstance = SolidColorMaterialInstance;
-				else
-					NewMaterialInstance = TexturedMaterialInstance;
-
-				auto& Scene = Hermes::GGameLoop->GetScene();
-				for (size_t Index = 0; Index < Scene.GetRootNode().GetChildrenCount(); Index++)
-				{
-					auto& Node = Scene.GetRootNode().GetChild(Index);
-					if (Node.GetType() != Hermes::SceneNodeType::Mesh)
-						continue;
-					static_cast<Hermes::MeshNode&>(Node).SetMaterialInstance(NewMaterialInstance);
-				}
 			}
 		}
 	}

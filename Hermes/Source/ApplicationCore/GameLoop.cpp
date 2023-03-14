@@ -93,9 +93,6 @@ namespace Hermes
 				auto& Renderer = Renderer::Get();
 				auto& Scene = GameWorld->GetScene();
 
-				// FIXME: change this ASAP (when camera component is implemented)
-				const_cast<class Scene&>(Scene).ChangeActiveCamera(Camera);
-
 				Renderer.RunFrame(Scene);
 
 				PrevFrameEndTimestamp = CurrentTimestamp;

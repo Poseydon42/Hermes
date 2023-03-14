@@ -37,8 +37,6 @@ set(SOURCES
     Resource/TextureResource.cpp
     Resource/TextureResource.h
     Scene/Camera.h
-    Scene/FPSCamera.cpp
-    Scene/FPSCamera.h
     Scene/GeometryList.cpp
     Scene/GeometryList.h
     Scene/Scene.cpp

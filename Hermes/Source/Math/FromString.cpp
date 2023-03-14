@@ -1,8 +1,9 @@
 #include "FromString.h"
 
+#include "Math/Common.h"
+
 namespace Hermes
 {
-	// FIXME: exponential notation
 	std::optional<double> FromString::Double(StringView String)
 	{
 		const char* Current = String.data();
@@ -41,15 +42,16 @@ namespace Hermes
 		}
 
 		// No dot - no fractional part
-		if (!Peek().has_value() || Peek().value() != '.')
+		bool HasFractionalPart = false;
+		if (Peek().has_value() && Peek().value() == '.')
 		{
-			return static_cast<double>(WholePart) * (Negative ? -1.0 : 1.0);
+			HasFractionalPart = true;
+			Consume();
 		}
-		Consume();
 
 		uint64 FractionalPart = 0;
 		double FractionalPartMultiplier = 1.0;
-		while (true)
+		while (HasFractionalPart)
 		{
 			if (!Peek().has_value() || !IsDigit(Peek().value()))
 				break;
@@ -59,6 +61,38 @@ namespace Hermes
 			Consume();
 		}
 
-		return (Negative ? -1.0 : 1.0) * (static_cast<double>(WholePart) + static_cast<double>(FractionalPart) * FractionalPartMultiplier);
+		// Exponent
+		double Exponent = 0.0;
+		if (Peek().has_value() && (Peek().value() == 'e' || Peek().value() == 'E'))
+		{
+			Consume();
+
+			bool ExponentIsPositive = true;
+			if (Peek().has_value() && Peek().value() == '+')
+			{
+				Consume();
+			}
+			if (Peek().has_value() && Peek().value() == '-')
+			{
+				ExponentIsPositive = false;
+				Consume();
+			}
+
+			uint64 RawExponentValue = 0;
+			while (Peek().has_value() && IsDigit(Peek().value()))
+			{
+				auto Digit = Peek().value() - '0';
+				Consume();
+
+				RawExponentValue = RawExponentValue * 10 + Digit;
+			}
+
+			Exponent = (ExponentIsPositive ? 1.0 : -1.0) * static_cast<double>(RawExponentValue);
+		}
+
+		double RawValue = static_cast<double>(WholePart) + static_cast<double>(FractionalPart) * FractionalPartMultiplier;
+		double Result = (Negative ? -1.0 : 1.0) * RawValue * Math::Pow(10.0, Exponent);
+
+		return Result;
 	}
 }

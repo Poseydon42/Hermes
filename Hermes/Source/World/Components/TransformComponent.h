@@ -2,7 +2,6 @@
 
 #include "Core/Core.h"
 #include "Math/Transform.h"
-#include "World/Component.h"
 
 namespace Hermes
 {
@@ -10,6 +9,4 @@ namespace Hermes
 	{
 		Transform Transform;
 	};
-
-	HERMES_DECLARE_ENGINE_COMPONENT(TransformComponent);
 }

@@ -1,5 +1,10 @@
 #include "Component.h"
 
+#include "World/Components/DirectionalLightComponent.h"
+#include "World/Components/MeshComponent.h"
+#include "World/Components/PointLightComponent.h"
+#include "World/Components/TransformComponent.h"
+
 namespace Hermes::ComponentIDCounterInternal
 {
 	ComponentID GNextComponentID = 0;
@@ -11,4 +16,12 @@ namespace Hermes::ComponentIDCounterInternal
 
 		return Result;
 	}
+}
+
+namespace Hermes
+{
+	HERMES_DECLARE_ENGINE_COMPONENT(DirectionalLightComponent);
+	HERMES_DECLARE_ENGINE_COMPONENT(MeshComponent);
+	HERMES_DECLARE_ENGINE_COMPONENT(PointLightComponent);
+	HERMES_DECLARE_ENGINE_COMPONENT(TransformComponent);
 }

@@ -2,7 +2,7 @@
 
 #include "AssetSystem/AssetCache.h"
 #include "Core/Core.h"
-#include "World/Component.h"
+#include "RenderingEngine/Material/MaterialInstance.h"
 
 namespace Hermes
 {
@@ -11,6 +11,4 @@ namespace Hermes
 		AssetHandle Mesh;
 		const MaterialInstance* Material = nullptr; // FIXME: this is unsafe
 	};
-
-	HERMES_DECLARE_ENGINE_COMPONENT(MeshComponent);
 }

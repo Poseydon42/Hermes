@@ -16,10 +16,7 @@ namespace Hermes
 	}
 
 	template<typename ComponentType>
-	ComponentID GetComponentID()
-	{
-		HERMES_ASSERT_LOG(false, "Trying to use undeclared comopnent");
-	}
+	HERMES_API ComponentID GetComponentID();
 
 	template<typename ComponentType>
 	ComponentBitmask GetComponentBitmask()

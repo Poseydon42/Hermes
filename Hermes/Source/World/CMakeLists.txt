@@ -8,6 +8,7 @@ set(SOURCES
     Components/DirectionalLightComponent.h
     Components/MeshComponent.h
     Components/PointLightComponent.h
+    Components/TagComponent.h
     Components/TransformComponent.h
     Entity.h
     Systems/LightRenderingSystem.cpp

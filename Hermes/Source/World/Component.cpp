@@ -3,6 +3,7 @@
 #include "World/Components/DirectionalLightComponent.h"
 #include "World/Components/MeshComponent.h"
 #include "World/Components/PointLightComponent.h"
+#include "World/Components/TagComponent.h"
 #include "World/Components/TransformComponent.h"
 
 namespace Hermes::ComponentIDCounterInternal
@@ -23,5 +24,6 @@ namespace Hermes
 	HERMES_DECLARE_ENGINE_COMPONENT(DirectionalLightComponent);
 	HERMES_DECLARE_ENGINE_COMPONENT(MeshComponent);
 	HERMES_DECLARE_ENGINE_COMPONENT(PointLightComponent);
+	HERMES_DECLARE_ENGINE_COMPONENT(TagComponent);
 	HERMES_DECLARE_ENGINE_COMPONENT(TransformComponent);
 }

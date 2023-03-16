@@ -47,6 +47,8 @@ namespace Hermes
 		 */
 		Matrix Inverse() const;
 
+		Matrix<Columns, Rows, InternalType> Transpose() const;
+
 		template<int OutRows = Rows, int OutColumns = Columns>
 		static std::enable_if_t<OutRows == OutColumns, Matrix> Identity();
 
@@ -304,6 +306,22 @@ namespace Hermes
 		return Result;
 	}
 
+	template<int Rows, int Columns, typename InternalType>
+	Matrix<Columns, Rows, InternalType> Matrix<Rows, Columns, InternalType>::Transpose() const
+	{
+		Matrix<Columns, Rows, InternalType> Result = {};
+
+		for (int Row = 0; Row < Rows; Row++)
+		{
+			for (int Column = 0; Column < Columns; Column++)
+			{
+				Result[Column][Row] = (*this)[Row][Column];
+			}
+		}
+
+		return Result;
+	}
+
 	template <int Rows, int Columns, typename InternalType>
 	template <int OutRows, int OutColumns>
 	std::enable_if_t<OutRows == OutColumns, Matrix<Rows, Columns, InternalType>> Matrix<Rows, Columns, InternalType>::Identity()
@@ -416,7 +434,7 @@ namespace Hermes
 	template <typename T>
 	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::Perspective(T VerticalFOV, T AspectRatio, T NearClipPlane, T FarClipPlane)
 	{
-		Mat4 Result = { 0.0f };
+		Mat4 Result(0.0f);
 
 		T CotanHalfFOV = Math::Cotan(VerticalFOV / static_cast<T>(2));
 

@@ -19,7 +19,7 @@ namespace Hermes::Tools
 		virtual std::optional<const Mesh*> GetMesh(StringView MeshName) const override;
 
 	private:
-		Node Root = Node(nullptr, "", Mat4::Identity(), "", NodePayloadType::None);
+		std::shared_ptr<Node> Root = Node::Create("", Mat4::Identity(), "", NodePayloadType::None);
 
 		std::vector<Mesh> Meshes;
 
@@ -99,7 +99,7 @@ namespace Hermes::Tools
 		std::optional<GLTFMeshPrimitive> ReadPrimitive(const JSONObject& GLTFPrimitive) const;
 
 		bool ReadSceneHierarchy(const JSONObject& RootObject);
-		std::optional<Node> ReadSceneNode(std::span<const JSONValue> JSONNodeList, size_t NodeIndex) const;
+		std::optional<std::shared_ptr<Node>> ReadSceneNode(std::span<const JSONValue> JSONNodeList, size_t NodeIndex) const;
 
 		std::span<const uint8> GetDataForAccessor(size_t AccessorIndex) const;
 		size_t GetStrideForAccessor(size_t AccessorIndex) const;

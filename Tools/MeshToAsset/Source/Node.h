@@ -27,10 +27,10 @@ namespace Hermes::Tools
 	 * This is done because two separate nodes can be pointing to the same payload (e.g. two
 	 * different nodes pointing to the same mesh payload).
 	 */
-	class HERMES_API Node
+	class HERMES_API Node : public std::enable_shared_from_this<Node>
 	{
 	public:
-		Node(Node* InParent, String InNodeName, Mat4 InTransformationMatrix, String InPayloadName, NodePayloadType InPayloadType);
+		static std::shared_ptr<Node> Create(String InNodeName, Mat4 InTransformationMatrix, String InPayloadName, NodePayloadType InPayloadType);
 
 		StringView GetNodeName() const;
 		Mat4 GetLocalTransformationMatrix() const;
@@ -40,22 +40,25 @@ namespace Hermes::Tools
 		StringView GetPayloadName() const;
 		NodePayloadType GetPayloadType() const;
 
-		std::vector<Node>& GetChildren();
-		const std::vector<Node>& GetChildren() const;
+		const std::vector<std::shared_ptr<Node>>& GetChildren() const;
 
-		void SetParent(Node* NewParent);
-		void AddChild(Node NewChild);
+		void SetParent(std::shared_ptr<Node> NewParent);
+		void AddChild(std::shared_ptr<Node> NewChild);
 
 		bool RemoveChild(StringView ChildNodeName);
 
 	private:
+		Node(String InNodeName, Mat4 InTransformationMatrix, String InPayloadName, NodePayloadType InPayloadType);
+
 		String NodeName;
 		Mat4 TransformationMatrix;
 
 		String PayloadName;
 		NodePayloadType PayloadType;
 
-		Node* Parent = nullptr;
-		std::vector<Node> Children;
+		std::shared_ptr<Node> Parent = nullptr;
+		std::vector<std::shared_ptr<Node>> Children;
+
+		friend class std::shared_ptr<Node>;
 	};
 }

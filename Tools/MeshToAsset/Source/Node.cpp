@@ -2,13 +2,17 @@
 
 namespace Hermes::Tools
 {
-	Node::Node(Node* InParent, String InNodeName, Mat4 InTransformationMatrix, String InPayloadName, NodePayloadType InPayloadType)
+	Node::Node(String InNodeName, Mat4 InTransformationMatrix, String InPayloadName, NodePayloadType InPayloadType)
 		: NodeName(std::move(InNodeName))
 		, TransformationMatrix(InTransformationMatrix)
 		, PayloadName(std::move(InPayloadName))
 		, PayloadType(InPayloadType)
-		, Parent(InParent)
 	{
+	}
+
+	std::shared_ptr<Node> Node::Create(String InNodeName, Mat4 InTransformationMatrix, String InPayloadName, NodePayloadType InPayloadType)
+	{
+		return std::shared_ptr<Node>(new Node(std::move(InNodeName), InTransformationMatrix, std::move(InPayloadName), InPayloadType));
 	}
 
 	StringView Node::GetNodeName() const
@@ -38,30 +42,26 @@ namespace Hermes::Tools
 	{
 		return PayloadType;
 	}
-
-	std::vector<Node>& Node::GetChildren()
+	
+	const std::vector<std::shared_ptr<Node>>& Node::GetChildren() const
 	{
 		return Children;
 	}
 
-	const std::vector<Node>& Node::GetChildren() const
+	void Node::SetParent(std::shared_ptr<Node> NewParent)
 	{
-		return Children;
+		Parent = std::move(NewParent);
 	}
 
-	void Node::SetParent(Node* NewParent)
+	void Node::AddChild(std::shared_ptr<Node> NewChild)
 	{
-		Parent = NewParent;
-	}
-
-	void Node::AddChild(Node NewChild)
-	{
+		NewChild->SetParent(shared_from_this());
 		Children.push_back(std::move(NewChild));
 	}
 
 	bool Node::RemoveChild(StringView ChildNodeName)
 	{
-		if (auto MaybeChild = std::ranges::find_if(Children, [&](const auto& Element) { return Element.GetNodeName() == ChildNodeName; });
+		if (auto MaybeChild = std::ranges::find_if(Children, [&](const auto& Element) { return Element->GetNodeName() == ChildNodeName; });
 			MaybeChild != Children.end())
 		{
 			Children.erase(MaybeChild);

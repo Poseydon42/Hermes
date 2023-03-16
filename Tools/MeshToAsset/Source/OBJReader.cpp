@@ -58,7 +58,7 @@ namespace Hermes::Tools
 
 			Meshes.emplace_back(CurrentMeshName, std::move(ComputedVertices), std::move(CurrentMeshIndices), std::vector{ Primitive }, false);
 
-			Root.AddChild(Node(&Root, CurrentMeshName, Mat4::Identity(), CurrentMeshName, NodePayloadType::Mesh));
+			Root->AddChild(Node::Create(CurrentMeshName, Mat4::Identity(), CurrentMeshName, NodePayloadType::Mesh));
 			
 			CurrentMeshVertices.clear();
 			CurrentMeshIndices.clear();
@@ -154,7 +154,7 @@ namespace Hermes::Tools
 
 	const Node& OBJReader::GetRootNode() const
 	{
-		return Root;
+		return *Root;
 	}
 
 	std::optional<const Mesh*> OBJReader::GetMesh(StringView MeshName) const

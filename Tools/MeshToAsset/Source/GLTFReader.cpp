@@ -132,7 +132,7 @@ namespace Hermes::Tools
 
 	const Node& GLTFReader::GetRootNode() const
 	{
-		return Root;
+		return *Root;
 	}
 
 	std::optional<const Mesh*> GLTFReader::GetMesh(StringView MeshName) const
@@ -581,13 +581,14 @@ namespace Hermes::Tools
 			if (!MaybeNode.has_value())
 				return false;
 
-			Root.AddChild(std::move(MaybeNode.value()));
+			MaybeNode.value()->SetParent(Root);
+			Root->AddChild(std::move(MaybeNode.value()));
 		}
 
 		return true;
 	}
 
-	std::optional<Node> GLTFReader::ReadSceneNode(std::span<const JSONValue> JSONNodeList, size_t NodeIndex) const
+	std::optional<std::shared_ptr<Node>> GLTFReader::ReadSceneNode(std::span<const JSONValue> JSONNodeList, size_t NodeIndex) const
 	{
 		HERMES_ASSERT(NodeIndex < JSONNodeList.size());
 		HERMES_ASSERT(JSONNodeList[NodeIndex].Is(JSONValueType::Object));
@@ -640,7 +641,7 @@ namespace Hermes::Tools
 
 		auto TransformationMatrix = TranslationMatrix * RotationMatrix * ScaleMatrix;
 
-		auto Result = Node(nullptr, NodeName, TransformationMatrix, MeshName, MeshName.empty() ? NodePayloadType::None : NodePayloadType::Mesh);
+		auto Result = Node::Create(NodeName, TransformationMatrix, MeshName, MeshName.empty() ? NodePayloadType::None : NodePayloadType::Mesh);
 		
 		if (!JSONNode.Contains("children") || !JSONNode["children"].Is(JSONValueType::Array))
 			return Result;
@@ -659,8 +660,8 @@ namespace Hermes::Tools
 				return {};
 
 			auto ChildNode = std::move(MaybeChildNode.value());
-			ChildNode.SetParent(&Result);
-			Result.AddChild(std::move(ChildNode));
+			ChildNode->SetParent(Result);
+			Result->AddChild(std::move(ChildNode));
 		}
 
 		return Result;

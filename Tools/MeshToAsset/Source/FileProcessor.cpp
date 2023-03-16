@@ -47,7 +47,7 @@ namespace Hermes::Tools
 		{
 			for (const auto& Child : CurrentNode.GetChildren())
 			{
-				if (!TraverseTree(Child))
+				if (!TraverseTree(*Child))
 					return false;
 			}
 

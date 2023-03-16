@@ -12,6 +12,8 @@ set(SOURCES
     Matrix.h
     Plane.h
     Plane.cpp
+    Quaternion.cpp
+    Quaternion.h
     Transform.cpp
     Transform.h
     Vector.h

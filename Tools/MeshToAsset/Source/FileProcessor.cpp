@@ -69,6 +69,9 @@ namespace Hermes::Tools
 				return false;
 			}
 
+			auto TransformationMatrix = CurrentNode.ComputeGlobalTransformationMatrix();
+			Mesh = ApplyVertexTransformation(Mesh, TransformationMatrix);
+
 			if (!Mesh.HasTangents())
 			{
 				Mesh.ComputeTangents();
@@ -84,5 +87,31 @@ namespace Hermes::Tools
 		};
 		
 		return TraverseTree(InputFileReader->GetRootNode(), InputFileName);
+	}
+
+	Vertex FileProcessor::ApplyVertexTransformation(Vertex Input, Mat4 TransformationMatrix)
+	{
+		auto NormalMatrix = Mat3(TransformationMatrix.Inverse().Transpose());
+
+		auto Position4 = Vec4(Input.Position, 1.0f);
+
+		return {
+			.Position = (TransformationMatrix * Position4).XYZ(),
+			.TextureCoordinates = Input.TextureCoordinates,
+			.Normal = NormalMatrix * Input.Normal,
+			.Tangent = NormalMatrix * Input.Tangent
+		};
+	}
+
+	Mesh FileProcessor::ApplyVertexTransformation(const Mesh& Input, Mat4 TransformationMatrix)
+	{
+		std::vector<Vertex> Vertices = Input.GetVertices();
+
+		for (auto& Vertex : Vertices)
+		{
+			Vertex = ApplyVertexTransformation(Vertex, TransformationMatrix);
+		}
+
+		return Mesh(String(Input.GetName()), Vertices, Input.GetIndices(), Input.GetPrimitives(), false);
 	}
 }

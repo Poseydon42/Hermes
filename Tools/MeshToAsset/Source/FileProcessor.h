@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "AssetSystem/MeshAsset.h"
 #include "InputFileReader.h"
 
 namespace Hermes::Tools
@@ -19,5 +20,8 @@ namespace Hermes::Tools
 		String InputFileName;
 
 		bool ShouldFlipVertexOrder = false;
+
+		static Vertex ApplyVertexTransformation(Vertex Input, Mat4 TransformationMatrix);
+		static Mesh ApplyVertexTransformation(const Mesh& Input, Mat4 TransformationMatrix);
 	};
 }

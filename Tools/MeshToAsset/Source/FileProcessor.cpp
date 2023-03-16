@@ -41,20 +41,18 @@ namespace Hermes::Tools
 			return false;
 		}
 		
-		std::function<bool(const Node&, const String&)> TraverseTree = [&](const Node& CurrentNode, const String& RootName) -> bool
+		String MeshName = InputFileName.substr(0, InputFileName.find_last_of('.')); // input file name without extension
+		Mesh MergedMesh(std::move(MeshName), {}, {}, {}, true);
+		std::function<bool(const Node&)> TraverseTree = [&](const Node& CurrentNode) -> bool
 		{
-			bool Result = true;
-
-			auto CurrentName = std::format("{}_{}", RootName, CurrentNode.GetNodeName());
 			for (const auto& Child : CurrentNode.GetChildren())
 			{
-				Result &= TraverseTree(Child, CurrentName);
+				if (!TraverseTree(Child))
+					return false;
 			}
 
 			if (CurrentNode.GetPayloadType() != NodePayloadType::Mesh)
-				return Result;
-
-			auto NameOfCurrentOutputFile = std::format("{}.hac", CurrentName);
+				return true;
 
 			auto MaybeMesh = InputFileReader->GetMesh(CurrentNode.GetPayloadName());
 			if (!MaybeMesh.has_value())
@@ -82,11 +80,18 @@ namespace Hermes::Tools
 				Mesh.FlipVertexOrder();
 			}
 
-			Result &= MeshWriter::Write(NameOfCurrentOutputFile, Mesh);
-			return Result;
+			MergedMesh = MergeMeshes(MergedMesh.GetName(), MergedMesh, Mesh);
+			return true;
 		};
-		
-		return TraverseTree(InputFileReader->GetRootNode(), InputFileName);
+
+		if (!TraverseTree(InputFileReader->GetRootNode()))
+			return false;
+
+		String OutputFileName = std::format("{}.hac", MergedMesh.GetName());
+		if (!MeshWriter::Write(OutputFileName, MergedMesh))
+			return false;
+
+		return true;
 	}
 
 	Vertex FileProcessor::ApplyVertexTransformation(Vertex Input, Mat4 TransformationMatrix)
@@ -112,6 +117,37 @@ namespace Hermes::Tools
 			Vertex = ApplyVertexTransformation(Vertex, TransformationMatrix);
 		}
 
-		return Mesh(String(Input.GetName()), Vertices, Input.GetIndices(), Input.GetPrimitives(), false);
+		return { String(Input.GetName()), Vertices, Input.GetIndices(), Input.GetPrimitives(), false };
+	}
+
+	Mesh FileProcessor::MergeMeshes(StringView OutputName, const Mesh& First, const Mesh& Second)
+	{
+		std::vector<Vertex> MergedVertices(First.GetVertices().size() + Second.GetVertices().size());
+
+		std::ranges::copy(First.GetVertices(), MergedVertices.begin());
+		std::ranges::copy(Second.GetVertices(), MergedVertices.begin() + static_cast<ptrdiff_t>(First.GetVertices().size()));
+
+		std::vector<uint32> MergedIndices(First.GetIndices().size() + Second.GetIndices().size());
+		std::ranges::copy(First.GetIndices(), MergedIndices.begin());
+		std::ranges::copy(Second.GetIndices(), MergedIndices.begin() + static_cast<ptrdiff_t>(First.GetIndices().size()));
+
+		auto VertexOffset = static_cast<uint32>(First.GetVertices().size());
+		std::for_each(MergedIndices.begin() + static_cast<ptrdiff_t>(First.GetIndices().size()), MergedIndices.end(), [VertexOffset](auto& Element)
+		{
+			if (Element != static_cast<uint32>(-1))
+				Element += VertexOffset;
+		});
+
+		std::vector<MeshPrimitiveHeader> MergedPrimitives(First.GetPrimitives().size() + Second.GetPrimitives().size());
+		std::ranges::copy(First.GetPrimitives(), MergedPrimitives.begin());
+		std::ranges::copy(Second.GetPrimitives(), MergedPrimitives.begin() + static_cast<ptrdiff_t>(First.GetPrimitives().size()));
+
+		auto IndexOffset = static_cast<uint32>(First.GetIndices().size());
+		std::for_each(MergedPrimitives.begin() + static_cast<ptrdiff_t>(First.GetPrimitives().size()), MergedPrimitives.end(), [IndexOffset](auto& Element)
+		{
+			Element.IndexBufferOffset += IndexOffset;
+		});
+
+		return { String(OutputName), std::move(MergedVertices), std::move(MergedIndices), std::move(MergedPrimitives), First.HasTangents() && Second.HasTangents() };
 	}
 }

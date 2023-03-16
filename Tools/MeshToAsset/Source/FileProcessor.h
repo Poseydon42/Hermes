@@ -23,5 +23,7 @@ namespace Hermes::Tools
 
 		static Vertex ApplyVertexTransformation(Vertex Input, Mat4 TransformationMatrix);
 		static Mesh ApplyVertexTransformation(const Mesh& Input, Mat4 TransformationMatrix);
+
+		static Mesh MergeMeshes(StringView OutputName, const Mesh& First, const Mesh& Second);
 	};
 }

@@ -33,6 +33,8 @@ namespace Hermes
 		Matrix<Rows, OtherColumns, InternalType> operator*(const Matrix<Columns, OtherColumns, InternalType>& Rhs) const;
 
 		template<typename OtherType>
+		Vector3<OtherType> operator*(const Vector3<OtherType>& Rhs) const;
+		template<typename OtherType>
 		Vector4<OtherType> operator*(const Vector4<OtherType>& Rhs) const;
 
 		void operator+=(const Matrix& Rhs);
@@ -200,6 +202,17 @@ namespace Hermes
 			}
 		}
 		return Result;
+	}
+
+	template<int Rows, int Columns, typename InternalType>
+	template<typename OtherType>
+	Vector3<OtherType> Matrix<Rows, Columns, InternalType>::operator*(const Vector3<OtherType>& Rhs) const
+	{
+		return Vec3 {
+			this->operator[](0)[0] * Rhs.X + this->operator[](0)[1] * Rhs.Y + this->operator[](0)[2] * Rhs.Z,
+			this->operator[](1)[0] * Rhs.X + this->operator[](1)[1] * Rhs.Y + this->operator[](1)[2] * Rhs.Z,
+			this->operator[](2)[0] * Rhs.X + this->operator[](2)[1] * Rhs.Y + this->operator[](2)[2] * Rhs.Z,
+		};
 	}
 
 	template<int Rows, int Columns, typename InternalType>

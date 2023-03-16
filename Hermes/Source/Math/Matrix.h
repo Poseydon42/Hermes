@@ -17,6 +17,9 @@ namespace Hermes
 	public:
 		Matrix(InternalType V = 0);
 
+		template<typename Enumerable>
+		explicit Matrix(Enumerable InData);
+
 		template<int OtherRows, int OtherColumns, typename OtherInternalType>
 		explicit Matrix(Matrix<OtherRows, OtherColumns, OtherInternalType> Other);
 
@@ -111,6 +114,16 @@ namespace Hermes
 		for (size_t Index = 0; Index < Rows * Columns; Index++)
 		{
 			Data[Index] = V;
+		}
+	}
+
+	template<int Rows, int Columns, typename InternalType>
+	template<typename Enumerable>
+	Matrix<Rows, Columns, InternalType>::Matrix(Enumerable InData)
+	{
+		for (size_t Index = 0; Index < Rows * Columns; Index++)
+		{
+			Data[Index] = static_cast<InternalType>(InData[Index]);
 		}
 	}
 

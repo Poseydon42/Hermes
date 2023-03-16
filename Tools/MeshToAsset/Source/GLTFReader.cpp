@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "JSON/JSONParser.h"
+#include "Math/Quaternion.h"
 #include "Platform/GenericPlatform/PlatformFile.h"
 
 namespace Hermes::Tools
@@ -586,7 +587,6 @@ namespace Hermes::Tools
 		return true;
 	}
 
-	// FIXME: read transformation data (translation/rotation/scale)
 	std::optional<Node> GLTFReader::ReadSceneNode(std::span<const JSONValue> JSONNodeList, size_t NodeIndex) const
 	{
 		HERMES_ASSERT(NodeIndex < JSONNodeList.size());
@@ -607,8 +607,40 @@ namespace Hermes::Tools
 
 			MeshName = Meshes[MeshIndex].GetName();
 		}
+		
+		Vec3 Translation = {}, Scale = { 1.0f };
+		Quaternion Rotation = {};
+		if (JSONNode.Contains("translation") && JSONNode["translation"].Is(JSONValueType::Array) && JSONNode["translation"].AsArray().size() == 3)
+		{
+			auto TranslationArray = JSONNode["translation"].AsArray();
+			Translation.X = static_cast<float>(TranslationArray[0].AsNumber());
+			Translation.Y = static_cast<float>(TranslationArray[1].AsNumber());
+			Translation.Z = static_cast<float>(TranslationArray[2].AsNumber());
+		}
+		if (JSONNode.Contains("scale") && JSONNode["scale"].Is(JSONValueType::Array) && JSONNode["scale"].AsArray().size() == 3)
+		{
+			auto ScaleArray = JSONNode["scale"].AsArray();
+			Scale.X = static_cast<float>(ScaleArray[0].AsNumber());
+			Scale.Y = static_cast<float>(ScaleArray[1].AsNumber());
+			Scale.Z = static_cast<float>(ScaleArray[2].AsNumber());
+		}
+		if (JSONNode.Contains("rotation") && JSONNode["rotation"].Is(JSONValueType::Array) && JSONNode["rotation"].AsArray().size() == 4)
+		{
+			auto RotationArray = JSONNode["rotation"].AsArray();
+			Rotation.XYZ.X = static_cast<float>(RotationArray[0].AsNumber());
+			Rotation.XYZ.Y = static_cast<float>(RotationArray[1].AsNumber());
+			Rotation.XYZ.Z = static_cast<float>(RotationArray[2].AsNumber());
+			Rotation.W     = static_cast<float>(RotationArray[3].AsNumber());
+		}
+		
+		auto TranslationMatrix = Mat4::Translation(Translation);
+		auto RotationMatrix = Mat4::Rotation(Rotation);
+		auto ScaleMatrix = Mat4(Mat3::Scale(Scale));
+		ScaleMatrix[3][3] = 1.0f;
 
-		auto Result = Node(nullptr, NodeName, Mat4::Identity(), MeshName, MeshName.empty() ? NodePayloadType::None : NodePayloadType::Mesh);
+		auto TransformationMatrix = TranslationMatrix * RotationMatrix * ScaleMatrix;
+
+		auto Result = Node(nullptr, NodeName, TransformationMatrix, MeshName, MeshName.empty() ? NodePayloadType::None : NodePayloadType::Mesh);
 		
 		if (!JSONNode.Contains("children") || !JSONNode["children"].Is(JSONValueType::Array))
 			return Result;

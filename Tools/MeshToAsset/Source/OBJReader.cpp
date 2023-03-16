@@ -58,7 +58,7 @@ namespace Hermes::Tools
 
 			Meshes.emplace_back(CurrentMeshName, std::move(ComputedVertices), std::move(CurrentMeshIndices), std::vector{ Primitive }, false);
 
-			Root.AddChild(Node(CurrentMeshName, CurrentMeshName, NodePayloadType::Mesh));
+			Root.AddChild(Node(&Root, CurrentMeshName, Mat4::Identity(), CurrentMeshName, NodePayloadType::Mesh));
 			
 			CurrentMeshVertices.clear();
 			CurrentMeshIndices.clear();

@@ -608,7 +608,7 @@ namespace Hermes::Tools
 			MeshName = Meshes[MeshIndex].GetName();
 		}
 
-		auto Result = Node(NodeName, MeshName, MeshName.empty() ? NodePayloadType::None : NodePayloadType::Mesh);
+		auto Result = Node(nullptr, NodeName, Mat4::Identity(), MeshName, MeshName.empty() ? NodePayloadType::None : NodePayloadType::Mesh);
 		
 		if (!JSONNode.Contains("children") || !JSONNode["children"].Is(JSONValueType::Array))
 			return Result;
@@ -626,7 +626,9 @@ namespace Hermes::Tools
 			if (!MaybeChildNode.has_value())
 				return {};
 
-			Result.AddChild(std::move(MaybeChildNode.value()));
+			auto ChildNode = std::move(MaybeChildNode.value());
+			ChildNode.SetParent(&Result);
+			Result.AddChild(std::move(ChildNode));
 		}
 
 		return Result;

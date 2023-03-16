@@ -19,7 +19,7 @@ namespace Hermes::Tools
 		virtual std::optional<const Mesh*> GetMesh(StringView MeshName) const override;
 
 	private:
-		Node Root = Node("", "", NodePayloadType::None);
+		Node Root = Node(nullptr, "", Mat4::Identity(), "", NodePayloadType::None);
 
 		std::vector<Mesh> Meshes;
 

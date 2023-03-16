@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Core/Core.h"
+#include "Math/Matrix.h"
 
 namespace Hermes::Tools
 {
@@ -29,9 +30,12 @@ namespace Hermes::Tools
 	class HERMES_API Node
 	{
 	public:
-		Node(String InNodeName, String InPayloadName, NodePayloadType InPayloadType);
+		Node(Node* InParent, String InNodeName, Mat4 InTransformationMatrix, String InPayloadName, NodePayloadType InPayloadType);
 
 		StringView GetNodeName() const;
+		Mat4 GetLocalTransformationMatrix() const;
+
+		Mat4 ComputeGlobalTransformationMatrix() const;
 
 		StringView GetPayloadName() const;
 		NodePayloadType GetPayloadType() const;
@@ -39,16 +43,19 @@ namespace Hermes::Tools
 		std::vector<Node>& GetChildren();
 		const std::vector<Node>& GetChildren() const;
 
+		void SetParent(Node* NewParent);
 		void AddChild(Node NewChild);
 
 		bool RemoveChild(StringView ChildNodeName);
 
 	private:
 		String NodeName;
+		Mat4 TransformationMatrix;
 
 		String PayloadName;
 		NodePayloadType PayloadType;
 
+		Node* Parent = nullptr;
 		std::vector<Node> Children;
 	};
 }

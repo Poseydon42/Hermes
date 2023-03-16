@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Math/Quaternion.h"
 #include "Math/Vector.h"
 #include "Math/Vector4.h"
 
@@ -64,6 +65,7 @@ namespace Hermes
 
 		template<typename AngleVectorType>
 		static Matrix<3, 3, InternalType> Rotation(Vector3<AngleVectorType> Rotation);
+		static Matrix<4, 4, InternalType> Rotation(Quaternion Rotation);
 
 		template<typename ScaleVectorType>
 		static Matrix<3, 3, InternalType> Scale(Vector3<ScaleVectorType> Scale);
@@ -389,6 +391,32 @@ namespace Hermes
 	Matrix<3, 3, InternalType> Matrix<Rows, Columns, InternalType>::Rotation(Vector3<AngleVectorType> Rotation)
 	{
 		return RotationY(Rotation.Y) * RotationX(Rotation.X) * RotationZ(Rotation.Z); // TODO : recheck order
+	}
+
+	template<int Rows, int Columns, typename InternalType>
+	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::Rotation(Quaternion Rotation)
+	{
+		HERMES_ASSERT(Rotation.IsNormalized());
+
+		float A = Rotation.W;
+		float B = Rotation.XYZ.X;
+		float C = Rotation.XYZ.Y;
+		float D = Rotation.XYZ.Z;
+
+		float A2 = A * A;
+		float B2 = B * B;
+		float C2 = C * C;
+		float D2 = D * D;
+
+		// https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#From_a_quaternion_to_an_orthogonal_matrix
+		InternalType Data[16] = {
+			A2 + B2 - C2 - D2  ,   2 * (B * C - A * D),   2 * (B * D + A * C),   0,
+			2 * (B * C + A * D),   A2 - B2 + C2 - D2  ,   2 * (C * D - A * B),   0,
+			2 * (B * D - A * C),   2 * (C * D + A * B),   A2 - B2 - C2 + D2  ,   0,
+			                  0,                     0,                     0,   1
+		};
+
+		return { Data };
 	}
 
 	template <int Rows, int Columns, typename InternalType>

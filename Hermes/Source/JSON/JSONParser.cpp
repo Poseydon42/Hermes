@@ -233,14 +233,13 @@ namespace Hermes
 		return {};
 	}
 
-	// FIXME: numbers in standard/exponential form
 	std::optional<double> JSONParser::ParseNumber()
 	{
 		SkipWhitespaces();
 
 		auto Start = Current;
 		auto OnePastEnd = Start;
-		while (Peek().has_value() && (IsDigit(Peek().value()) || Peek() == '.' || Peek() == '-'))
+		while (Peek().has_value() && (IsDigit(Peek().value()) || Peek() == '.' || Peek() == '+' || Peek() == '-' || Peek() == 'E' || Peek() == 'e'))
 		{
 			++OnePastEnd;
 			Consume();

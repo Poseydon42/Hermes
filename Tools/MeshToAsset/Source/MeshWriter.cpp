@@ -31,7 +31,8 @@ namespace Hermes::Tools
 			Primitive.IndexBufferOffset = Primitive.IndexBufferOffset / 4 * 3;
 		}
 
-		AssetHeader AssetHeader = { AssetType::Mesh };
+		AssetHeader AssetHeader = { .Type = AssetType::Mesh };
+		memcpy(AssetHeader.Signature, AssetHeader::ExpectedSignature, sizeof(AssetHeader.Signature));
 		MeshAssetHeader MeshHeader = {};
 		MeshHeader.VertexBufferSize = Mesh.GetVertices().size();
 		MeshHeader.IndexBufferSize = FilteredIndices.size();

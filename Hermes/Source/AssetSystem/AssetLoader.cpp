@@ -26,6 +26,12 @@ namespace Hermes
 			return nullptr;
 		}
 
+		if (memcmp(Header.Signature, AssetHeader::ExpectedSignature, sizeof(Header.Signature)) != 0)
+		{
+			HERMES_LOG_WARNING("Asset %s has invalid header signature", Name.data());
+			return nullptr;
+		}
+
 		switch (Header.Type)
 		{
 		case AssetType::Image:

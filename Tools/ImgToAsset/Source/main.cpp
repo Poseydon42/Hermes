@@ -83,6 +83,7 @@ std::vector<uint8_t> ReadAllFile(const std::string& Path)
 int WriteAssetFile(const std::vector<const Image*>& Images, const std::string& Filename)
 {
 	Hermes::AssetHeader AssetHeader = {};
+	memcpy(AssetHeader.Signature, Hermes::AssetHeader::ExpectedSignature, sizeof(AssetHeader.Signature));
 	AssetHeader.Type = Hermes::AssetType::Image;
 
 	Hermes::ImageAssetHeader ImageHeader = {};

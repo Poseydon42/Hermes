@@ -19,6 +19,9 @@ namespace Hermes
 	PACKED_STRUCT_BEGIN
 	struct AssetHeader
 	{
+		static constexpr uint8 ExpectedSignature[3] = { 'H', 'A', 'C' };
+
+		uint8 Signature[3];
 		AssetType Type;
 		// TODO : version, dependencies etc.
 	};

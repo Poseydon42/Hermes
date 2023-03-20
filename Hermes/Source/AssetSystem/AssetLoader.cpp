@@ -2,12 +2,21 @@
 
 #include "Platform/GenericPlatform/PlatformFile.h"
 #include "AssetSystem/ImageAsset.h"
+#include "AssetSystem/MaterialAsset.h"
 #include "AssetSystem/MeshAsset.h"
+#include "JSON/JSONParser.h"
 #include "Logging/Logger.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 
 namespace Hermes
 {
+	static AssetType AssetTypeFromString(StringView String)
+	{
+		if (String == "material")
+			return AssetType::Material;
+		return AssetType::Invalid;
+	}
+	
 	std::unique_ptr<Asset> AssetLoader::Load(StringView Name)
 	{
 		String Filename = String(Name) + ".hac";
@@ -19,8 +28,35 @@ namespace Hermes
 			return nullptr;
 		}
 
+		uint8 Signature[sizeof(AssetHeader::ExpectedSignature)];
+		if (File->Read(Signature, sizeof(Signature)) && memcmp(Signature, AssetHeader::ExpectedSignature, sizeof(Signature)) == 0)
+		{
+			File->Seek(0);
+			return LoadBinary(*File, Name);
+		}
+
+		String FileContents(File->Size(), 0);
+		File->Seek(0);
+		if (!File->Read(FileContents.data(), FileContents.size()))
+		{
+			HERMES_LOG_WARNING("Cannot read asset file %s", Name.data());
+			return nullptr;
+		}
+
+		auto MaybeJSONRoot = JSONParser::FromString(FileContents);
+		if (!MaybeJSONRoot.has_value() || !MaybeJSONRoot.value())
+		{
+			HERMES_LOG_WARNING("Asset %s is assumed to be text, but it cannot be parsed as JSON", Name.data());
+			return nullptr;
+		}
+
+		return LoadText(*MaybeJSONRoot.value(), Name);
+	}
+
+	std::unique_ptr<Asset> AssetLoader::LoadBinary(IPlatformFile& File, StringView Name)
+	{
 		AssetHeader Header = {};
-		if (!File->Read(&Header, sizeof(Header)))
+		if (!File.Read(&Header, sizeof(Header)))
 		{
 			HERMES_LOG_WARNING("Failed to read asset header from asset file %s", Name.data());
 			return nullptr;
@@ -35,13 +71,74 @@ namespace Hermes
 		switch (Header.Type)
 		{
 		case AssetType::Image:
-			return LoadImage(*File, Header, Name);
+			return LoadImage(File, Header, Name);
 		case AssetType::Mesh:
-			return LoadMesh(*File, Header, Name);
+			return LoadMesh(File, Header, Name);
 		default:
-			HERMES_LOG_WARNING("Loading assets of type %02x is currently unsupported or it is unknown type", static_cast<uint8>(Header.Type));
+			HERMES_LOG_WARNING("Binary asset %s (type %02x) cannot be loaded", Name.data(), static_cast<uint8>(Header.Type));
 			return nullptr;
 		}
+	}
+
+	std::unique_ptr<Asset> AssetLoader::LoadText(const JSONObject& JSONRoot, StringView Name)
+	{
+		if (!JSONRoot.Contains("meta") || !JSONRoot["meta"].Is(JSONValueType::Object))
+		{
+			HERMES_LOG_WARNING("Asset %s does not contains 'meta' JSON property", Name.data());
+			return nullptr;
+		}
+
+		const auto& Meta = JSONRoot["meta"].AsObject();
+
+		if (!Meta.Contains("type") || !Meta["type"].Is(JSONValueType::String))
+		{
+			HERMES_LOG_WARNING("Asset's %s meta does not specify its type", Name.data());
+			return nullptr;
+		}
+
+		auto StringType = Meta["type"].AsString();
+		auto Type = AssetTypeFromString(StringType);
+
+		if (!JSONRoot.Contains("data") || !JSONRoot["data"].Is(JSONValueType::Object))
+		{
+			HERMES_LOG_WARNING("Asset %s does not provide any data", Name.data());
+			return nullptr;
+		}
+
+		const auto& Data = JSONRoot["data"].AsObject();
+		switch (Type)
+		{
+		case AssetType::Material:
+			return LoadMaterial(Data, Name);
+		default:
+			HERMES_LOG_WARNING("Cannot load text asset of type %02x", static_cast<uint8>(Type));
+			return nullptr;
+		}
+	}
+
+	std::unique_ptr<Asset> AssetLoader::LoadMaterial(const JSONObject& Data, StringView Name)
+	{
+		if (!Data.Contains("shaders") || !Data["shaders"].Is(JSONValueType::Object))
+		{
+			HERMES_LOG_WARNING("Material asset %s does not specify any shaders", Name.data());
+			return nullptr;
+		}
+
+		const auto& JSONShaders = Data["shaders"].AsObject();
+
+		std::vector<std::pair<String, String>> Shaders;
+		for (const auto& JSONShader : JSONShaders)
+		{
+			if (!JSONShader.second.Is(JSONValueType::String))
+				continue;
+
+			const auto& Type = JSONShader.first;
+			auto Path = JSONShader.second.AsString();
+
+			Shaders.emplace_back(Type, String(Path));
+		}
+		
+		return std::unique_ptr<MaterialAsset>(new MaterialAsset(String(Name), Shaders));
 	}
 
 	std::unique_ptr<Asset> AssetLoader::LoadImage(IPlatformFile& File, const AssetHeader&, StringView Name)

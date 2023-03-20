@@ -13,6 +13,8 @@ namespace Hermes
 		Image = 1,
 		Mesh = 2,
 
+		Material = 64,
+
 		Invalid = 0xFF
 	};
 

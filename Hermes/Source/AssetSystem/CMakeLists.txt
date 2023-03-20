@@ -12,6 +12,8 @@ set(SOURCES
     AssetLoader.h
     ImageAsset.cpp
     ImageAsset.h
+    MaterialAsset.cpp
+    MaterialAsset.h
     MeshAsset.cpp
     MeshAsset.h
 )

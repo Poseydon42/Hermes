@@ -29,7 +29,7 @@ namespace Hermes
 		ADD_DEFAULT_MOVE_CONSTRUCTOR(Asset)
 		ADD_DEFAULT_VIRTUAL_DESTRUCTOR(Asset)
 	public:
-		Asset(const String& InName, AssetType InType);
+		Asset(String InName, AssetType InType);
 
 		String GetName() const;
 

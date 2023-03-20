@@ -2,8 +2,8 @@
 
 namespace Hermes
 {
-	Asset::Asset(const String& InName, AssetType InType)
-		: Name(InName)
+	Asset::Asset(String InName, AssetType InType)
+		: Name(std::move(InName))
 		, Type(InType)
 	{
 	}

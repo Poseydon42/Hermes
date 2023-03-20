@@ -47,7 +47,7 @@ namespace Hermes
 			return {};
 		}
 
-		auto Material = Material::Create(VertexShaderPath, FragmentShaderPath);
+		auto Material = Material::Create("UNNAMED_MATERIAL", VertexShaderPath, FragmentShaderPath);
 		if (!Material)
 		{
 			HERMES_LOG_WARNING("Failed to create material instance: material is null");

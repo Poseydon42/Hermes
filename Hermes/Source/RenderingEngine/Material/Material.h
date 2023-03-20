@@ -1,9 +1,8 @@
 ﻿#pragma once
 
-#include <vector>
-
 #include "Core/Core.h"
 #include "RenderingEngine/Material/MaterialProperty.h"
+#include "RenderingEngine/Resource/Resource.h"
 #include "Vulkan/Descriptor.h"
 #include "Vulkan/Pipeline.h"
 
@@ -18,14 +17,14 @@ namespace Hermes
 	 * A material cannot be applied directly to an object. It serves as a template based on which material
 	 * instances can be created.
 	 */
-	class HERMES_API Material : public std::enable_shared_from_this<Material>
+	class HERMES_API Material : public Resource, public std::enable_shared_from_this<Material>
 	{
 	public:
-		static std::shared_ptr<Material> Create(const String& VertexShaderPath, const String& FragmentShaderPath);
+		static std::shared_ptr<Material> Create(String Name, const String& VertexShaderPath, const String& FragmentShaderPath);
 
 		std::unique_ptr<MaterialInstance> CreateInstance() const;
 
-		const MaterialProperty* FindProperty(const String& Name) const;
+		const MaterialProperty* FindProperty(const String& PropertyName) const;
 
 		const Vulkan::DescriptorSetLayout& GetDescriptorSetLayout() const;
 
@@ -45,6 +44,6 @@ namespace Hermes
 		std::unique_ptr<Vulkan::DescriptorSetLayout> DescriptorSetLayout;
 		std::unique_ptr<Vulkan::Pipeline> Pipeline, VertexPipeline;
 
-		Material(String InVertexShaderPath, String InFragmentShaderPath);
+		Material(String InName, String InVertexShaderPath, String InFragmentShaderPath);
 	};
 }

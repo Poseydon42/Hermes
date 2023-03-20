@@ -9,7 +9,9 @@ namespace Hermes
 		Texture2D,
 		TextureCube,
 
-		Mesh
+		Mesh,
+
+		Material
 	};
 
 	class HERMES_API Resource

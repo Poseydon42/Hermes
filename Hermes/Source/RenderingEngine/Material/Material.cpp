@@ -4,7 +4,6 @@
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/SharedData.h"
-#include "Vulkan/Descriptor.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Swapchain.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
@@ -15,8 +14,9 @@ namespace Hermes
 
 	// FIXME: can this class be implemented without double hash table lookup? (at the moment: first look up the shader
 	// reflection instance in shader cache, then look up properties in the reflection instance)
-	Material::Material(String InVertexShaderPath, String InFragmentShaderPath)
-		: VertexShaderName(std::move(InVertexShaderPath))
+	Material::Material(String InName, String InVertexShaderPath, String InFragmentShaderPath)
+		: Resource(std::move(InName), ResourceType::Material)
+		, VertexShaderName(std::move(InVertexShaderPath))
 		, FragmentShaderName(std::move(InFragmentShaderPath))
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
@@ -124,7 +124,7 @@ namespace Hermes
 		VertexPipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetVertexRenderPassObject(), PipelineDesc);
 	}
 
-	std::shared_ptr<Material> Material::Create(const String& VertexShaderPath, const String& FragmentShaderPath)
+	std::shared_ptr<Material> Material::Create(String Name, const String& VertexShaderPath, const String& FragmentShaderPath)
 	{
 		auto MaterialHash = VertexShaderPath + FragmentShaderPath;
 		if (auto MaybeExistingMaterial = CreatedMaterials.find(MaterialHash); MaybeExistingMaterial != CreatedMaterials.end())
@@ -132,7 +132,7 @@ namespace Hermes
 			return MaybeExistingMaterial->second;
 		}
 
-		auto NewMaterial = std::shared_ptr<Material>(new Material(VertexShaderPath, FragmentShaderPath));
+		auto NewMaterial = std::shared_ptr<Material>(new Material(std::move(Name), VertexShaderPath, FragmentShaderPath));
 		CreatedMaterials[MaterialHash] = NewMaterial;
 
 		return NewMaterial;
@@ -146,12 +146,12 @@ namespace Hermes
 		return std::unique_ptr<MaterialInstance>(new MaterialInstance(shared_from_this(), Reflection.GetTotalSizeForUniformBuffer()));
 	}
 
-	const MaterialProperty* Material::FindProperty(const String& Name) const
+	const MaterialProperty* Material::FindProperty(const String& PropertyName) const
 	{
 		auto& ShaderCache = Renderer::Get().GetShaderCache();
 		const auto& Reflection = ShaderCache.GetShaderReflection(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		return Reflection.FindProperty(Name);
+		return Reflection.FindProperty(PropertyName);
 	}
 
 	const Vulkan::DescriptorSetLayout& Material::GetDescriptorSetLayout() const

@@ -34,8 +34,6 @@ namespace Hermes
 	public:
 		virtual bool IsValid() const override;
 
-		virtual size_t GetMemorySize() const override;
-
 		virtual const Resource* GetResource() const override;
 
 		const uint8* GetRawData(uint8 MipLevel = 0) const;
@@ -75,6 +73,8 @@ namespace Hermes
 		uint8 MipLevelCount;
 
 		std::unique_ptr<Texture2DResource> Texture;
+
+		size_t GetMemorySize() const;
 
 		void UnpackHDRAsset(const float* RawData);
 	};

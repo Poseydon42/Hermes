@@ -14,8 +14,6 @@ namespace Hermes
 	public:
 		virtual bool IsValid() const override;
 
-		virtual size_t GetMemorySize() const override;
-
 		virtual const Resource* GetResource() const override;
 
 	private:

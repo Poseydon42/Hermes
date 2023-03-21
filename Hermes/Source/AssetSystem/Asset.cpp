@@ -24,11 +24,6 @@ namespace Hermes
 		return false;
 	}
 
-	size_t Asset::GetMemorySize() const
-	{
-		return 0;
-	}
-
 	const Resource* Asset::GetResource() const
 	{
 		return nullptr;

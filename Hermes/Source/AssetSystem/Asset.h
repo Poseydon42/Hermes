@@ -39,8 +39,6 @@ namespace Hermes
 
 		virtual bool IsValid() const;
 
-		virtual size_t GetMemorySize() const;
-
 		virtual const Resource* GetResource() const;
 		
 		template<class AssetType>

@@ -28,8 +28,6 @@ namespace Hermes
 			uint32 IndexCount;
 		};
 
-		virtual size_t GetMemorySize() const override;
-
 		virtual bool IsValid() const override;
 
 		virtual const Resource* GetResource() const override;

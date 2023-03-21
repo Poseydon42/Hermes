@@ -9,12 +9,6 @@ namespace Hermes
 		return (Material != nullptr);
 	}
 
-	size_t MaterialAsset::GetMemorySize() const
-	{
-		// FIXME
-		return 0;
-	}
-
 	const Resource* MaterialAsset::GetResource() const
 	{
 		HERMES_ASSERT(Material);

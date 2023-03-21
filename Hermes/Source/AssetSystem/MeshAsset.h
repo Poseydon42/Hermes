@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "AssetSystem/Asset.h"
+#include "AssetSystem/AssetLoader.h"
 #include "Core/Core.h"
 #include "Math/BoundingVolume.h"
 #include "Math/Math.h"

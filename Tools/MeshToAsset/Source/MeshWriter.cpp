@@ -34,11 +34,9 @@ namespace Hermes::Tools
 		AssetHeader AssetHeader = { .Type = AssetType::Mesh };
 		memcpy(AssetHeader.Signature, AssetHeader::ExpectedSignature, sizeof(AssetHeader.Signature));
 		MeshAssetHeader MeshHeader = {};
-		MeshHeader.VertexBufferSize = Mesh.GetVertices().size();
-		MeshHeader.IndexBufferSize = FilteredIndices.size();
+		MeshHeader.VertexBufferSize = static_cast<uint32>(Mesh.GetVertices().size());
+		MeshHeader.IndexBufferSize = static_cast<uint32>(FilteredIndices.size());
 		MeshHeader.PrimitiveCount = static_cast<uint32>(Primitives.size());
-		MeshHeader.VertexBufferOffset = sizeof(AssetHeader) + sizeof(MeshHeader) + sizeof(MeshPrimitiveHeader) * MeshHeader.PrimitiveCount;
-		MeshHeader.IndexBufferOffset = MeshHeader.VertexBufferOffset + MeshHeader.VertexBufferSize * sizeof(Vertex);
 
 		bool Result =
 			File->Write(&AssetHeader, sizeof(AssetHeader)) &&

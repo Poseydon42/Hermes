@@ -28,12 +28,8 @@ namespace Hermes
 
 	struct MeshAssetHeader
 	{
-		size_t VertexBufferOffset;
-		size_t VertexBufferSize; // Number of elements in the vertex buffer
-
-		size_t IndexBufferOffset;
-		size_t IndexBufferSize; // Number of elements in the index buffer
-
+		uint32 VertexBufferSize; // Number of elements in the vertex buffer
+		uint32 IndexBufferSize; // Number of elements in the index buffer
 		uint32 PrimitiveCount;
 	};
 

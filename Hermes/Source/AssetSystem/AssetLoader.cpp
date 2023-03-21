@@ -192,7 +192,6 @@ namespace Hermes
 		}
 
 		std::vector<Vertex> Vertices(Header.VertexBufferSize);
-		File.Seek(Header.VertexBufferOffset);
 		if (!File.Read(Vertices.data(), Vertices.size() * sizeof(Vertex)))
 		{
 			HERMES_LOG_WARNING("Could not read vertex buffer from mesh %s", Name.data());
@@ -200,7 +199,6 @@ namespace Hermes
 		}
 
 		std::vector<uint32> Indices(Header.IndexBufferSize);
-		File.Seek(Header.IndexBufferOffset);
 		if (!File.Read(Indices.data(), Indices.size() * sizeof(Indices[0])))
 		{
 			HERMES_LOG_WARNING("Could not read index buffer from mesh %s", Name.data());

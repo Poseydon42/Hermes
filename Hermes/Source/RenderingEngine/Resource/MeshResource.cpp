@@ -9,6 +9,7 @@ namespace Hermes
 {
 	MeshResource::MeshResource(const MeshAsset& Asset)
 		: Resource(Asset.GetName(), ResourceType::Mesh)
+		, BoundingVolume(CalculateMeshRadius(Asset.GetRawVertexData(), Asset.GetVertexCount()))
 	{
 		auto& Device = Renderer::Get().GetActiveDevice();
 
@@ -24,6 +25,17 @@ namespace Hermes
 		{
 			Primitives.emplace_back(Primitive.IndexBufferOffset, Primitive.IndexCount);
 		}
+	}
+
+	float MeshResource::CalculateMeshRadius(const Vertex* Vertices, size_t Count) const
+	{
+		float MaxDistanceSquared = 0.0f;
+		for (size_t Index = 0; Index < Count; Index++)
+		{
+			MaxDistanceSquared = Math::Max(MaxDistanceSquared, Vertices[Index].Position.LengthSq());
+		}
+
+		return Math::Sqrt(MaxDistanceSquared);
 	}
 
 	std::unique_ptr<MeshResource> MeshResource::CreateFromAsset(const MeshAsset& Asset)
@@ -44,5 +56,10 @@ namespace Hermes
 	std::span<const MeshResource::PrimitiveDrawInformation> MeshResource::GetPrimitives() const
 	{
 		return Primitives;
+	}
+
+	const SphereBoundingVolume& MeshResource::GetBoundingVolume() const
+	{
+		return BoundingVolume;
 	}
 }

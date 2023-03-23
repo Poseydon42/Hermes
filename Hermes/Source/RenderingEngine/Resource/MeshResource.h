@@ -4,12 +4,14 @@
 #include <span>
 
 #include "Core/Core.h"
+#include "Math/BoundingVolume.h"
 #include "RenderingEngine/Resource/Resource.h"
 #include "Vulkan/Buffer.h"
 
 namespace Hermes
 {
 	class MeshAsset;
+	struct Vertex;
 
 	class HERMES_API MeshResource : public Resource
 	{
@@ -26,11 +28,17 @@ namespace Hermes
 		const Vulkan::Buffer& GetIndexBuffer() const;
 		std::span<const PrimitiveDrawInformation> GetPrimitives() const;
 
+		const SphereBoundingVolume& GetBoundingVolume() const;
+
 	private:
 		explicit MeshResource(const MeshAsset& Asset);
 		
 		std::unique_ptr<Vulkan::Buffer> VertexBuffer, IndexBuffer;
 
 		std::vector<PrimitiveDrawInformation> Primitives;
+
+		SphereBoundingVolume BoundingVolume;
+
+		float CalculateMeshRadius(const Vertex* Vertices, size_t Count) const;
 	};
 }

@@ -49,8 +49,6 @@ namespace Hermes
 
 		size_t GetRequiredIndexBufferSize() const;
 
-		const SphereBoundingVolume& GetBoundingVolume() const;
-
 	private:
 		MeshAsset(const String& Name, std::vector<Vertex> VertexData, std::vector<uint32> IndexData, std::vector<Primitive> InPrimitives);
 
@@ -60,10 +58,6 @@ namespace Hermes
 		std::vector<Primitive> Primitives;
 
 		std::unique_ptr<MeshResource> Resource;
-
-		SphereBoundingVolume BoundingVolume;
-
-		float CalculateMeshRadius() const;
 
 		friend class AssetLoader;
 	};

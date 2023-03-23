@@ -105,7 +105,7 @@ namespace Hermes
 		auto Asset = AssetCache.Get<MeshAsset>(MeshHandle);
 		HERMES_ASSERT(Asset);
 
-		return Asset.value()->GetBoundingVolume();
+		return static_cast<const MeshResource*>(Asset.value()->GetResource())->GetBoundingVolume();
 	}
 
 	AssetHandle MeshNode::GetMesh() const

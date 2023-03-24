@@ -10,8 +10,6 @@ set(SOURCES
     AssetHeaders.h
     AssetLoader.cpp
     AssetLoader.h
-    ImageAsset.cpp
-    ImageAsset.h
     MaterialAsset.cpp
     MaterialAsset.h
 )

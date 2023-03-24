@@ -4,7 +4,6 @@
 
 #include "AssetSystem/Asset.h"
 #include "AssetSystem/AssetHeaders.h"
-#include "AssetSystem/ImageAsset.h"
 #include "Core/Core.h"
 #include "JSON/JSONObject.h"
 

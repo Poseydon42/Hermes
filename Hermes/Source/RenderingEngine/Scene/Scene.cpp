@@ -3,7 +3,6 @@
 #include <functional>
 
 #include "ApplicationCore/GameLoop.h"
-#include "AssetSystem/ImageAsset.h"
 #include "Core/Profiling.h"
 #include "Math/Frustum.h"
 #include "RenderingEngine/DescriptorAllocator.h"
@@ -41,7 +40,7 @@ namespace Hermes
 		}
 	}
 
-	static std::unique_ptr<TextureCubeResource> ComputeIrradianceCubemap(const TextureCubeResource& Source)
+	static std::unique_ptr<TextureCube> ComputeIrradianceCubemap(const TextureCube& Source)
 	{
 		constexpr Vec2ui Dimensions = { 16 };
 
@@ -57,7 +56,7 @@ namespace Hermes
 			Mat4 MVP;
 		};
 
-		std::unique_ptr<TextureCubeResource> Result = TextureCubeResource::CreateEmpty("IrradianceEnvmap", Dimensions, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 1);
+		std::unique_ptr<TextureCube> Result = TextureCube::CreateEmpty(Dimensions, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 1);
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 		auto& Queue = Device.GetQueue(VK_QUEUE_GRAPHICS_BIT);
@@ -198,7 +197,7 @@ namespace Hermes
 		return Result;
 	}
 
-	static std::unique_ptr<TextureCubeResource> ComputeSpecularEnvmap(const TextureCubeResource& Source)
+	static std::unique_ptr<TextureCube> ComputeSpecularEnvmap(const TextureCube& Source)
 	{
 		constexpr uint32 MipLevelCount = 5;
 		constexpr Vec2ui Dimensions { 256 };
@@ -219,7 +218,7 @@ namespace Hermes
 			float RoughnessLevel;
 		};
 
-		auto Result = TextureCubeResource::CreateEmpty("SpecularEnvmap", Dimensions, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, MipLevelCount);
+		auto Result = TextureCube::CreateEmpty(Dimensions, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, MipLevelCount);
 
 		auto& Device = Renderer::Get().GetActiveDevice();
 		auto& Queue = Device.GetQueue(VK_QUEUE_GRAPHICS_BIT);
@@ -397,11 +396,11 @@ namespace Hermes
 		static constexpr auto EnvmapName = "/Textures/envmap";
 
 		auto& AssetCache = GGameLoop->GetAssetCache();
-		auto RawReflectionEnvmapAsset = AssetCache.Get<ImageAsset>(EnvmapName);
-		HERMES_ASSERT_LOG(RawReflectionEnvmapAsset && RawReflectionEnvmapAsset.value()->GetResource() && RawReflectionEnvmapAsset.value()->GetResource()->GetType() == ResourceType::Texture2D, "Cannot load envmap %s", EnvmapName);
+		auto MaybeRawReflectionEnvmap = AssetCache.Get<Texture2D>(EnvmapName);
+		HERMES_ASSERT_LOG(MaybeRawReflectionEnvmap.has_value() && MaybeRawReflectionEnvmap.value(), "Cannot load envmap %s", EnvmapName);
 
-		const auto* RawReflectionEnvmap = static_cast<const Texture2DResource*>(RawReflectionEnvmapAsset.value()->GetResource());
-		ReflectionEnvmap = TextureCubeResource::CreateFromEquirectangularTexture("ReflectionEnvmap", *RawReflectionEnvmap, VK_FORMAT_R16G16B16A16_SFLOAT, true);
+		const auto* RawReflectionEnvmap = MaybeRawReflectionEnvmap.value();
+		ReflectionEnvmap = TextureCube::CreateFromEquirectangularTexture(*RawReflectionEnvmap, VK_FORMAT_R16G16B16A16_SFLOAT, true);
 		IrradianceEnvmap = ComputeIrradianceCubemap(*ReflectionEnvmap);
 		SpecularEnvmap = ComputeSpecularEnvmap(*ReflectionEnvmap);
 	}
@@ -426,17 +425,17 @@ namespace Hermes
 		ActiveCamera = nullptr;
 	}
 	
-	const TextureCubeResource& Scene::GetReflectionEnvmap() const
+	const TextureCube& Scene::GetReflectionEnvmap() const
 	{
 		return *ReflectionEnvmap;
 	}
 
-	const TextureCubeResource& Scene::GetIrradianceEnvmap() const
+	const TextureCube& Scene::GetIrradianceEnvmap() const
 	{
 		return *IrradianceEnvmap;
 	}
 
-	const TextureCubeResource& Scene::GetSpecularEnvmap() const
+	const TextureCube& Scene::GetSpecularEnvmap() const
 	{
 		return *SpecularEnvmap;
 	}

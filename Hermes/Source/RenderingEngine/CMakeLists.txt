@@ -34,8 +34,6 @@ set(SOURCES
     Renderer.h
     Resource/Resource.cpp
     Resource/Resource.h
-    Resource/TextureResource.cpp
-    Resource/TextureResource.h
     Scene/Camera.h
     Scene/GeometryList.cpp
     Scene/GeometryList.h
@@ -46,6 +44,8 @@ set(SOURCES
     ShaderCache.cpp
     ShaderCache.h
     SharedData.h
+    Texture.cpp
+    Texture.h
 )
 
 include(HermesSublib)

@@ -1,8 +1,7 @@
-﻿#include "TextureResource.h"
+﻿#include "Texture.h"
 
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
-#include "AssetSystem/ImageAsset.h"
 #include "RenderingEngine/GPUInteractionUtilities.h"
 #include "RenderingEngine/Renderer.h"
 #include "Vulkan/Descriptor.h"
@@ -15,6 +14,8 @@
 
 namespace Hermes
 {
+	DEFINE_ASSET_TYPE(Texture2D, Texture2D);
+
 	static VkFormat ChooseFormatFromImageType(ImageFormat Format, size_t BytesPerChannel)
 	{
 		using FormatCombinationHashType = size_t;
@@ -49,6 +50,24 @@ namespace Hermes
 			return VK_FORMAT_UNDEFINED;
 		}
 		return It->second;
+	}
+
+	static size_t GetBytesPerPixel(ImageFormat Format, size_t BytesPerChannel)
+	{
+		switch (Format)
+		{
+		case ImageFormat::R:
+			return 1 * BytesPerChannel;
+		case ImageFormat::RG:
+		case ImageFormat::RA:
+			return 2 * BytesPerChannel;
+		case ImageFormat::RGBA:
+		case ImageFormat::RGBX:
+		case ImageFormat::HDR:
+			return 4 * BytesPerChannel;
+		default:
+			HERMES_ASSERT(false);
+		}
 	}
 
 	static VkFormat GetCorrespondingSRGBFormat(VkFormat BaseFormat)
@@ -110,17 +129,17 @@ namespace Hermes
 		}
 	}
 
-	std::unique_ptr<Texture2DResource> Texture2DResource::CreateFromAsset(const ImageAsset& Source, bool EnableMipMaps)
+	std::unique_ptr<Texture2D> Texture2D::Create(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
 	{
-		return std::unique_ptr<Texture2DResource>(new Texture2DResource(Source, EnableMipMaps));
+		return std::unique_ptr<Texture2D>(new Texture2D(std::move(Name), Dimensions, Format, BytesPerChannel, Data, MipmapMode));
 	}
 
-	const Vulkan::Image& Texture2DResource::GetRawImage() const
+	const Vulkan::Image& Texture2D::GetRawImage() const
 	{
 		return *Image;
 	}
 
-	const Vulkan::ImageView& Texture2DResource::GetView(ColorSpace ColorSpace) const
+	const Vulkan::ImageView& Texture2D::GetView(ColorSpace ColorSpace) const
 	{
 		HERMES_ASSERT(static_cast<size_t>(ColorSpace) < static_cast<size_t>(ColorSpace::Count_));
 		auto& MaybeView = Views[static_cast<size_t>(ColorSpace)];
@@ -129,53 +148,41 @@ namespace Hermes
 		return *MaybeView;
 	}
 
-	Vec2ui Texture2DResource::GetDimensions() const
+	Vec2ui Texture2D::GetDimensions() const
 	{
 		return Image->GetDimensions();
 	}
 
-	uint32 Texture2DResource::GetMipLevelsCount() const
+	uint32 Texture2D::GetMipLevelsCount() const
 	{
 		return Image->GetMipLevelsCount();
 	}
 
-	VkFormat Texture2DResource::GetDataFormat() const
+	VkFormat Texture2D::GetDataFormat() const
 	{
 		if (!Image)
 			return VK_FORMAT_UNDEFINED;
 		return Image->GetDataFormat();
 	}
 
-	Texture2DResource::Texture2DResource(const ImageAsset& Source, bool EnableMipMaps)
-		: Resource(Source.GetName(), ResourceType::Texture2D)
+	Texture2D::Texture2D(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
+		: Asset(std::move(Name), AssetType::Texture2D)
 	{
-		auto Dimensions = Source.GetDimensions();
-
 		uint32 BiggestDimension = Math::Max(Dimensions.X, Dimensions.Y);
 		HERMES_ASSERT(BiggestDimension > 0);
 
 		uint32 MipLevelCount;
-		if (EnableMipMaps)
+		if (MipmapMode == MipmapGenerationMode::DoNotGenerate)
 		{
-			if (Source.HasPrecomputedMips())
-			{
-				MipLevelCount = Source.GetMipLevelCount();
-			}
-			else
-			{
-				MipLevelCount = Math::FloorLog2(BiggestDimension) + 1;
-			}
+			MipLevelCount = 0;
 		}
 		else
 		{
-			MipLevelCount = 1;
+			MipLevelCount = Math::FloorLog2(BiggestDimension) + 1;
 		}
 
-		auto Format = ChooseFormatFromImageType(Source.GetImageFormat(), Source.GetBytesPerChannel());
-		Image = Renderer::Get().GetActiveDevice().CreateImage(Dimensions,
-		                                                      VK_IMAGE_USAGE_SAMPLED_BIT |
-		                                                      VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-		                                                      VK_IMAGE_USAGE_TRANSFER_DST_BIT, Format, MipLevelCount);
+		auto VulkanFormat = ChooseFormatFromImageType(Format, BytesPerChannel);
+		Image = Renderer::Get().GetActiveDevice().CreateImage(Dimensions, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VulkanFormat, MipLevelCount);
 
 		// NOTE : normally, after loading image we will move it into
 		// transfer source layout for further blitting to generate mip
@@ -185,7 +192,7 @@ namespace Hermes
 		// precomputed(so we only upload them) then we have to perform
 		// transition to shader read only layout immediately ourselves
 		VkImageLayout LayoutAfterLoad;
-		if (EnableMipMaps && !Source.HasPrecomputedMips())
+		if (MipmapMode == MipmapGenerationMode::Generate)
 		{
 			LayoutAfterLoad = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 		}
@@ -194,32 +201,28 @@ namespace Hermes
 			LayoutAfterLoad = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		}
 
-		GPUInteractionUtilities::UploadDataToGPUImage(Source.GetRawData(), { 0, 0 }, Dimensions,
-		                                              Source.GetBytesPerPixel(), 0, *Image,
-		                                              VK_IMAGE_LAYOUT_UNDEFINED, LayoutAfterLoad);
+		GPUInteractionUtilities::UploadDataToGPUImage(Data, { 0, 0 }, Dimensions, GetBytesPerPixel(Format, BytesPerChannel), 0, *Image, VK_IMAGE_LAYOUT_UNDEFINED, LayoutAfterLoad);
 
-		if (EnableMipMaps)
+		if (MipmapMode == MipmapGenerationMode::LoadExisting)
 		{
-			if (Source.HasPrecomputedMips())
+			const auto* CurrentMipData = static_cast<const uint8*>(Data);
+			auto CurrentMipLevelDimensions = Dimensions;
+
+			for (uint32 MipLevel = 1; MipLevel < MipLevelCount; MipLevel++)
 			{
-				for (uint8 MipLevel = 1; MipLevel < Source.GetMipLevelCount(); MipLevel++)
-				{
-					GPUInteractionUtilities::UploadDataToGPUImage(Source.GetRawData(MipLevel), { 0, 0 },
-					                                              Source.GetDimensions(MipLevel),
-					                                              Source.GetBytesPerPixel(), MipLevel, *Image,
-					                                              VK_IMAGE_LAYOUT_UNDEFINED,
-					                                              LayoutAfterLoad);
-				}
+				CurrentMipData += static_cast<size_t>(CurrentMipLevelDimensions.X) * CurrentMipLevelDimensions.Y * GetBytesPerPixel(Format, BytesPerChannel);
+				CurrentMipLevelDimensions /= 2;
+
+				GPUInteractionUtilities::UploadDataToGPUImage(CurrentMipData, { 0, 0 }, CurrentMipLevelDimensions, GetBytesPerPixel(Format, BytesPerChannel), MipLevel, *Image, VK_IMAGE_LAYOUT_UNDEFINED, LayoutAfterLoad);
 			}
-			else
-			{
-				GPUInteractionUtilities::GenerateMipMaps(*Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			}
+		}
+		else if (MipmapMode == MipmapGenerationMode::Generate)
+		{
+			GPUInteractionUtilities::GenerateMipMaps(*Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
 	}
 
-	Vulkan::ImageView& Texture2DResource::CreateView(ColorSpace ColorSpace) const
+	Vulkan::ImageView& Texture2D::CreateView(ColorSpace ColorSpace) const
 	{
 		VkFormat Format = VK_FORMAT_UNDEFINED;
 		switch (ColorSpace)
@@ -247,50 +250,48 @@ namespace Hermes
 		return Result;
 	}
 
-	std::unique_ptr<TextureCubeResource> TextureCubeResource::CreateEmpty(String Name, Vec2ui InDimensions, VkFormat InFormat, VkImageUsageFlags InUsage, uint32 InMipLevelCount)
+	std::unique_ptr<TextureCube> TextureCube::CreateEmpty(Vec2ui InDimensions, VkFormat InFormat, VkImageUsageFlags InUsage, uint32 InMipLevelCount)
 	{
-		return std::unique_ptr<TextureCubeResource>(new TextureCubeResource(Name, InDimensions, InFormat, InUsage, InMipLevelCount));
+		return std::unique_ptr<TextureCube>(new TextureCube(InDimensions, InFormat, InUsage, InMipLevelCount));
 	}
 
-	std::unique_ptr<TextureCubeResource> TextureCubeResource::CreateFromEquirectangularTexture(String Name, const Texture2DResource& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
+	std::unique_ptr<TextureCube> TextureCube::CreateFromEquirectangularTexture(const Texture2D& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
 	{
-		return std::unique_ptr<TextureCubeResource>(new TextureCubeResource(Name, EquirectangularTexture, PreferredFormat, EnableMipMaps));
+		return std::unique_ptr<TextureCube>(new TextureCube(EquirectangularTexture, PreferredFormat, EnableMipMaps));
 	}
 
-	const Vulkan::Image& TextureCubeResource::GetRawImage() const
+	const Vulkan::Image& TextureCube::GetRawImage() const
 	{
 		return *Image;
 	}
 
-	const Vulkan::ImageView& TextureCubeResource::GetView() const
+	const Vulkan::ImageView& TextureCube::GetView() const
 	{
 		return *View;
 	}
 
-	Vec2ui TextureCubeResource::GetDimensions() const
+	Vec2ui TextureCube::GetDimensions() const
 	{
 		return Image->GetDimensions();
 	}
 
-	uint32 TextureCubeResource::GetMipLevelsCount() const
+	uint32 TextureCube::GetMipLevelsCount() const
 	{
 		return Image->GetMipLevelsCount();
 	}
 
-	VkFormat TextureCubeResource::GetDataFormat() const
+	VkFormat TextureCube::GetDataFormat() const
 	{
 		return Image->GetDataFormat();
 	}
 
-	TextureCubeResource::TextureCubeResource(String Name, Vec2ui InDimensions, VkFormat InFormat, VkImageUsageFlags InUsage, uint32 InMipLevelCount)
-		: Resource(std::move(Name), ResourceType::TextureCube)
+	TextureCube::TextureCube(Vec2ui InDimensions, VkFormat InFormat, VkImageUsageFlags InUsage, uint32 InMipLevelCount)
 	{
 		Image = Renderer::Get().GetActiveDevice().CreateCubemap(InDimensions, InUsage, InFormat, InMipLevelCount);
 		View = Image->CreateDefaultImageView();
 	}
 
-	TextureCubeResource::TextureCubeResource(String Name, const Texture2DResource& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
-		: Resource(std::move(Name), ResourceType::TextureCube)
+	TextureCube::TextureCube(const Texture2D& EquirectangularTexture, VkFormat PreferredFormat, bool EnableMipMaps)
 	{
 		auto EquirectangularTextureResourceDimensions = EquirectangularTexture.GetDimensions();
 

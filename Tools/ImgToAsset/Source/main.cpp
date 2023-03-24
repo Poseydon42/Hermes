@@ -84,7 +84,7 @@ int WriteAssetFile(const std::vector<const Image*>& Images, const std::string& F
 {
 	Hermes::AssetHeader AssetHeader = {};
 	memcpy(AssetHeader.Signature, Hermes::AssetHeader::ExpectedSignature, sizeof(AssetHeader.Signature));
-	AssetHeader.Type = Hermes::AssetType::Image;
+	AssetHeader.Type = Hermes::AssetType::Texture2D;
 
 	Hermes::ImageAssetHeader ImageHeader = {};
 	ImageHeader.Width = Images[0]->GetWidth();

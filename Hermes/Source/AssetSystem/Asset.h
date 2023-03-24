@@ -10,7 +10,7 @@ namespace Hermes
 {
 	enum class AssetType : uint8
 	{
-		Image = 1,
+		Texture2D = 1,
 		Mesh = 2,
 
 		Material = 64,

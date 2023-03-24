@@ -1,11 +1,11 @@
 ﻿#include "AssetLoader.h"
 
 #include "Platform/GenericPlatform/PlatformFile.h"
-#include "AssetSystem/ImageAsset.h"
 #include "AssetSystem/MaterialAsset.h"
 #include "JSON/JSONParser.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/Mesh.h"
+#include "RenderingEngine/Texture.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 
 namespace Hermes
@@ -70,7 +70,7 @@ namespace Hermes
 
 		switch (Header.Type)
 		{
-		case AssetType::Image:
+		case AssetType::Texture2D:
 			return LoadImage(File, Header, Name);
 		case AssetType::Mesh:
 			return LoadMesh(File, Header, Name);
@@ -141,6 +141,36 @@ namespace Hermes
 		return std::unique_ptr<MaterialAsset>(new MaterialAsset(String(Name), Shaders));
 	}
 
+	static size_t NumberOfChannelInImageFormat(ImageFormat Format)
+	{
+		switch (Format)
+		{
+		case ImageFormat::R:
+			return 1;
+		case ImageFormat::RG:
+		case ImageFormat::RA:
+			return 2;
+		case ImageFormat::HDR:
+		case ImageFormat::RGBA:
+		case ImageFormat::RGBX:
+			return 4;
+		default:
+			HERMES_ASSERT(false);
+		}
+	}
+
+	static size_t CalculateTotalPixelCount(size_t Width, size_t Height, size_t MipLevelCount)
+	{
+		size_t Result = 0;
+		while (MipLevelCount--)
+		{
+			Result += Width * Height;
+			Width = Math::Max<size_t>(Width / 2, 1);
+			Height = Math::Max<size_t>(Height / 2, 1);
+		}
+		return Result;
+	}
+
 	std::unique_ptr<Asset> AssetLoader::LoadImage(IPlatformFile& File, const AssetHeader&, StringView Name)
 	{
 		ImageAssetHeader Header = {};
@@ -152,16 +182,42 @@ namespace Hermes
 
 		size_t BytesPerPixel = NumberOfChannelInImageFormat(Header.Format) * Header.BytesPerChannel;
 		size_t TotalBytes = CalculateTotalPixelCount(Header.Width, Header.Height, Header.MipLevelCount) * BytesPerPixel;
-		std::vector<uint8> ImageData(TotalBytes, 0x00);
-		if (!File.Read(ImageData.data(), TotalBytes))
+
+		size_t BytesToReadFromFile = TotalBytes;
+		if (Header.Format == ImageFormat::HDR)
+			BytesToReadFromFile = BytesToReadFromFile / 4 * 3; // We need to insert the alpha channel manually
+		std::vector<uint8> ImageData(BytesToReadFromFile, 0x00);
+		if (!File.Read(ImageData.data(), BytesToReadFromFile))
 		{
 			HERMES_LOG_WARNING("Failed to read image data from asset %s", Name.data());
 			return nullptr;
 		}
 
-		auto Result = std::unique_ptr<ImageAsset>(new ImageAsset(String(Name), Vec2ui{Header.Width, Header.Height},
-		                                                         Header.Format, Header.BytesPerChannel, Header.MipLevelCount,
-		                                                         ImageData.data()));
+		if (Header.Format == ImageFormat::HDR)
+		{
+			HERMES_ASSERT_LOG(Header.MipLevelCount == 1, "Loading HDR texures with pregenerated mipmaps is not supported");
+
+			std::vector<uint8> UnpackedData(TotalBytes, 0x00);
+			auto* SourcePixel = reinterpret_cast<float*>(ImageData.data());
+			auto* DestPixel = reinterpret_cast<float*>(UnpackedData.data());
+
+			auto PixelCount = CalculateTotalPixelCount(Header.Width, Header.Height, 1);
+			while (PixelCount--)
+			{
+				*DestPixel++ = *SourcePixel++; // R
+				*DestPixel++ = *SourcePixel++; // G
+				*DestPixel++ = *SourcePixel++; // B
+				*DestPixel++ = 1.0f; // A
+			}
+
+			ImageData = std::move(UnpackedData);
+		}
+
+		// FIXME: let the user choose whether they want to load/generate mipmaps
+		auto MipmapGenerationMode = MipmapGenerationMode::Generate;
+		if (Header.MipLevelCount > 1)
+			MipmapGenerationMode = MipmapGenerationMode::LoadExisting;
+		auto Result = Texture2D::Create(String(Name), { Header.Width, Header.Height }, Header.Format, Header.BytesPerChannel, ImageData.data(), MipmapGenerationMode);
 
 		return Result;
 	}

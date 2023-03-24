@@ -2,11 +2,10 @@
 
 #include "ApplicationCore/GameLoop.h"
 #include "AssetSystem/AssetCache.h"
-#include "AssetSystem/ImageAsset.h"
 #include "JSON/JSONParser.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderingEngine/Resource/TextureResource.h"
+#include "RenderingEngine/Texture.h"
 #include "Vulkan/Device.h"
 
 namespace Hermes
@@ -104,7 +103,7 @@ namespace Hermes
 	}
 
 
-	void MaterialInstance::SetTextureProperty(const String& Name, const Texture2DResource& Value, ColorSpace ColorSpace)
+	void MaterialInstance::SetTextureProperty(const String& Name, const Texture2D& Value, ColorSpace ColorSpace)
 	{
 		auto* Property = BaseMaterial->FindProperty(Name);
 		HERMES_ASSERT(Property);
@@ -118,20 +117,14 @@ namespace Hermes
 	{
 		auto& AssetCache = GGameLoop->GetAssetCache();
 
-		auto TextureAsset = AssetCache.Get<ImageAsset>(TextureHandle);
-		if (!TextureAsset || !TextureAsset.value())
+		auto MaybeTexture = AssetCache.Get<Texture2D>(TextureHandle);
+		if (!MaybeTexture || !MaybeTexture.value())
 		{
 			HERMES_LOG_WARNING("Cannot set material instance property %s because the texture cannot be found", Name.c_str());
 			return;
 		}
 
-		const auto* Resource = TextureAsset.value()->GetResource();
-		if (Resource->GetType() != ResourceType::Texture2D)
-		{
-			HERMES_LOG_WARNING("Cannot assign resource %s (type %u) to texture property %s", Resource->GetName().data(), static_cast<uint32>(Resource->GetType()), Name.c_str());
-		}
-
-		const auto* Texture = static_cast<const Texture2DResource*>(Resource);
+		const auto* Texture = MaybeTexture.value();
 		HERMES_ASSERT(Texture);
 
 		SetTextureProperty(Name, *Texture, ColorSpace);

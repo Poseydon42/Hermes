@@ -53,16 +53,10 @@ namespace Hermes
 	};
 }
 
-#define DEFINE_ASSET_TYPE(Type)                                                                        \
+#define DEFINE_ASSET_TYPE(ClassName, Type)                                                             \
 	template<>                                                                                         \
-	HERMES_API const Type##Asset& Asset::As<Type##Asset>(const Asset& From)                            \
+	HERMES_API const ClassName& Asset::As<ClassName>(const Asset& From)                                \
 	{                                                                                                  \
 		HERMES_ASSERT(From.GetType() == AssetType::Type);                                              \
-		return static_cast<const Type##Asset&>(From);                                                  \
-	}                                                                                                  \
-	template<>                                                                                         \
-	HERMES_API std::unique_ptr<Type##Asset> Asset::As<Type##Asset>(std::unique_ptr<Asset> From)        \
-	{                                                                                                  \
-		HERMES_ASSERT(From->GetType() == AssetType::Type);                                             \
-		return std::unique_ptr<Type##Asset>(static_cast<Type##Asset*>(From.release()));                \
-	}                                                                                                  \
+		return static_cast<const ClassName&>(From);                                                    \
+	}

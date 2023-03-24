@@ -4,7 +4,7 @@
 
 namespace Hermes
 {
-	DEFINE_ASSET_TYPE(Image)
+	DEFINE_ASSET_TYPE(ImageAsset, Image)
 
 	size_t NumberOfChannelInImageFormat(ImageFormat Format)
 	{

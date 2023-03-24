@@ -18,6 +18,8 @@ set(SOURCES
     Material/MaterialProperty.h
     Material/ShaderReflection.cpp
     Material/ShaderReflection.h
+    Mesh.cpp
+    Mesh.h
     Passes/DepthPass.cpp
     Passes/DepthPass.h
     Passes/ForwardPass.cpp
@@ -30,8 +32,6 @@ set(SOURCES
     Passes/SkyboxPass.h
     Renderer.cpp
     Renderer.h
-    Resource/MeshResource.cpp
-    Resource/MeshResource.h
     Resource/Resource.cpp
     Resource/Resource.h
     Resource/TextureResource.cpp

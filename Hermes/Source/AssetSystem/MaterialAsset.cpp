@@ -2,7 +2,7 @@
 
 namespace Hermes
 {
-	DEFINE_ASSET_TYPE(Material)
+	DEFINE_ASSET_TYPE(MaterialAsset, Material)
 
 	bool MaterialAsset::IsValid() const
 	{

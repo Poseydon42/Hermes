@@ -1,6 +1,7 @@
 ﻿#include "Material.h"
 
-#include "AssetSystem/MeshAsset.h"
+// FIXME: this include looks so ugly here
+#include "AssetSystem/AssetHeaders.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/SharedData.h"

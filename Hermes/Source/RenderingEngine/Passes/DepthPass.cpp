@@ -3,7 +3,7 @@
 #include "Core/Profiling.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
-#include "RenderingEngine/Resource/MeshResource.h"
+#include "RenderingEngine/Mesh.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/GeometryList.h"
@@ -38,13 +38,13 @@ namespace Hermes
 		const auto& GlobalSceneDataBuffer = Renderer::Get().GetGlobalSceneDataBuffer();
 		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
 
-		for (const auto& Mesh : CallbackInfo.GeometryList.GetMeshList())
+		for (const auto& DrawableMesh : CallbackInfo.GeometryList.GetMeshList())
 		{
-			auto& Material = Mesh.Material;
+			auto& Material = DrawableMesh.Material;
 			auto& MaterialPipeline = Material->GetBaseMaterial().GetVertexPipeline();
-			const auto* MeshBuffer = Mesh.Mesh;
+			const auto* Mesh = DrawableMesh.Mesh;
 
-			if (!MeshBuffer)
+			if (!Mesh)
 				continue;
 			
 			Material->PrepareForRender();
@@ -53,17 +53,17 @@ namespace Hermes
 			Metrics.PipelineBindCount++;
 			CommandBuffer.BindDescriptorSet(*SceneUBODescriptorSet, MaterialPipeline, 0);
 			Metrics.DescriptorSetBindCount++;
-			CommandBuffer.BindVertexBuffer(MeshBuffer->GetVertexBuffer());
+			CommandBuffer.BindVertexBuffer(Mesh->GetVertexBuffer());
 			Metrics.BufferBindCount++;
-			CommandBuffer.BindIndexBuffer(MeshBuffer->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
+			CommandBuffer.BindIndexBuffer(Mesh->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
 			Metrics.BufferBindCount++;
 
-			auto TransformationMatrix = Mesh.TransformationMatrix;
+			auto TransformationMatrix = DrawableMesh.TransformationMatrix;
 
 			CommandBuffer.UploadPushConstants(MaterialPipeline, VK_SHADER_STAGE_VERTEX_BIT,
 			                                  &TransformationMatrix, sizeof(TransformationMatrix), 0);
 
-			for (const auto& Primitive : MeshBuffer->GetPrimitives())
+			for (const auto& Primitive : Mesh->GetPrimitives())
 			{
 				CommandBuffer.DrawIndexed(Primitive.IndexCount, 1, Primitive.IndexOffset, 0, 0);
 				Metrics.DrawCallCount++;

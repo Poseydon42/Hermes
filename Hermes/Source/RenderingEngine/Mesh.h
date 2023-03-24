@@ -2,27 +2,25 @@
 
 #include <memory>
 #include <span>
+#include <vector>
 
+#include "AssetSystem/AssetHeaders.h"
 #include "Core/Core.h"
 #include "Math/BoundingVolume.h"
-#include "RenderingEngine/Resource/Resource.h"
 #include "Vulkan/Buffer.h"
 
 namespace Hermes
 {
-	class MeshAsset;
-	struct Vertex;
-
-	class HERMES_API MeshResource : public Resource
+	class HERMES_API Mesh : public Asset
 	{
 	public:
-		static std::unique_ptr<MeshResource> CreateFromAsset(const MeshAsset& Asset);
-
 		struct PrimitiveDrawInformation
 		{
 			uint32 IndexOffset;
 			uint32 IndexCount;
 		};
+
+		static std::unique_ptr<Mesh> Create(String Name, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> Primitives);
 
 		const Vulkan::Buffer& GetVertexBuffer() const;
 		const Vulkan::Buffer& GetIndexBuffer() const;
@@ -31,7 +29,7 @@ namespace Hermes
 		const SphereBoundingVolume& GetBoundingVolume() const;
 
 	private:
-		explicit MeshResource(const MeshAsset& Asset);
+		Mesh(String Name, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> InPrimitives);
 		
 		std::unique_ptr<Vulkan::Buffer> VertexBuffer, IndexBuffer;
 
@@ -39,6 +37,6 @@ namespace Hermes
 
 		SphereBoundingVolume BoundingVolume;
 
-		float CalculateMeshRadius(const Vertex* Vertices, size_t Count) const;
+		float CalculateMeshRadius(std::span<const Vertex> Vertices) const;
 	};
 }

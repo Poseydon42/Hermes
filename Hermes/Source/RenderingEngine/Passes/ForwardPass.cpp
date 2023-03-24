@@ -4,8 +4,8 @@
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Material/Material.h"
+#include "RenderingEngine/Mesh.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderingEngine/Resource/MeshResource.h"
 #include "RenderingEngine/Scene/GeometryList.h"
 #include "RenderingEngine/Scene/Scene.h"
 #include "Vulkan/Buffer.h"
@@ -96,13 +96,13 @@ namespace Hermes
 		SceneUBODescriptorSet->UpdateWithBuffer(4, 0, LightClusterListBuffer, 0, static_cast<uint32>(LightClusterListBuffer.GetSize()));
 		SceneUBODescriptorSet->UpdateWithBuffer(5, 0, LightIndexListBuffer, 0, static_cast<uint32>(LightIndexListBuffer.GetSize()));
 
-		for (const auto& Mesh : CallbackInfo.GeometryList.GetMeshList())
+		for (const auto& DrawableMesh : CallbackInfo.GeometryList.GetMeshList())
 		{
-			auto& Material = Mesh.Material;
+			auto& Material = DrawableMesh.Material;
 			auto& MaterialPipeline = Material->GetBaseMaterial().GetPipeline();
-			const auto* MeshResource = Mesh.Mesh;
+			const auto* Mesh = DrawableMesh.Mesh;
 
-			if (!MeshResource)
+			if (!Mesh)
 				continue;
 
 			// TODO : move it into the renderer?
@@ -114,17 +114,17 @@ namespace Hermes
 			Metrics.DescriptorSetBindCount++;
 			CommandBuffer.BindDescriptorSet(Material->GetMaterialDescriptorSet(), MaterialPipeline, 1);
 			Metrics.DescriptorSetBindCount++;
-			CommandBuffer.BindVertexBuffer(MeshResource->GetVertexBuffer());
+			CommandBuffer.BindVertexBuffer(Mesh->GetVertexBuffer());
 			Metrics.BufferBindCount++;
-			CommandBuffer.BindIndexBuffer(MeshResource->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
+			CommandBuffer.BindIndexBuffer(Mesh->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
 			Metrics.BufferBindCount++;
 
-			auto TransformationMatrix = Mesh.TransformationMatrix;
+			auto TransformationMatrix = DrawableMesh.TransformationMatrix;
 
 			CommandBuffer.UploadPushConstants(MaterialPipeline, VK_SHADER_STAGE_VERTEX_BIT,
 			                                  &TransformationMatrix, sizeof(TransformationMatrix), 0);
 
-			for (const auto& Primitive : MeshResource->GetPrimitives())
+			for (const auto& Primitive : Mesh->GetPrimitives())
 			{
 				CommandBuffer.DrawIndexed(Primitive.IndexCount, 1, Primitive.IndexOffset, 0, 0);
 				Metrics.DrawCallCount++;

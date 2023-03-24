@@ -1,7 +1,7 @@
 #include "SceneNode.h"
 
 #include "ApplicationCore/GameLoop.h"
-#include "AssetSystem/MeshAsset.h"
+#include "RenderingEngine/Mesh.h"
 
 namespace Hermes
 {
@@ -102,10 +102,10 @@ namespace Hermes
 	{
 		auto& AssetCache = GGameLoop->GetAssetCache();
 
-		auto Asset = AssetCache.Get<MeshAsset>(MeshHandle);
-		HERMES_ASSERT(Asset);
+		auto Mesh = AssetCache.Get<class Mesh>(MeshHandle);
+		HERMES_ASSERT(Mesh.has_value());
 
-		return static_cast<const MeshResource*>(Asset.value()->GetResource())->GetBoundingVolume();
+		return Mesh.value()->GetBoundingVolume();
 	}
 
 	AssetHandle MeshNode::GetMesh() const

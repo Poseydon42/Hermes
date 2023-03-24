@@ -1,9 +1,9 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
 #include "AssetSystem/AssetHeaders.h"
-#include "AssetSystem/MeshAsset.h"
 #include "Core/Core.h"
 
 namespace Hermes::Tools

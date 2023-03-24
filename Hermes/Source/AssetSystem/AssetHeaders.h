@@ -2,6 +2,8 @@
 
 #include "AssetSystem/Asset.h"
 #include "Core/Core.h"
+#include "Math/Vector.h"
+#include "Math/Vector2.h"
 
 namespace Hermes
 {
@@ -31,6 +33,14 @@ namespace Hermes
 		uint32 VertexBufferSize; // Number of elements in the vertex buffer
 		uint32 IndexBufferSize; // Number of elements in the index buffer
 		uint32 PrimitiveCount;
+	};
+
+	struct Vertex
+	{
+		Vec3 Position;
+		Vec2 TextureCoordinates;
+		Vec3 Normal;
+		Vec3 Tangent;
 	};
 
 	struct MeshPrimitiveHeader

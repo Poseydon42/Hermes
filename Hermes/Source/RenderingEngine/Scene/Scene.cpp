@@ -4,12 +4,11 @@
 
 #include "ApplicationCore/GameLoop.h"
 #include "AssetSystem/ImageAsset.h"
-#include "AssetSystem/MeshAsset.h"
 #include "Core/Profiling.h"
 #include "Math/Frustum.h"
 #include "RenderingEngine/DescriptorAllocator.h"
+#include "RenderingEngine/Mesh.h"
 #include "RenderingEngine/Renderer.h"
-#include "RenderingEngine/Resource/MeshResource.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "Vulkan/CommandBuffer.h"
 #include "Vulkan/Device.h"
@@ -476,11 +475,11 @@ namespace Hermes
 			if (!Frustum.IsInside(CurrentMeshNode.GetBoundingVolume(), TransformationMatrix))
 				return;
 
-			auto MaybeMeshAsset = AssetCache.Get<MeshAsset>(CurrentMeshNode.GetMesh());
-			if (!MaybeMeshAsset.has_value() || !MaybeMeshAsset.value() || !MaybeMeshAsset.value()->GetResource())
+			auto MaybeMesh = AssetCache.Get<Mesh>(CurrentMeshNode.GetMesh());
+			if (!MaybeMesh.has_value() || !MaybeMesh.value())
 				return;
 
-			const auto* Mesh = static_cast<const MeshResource*>(MaybeMeshAsset.value()->GetResource());
+			const auto* Mesh = MaybeMesh.value();
 			CulledMeshes.emplace_back(TransformationMatrix, Mesh, &CurrentMeshNode.GetMaterialInstance());
 		};
 		MeshTraversal(RootNode);

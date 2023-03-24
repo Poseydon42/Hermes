@@ -3,9 +3,9 @@
 #include "Platform/GenericPlatform/PlatformFile.h"
 #include "AssetSystem/ImageAsset.h"
 #include "AssetSystem/MaterialAsset.h"
-#include "AssetSystem/MeshAsset.h"
 #include "JSON/JSONParser.h"
 #include "Logging/Logger.h"
+#include "RenderingEngine/Mesh.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 
 namespace Hermes
@@ -184,10 +184,10 @@ namespace Hermes
 			return nullptr;
 		}
 
-		std::vector<MeshAsset::Primitive> Primitives(PrimitiveHeaders.size());
+		std::vector<Mesh::PrimitiveDrawInformation> Primitives(PrimitiveHeaders.size());
 		for (size_t Index = 0; Index < Primitives.size(); Index++)
 		{
-			Primitives[Index].IndexBufferOffset = PrimitiveHeaders[Index].IndexBufferOffset;
+			Primitives[Index].IndexOffset = PrimitiveHeaders[Index].IndexBufferOffset;
 			Primitives[Index].IndexCount = PrimitiveHeaders[Index].IndexCount;
 		}
 
@@ -205,6 +205,6 @@ namespace Hermes
 			return nullptr;
 		}
 
-		return std::unique_ptr<MeshAsset>(new MeshAsset(String(Name), Vertices, Indices, Primitives));
+		return Mesh::Create(String(Name), Vertices, Indices, Primitives);
 	}
 }

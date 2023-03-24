@@ -14,8 +14,6 @@ set(SOURCES
     ImageAsset.h
     MaterialAsset.cpp
     MaterialAsset.h
-    MeshAsset.cpp
-    MeshAsset.h
 )
 
 add_hermes_sublib(Hermes_AssetSystem "${SOURCES}")

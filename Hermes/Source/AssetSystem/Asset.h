@@ -20,6 +20,9 @@ namespace Hermes
 
 	class Resource;
 
+	using AssetHandle = uint32;
+	constexpr AssetHandle GInvalidAssetHandle = 0;
+
 	/*
 	 * A generic asset representation
 	 * Hermes assumes every file that is loaded by engine to be asset(with exceptions being dynamically linked libraries and configuration files)

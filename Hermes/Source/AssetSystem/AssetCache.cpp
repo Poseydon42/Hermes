@@ -5,29 +5,6 @@
 
 namespace Hermes
 {
-	HERMES_API AssetHandle AssetHandle::InvalidHandle = AssetHandle(InvalidID, AssetType::Invalid);
-
-	AssetHandle::AssetHandle(HandleIDType InHandleID, AssetType InType)
-		: HandleID(InHandleID)
-		, Type(InType)
-	{
-	}
-
-	bool operator==(const AssetHandle& Left, const AssetHandle& Right)
-	{
-		return Left.HandleID == Right.HandleID && Left.Type == Right.Type;
-	}
-
-	size_t AssetHandleHasher::operator()(const AssetHandle& Value) const
-	{
-		return (static_cast<size_t>(Value.HandleID) << 32 | static_cast<std::underlying_type_t<decltype(Value.Type)>>(Value.Type));
-	}
-
-	AssetType AssetHandle::GetType() const
-	{
-		return Type;
-	}
-
 	AssetHandle AssetCache::Create(StringView AssetName)
 	{
 		HERMES_PROFILE_FUNC();
@@ -50,10 +27,7 @@ namespace Hermes
 		auto Asset = LoadedAssets.at(Handle).get();;
 		if (!Asset)
 			return nullptr;
-
-		if (Asset->GetType() != Handle.GetType())
-			return nullptr;
-
+		
 		return Asset;
 	}
 
@@ -67,9 +41,9 @@ namespace Hermes
 	{
 		auto Asset = AssetLoader::Load(Name);
 		if (!Asset)
-			return AssetHandle::InvalidHandle;
+			return GInvalidAssetHandle;
 
-		auto Handle = AssetHandle(NextID++, Asset->GetType());
+		auto Handle = NextHandle++;
 		
 		LoadedAssets.insert(std::make_pair(Handle, std::move(Asset)));
 

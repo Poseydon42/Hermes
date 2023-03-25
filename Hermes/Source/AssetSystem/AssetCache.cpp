@@ -39,11 +39,14 @@ namespace Hermes
 
 	AssetHandle AssetCache::LoadAsset(StringView Name)
 	{
-		auto Asset = AssetLoader::Load(Name);
-		if (!Asset)
-			return GInvalidAssetHandle;
-
 		auto Handle = NextHandle++;
+
+		auto Asset = AssetLoader::Load(Name, Handle);
+		if (!Asset)
+		{
+			NextHandle--; // Since we didn't actually use the handle that we've allocated
+			return GInvalidAssetHandle;
+		}
 		
 		LoadedAssets.insert(std::make_pair(Handle, std::move(Asset)));
 

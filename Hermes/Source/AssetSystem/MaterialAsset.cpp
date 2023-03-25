@@ -15,8 +15,8 @@ namespace Hermes
 		return Material.get();
 	}
 
-	MaterialAsset::MaterialAsset(String Name, std::span<const std::pair<String, String>> InShaders)
-		: Asset(std::move(Name), AssetType::Material)
+	MaterialAsset::MaterialAsset(String Name, AssetHandle Handle, std::span<const std::pair<String, String>> InShaders)
+		: Asset(std::move(Name), AssetType::Material, Handle)
 	{
 		String VertexShaderPath, FragmentShaderPath;
 		for (const auto& [ShaderType, Path] : InShaders)

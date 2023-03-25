@@ -8,8 +8,8 @@ namespace Hermes
 {
 	DEFINE_ASSET_TYPE(Mesh, Mesh);
 
-	Mesh::Mesh(String Name, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> InPrimitives)
-		: Asset(std::move(Name), AssetType::Mesh)
+	Mesh::Mesh(String Name, AssetHandle Handle, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> InPrimitives)
+		: Asset(std::move(Name), AssetType::Mesh, Handle)
 		, Primitives(std::move(InPrimitives))
 		, BoundingVolume(CalculateMeshRadius(Vertices))
 	{
@@ -36,9 +36,9 @@ namespace Hermes
 		return Math::Sqrt(MaxDistanceSquared);
 	}
 
-	std::unique_ptr<Mesh> Mesh::Create(String Name, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> Primitives)
+	std::unique_ptr<Mesh> Mesh::Create(String Name, AssetHandle Handle, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> Primitives)
 	{
-		return std::unique_ptr<Mesh>(new Mesh(std::move(Name), Vertices, Indices, std::move(Primitives)));
+		return std::unique_ptr<Mesh>(new Mesh(std::move(Name), Handle, Vertices, Indices, std::move(Primitives)));
 	}
 
 	const Vulkan::Buffer& Mesh::GetVertexBuffer() const

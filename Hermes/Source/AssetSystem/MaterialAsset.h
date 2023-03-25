@@ -22,7 +22,7 @@ namespace Hermes
 		// FIXME: this has to be shared pointer for now until Material no longer depends on shared_from_this()
 		std::shared_ptr<Material> Material;
 
-		MaterialAsset(String Name, std::span<const std::pair<String, String>> InShaders);
+		MaterialAsset(String Name, AssetHandle Handle, std::span<const std::pair<String, String>> InShaders);
 
 		friend class AssetLoader;
 	};

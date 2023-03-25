@@ -34,11 +34,13 @@ namespace Hermes
 		ADD_DEFAULT_MOVE_CONSTRUCTOR(Asset)
 		ADD_DEFAULT_VIRTUAL_DESTRUCTOR(Asset)
 	public:
-		Asset(String InName, AssetType InType);
+		Asset(String InName, AssetType InType, AssetHandle InSelfHandle);
 
 		String GetName() const;
 
 		AssetType GetType() const;
+
+		AssetHandle GetSelfHandle() const;
 
 		virtual bool IsValid() const;
 
@@ -53,6 +55,8 @@ namespace Hermes
 	private:
 		String Name;
 		AssetType Type;
+
+		AssetHandle SelfHandle;
 	};
 }
 

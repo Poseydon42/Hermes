@@ -129,9 +129,9 @@ namespace Hermes
 		}
 	}
 
-	std::unique_ptr<Texture2D> Texture2D::Create(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
+	std::unique_ptr<Texture2D> Texture2D::Create(String Name, AssetHandle Handle, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
 	{
-		return std::unique_ptr<Texture2D>(new Texture2D(std::move(Name), Dimensions, Format, BytesPerChannel, Data, MipmapMode));
+		return std::unique_ptr<Texture2D>(new Texture2D(std::move(Name), Handle, Dimensions, Format, BytesPerChannel, Data, MipmapMode));
 	}
 
 	const Vulkan::Image& Texture2D::GetRawImage() const
@@ -165,8 +165,8 @@ namespace Hermes
 		return Image->GetDataFormat();
 	}
 
-	Texture2D::Texture2D(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
-		: Asset(std::move(Name), AssetType::Texture2D)
+	Texture2D::Texture2D(String Name, AssetHandle Handle, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
+		: Asset(std::move(Name), AssetType::Texture2D, Handle)
 	{
 		uint32 BiggestDimension = Math::Max(Dimensions.X, Dimensions.Y);
 		HERMES_ASSERT(BiggestDimension > 0);

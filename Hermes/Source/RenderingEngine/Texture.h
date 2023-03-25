@@ -30,7 +30,7 @@ namespace Hermes
 	class Texture2D : public Asset
 	{
 	public:
-		static std::unique_ptr<Texture2D> Create(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode);
+		static std::unique_ptr<Texture2D> Create(String Name, AssetHandle Handle, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode);
 
 		const Vulkan::Image& GetRawImage() const;
 
@@ -43,7 +43,7 @@ namespace Hermes
 		VkFormat GetDataFormat() const;
 
 	private:
-		Texture2D(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode);
+		Texture2D(String Name, AssetHandle Handle, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode);
 
 		Vulkan::ImageView& CreateView(ColorSpace ColorSpace) const;
 		

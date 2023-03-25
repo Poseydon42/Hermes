@@ -17,7 +17,7 @@ namespace Hermes
 		return AssetType::Invalid;
 	}
 	
-	std::unique_ptr<Asset> AssetLoader::Load(StringView Name)
+	std::unique_ptr<Asset> AssetLoader::Load(StringView Name, AssetHandle Handle)
 	{
 		String Filename = String(Name) + ".hac";
 
@@ -32,7 +32,7 @@ namespace Hermes
 		if (File->Read(Signature, sizeof(Signature)) && memcmp(Signature, AssetHeader::ExpectedSignature, sizeof(Signature)) == 0)
 		{
 			File->Seek(0);
-			return LoadBinary(*File, Name);
+			return LoadBinary(*File, Name, Handle);
 		}
 
 		String FileContents(File->Size(), 0);
@@ -50,10 +50,10 @@ namespace Hermes
 			return nullptr;
 		}
 
-		return LoadText(*MaybeJSONRoot.value(), Name);
+		return LoadText(*MaybeJSONRoot.value(), Name, Handle);
 	}
 
-	std::unique_ptr<Asset> AssetLoader::LoadBinary(IPlatformFile& File, StringView Name)
+	std::unique_ptr<Asset> AssetLoader::LoadBinary(IPlatformFile& File, StringView Name, AssetHandle Handle)
 	{
 		AssetHeader Header = {};
 		if (!File.Read(&Header, sizeof(Header)))
@@ -71,16 +71,16 @@ namespace Hermes
 		switch (Header.Type)
 		{
 		case AssetType::Texture2D:
-			return LoadImage(File, Header, Name);
+			return LoadImage(File, Header, Name, Handle);
 		case AssetType::Mesh:
-			return LoadMesh(File, Header, Name);
+			return LoadMesh(File, Header, Name, Handle);
 		default:
 			HERMES_LOG_WARNING("Binary asset %s (type %02x) cannot be loaded", Name.data(), static_cast<uint8>(Header.Type));
 			return nullptr;
 		}
 	}
 
-	std::unique_ptr<Asset> AssetLoader::LoadText(const JSONObject& JSONRoot, StringView Name)
+	std::unique_ptr<Asset> AssetLoader::LoadText(const JSONObject& JSONRoot, StringView Name, AssetHandle Handle)
 	{
 		if (!JSONRoot.Contains("meta") || !JSONRoot["meta"].Is(JSONValueType::Object))
 		{
@@ -109,14 +109,14 @@ namespace Hermes
 		switch (Type)
 		{
 		case AssetType::Material:
-			return LoadMaterial(Data, Name);
+			return LoadMaterial(Data, Name, Handle);
 		default:
 			HERMES_LOG_WARNING("Cannot load text asset of type %02x", static_cast<uint8>(Type));
 			return nullptr;
 		}
 	}
 
-	std::unique_ptr<Asset> AssetLoader::LoadMaterial(const JSONObject& Data, StringView Name)
+	std::unique_ptr<Asset> AssetLoader::LoadMaterial(const JSONObject& Data, StringView Name, AssetHandle Handle)
 	{
 		if (!Data.Contains("shaders") || !Data["shaders"].Is(JSONValueType::Object))
 		{
@@ -138,7 +138,7 @@ namespace Hermes
 			Shaders.emplace_back(Type, String(Path));
 		}
 		
-		return std::unique_ptr<MaterialAsset>(new MaterialAsset(String(Name), Shaders));
+		return std::unique_ptr<MaterialAsset>(new MaterialAsset(String(Name), Handle, Shaders));
 	}
 
 	static size_t NumberOfChannelInImageFormat(ImageFormat Format)
@@ -171,7 +171,7 @@ namespace Hermes
 		return Result;
 	}
 
-	std::unique_ptr<Asset> AssetLoader::LoadImage(IPlatformFile& File, const AssetHeader&, StringView Name)
+	std::unique_ptr<Asset> AssetLoader::LoadImage(IPlatformFile& File, const AssetHeader&, StringView Name, AssetHandle Handle)
 	{
 		ImageAssetHeader Header = {};
 		if (!File.Read(&Header, sizeof(Header)))
@@ -217,12 +217,12 @@ namespace Hermes
 		auto MipmapGenerationMode = MipmapGenerationMode::Generate;
 		if (Header.MipLevelCount > 1)
 			MipmapGenerationMode = MipmapGenerationMode::LoadExisting;
-		auto Result = Texture2D::Create(String(Name), { Header.Width, Header.Height }, Header.Format, Header.BytesPerChannel, ImageData.data(), MipmapGenerationMode);
+		auto Result = Texture2D::Create(String(Name), Handle, { Header.Width, Header.Height }, Header.Format, Header.BytesPerChannel, ImageData.data(), MipmapGenerationMode);
 
 		return Result;
 	}
 
-	std::unique_ptr<Asset> AssetLoader::LoadMesh(IPlatformFile& File, const AssetHeader& AssetHeader, StringView Name)
+	std::unique_ptr<Asset> AssetLoader::LoadMesh(IPlatformFile& File, const AssetHeader& AssetHeader, StringView Name, AssetHandle Handle)
 	{
 		(void)AssetHeader;
 
@@ -261,6 +261,6 @@ namespace Hermes
 			return nullptr;
 		}
 
-		return Mesh::Create(String(Name), Vertices, Indices, Primitives);
+		return Mesh::Create(String(Name), Handle, Vertices, Indices, Primitives);
 	}
 }

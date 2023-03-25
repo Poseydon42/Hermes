@@ -2,9 +2,10 @@
 
 namespace Hermes
 {
-	Asset::Asset(String InName, AssetType InType)
+	Asset::Asset(String InName, AssetType InType, AssetHandle InSelfHandle)
 		: Name(std::move(InName))
 		, Type(InType)
+		, SelfHandle(InSelfHandle)
 	{
 	}
 
@@ -18,6 +19,10 @@ namespace Hermes
 		return Type;
 	}
 
+	AssetHandle Asset::GetSelfHandle() const
+	{
+		return SelfHandle;
+	}
 
 	bool Asset::IsValid() const
 	{

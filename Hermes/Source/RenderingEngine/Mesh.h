@@ -20,7 +20,7 @@ namespace Hermes
 			uint32 IndexCount;
 		};
 
-		static std::unique_ptr<Mesh> Create(String Name, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> Primitives);
+		static std::unique_ptr<Mesh> Create(String Name, AssetHandle Handle, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> Primitives);
 
 		const Vulkan::Buffer& GetVertexBuffer() const;
 		const Vulkan::Buffer& GetIndexBuffer() const;
@@ -29,7 +29,7 @@ namespace Hermes
 		const SphereBoundingVolume& GetBoundingVolume() const;
 
 	private:
-		Mesh(String Name, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> InPrimitives);
+		Mesh(String Name, AssetHandle Handle, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> InPrimitives);
 		
 		std::unique_ptr<Vulkan::Buffer> VertexBuffer, IndexBuffer;
 

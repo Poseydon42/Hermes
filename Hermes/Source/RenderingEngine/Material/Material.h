@@ -1,8 +1,8 @@
 ﻿#pragma once
 
+#include "AssetSystem/Asset.h"
 #include "Core/Core.h"
 #include "RenderingEngine/Material/MaterialProperty.h"
-#include "RenderingEngine/Resource/Resource.h"
 #include "Vulkan/Descriptor.h"
 #include "Vulkan/Pipeline.h"
 
@@ -17,11 +17,9 @@ namespace Hermes
 	 * A material cannot be applied directly to an object. It serves as a template based on which material
 	 * instances can be created.
 	 */
-	class HERMES_API Material : public Resource, public std::enable_shared_from_this<Material>
+	class HERMES_API Material : public Asset
 	{
 	public:
-		static std::shared_ptr<Material> Create(String Name, const String& VertexShaderPath, const String& FragmentShaderPath);
-
 		std::unique_ptr<MaterialInstance> CreateInstance() const;
 
 		const MaterialProperty* FindProperty(const String& PropertyName) const;
@@ -36,14 +34,13 @@ namespace Hermes
 		const Vulkan::Pipeline& GetVertexPipeline() const;
 
 	private:
-		// FIXME: this means that a material will never be destroyed, perhaps we should try to destroy unused materials when we're close to being out of memory?
-		static std::unordered_map<String, std::shared_ptr<Material>> CreatedMaterials;
-
 		String VertexShaderName, FragmentShaderName;
 
 		std::unique_ptr<Vulkan::DescriptorSetLayout> DescriptorSetLayout;
 		std::unique_ptr<Vulkan::Pipeline> Pipeline, VertexPipeline;
 
-		Material(String InName, String InVertexShaderPath, String InFragmentShaderPath);
+		Material(String InName, AssetHandle InHandle, String InVertexShaderPath, String InFragmentShaderPath);
+
+		friend class AssetLoader;
 	};
 }

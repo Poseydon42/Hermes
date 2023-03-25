@@ -11,12 +11,10 @@
 
 namespace Hermes
 {
-	std::unordered_map<String, std::shared_ptr<Material>> Material::CreatedMaterials;
+	DEFINE_ASSET_TYPE(Material, Material);
 
-	// FIXME: can this class be implemented without double hash table lookup? (at the moment: first look up the shader
-	// reflection instance in shader cache, then look up properties in the reflection instance)
-	Material::Material(String InName, String InVertexShaderPath, String InFragmentShaderPath)
-		: Resource(std::move(InName), ResourceType::Material)
+	Material::Material(String InName, AssetHandle InHandle, String InVertexShaderPath, String InFragmentShaderPath)
+		: Asset(std::move(InName), AssetType::Material, InHandle)
 		, VertexShaderName(std::move(InVertexShaderPath))
 		, FragmentShaderName(std::move(InFragmentShaderPath))
 	{
@@ -125,26 +123,12 @@ namespace Hermes
 		VertexPipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetVertexRenderPassObject(), PipelineDesc);
 	}
 
-	std::shared_ptr<Material> Material::Create(String Name, const String& VertexShaderPath, const String& FragmentShaderPath)
-	{
-		auto MaterialHash = VertexShaderPath + FragmentShaderPath;
-		if (auto MaybeExistingMaterial = CreatedMaterials.find(MaterialHash); MaybeExistingMaterial != CreatedMaterials.end())
-		{
-			return MaybeExistingMaterial->second;
-		}
-
-		auto NewMaterial = std::shared_ptr<Material>(new Material(std::move(Name), VertexShaderPath, FragmentShaderPath));
-		CreatedMaterials[MaterialHash] = NewMaterial;
-
-		return NewMaterial;
-	}
-
 	std::unique_ptr<MaterialInstance> Material::CreateInstance() const
 	{
 		auto& ShaderCache = Renderer::Get().GetShaderCache();
 		const auto& Reflection = ShaderCache.GetShaderReflection(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		return std::unique_ptr<MaterialInstance>(new MaterialInstance(shared_from_this(), Reflection.GetTotalSizeForUniformBuffer()));
+		return std::unique_ptr<MaterialInstance>(new MaterialInstance(GetSelfHandle(), Reflection.GetTotalSizeForUniformBuffer()));
 	}
 
 	const MaterialProperty* Material::FindProperty(const String& PropertyName) const

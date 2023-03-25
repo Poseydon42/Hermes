@@ -10,8 +10,6 @@ set(SOURCES
     AssetHeaders.h
     AssetLoader.cpp
     AssetLoader.h
-    MaterialAsset.cpp
-    MaterialAsset.h
 )
 
 add_hermes_sublib(Hermes_AssetSystem "${SOURCES}")

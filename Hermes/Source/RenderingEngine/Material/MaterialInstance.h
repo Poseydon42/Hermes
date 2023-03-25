@@ -27,8 +27,6 @@ namespace Hermes
 	class HERMES_API MaterialInstance
 	{
 	public:
-		static std::optional<std::unique_ptr<MaterialInstance>> CreateFromJSON(StringView JSON);
-
 		template<typename ValueType>
 		void SetNumericProperty(const String& Name, const ValueType& Value, size_t ArrayIndex = 0);
 
@@ -56,21 +54,13 @@ namespace Hermes
 		mutable bool IsDirty = false;
 		bool HasUniformBuffer = false;
 
-		std::shared_ptr<const Material> BaseMaterial;
+		AssetHandle BaseMaterialHandle;
 		std::unordered_map<String, AssetHandle> CurrentlyBoundRefCountedTextures;
 		std::vector<uint8> CPUBuffer;
 		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
 		std::unique_ptr<Vulkan::Buffer> UniformBuffer;
 
-		MaterialInstance(std::shared_ptr<const Material> Material, size_t UniformBufferSize);
-
-		void SetScalarPropertyFromJSON(const String& Name, const JSONValue& Value);
-
-		void SetVectorPropertyFromJSON(const String& Name, const JSONValue& Value);
-
-		void SetTexturePropertyFromJSON(const String& Name, const JSONValue& Value);
-
-		void SetPropertiesFromJSON(const JSONObject& PropertiesObject);
+		MaterialInstance(AssetHandle InBaseMaterialHandle, size_t UniformBufferSize);
 
 		friend class Material;
 	};
@@ -79,7 +69,7 @@ namespace Hermes
 	template<typename ValueType>
 	void MaterialInstance::SetNumericProperty(const String& Name, const ValueType& Value, size_t ArrayIndex)
 	{
-		auto* Property = BaseMaterial->FindProperty(Name);
+		auto* Property = GetBaseMaterial().FindProperty(Name);
 		HERMES_ASSERT_LOG(Property, "Unknown material property '%s'", Name.c_str());
 
 		auto SizeOfSingleElement = Property->Size / Property->ArrayLength;

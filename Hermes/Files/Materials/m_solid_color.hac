@@ -1,0 +1,11 @@
+{
+    "meta": {
+        "type": "material"
+    },
+    "data": {
+        "shaders": {
+            "vertex": "/Shaders/Bin/forward_vert.glsl.spv",
+            "fragment": "/Shaders/Bin/solid_color_frag.glsl.spv"
+        }
+    }
+}

@@ -1,9 +1,9 @@
 ﻿#include "AssetLoader.h"
 
-#include "Platform/GenericPlatform/PlatformFile.h"
-#include "AssetSystem/MaterialAsset.h"
 #include "JSON/JSONParser.h"
 #include "Logging/Logger.h"
+#include "Platform/GenericPlatform/PlatformFile.h"
+#include "RenderingEngine/Material/Material.h"
 #include "RenderingEngine/Mesh.h"
 #include "RenderingEngine/Texture.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
@@ -126,7 +126,7 @@ namespace Hermes
 
 		const auto& JSONShaders = Data["shaders"].AsObject();
 
-		std::vector<std::pair<String, String>> Shaders;
+		String VertexShader, FragmentShader;
 		for (const auto& JSONShader : JSONShaders)
 		{
 			if (!JSONShader.second.Is(JSONValueType::String))
@@ -135,10 +135,13 @@ namespace Hermes
 			const auto& Type = JSONShader.first;
 			auto Path = JSONShader.second.AsString();
 
-			Shaders.emplace_back(Type, String(Path));
+			if (Type == "vertex")
+				VertexShader = String(Path);
+			if (Type == "fragment")
+				FragmentShader = String(Path);
 		}
 		
-		return std::unique_ptr<MaterialAsset>(new MaterialAsset(String(Name), Handle, Shaders));
+		return std::unique_ptr<Material>(new Material(String(Name), Handle, VertexShader, FragmentShader));
 	}
 
 	static size_t NumberOfChannelInImageFormat(ImageFormat Format)

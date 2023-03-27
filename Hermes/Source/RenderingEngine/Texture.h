@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <memory>
+#include <span>
 
 #include "AssetSystem/AssetHeaders.h"
 #include "Core/Core.h"
@@ -31,6 +32,8 @@ namespace Hermes
 	{
 	public:
 		static std::unique_ptr<Texture2D> Create(String Name, AssetHandle Handle, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode);
+
+		static std::unique_ptr<Asset> Load(String Name, AssetHandle Handle, std::span<const uint8> BinaryData);
 
 		const Vulkan::Image& GetRawImage() const;
 

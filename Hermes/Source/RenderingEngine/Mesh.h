@@ -22,6 +22,8 @@ namespace Hermes
 
 		static std::unique_ptr<Mesh> Create(String Name, AssetHandle Handle, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> Primitives);
 
+		static std::unique_ptr<Asset> Load(String Name, AssetHandle Handle, std::span<const uint8> BinaryData);
+
 		const Vulkan::Buffer& GetVertexBuffer() const;
 		const Vulkan::Buffer& GetIndexBuffer() const;
 		std::span<const PrimitiveDrawInformation> GetPrimitives() const;

@@ -67,3 +67,14 @@ namespace Hermes
 		HERMES_ASSERT(From.GetType() == AssetType::Type);                                              \
 		return static_cast<const ClassName&>(From);                                                    \
 	}
+
+#define HERMES_ADD_BINARY_ASSET_LOADER(ClassName, Type) \
+	namespace Asset##Type##ClassName##LoaderInitializerInternal \
+	{ \
+		static bool InitializeLoader() \
+		{ \
+			AssetLoader::RegisterBinaryAssetLoader(AssetType::Type, ClassName::Load); \
+			return true; \
+		} \
+		static volatile [[maybe_unused]] bool InitializerDummy = InitializeLoader(); \
+	}

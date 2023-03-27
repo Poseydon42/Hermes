@@ -1,5 +1,6 @@
 ﻿#include "Texture.h"
 
+#include "AssetSystem/AssetLoader.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/GPUInteractionUtilities.h"
@@ -15,6 +16,7 @@
 namespace Hermes
 {
 	DEFINE_ASSET_TYPE(Texture2D, Texture2D);
+	HERMES_ADD_BINARY_ASSET_LOADER(Texture2D, Texture2D);
 
 	static VkFormat ChooseFormatFromImageType(ImageFormat Format, size_t BytesPerChannel)
 	{
@@ -129,9 +131,93 @@ namespace Hermes
 		}
 	}
 
+	static size_t NumberOfChannelInImageFormat(ImageFormat Format)
+	{
+		switch (Format)
+		{
+		case ImageFormat::R:
+			return 1;
+		case ImageFormat::RG:
+		case ImageFormat::RA:
+			return 2;
+		case ImageFormat::HDR:
+		case ImageFormat::RGBA:
+		case ImageFormat::RGBX:
+			return 4;
+		default:
+			HERMES_ASSERT(false);
+		}
+	}
+
+	static size_t CalculateTotalPixelCount(size_t Width, size_t Height, size_t MipLevelCount)
+	{
+		size_t Result = 0;
+		while (MipLevelCount--)
+		{
+			Result += Width * Height;
+			Width = Math::Max<size_t>(Width / 2, 1);
+			Height = Math::Max<size_t>(Height / 2, 1);
+		}
+		return Result;
+	}
+
 	std::unique_ptr<Texture2D> Texture2D::Create(String Name, AssetHandle Handle, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
 	{
 		return std::unique_ptr<Texture2D>(new Texture2D(std::move(Name), Handle, Dimensions, Format, BytesPerChannel, Data, MipmapMode));
+	}
+
+	std::unique_ptr<Asset> Texture2D::Load(String Name, AssetHandle Handle, std::span<const uint8> BinaryData)
+	{
+		const uint8* DataPtr = BinaryData.data();
+
+		const auto* Header = reinterpret_cast<const ImageAssetHeader*>(DataPtr);
+		DataPtr += sizeof(*Header);
+
+		size_t BytesPerPixel = NumberOfChannelInImageFormat(Header->Format) * Header->BytesPerChannel;
+		size_t TotalBytes = CalculateTotalPixelCount(Header->Width, Header->Height, Header->MipLevelCount) * BytesPerPixel;
+
+		size_t BytesInSource = TotalBytes;
+		if (Header->Format == ImageFormat::HDR)
+			BytesInSource = BytesInSource / 4 * 3; // We need to insert the alpha channel manually
+
+		std::vector<uint8> ImageData;
+		if (Header->Format == ImageFormat::HDR)
+		{
+			HERMES_ASSERT_LOG(Header->MipLevelCount == 1, "Loading HDR texures with pregenerated mipmaps is not supported");
+			
+			std::vector<uint8> UnpackedData(TotalBytes, 0x00);
+			const auto* SourcePixel = reinterpret_cast<const float*>(DataPtr);
+			auto* DestPixel = reinterpret_cast<float*>(UnpackedData.data());
+
+			auto PixelCount = CalculateTotalPixelCount(Header->Width, Header->Height, 1);
+			while (PixelCount--)
+			{
+				*DestPixel++ = *SourcePixel++; // R
+				*DestPixel++ = *SourcePixel++; // G
+				*DestPixel++ = *SourcePixel++; // B
+				*DestPixel++ = 1.0f; // A
+			}
+
+			DataPtr = reinterpret_cast<const uint8*>(SourcePixel);
+
+			ImageData = std::move(UnpackedData);
+		}
+		else
+		{
+			ImageData = std::vector<uint8>(TotalBytes);
+			memcpy(ImageData.data(), DataPtr, TotalBytes);
+			DataPtr += TotalBytes;
+		}
+
+		HERMES_ASSERT(DataPtr == BinaryData.data() + BinaryData.size());
+
+		// FIXME: let the user choose whether they want to load/generate mipmaps
+		auto MipmapGenerationMode = MipmapGenerationMode::Generate;
+		if (Header->MipLevelCount > 1)
+			MipmapGenerationMode = MipmapGenerationMode::LoadExisting;
+		auto Result = Texture2D::Create(String(Name), Handle, { Header->Width, Header->Height }, Header->Format, Header->BytesPerChannel, ImageData.data(), MipmapGenerationMode);
+
+		return Result;
 	}
 
 	const Vulkan::Image& Texture2D::GetRawImage() const

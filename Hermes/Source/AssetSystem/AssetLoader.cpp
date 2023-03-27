@@ -1,27 +1,27 @@
 ﻿#include "AssetLoader.h"
 
+#include "AssetSystem/AssetHeaders.h"
 #include "JSON/JSONParser.h"
 #include "Logging/Logger.h"
 #include "Platform/GenericPlatform/PlatformFile.h"
-#include "RenderingEngine/Material/Material.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 
 namespace Hermes
 {
-	static AssetType AssetTypeFromString(StringView String)
-	{
-		if (String == "material")
-			return AssetType::Material;
-		return AssetType::Invalid;
-	}
-
 	std::unordered_map<AssetType, AssetLoader::BinaryAssetLoaderFunction> AssetLoader::BinaryLoaders;
+	std::unordered_map<String, AssetLoader::TextAssetLoaderFunction> AssetLoader::TextLoaders;
 
 	void AssetLoader::RegisterBinaryAssetLoader(AssetType Type, BinaryAssetLoaderFunction Loader)
 	{
 		// NOTE: this function will be called well before the engine is initialized, so we can't use the logger here
 		HERMES_ASSERT(!BinaryLoaders.contains(Type));
 		BinaryLoaders[Type] = Loader;
+	}
+
+	void AssetLoader::RegisterTextAssetLoader(String Type, TextAssetLoaderFunction Loader)
+	{
+		HERMES_ASSERT(!TextLoaders.contains(Type));
+		TextLoaders[Type] = Loader;
 	}
 
 	std::unique_ptr<Asset> AssetLoader::Load(StringView Name, AssetHandle Handle)
@@ -108,8 +108,7 @@ namespace Hermes
 			return nullptr;
 		}
 
-		auto StringType = Meta["type"].AsString();
-		auto Type = AssetTypeFromString(StringType);
+		auto Type = String(Meta["type"].AsString());
 
 		if (!JSONRoot.Contains("data") || !JSONRoot["data"].Is(JSONValueType::Object))
 		{
@@ -118,41 +117,13 @@ namespace Hermes
 		}
 
 		const auto& Data = JSONRoot["data"].AsObject();
-		switch (Type)
+		if (!TextLoaders.contains(Type))
 		{
-		case AssetType::Material:
-			return LoadMaterial(Data, Name, Handle);
-		default:
-			HERMES_LOG_ERROR("Cannot load text asset of type %02x", static_cast<uint8>(Type));
-			return nullptr;
-		}
-	}
-
-	std::unique_ptr<Asset> AssetLoader::LoadMaterial(const JSONObject& Data, StringView Name, AssetHandle Handle)
-	{
-		if (!Data.Contains("shaders") || !Data["shaders"].Is(JSONValueType::Object))
-		{
-			HERMES_LOG_ERROR("Material asset %s does not specify any shaders", Name.data());
+			HERMES_LOG_ERROR("Cannot load text asset of type \"%s\"", Type.c_str());
 			return nullptr;
 		}
 
-		const auto& JSONShaders = Data["shaders"].AsObject();
-
-		String VertexShader, FragmentShader;
-		for (const auto& JSONShader : JSONShaders)
-		{
-			if (!JSONShader.second.Is(JSONValueType::String))
-				continue;
-
-			const auto& Type = JSONShader.first;
-			auto Path = JSONShader.second.AsString();
-
-			if (Type == "vertex")
-				VertexShader = String(Path);
-			if (Type == "fragment")
-				FragmentShader = String(Path);
-		}
-		
-		return std::unique_ptr<Material>(new Material(String(Name), Handle, VertexShader, FragmentShader));
+		auto Loader = TextLoaders[Type];
+		return Loader(String(Name), Handle, Data);
 	}
 }

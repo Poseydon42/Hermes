@@ -8,6 +8,7 @@
 
 namespace Hermes
 {
+	class JSONObject;
 	class MaterialInstance;
 
 	/*
@@ -20,6 +21,10 @@ namespace Hermes
 	class HERMES_API Material : public Asset
 	{
 	public:
+		static std::unique_ptr<Material> Create(String Name, AssetHandle Handle, String VertexShaderPath, String FragmentShaderPath);
+
+		static std::unique_ptr<Asset> Load(String Name, AssetHandle Handle, const JSONObject& Data);
+
 		std::unique_ptr<MaterialInstance> CreateInstance() const;
 
 		const MaterialProperty* FindProperty(const String& PropertyName) const;
@@ -40,7 +45,5 @@ namespace Hermes
 		std::unique_ptr<Vulkan::Pipeline> Pipeline, VertexPipeline;
 
 		Material(String InName, AssetHandle InHandle, String InVertexShaderPath, String InFragmentShaderPath);
-
-		friend class AssetLoader;
 	};
 }

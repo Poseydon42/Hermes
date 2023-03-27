@@ -1,7 +1,9 @@
 ﻿#include "Material.h"
 
-// FIXME: this include looks so ugly here
 #include "AssetSystem/AssetHeaders.h"
+#include "AssetSystem/AssetLoader.h"
+#include "JSON/JSONObject.h"
+#include "JSON/JSONValue.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/SharedData.h"
@@ -12,6 +14,7 @@
 namespace Hermes
 {
 	DEFINE_ASSET_TYPE(Material, Material);
+	HERMES_ADD_TEXT_ASSET_LOADER(Material, "material");
 
 	Material::Material(String InName, AssetHandle InHandle, String InVertexShaderPath, String InFragmentShaderPath)
 		: Asset(std::move(InName), AssetType::Material, InHandle)
@@ -121,6 +124,39 @@ namespace Hermes
 		// NOTE: vertex shaders don't have any user-defined material properties for now
 		PipelineDesc.DescriptorSetLayouts = { &Renderer::Get().GetGlobalDataDescriptorSetLayout() };
 		VertexPipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetVertexRenderPassObject(), PipelineDesc);
+	}
+
+	std::unique_ptr<Material> Material::Create(String Name, AssetHandle Handle, String VertexShaderPath, String FragmentShaderPath)
+	{
+		return std::unique_ptr<Material>(new Material(std::move(Name), Handle, std::move(VertexShaderPath), std::move(FragmentShaderPath)));
+	}
+
+	std::unique_ptr<Asset> Material::Load(String Name, AssetHandle Handle, const JSONObject& Data)
+	{
+		if (!Data.Contains("shaders") || !Data["shaders"].Is(JSONValueType::Object))
+		{
+			HERMES_LOG_ERROR("Material asset %s does not specify any shaders", Name.data());
+			return nullptr;
+		}
+
+		const auto& JSONShaders = Data["shaders"].AsObject();
+
+		String VertexShader, FragmentShader;
+		for (const auto& JSONShader : JSONShaders)
+		{
+			if (!JSONShader.second.Is(JSONValueType::String))
+				continue;
+
+			const auto& Type = JSONShader.first;
+			auto Path = JSONShader.second.AsString();
+
+			if (Type == "vertex")
+				VertexShader = String(Path);
+			if (Type == "fragment")
+				FragmentShader = String(Path);
+		}
+
+		return Create(std::move(Name), Handle, std::move(VertexShader), std::move(FragmentShader));
 	}
 
 	std::unique_ptr<MaterialInstance> Material::CreateInstance() const

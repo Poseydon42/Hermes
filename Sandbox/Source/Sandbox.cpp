@@ -243,7 +243,6 @@ public:
 private:
 	bool AnisotropyEnabled = false, AnisotropyChanged = false;
 	Hermes::AssetHandle SolidColorMaterialInstanceHandle = Hermes::GInvalidAssetHandle;
-	Hermes::EntityID NextEntityToRemove = 1;
 
 	void KeyEventHandler(const Hermes::IEvent& Event)
 	{

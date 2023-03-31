@@ -4,7 +4,7 @@
 #include <iostream>
 #include <numeric>
 
-#include "AssetSystem/MeshAsset.h"
+#include "AssetSystem/AssetHeaders.h"
 #include "Mesh.h"
 #include "Node.h"
 #include "Platform/GenericPlatform/PlatformFile.h"

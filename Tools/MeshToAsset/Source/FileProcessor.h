@@ -2,7 +2,8 @@
 
 #include <memory>
 
-#include "AssetSystem/MeshAsset.h"
+#include "AssetSystem/AssetHeaders.h"
+#include "Math/Math.h"
 #include "InputFileReader.h"
 
 namespace Hermes::Tools

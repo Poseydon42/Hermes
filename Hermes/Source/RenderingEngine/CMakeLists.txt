@@ -32,8 +32,6 @@ set(SOURCES
     Passes/SkyboxPass.h
     Renderer.cpp
     Renderer.h
-    Resource/Resource.cpp
-    Resource/Resource.h
     Scene/Camera.h
     Scene/GeometryList.cpp
     Scene/GeometryList.h

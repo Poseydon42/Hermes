@@ -29,8 +29,13 @@ namespace Hermes
 
 		EntityID CreateEntity();
 
+		void RemoveEntity(EntityID Entity);
+
 		template<typename ComponentType>
 		ComponentType& AddComponent(EntityID Entity);
+
+		template<typename ComponentType>
+		void RemoveComponent(EntityID Entity);
 
 		template<typename ComponentType>
 		ComponentType* GetComponent(EntityID Entity);
@@ -96,7 +101,19 @@ namespace Hermes
 
 		Entities[Entity] |= GetComponentBitmask<ComponentType>();
 
+		Container[Entity] = {};
+
 		return Container[Entity];
+	}
+
+	template<typename ComponentType>
+	void World::RemoveComponent(EntityID Entity)
+	{
+		// FIXME: properly destroy components (call destructor)
+		HERMES_ASSERT(Entities.contains(Entity));
+		HERMES_ASSERT(Entity != InvalidEntity);
+
+		Entities[Entity] &= ~GetComponentBitmask<ComponentType>();
 	}
 
 	template<typename ComponentType>

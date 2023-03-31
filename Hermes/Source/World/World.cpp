@@ -32,6 +32,13 @@ namespace Hermes
 		return Entity;
 	}
 
+	void World::RemoveEntity(EntityID Entity)
+	{
+		// FIXME: properly destroy all components and reuse the entity ID
+		HERMES_ASSERT(Entities.contains(Entity));
+		Entities.erase(Entity);
+	}
+
 	void World::AddSystem(std::unique_ptr<ISystem> System)
 	{
 		Systems.push_back(std::move(System));

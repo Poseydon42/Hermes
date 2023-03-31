@@ -477,9 +477,13 @@ namespace Hermes
 			auto MaybeMesh = AssetCache.Get<Mesh>(CurrentMeshNode.GetMesh());
 			if (!MaybeMesh.has_value() || !MaybeMesh.value())
 				return;
-
 			const auto* Mesh = MaybeMesh.value();
-			CulledMeshes.emplace_back(TransformationMatrix, Mesh, &CurrentMeshNode.GetMaterialInstance());
+
+			auto MaybeMaterialInstance = AssetCache.Get<MaterialInstance>(CurrentMeshNode.GetMaterialInstance());
+			if (!MaybeMaterialInstance.has_value() || !MaybeMaterialInstance.value())
+				return;
+			const auto* MaterialInstance = MaybeMaterialInstance.value();
+			CulledMeshes.emplace_back(TransformationMatrix, Mesh, MaterialInstance);
 		};
 		MeshTraversal(RootNode);
 

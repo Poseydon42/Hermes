@@ -18,7 +18,7 @@ namespace Hermes
 			const auto* Mesh = World.GetComponent<MeshComponent>(Entity);
 			const auto* Transform = World.GetComponent<TransformComponent>(Entity);
 
-			Scene.GetRootNode().AddChild<MeshNode>(Transform->Transform, Mesh->Mesh, Mesh->Material);
+			Scene.GetRootNode().AddChild<MeshNode>(Transform->Transform, Mesh->Mesh, Mesh->MaterialInstance);
 		}
 	}
 }

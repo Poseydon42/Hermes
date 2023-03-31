@@ -193,7 +193,7 @@ public:
 
 				auto& SphereMeshComponent = World.AddComponent<Hermes::MeshComponent>(SphereEntity);
 				SphereMeshComponent.Mesh = SphereAssetHandle;
-				SphereMeshComponent.Material = AssetCache.Get<Hermes::MaterialInstance>(SolidColorMaterialInstanceHandle).value();
+				SphereMeshComponent.MaterialInstance = SolidColorMaterialInstanceHandle;
 
 				auto PointLightEntity = World.CreateEntity();
 				auto& LightTransform = World.AddComponent<Hermes::TransformComponent>(PointLightEntity);

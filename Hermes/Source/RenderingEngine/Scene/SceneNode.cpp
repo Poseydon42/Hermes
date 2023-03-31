@@ -91,10 +91,10 @@ namespace Hermes
 		return *Children.back();
 	}
 
-	MeshNode::MeshNode(Transform Transform, AssetHandle InMeshHandle, const MaterialInstance* InMaterial)
+	MeshNode::MeshNode(Transform Transform, AssetHandle InMeshHandle, AssetHandle InMaterialInstanceHandle)
 		: SceneNode(SceneNodeType::Mesh, Transform)
 		, MeshHandle(InMeshHandle)
-		, Material(std::move(InMaterial))
+		, MaterialInstanceHandle(InMaterialInstanceHandle)
 	{
 	}
 
@@ -118,15 +118,15 @@ namespace Hermes
 		MeshHandle = NewMeshHandle;
 	}
 
-	void MeshNode::SetMaterialInstance(const MaterialInstance* NewMaterialInstance)
+	void MeshNode::SetMaterialInstance(AssetHandle NewMaterialInstance)
 	{
-		Material = std::move(NewMaterialInstance);
+		MaterialInstanceHandle = NewMaterialInstance;
 	}
 
-	const MaterialInstance& MeshNode::GetMaterialInstance() const
+	AssetHandle MeshNode::GetMaterialInstance() const
 	{
-		HERMES_ASSERT(Material);
-		return *Material;
+		HERMES_ASSERT(MaterialInstanceHandle);
+		return MaterialInstanceHandle;
 	}
 
 	PointLightNode::PointLightNode(Transform Transform, Vec3 InColor, float InIntensity)

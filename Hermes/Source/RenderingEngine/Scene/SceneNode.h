@@ -94,19 +94,19 @@ namespace Hermes
 	public:
 		virtual ~MeshNode() override = default;
 
-		MeshNode(Transform Transform, AssetHandle InMeshHandle, const MaterialInstance* InMaterial);
+		MeshNode(Transform Transform, AssetHandle InMeshHandle, AssetHandle InMaterialInstanceHandle);
 
 		const SphereBoundingVolume& GetBoundingVolume() const;
 
 		AssetHandle GetMesh() const;
 		void SetMesh(AssetHandle NewMeshHandle);
 
-		const MaterialInstance& GetMaterialInstance() const;
-		void SetMaterialInstance(const MaterialInstance* NewMaterialInstance);
+		AssetHandle GetMaterialInstance() const;
+		void SetMaterialInstance(AssetHandle NewMaterialInstance);
 
 	private:
 		AssetHandle MeshHandle;
-		const MaterialInstance* Material; // FIXME: replace with refcounted pointers or asset handle
+		AssetHandle MaterialInstanceHandle;
 	};
 
 	class HERMES_API PointLightNode : public SceneNode

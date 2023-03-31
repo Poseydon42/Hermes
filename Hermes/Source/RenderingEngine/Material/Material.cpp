@@ -131,11 +131,11 @@ namespace Hermes
 		return std::unique_ptr<Material>(new Material(std::move(Name), Handle, std::move(VertexShaderPath), std::move(FragmentShaderPath)));
 	}
 
-	std::unique_ptr<Asset> Material::Load(String Name, AssetHandle Handle, const JSONObject& Data)
+	std::unique_ptr<Asset> Material::Load(const AssetLoaderCallbackInfo& CallbackInfo, const JSONObject& Data)
 	{
 		if (!Data.Contains("shaders") || !Data["shaders"].Is(JSONValueType::Object))
 		{
-			HERMES_LOG_ERROR("Material asset %s does not specify any shaders", Name.data());
+			HERMES_LOG_ERROR("Material asset %s does not specify any shaders", CallbackInfo.Name.data());
 			return nullptr;
 		}
 
@@ -156,15 +156,7 @@ namespace Hermes
 				FragmentShader = String(Path);
 		}
 
-		return Create(std::move(Name), Handle, std::move(VertexShader), std::move(FragmentShader));
-	}
-
-	std::unique_ptr<MaterialInstance> Material::CreateInstance() const
-	{
-		auto& ShaderCache = Renderer::Get().GetShaderCache();
-		const auto& Reflection = ShaderCache.GetShaderReflection(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
-
-		return std::unique_ptr<MaterialInstance>(new MaterialInstance(GetSelfHandle(), Reflection.GetTotalSizeForUniformBuffer()));
+		return Create(String(CallbackInfo.Name), CallbackInfo.Handle, std::move(VertexShader), std::move(FragmentShader));
 	}
 
 	const MaterialProperty* Material::FindProperty(const String& PropertyName) const
@@ -188,5 +180,13 @@ namespace Hermes
 	const Vulkan::Pipeline& Material::GetVertexPipeline() const
 	{
 		return *VertexPipeline;
+	}
+
+	size_t Material::GetUniformBufferSize() const
+	{
+		auto& ShaderCache = Renderer::Get().GetShaderCache();
+		const auto& Reflection = ShaderCache.GetShaderReflection(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+		return Reflection.GetTotalSizeForUniformBuffer();
 	}
 }

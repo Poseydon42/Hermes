@@ -12,11 +12,18 @@ namespace Hermes
 	class JSONObject;
 	class IPlatformFile;
 
+	struct AssetLoaderCallbackInfo
+	{
+		StringView Name;
+		AssetHandle Handle;
+		std::vector<AssetHandle> Dependencies;
+	};
+
 	class HERMES_API AssetLoader
 	{
 	public:
 		using BinaryAssetLoaderFunction = std::unique_ptr<Asset>(*)(String, AssetHandle, std::span<const uint8>);
-		using TextAssetLoaderFunction = std::unique_ptr<Asset>(*)(String, AssetHandle, const JSONObject&);
+		using TextAssetLoaderFunction = std::unique_ptr<Asset>(*)(const AssetLoaderCallbackInfo&, const JSONObject&);
 
 		static void RegisterBinaryAssetLoader(AssetType Type, BinaryAssetLoaderFunction Loader);
 		static void RegisterTextAssetLoader(String Type, TextAssetLoaderFunction Loader);

@@ -1,0 +1,14 @@
+{
+    "meta": {
+        "type": "material_instance",
+        "dependencies": [
+            "/Materials/m_solid_color"
+        ]
+    },
+    "data": {
+        "material": 0,
+        "values": {
+            "Color": [ 0.41, 0.61, 1.0 ]
+        }
+    }
+}

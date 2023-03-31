@@ -1,5 +1,6 @@
 ﻿#include "AssetLoader.h"
 
+#include "ApplicationCore/GameLoop.h"
 #include "AssetSystem/AssetHeaders.h"
 #include "JSON/JSONParser.h"
 #include "Logging/Logger.h"
@@ -21,7 +22,7 @@ namespace Hermes
 	void AssetLoader::RegisterTextAssetLoader(String Type, TextAssetLoaderFunction Loader)
 	{
 		HERMES_ASSERT(!TextLoaders.contains(Type));
-		TextLoaders[Type] = Loader;
+		TextLoaders[std::move(Type)] = Loader;
 	}
 
 	std::unique_ptr<Asset> AssetLoader::Load(StringView Name, AssetHandle Handle)
@@ -107,8 +108,35 @@ namespace Hermes
 			HERMES_LOG_ERROR("Asset's %s meta does not specify its type", Name.data());
 			return nullptr;
 		}
-
 		auto Type = String(Meta["type"].AsString());
+
+		std::vector<StringView> DependencyNames;
+		if (Meta.Contains("dependencies") && Meta["dependencies"].Is(JSONValueType::Array))
+		{
+			for (const auto& Dependency : Meta["dependencies"].AsArray())
+			{
+				if (!Dependency.Is(JSONValueType::String))
+				{
+					HERMES_LOG_ERROR("Dependency name is not a string (asset %s)", Name.data());
+					return nullptr;
+				}
+
+				DependencyNames.push_back(Dependency.AsString());
+			}
+		}
+
+		std::vector<AssetHandle> DependencyHandles;
+		auto& AssetCache = GGameLoop->GetAssetCache();
+		for (const auto& DependencyName : DependencyNames)
+		{
+			auto DependencyHandle = AssetCache.Create(DependencyName);
+			if (Handle == GInvalidAssetHandle)
+			{
+				HERMES_LOG_ERROR("Asset %s depends on asset %s which cannot be loaded", DependencyName.data());
+				return nullptr;
+			}
+			DependencyHandles.push_back(DependencyHandle);
+		}
 
 		if (!JSONRoot.Contains("data") || !JSONRoot["data"].Is(JSONValueType::Object))
 		{
@@ -124,6 +152,13 @@ namespace Hermes
 		}
 
 		auto Loader = TextLoaders[Type];
-		return Loader(String(Name), Handle, Data);
+
+		AssetLoaderCallbackInfo CallbackInfo = {
+			.Name = Name,
+			.Handle = Handle,
+			.Dependencies = std::move(DependencyHandles)
+		};
+
+		return Loader(CallbackInfo, Data);
 	}
 }

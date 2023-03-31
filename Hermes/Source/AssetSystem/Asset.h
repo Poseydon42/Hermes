@@ -14,6 +14,7 @@ namespace Hermes
 		Mesh = 2,
 
 		Material = 64,
+		MaterialInstance = 65,
 
 		Invalid = 0xFF
 	};

@@ -4,7 +4,7 @@
 #include <optional>
 #include <vector>
 
-#include "AssetSystem/AssetCache.h"
+#include "AssetSystem/Asset.h"
 #include "Core/Core.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/Material/Material.h"
@@ -24,25 +24,22 @@ namespace Hermes
 	 *
 	 * Can be applied to an object in the scene to change its visual appearance.
 	 */
-	class HERMES_API MaterialInstance
+	class HERMES_API MaterialInstance : public Asset
 	{
 	public:
+		static std::unique_ptr<MaterialInstance> Create(String Name, AssetHandle Handle, AssetHandle BaseMaterialHandle);
+
+		static std::unique_ptr<Asset> Load(const AssetLoaderCallbackInfo& CallbackInfo, const JSONObject& Data);
+
 		template<typename ValueType>
 		void SetNumericProperty(const String& Name, const ValueType& Value, size_t ArrayIndex = 0);
 
-		/*
-		 * Sets a texture property using a direct reference to a Texture object.
-		 *
-		 * Reference counting and ensuring the lifetime of the texture is a responsibility of the user in this case.
-		 */
-		void SetTextureProperty(const String& Name, const Texture2D& Value, ColorSpace ColorSpace);
-
-		/*
-		 * Sets a texture property using a texture name. The texture will be acquired from a global TextureCache object.
-		 *
-		 * Reference counting is implemented in the texture cache object and valid lifetime is guaranteed.
-		 */
-		void SetTextureProperty(const String& Name, AssetHandle TextureHandle, ColorSpace ColorSpace);
+		template<typename ValueType>
+		void SetNumericProperty(const MaterialProperty& Property, const ValueType& Value, size_t ArrayIndex = 0);
+		
+		void SetTextureProperty(const String& PropertyName, const Texture2D& Value, ColorSpace ColorSpace);
+		
+		void SetTextureProperty(const String& PropertyName, AssetHandle TextureHandle, ColorSpace ColorSpace);
 
 		void PrepareForRender() const;
 
@@ -60,9 +57,16 @@ namespace Hermes
 		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
 		std::unique_ptr<Vulkan::Buffer> UniformBuffer;
 
-		MaterialInstance(AssetHandle InBaseMaterialHandle, size_t UniformBufferSize);
+		MaterialInstance(String InName, AssetHandle InHandle, AssetHandle InBaseMaterialHandle);
 
-		friend class Material;
+		/*
+		 * Loading from JSON routines
+		 */
+		void SetVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& Value);
+		
+		void SetFloatVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& Value);
+		
+		void SetPropertyFromJSON(const String& PropertyName, const JSONValue& Value);
 	};
 
 	// TODO : add type checking
@@ -72,10 +76,16 @@ namespace Hermes
 		auto* Property = GetBaseMaterial().FindProperty(Name);
 		HERMES_ASSERT_LOG(Property, "Unknown material property '%s'", Name.c_str());
 
-		auto SizeOfSingleElement = Property->Size / Property->ArrayLength;
+		SetNumericProperty(*Property, Value, ArrayIndex);
+	}
+
+	template<typename ValueType>
+	void MaterialInstance::SetNumericProperty(const MaterialProperty& Property, const ValueType& Value, size_t ArrayIndex)
+	{
+		auto SizeOfSingleElement = Property.Size / Property.ArrayLength;
 		HERMES_ASSERT(sizeof(ValueType) <= SizeOfSingleElement);
-		HERMES_ASSERT(ArrayIndex < Property->ArrayLength)
-		memcpy(CPUBuffer.data() + Property->Offset + ArrayIndex * SizeOfSingleElement, &Value, sizeof(ValueType));
+		HERMES_ASSERT(ArrayIndex < Property.ArrayLength);
+		memcpy(CPUBuffer.data() + Property.Offset + ArrayIndex * SizeOfSingleElement, &Value, sizeof(ValueType));
 
 		IsDirty = true;
 	}

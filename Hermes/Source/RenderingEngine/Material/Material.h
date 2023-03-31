@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "AssetSystem/Asset.h"
+#include "AssetSystem/AssetLoader.h"
 #include "Core/Core.h"
 #include "RenderingEngine/Material/MaterialProperty.h"
 #include "Vulkan/Descriptor.h"
@@ -23,9 +24,7 @@ namespace Hermes
 	public:
 		static std::unique_ptr<Material> Create(String Name, AssetHandle Handle, String VertexShaderPath, String FragmentShaderPath);
 
-		static std::unique_ptr<Asset> Load(String Name, AssetHandle Handle, const JSONObject& Data);
-
-		std::unique_ptr<MaterialInstance> CreateInstance() const;
+		static std::unique_ptr<Asset> Load(const AssetLoaderCallbackInfo& CallbackInfo, const JSONObject& Data);
 
 		const MaterialProperty* FindProperty(const String& PropertyName) const;
 
@@ -37,6 +36,8 @@ namespace Hermes
 		 * Returns a pipeline with vertex shader only that can be used for things like depth pass etc.
 		 */
 		const Vulkan::Pipeline& GetVertexPipeline() const;
+
+		size_t GetUniformBufferSize() const;
 
 	private:
 		String VertexShaderName, FragmentShaderName;

@@ -175,14 +175,8 @@ public:
 		auto& AssetCache = Hermes::GGameLoop->GetAssetCache();
 		auto SphereAssetHandle = AssetCache.Create("/sphere");
 
-		auto MaybeSolidColorMaterial = AssetCache.Get<Hermes::Material>("/Materials/m_solid_color");
-		HERMES_ASSERT(MaybeSolidColorMaterial.has_value());
-
-		const auto* SolidColorMaterial = MaybeSolidColorMaterial.value();
-		HERMES_ASSERT(SolidColorMaterial);
-
-		SolidColorMaterialInstance = SolidColorMaterial->CreateInstance();
-		SolidColorMaterialInstance->SetNumericProperty("Color", Hermes::Vec3{ 1.0f, 0.5f, 0.3f });
+		SolidColorMaterialInstanceHandle = AssetCache.Create("/mi_solid_color_blue");
+		HERMES_ASSERT(SolidColorMaterialInstanceHandle != Hermes::GInvalidAssetHandle);
 
 		auto& World = Hermes::GGameLoop->GetWorld();
 
@@ -199,7 +193,7 @@ public:
 
 				auto& SphereMeshComponent = World.AddComponent<Hermes::MeshComponent>(SphereEntity);
 				SphereMeshComponent.Mesh = SphereAssetHandle;
-				SphereMeshComponent.Material = SolidColorMaterialInstance.get();
+				SphereMeshComponent.Material = AssetCache.Get<Hermes::MaterialInstance>(SolidColorMaterialInstanceHandle).value();
 
 				auto PointLightEntity = World.CreateEntity();
 				auto& LightTransform = World.AddComponent<Hermes::TransformComponent>(PointLightEntity);
@@ -248,7 +242,7 @@ public:
 
 private:
 	bool AnisotropyEnabled = false, AnisotropyChanged = false;
-	std::unique_ptr<Hermes::MaterialInstance> SolidColorMaterialInstance;
+	Hermes::AssetHandle SolidColorMaterialInstanceHandle = Hermes::GInvalidAssetHandle;
 
 	void KeyEventHandler(const Hermes::IEvent& Event)
 	{

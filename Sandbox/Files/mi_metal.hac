@@ -1,0 +1,24 @@
+{
+    "meta": {
+        "type": "material_instance",
+        "dependencies": [
+            "/Materials/m_pbr",
+            "/pbr_test_albedo",
+            "/pbr_test_roughness",
+            "/pbr_test_metallic",
+            "/pbr_test_normal"
+        ]
+    },
+    "data": {
+        "material": 0,
+        "values": {
+            "u_AlbedoTexture": {
+                "texture": 1,
+                "color_space": "srgb"
+            },
+            "u_RoughnessTexture": 2,
+            "u_MetallicTexture": 3,
+            "u_NormalTexture": 4
+        }
+    }
+}

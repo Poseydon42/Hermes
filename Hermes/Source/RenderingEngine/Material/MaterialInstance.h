@@ -38,8 +38,10 @@ namespace Hermes
 		void SetNumericProperty(const MaterialProperty& Property, const ValueType& Value, size_t ArrayIndex = 0);
 		
 		void SetTextureProperty(const String& PropertyName, const Texture2D& Value, ColorSpace ColorSpace);
+		void SetTextureProperty(const MaterialProperty& Property, const Texture2D& Value, ColorSpace ColorSpace);
 		
 		void SetTextureProperty(const String& PropertyName, AssetHandle TextureHandle, ColorSpace ColorSpace);
+		void SetTextureProperty(const MaterialProperty& Property, AssetHandle TextureHandle, ColorSpace ColorSpace);
 
 		void PrepareForRender() const;
 
@@ -52,7 +54,6 @@ namespace Hermes
 		bool HasUniformBuffer = false;
 
 		AssetHandle BaseMaterialHandle;
-		std::unordered_map<String, AssetHandle> CurrentlyBoundRefCountedTextures;
 		std::vector<uint8> CPUBuffer;
 		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
 		std::unique_ptr<Vulkan::Buffer> UniformBuffer;
@@ -65,10 +66,12 @@ namespace Hermes
 		void SetScalarPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue);
 
 		void SetVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue);
+
+		void SetTexturePropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue, std::span<const AssetHandle> Dependencies);
 		
 		void SetFloatVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue);
 		
-		void SetPropertyFromJSON(const String& PropertyName, const JSONValue& Value);
+		void SetPropertyFromJSON(const String& PropertyName, const JSONValue& Value, std::span<const AssetHandle> Dependencies);
 	};
 
 	// TODO : add type checking

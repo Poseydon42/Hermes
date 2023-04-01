@@ -49,7 +49,7 @@ namespace Hermes
 
 		for (const auto& [Name, Value] : Data["values"].AsObject())
 		{
-			Instance->SetPropertyFromJSON(Name, Value);
+			Instance->SetPropertyFromJSON(Name, Value, CallbackInfo.Dependencies);
 		}
 
 		return Instance;
@@ -59,28 +59,36 @@ namespace Hermes
 	{
 		auto* Property = GetBaseMaterial().FindProperty(PropertyName);
 		HERMES_ASSERT(Property);
+		SetTextureProperty(*Property, Value, ColorSpace);
+	}
 
-		DescriptorSet->UpdateWithImageAndSampler(Property->Binding, 0, Value.GetView(ColorSpace),
-		                                         Renderer::Get().GetDefaultSampler(),
-		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	void MaterialInstance::SetTextureProperty(const MaterialProperty& Property, const Texture2D& Value, ColorSpace ColorSpace)
+	{
+		DescriptorSet->UpdateWithImageAndSampler(Property.Binding, 0, Value.GetView(ColorSpace), Renderer::Get().GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void MaterialInstance::SetTextureProperty(const String& PropertyName, AssetHandle TextureHandle, ColorSpace ColorSpace)
+	{
+		auto* Property = GetBaseMaterial().FindProperty(PropertyName);
+		HERMES_ASSERT(Property);
+		SetTextureProperty(*Property, TextureHandle, ColorSpace);
+	}
+
+	void MaterialInstance::SetTextureProperty(const MaterialProperty& Property, AssetHandle TextureHandle, ColorSpace ColorSpace)
 	{
 		auto& AssetCache = GGameLoop->GetAssetCache();
 
 		auto MaybeTexture = AssetCache.Get<Texture2D>(TextureHandle);
 		if (!MaybeTexture || !MaybeTexture.value())
 		{
-			HERMES_LOG_WARNING("Cannot set material instance property %s because the texture cannot be found", PropertyName.c_str());
+			HERMES_LOG_WARNING("Cannot set material instance property of material instance %s because the texture (handle 0x%zx) cannot be found", GetName().c_str(), static_cast<size_t>(TextureHandle));
 			return;
 		}
 
 		const auto* Texture = MaybeTexture.value();
 		HERMES_ASSERT(Texture);
 
-		SetTextureProperty(PropertyName, *Texture, ColorSpace);
-		CurrentlyBoundRefCountedTextures[PropertyName] = TextureHandle;
+		SetTextureProperty(Property, *Texture, ColorSpace);
 	}
 
 	void MaterialInstance::PrepareForRender() const
@@ -186,6 +194,59 @@ namespace Hermes
 		}
 	}
 
+	static ColorSpace ColorSpaceFromStringOr(StringView String, ColorSpace Fallback)
+	{
+		if (String == "linear")
+			return ColorSpace::Linear;
+		if (String == "srgb")
+			return ColorSpace::SRGB;
+		return Fallback;
+	}
+
+	void MaterialInstance::SetTexturePropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue, std::span<const AssetHandle> Dependencies)
+	{
+		static constexpr auto DefaultColorSpace = ColorSpace::Linear; // TODO: set the default color space in material asset
+
+		if (JSONValue.Is(JSONValueType::Number))
+		{
+			auto DependencyIndex = static_cast<size_t>(JSONValue.AsInteger());
+			if (DependencyIndex >= Dependencies.size())
+			{
+				HERMES_LOG_WARNING("Cannot set property %s of material instance %s: invalid texture index", PropertyName.data(), GetName().c_str());
+				return;
+			}
+
+			auto TextureHandle = Dependencies[DependencyIndex];
+			SetTextureProperty(Property, TextureHandle, DefaultColorSpace);
+		}
+		else if (JSONValue.Is(JSONValueType::Object))
+		{
+			const auto& JSONTextureContainer = JSONValue.AsObject();
+			if (!JSONTextureContainer.Contains("texture") || !JSONTextureContainer["texture"].Is(JSONValueType::Number))
+			{
+				HERMES_LOG_WARNING("Cannot set property %s of material instance %s: texture index not specified", PropertyName.data(), GetName().c_str());
+				return;
+			}
+
+			auto DependencyIndex = static_cast<size_t>(JSONTextureContainer["texture"].AsInteger());
+			if (DependencyIndex >= Dependencies.size())
+			{
+				HERMES_LOG_WARNING("Cannot set property %s of material instance %s: invalid texture index", PropertyName.data(), GetName().c_str());
+				return;
+			}
+
+			auto TextureHandle = Dependencies[DependencyIndex];
+
+			auto ColorSpace = DefaultColorSpace;
+			if (JSONTextureContainer.Contains("color_space") && JSONTextureContainer["color_space"].Is(JSONValueType::String))
+			{
+				ColorSpace = ColorSpaceFromStringOr(JSONTextureContainer["color_space"].AsString(), DefaultColorSpace);
+			}
+
+			SetTextureProperty(Property, TextureHandle, ColorSpace);
+		}
+	}
+
 	void MaterialInstance::SetFloatVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue)
 	{
 		HERMES_ASSERT(JSONValue.Is(JSONValueType::Array));
@@ -226,7 +287,7 @@ namespace Hermes
 		}
 	}
 
-	void MaterialInstance::SetPropertyFromJSON(const String& PropertyName, const JSONValue& Value)
+	void MaterialInstance::SetPropertyFromJSON(const String& PropertyName, const JSONValue& Value, std::span<const AssetHandle> Dependencies)
 	{
 		auto& BaseMaterial = GetBaseMaterial();
 
@@ -244,6 +305,9 @@ namespace Hermes
 			break;
 		case MaterialPropertyType::Vector:
 			SetVectorPropertyFromJSON(PropertyName, *Property, Value);
+			break;
+		case MaterialPropertyType::Texture:
+			SetTexturePropertyFromJSON(PropertyName, *Property, Value, Dependencies);
 			break;
 		default:
 			HERMES_LOG_WARNING("Cannot set property %s of material instance asset %s: this property type is not supported yet", PropertyName.c_str(), GetName().c_str());

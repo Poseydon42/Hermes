@@ -175,7 +175,7 @@ public:
 		auto& AssetCache = Hermes::GGameLoop->GetAssetCache();
 		auto SphereAssetHandle = AssetCache.Create("/sphere");
 
-		SolidColorMaterialInstanceHandle = AssetCache.Create("/mi_solid_color_blue");
+		SolidColorMaterialInstanceHandle = AssetCache.Create("/mi_metal");
 		HERMES_ASSERT(SolidColorMaterialInstanceHandle != Hermes::GInvalidAssetHandle);
 
 		auto& World = Hermes::GGameLoop->GetWorld();

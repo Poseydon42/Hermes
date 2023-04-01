@@ -137,19 +137,39 @@ namespace Hermes
 		}		
 	}
 
-	void MaterialInstance::SetVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& Value)
+	void MaterialInstance::SetScalarPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue)
+	{
+		if (!JSONValue.Is(JSONValueType::Number))
+		{
+			HERMES_LOG_WARNING("Cannot set property %s of material instance %s: JSON value must have numeric type", PropertyName.data(), GetName().data());
+			return;
+		}
+
+		auto Value = JSONValue.AsNumber();
+
+		switch (Property.DataType)
+		{
+		case MaterialPropertyDataType::Float:
+			SetNumericProperty(Property, static_cast<float>(Value));
+			break;
+		default:
+			HERMES_ASSERT_LOG(false, "Material property %s has unknown data type %u", PropertyName.data(), static_cast<uint32>(Property.DataType));
+		}
+	}
+
+	void MaterialInstance::SetVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue)
 	{
 		size_t ComponentCount = Property.Width;
 
 		HERMES_ASSERT(ComponentCount > 1 && ComponentCount <= 4);
 
-		if (!Value.Is(JSONValueType::Array))
+		if (!JSONValue.Is(JSONValueType::Array))
 		{
 			HERMES_LOG_WARNING("Cannot set property %s of material instance %s: JSON value must have array type", PropertyName.data(), GetName().c_str());
 			return;
 		}
 
-		auto Array = Value.AsArray();
+		auto Array = JSONValue.AsArray();
 		if (Array.size() != ComponentCount)
 		{
 			HERMES_LOG_WARNING("Cannot set property %s of material instance %s: JSON array has invalid size", PropertyName.data(), GetName().c_str());
@@ -159,19 +179,19 @@ namespace Hermes
 		switch (Property.DataType)
 		{
 		case MaterialPropertyDataType::Float:
-			SetFloatVectorPropertyFromJSON(PropertyName, Property, Value);
+			SetFloatVectorPropertyFromJSON(PropertyName, Property, JSONValue);
 			break;
 		default:
 			HERMES_ASSERT_LOG(false, "Material property %s has unknown data type %u", PropertyName.data(), static_cast<uint32>(Property.DataType))
 		}
 	}
 
-	void MaterialInstance::SetFloatVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& Value)
+	void MaterialInstance::SetFloatVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue)
 	{
-		HERMES_ASSERT(Value.Is(JSONValueType::Array));
-		HERMES_ASSERT(Value.AsArray().size() == Property.Width);
+		HERMES_ASSERT(JSONValue.Is(JSONValueType::Array));
+		HERMES_ASSERT(JSONValue.AsArray().size() == Property.Width);
 
-		auto ValueAsArray = Value.AsArray();
+		auto ValueAsArray = JSONValue.AsArray();
 		for (const auto& Element : ValueAsArray)
 		{
 			if (Element.Is(JSONValueType::Number))
@@ -219,6 +239,9 @@ namespace Hermes
 
 		switch (Property->Type)
 		{
+		case MaterialPropertyType::Value:
+			SetScalarPropertyFromJSON(PropertyName, *Property, Value);
+			break;
 		case MaterialPropertyType::Vector:
 			SetVectorPropertyFromJSON(PropertyName, *Property, Value);
 			break;

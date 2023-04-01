@@ -62,9 +62,11 @@ namespace Hermes
 		/*
 		 * Loading from JSON routines
 		 */
-		void SetVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& Value);
+		void SetScalarPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue);
+
+		void SetVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue);
 		
-		void SetFloatVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& Value);
+		void SetFloatVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue);
 		
 		void SetPropertyFromJSON(const String& PropertyName, const JSONValue& Value);
 	};

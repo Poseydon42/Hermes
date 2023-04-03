@@ -58,30 +58,30 @@ namespace Hermes::Vulkan
 	Image::Image(std::shared_ptr<Device::VkDeviceHolder> InDevice, VkImage InImage, VkFormat InFormat,
 	             Vec2ui InDimensions, bool InIsCubemapCompatible)
 		: Holder(std::make_shared<VkImageHolder>())
-		, Dimensions(InDimensions)
 		, MipLevelCount(1)
 		, IsCubemapCompatible(InIsCubemapCompatible)
 	{
 		Holder->Device = std::move(InDevice);
 		Holder->Image = InImage;
 		Holder->Format = InFormat;
+		Holder->Dimensions = InDimensions;
 		Holder->IsOwned = false;
 	}
 
 	Image::Image(std::shared_ptr<Device::VkDeviceHolder> InDevice, Vec2ui InDimensions, VkImageUsageFlags InUsage,
 	             VkFormat InFormat, uint32 InMipLevels, bool InIsCubemapCompatible)
 		: Holder(std::make_shared<VkImageHolder>())
-		, Dimensions(InDimensions)
 		, MipLevelCount(InMipLevels)
 		, IsCubemapCompatible(InIsCubemapCompatible)
 	{
 		Holder->Device = std::move(InDevice);
 		Holder->Format = InFormat;
+		Holder->Dimensions = InDimensions;
 
 		VkImageCreateInfo CreateInfo = {};
 		CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		CreateInfo.extent.width = Dimensions.X;
-		CreateInfo.extent.height = Dimensions.Y;
+		CreateInfo.extent.width = Holder->Dimensions.X;
+		CreateInfo.extent.height = Holder->Dimensions.Y;
 		CreateInfo.extent.depth = 1;
 		CreateInfo.arrayLayers = IsCubemapCompatible ? 6 : 1;
 		CreateInfo.format = Holder->Format;
@@ -155,7 +155,7 @@ namespace Hermes::Vulkan
 
 	Vec2ui Image::GetDimensions() const
 	{
-		return Dimensions;
+		return Holder->Dimensions;
 	}
 
 	VkFormat Image::GetDataFormat() const
@@ -216,5 +216,10 @@ namespace Hermes::Vulkan
 	VkImageView ImageView::GetImageView() const
 	{
 		return View;
+	}
+
+	Vec2ui ImageView::GetDimensions() const
+	{
+		return Image->Dimensions;
 	}
 }

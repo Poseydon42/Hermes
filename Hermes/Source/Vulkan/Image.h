@@ -116,12 +116,12 @@ namespace Hermes::Vulkan
 			VkImage Image = VK_NULL_HANDLE;
 			VmaAllocation Allocation = VK_NULL_HANDLE;
 			VkFormat Format = VK_FORMAT_UNDEFINED;
+			Vec2ui Dimensions;
 			bool IsOwned = false;
 		};
 
 		std::shared_ptr<VkImageHolder> Holder;
 
-		Vec2ui Dimensions;
 		uint32 MipLevelCount = 0;
 		bool IsCubemapCompatible = false;
 
@@ -144,6 +144,8 @@ namespace Hermes::Vulkan
 		~ImageView();
 
 		VkImageView GetImageView() const;
+
+		Vec2ui GetDimensions() const;
 
 	private:
 		std::shared_ptr<Image::VkImageHolder> Image;

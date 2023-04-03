@@ -18,11 +18,15 @@
 
 #define ALIGNAS_16 alignas(16)
 
+#pragma warning(push)
+#pragma warning(disable : 4324)
+
 #else
 
 #define uint32 uint
 #define Vec2 vec2
 #define Vec2ui uvec2
+#define Vec3 vec3
 #define Vec4 vec4
 #define Mat4 mat4
 
@@ -88,8 +92,26 @@ namespace Hermes
 		uint32 DirectionalLightCount;
 	};
 
+	struct ALIGNAS_16 UIShaderPushConstants
+	{
+		Vec2 BottomLeft;
+		Vec2 TopRight;
+		uint32 FirstRectangle;
+		uint32 RectangleCount;
+	};
+
+	struct ALIGNAS_16 RectanglePrimitive
+	{
+		Vec2 Min;
+		Vec2 Max;
+		Vec3 Color;
+	};
+
 #ifndef _GLSL_
 }
+
+#pragma warning(pop)
+
 #endif
 
 #endif

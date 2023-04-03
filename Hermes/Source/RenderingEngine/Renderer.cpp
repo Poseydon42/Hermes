@@ -103,6 +103,7 @@ namespace Hermes
 		ForwardPass = std::make_unique<class ForwardPass>(true);
 		PostProcessingPass = std::make_unique<class PostProcessingPass>();
 		SkyboxPass = std::make_unique<class SkyboxPass>();
+		UIPass = std::make_unique<class UIPass>();
 
 		FrameGraphScheme Scheme;
 		Scheme.AddPass("LightCullingPass", LightCullingPass->GetPassDescription());
@@ -110,6 +111,7 @@ namespace Hermes
 		Scheme.AddPass("ForwardPass", ForwardPass->GetPassDescription());
 		Scheme.AddPass("PostProcessingPass", PostProcessingPass->GetPassDescription());
 		Scheme.AddPass("SkyboxPass", SkyboxPass->GetPassDescription());
+		Scheme.AddPass("UIPass", UIPass->GetPassDescription());
 
 		ImageResourceDescription HDRColorBufferResource = {};
 		HDRColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
@@ -154,7 +156,9 @@ namespace Hermes
 		Scheme.AddLink("SkyboxPass.ColorBuffer", "PostProcessingPass.InputColor");
 		Scheme.AddLink("$.ColorBuffer", "PostProcessingPass.OutputColor");
 
-		Scheme.AddLink("PostProcessingPass.OutputColor", "$.BLIT_TO_SWAPCHAIN");
+		Scheme.AddLink("PostProcessingPass.OutputColor", "UIPass.Framebuffer");
+
+		Scheme.AddLink("UIPass.Framebuffer", "$.BLIT_TO_SWAPCHAIN");
 
 		FrameGraph = Scheme.Compile();
 		HERMES_ASSERT_LOG(FrameGraph, "Failed to compile a frame graph");
@@ -170,6 +174,11 @@ namespace Hermes
 	void Renderer::UpdateGraphicsSettings(GraphicsSettings NewSettings)
 	{
 		CurrentSettings = NewSettings;
+	}
+
+	void Renderer::AddWindow(const UI::Window& Window, Vec2ui ScreenLocation)
+	{
+		UIPass->AddWindow(&Window, ScreenLocation);
 	}
 
 	void Renderer::RunFrame(const Scene& Scene)

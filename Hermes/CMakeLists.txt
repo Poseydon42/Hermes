@@ -16,6 +16,7 @@ add_subdirectory(Source/Logging)
 add_subdirectory(Source/Math)
 add_subdirectory(Source/Platform)
 add_subdirectory(Source/RenderingEngine)
+add_subdirectory(Source/UIEngine)
 add_subdirectory(Source/VirtualFilesystem)
 add_subdirectory(Source/Vulkan)
 add_subdirectory(Source/World)
@@ -61,6 +62,7 @@ set(HERMES_SUBLIB_LIST
     Hermes_Math
     Hermes_Platform
     Hermes_RenderingEngine
+    Hermes_UIEngine
     Hermes_VirtualFileSystem
     Hermes_Vulkan
     Hermes_World

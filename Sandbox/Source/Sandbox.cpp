@@ -11,6 +11,8 @@
 #include "RenderingEngine/Material/MaterialInstance.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
+#include "UIEngine/Widgets/PanelWidget.h"
+#include "UIEngine/Window.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 #include "World/Components/DirectionalLightComponent.h"
 #include "World/Components/MeshComponent.h"
@@ -221,6 +223,9 @@ public:
 
 		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe<SandboxApp, &SandboxApp::KeyEventHandler>(Hermes::KeyEvent::GetStaticType(), this);
 
+		auto Panel = Hermes::UI::PanelWidget::Create(nullptr, { 10, 10 }, { 80, 80 }, { 1.0f, 0.0f, 0.0f });
+		UIWindow = std::make_unique<Hermes::UI::Window>(std::move(Panel), Hermes::Vec2ui{ 100, 100 });
+
 		return true;
 	}
 
@@ -234,6 +239,8 @@ public:
 			Settings.AnisotropyLevel = AnisotropyEnabled ? 16.0f : 0.0f;
 			Hermes::Renderer::Get().UpdateGraphicsSettings(Settings);
 		}
+
+		Hermes::Renderer::Get().AddWindow(*UIWindow, { 0, 0 });
 	}
 
 	void Shutdown() override
@@ -243,6 +250,7 @@ public:
 private:
 	bool AnisotropyEnabled = false, AnisotropyChanged = false;
 	Hermes::AssetHandle SolidColorMaterialInstanceHandle = Hermes::GInvalidAssetHandle;
+	std::unique_ptr<Hermes::UI::Window> UIWindow;
 
 	void KeyEventHandler(const Hermes::IEvent& Event)
 	{

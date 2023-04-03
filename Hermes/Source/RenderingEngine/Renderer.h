@@ -12,6 +12,7 @@
 #include "RenderingEngine/Passes/ForwardPass.h"
 #include "RenderingEngine/Passes/PostProcessingPass.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
+#include "RenderingEngine/Passes/UIPass.h"
 #include "RenderingEngine/ShaderCache.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Swapchain.h"
@@ -43,6 +44,8 @@ namespace Hermes
 		const GraphicsSettings& GetGraphicsSettings() const;
 
 		void UpdateGraphicsSettings(GraphicsSettings NewSettings);
+		
+		void AddWindow(const UI::Window& Window, Vec2ui ScreenLocation);
 
 		void RunFrame(const Scene& Scene);
 
@@ -89,6 +92,7 @@ namespace Hermes
 		std::unique_ptr<ForwardPass> ForwardPass;
 		std::unique_ptr<PostProcessingPass> PostProcessingPass;
 		std::unique_ptr<SkyboxPass> SkyboxPass;
+		std::unique_ptr<UIPass> UIPass;
 
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
 		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;

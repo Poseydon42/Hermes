@@ -1,4 +1,5 @@
-﻿#ifdef HERMES_PLATFORM_WINDOWS
+﻿#include "UIEngine/Widgets/Containers/VerticalContainerWidget.h"
+#ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
 #include "Core/Profiling.h"
@@ -223,8 +224,10 @@ public:
 
 		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe(Hermes::KeyEvent::GetStaticType(), [this](const Hermes::IEvent& Event) { KeyEventHandler(Event); });
 
-		auto Panel = Hermes::UI::PanelWidget::Create(nullptr, { 10, 10 }, { 80, 80 }, { 1.0f, 0.0f, 0.0f });
-		UIWindow = std::make_unique<Hermes::UI::Window>(std::move(Panel), Hermes::Vec2ui{ 100, 100 });
+		auto VerticalContainer = Hermes::UI::VerticalContainerWidget::Create(nullptr);
+		VerticalContainer->AddChild(Hermes::UI::PanelWidget::Create(VerticalContainer, { 130, 20 }, { 1.0f, 0.0f, 0.0f }));
+		VerticalContainer->AddChild(Hermes::UI::PanelWidget::Create(VerticalContainer, { 30, 100 }, { 0.0f, 1.0f, 0.0f }));
+		UIWindow = std::make_unique<Hermes::UI::Window>(std::move(VerticalContainer), Hermes::Vec2ui{ 100, 300 });
 
 		return true;
 	}

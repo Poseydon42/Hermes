@@ -7,6 +7,10 @@ set(SOURCES
     DrawingContext.h
     Window.cpp
     Window.h
+    Widgets/Containers/ContainerWidget.cpp
+    Widgets/Containers/ContainerWidget.h
+    Widgets/Containers/VerticalContainerWidget.cpp
+    Widgets/Containers/VerticalContainerWidget.h
     Widgets/PanelWidget.cpp
     Widgets/PanelWidget.h
     Widgets/Widget.cpp

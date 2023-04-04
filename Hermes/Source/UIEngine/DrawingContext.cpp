@@ -5,9 +5,8 @@
 
 namespace Hermes::UI
 {
-	void DrawingContext::DrawRectangle(const Widget& Widget, Vec2ui RelativeLocation, Vec2ui Dimensions, Vec3 Color)
+	void DrawingContext::DrawRectangle(Vec2ui AbsoluteLocation, Vec2ui Dimensions, Vec3 Color)
 	{
-		auto AbsoluteLocation = Widget.GetAbsoluteLocation() + RelativeLocation;
 		Rectangles.emplace_back(AbsoluteLocation, Dimensions, Color);
 	}
 

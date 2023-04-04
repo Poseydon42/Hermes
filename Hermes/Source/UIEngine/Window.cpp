@@ -15,7 +15,7 @@ namespace Hermes::UI
 		HERMES_PROFILE_FUNC();
 
 		DrawingContext Context;
-		RootWidget->Draw(Context);
+		RootWidget->Draw(Context, { 0, 0 }, Dimensions);
 
 		return Context;
 	}

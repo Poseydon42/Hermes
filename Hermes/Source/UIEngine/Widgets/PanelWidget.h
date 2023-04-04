@@ -17,14 +17,14 @@ namespace Hermes::UI
 		PanelWidget(PanelWidget&&) = default;
 		PanelWidget& operator=(PanelWidget&&) = default;
 
-		static std::shared_ptr<PanelWidget> Create(std::shared_ptr<Widget> InParent, Vec2ui InLocation, Vec2ui InDimensions, Vec3 InColor);
+		static std::shared_ptr<PanelWidget> Create(std::shared_ptr<Widget> InParent, Vec2ui InDimensions, Vec3 InColor);
 
 		virtual Vec2ui GetDimensions() const override;
 
-		virtual void Draw(DrawingContext& Context) const override;
+		virtual void Draw(DrawingContext& Context, Vec2ui AbsoluteLocation, Vec2ui MaxDimensions) const override;
 
 	private:
-		PanelWidget(std::shared_ptr<Widget> InParent, Vec2ui InLocation, Vec2ui InDimensions, Vec3 InColor);
+		PanelWidget(std::shared_ptr<Widget> InParent, Vec2ui InDimensions, Vec3 InColor);
 
 		Vec2ui Dimensions;
 		Vec3 Color;

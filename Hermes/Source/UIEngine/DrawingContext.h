@@ -38,12 +38,11 @@ namespace Hermes::UI
 		/**
 		 * Issues a draw of a rectangle
 		 *
-		 * @param Widget Widget that the rectangle is drawn for
-		 * @param RelativeLocation Location of the rectangle relative to the origin of the widget
+		 * @param AbsoluteLocation Location of the rectangle within the window that contains it, in pixels
 		 * @param Dimensions Dimensions of the rectangle
 		 * @param Color Color of the rectangle
 		 */
-		void DrawRectangle(const Widget& Widget, Vec2ui RelativeLocation, Vec2ui Dimensions, Vec3 Color);
+		void DrawRectangle(Vec2ui AbsoluteLocation, Vec2ui Dimensions, Vec3 Color);
 
 		const std::vector<DrawableRectangle>& GetRectangles() const;
 

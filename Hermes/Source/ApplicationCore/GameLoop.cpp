@@ -48,10 +48,10 @@ namespace Hermes
 		ApplicationWindow->SetInputEngine(InputEngine);
 		ApplicationWindow->SetCursorVisibility(false);
 
-		ApplicationWindow->GetWindowQueue().Subscribe<GameLoop, &GameLoop::WindowCloseEventHandler>(WindowCloseEvent::GetStaticType(), this);
+		ApplicationWindow->GetWindowQueue().Subscribe(WindowCloseEvent::GetStaticType(), [this](const IEvent&) { RequestedExit = true; });
 
 		// DEBUG ONLY
-		InputEngine->GetEventQueue().Subscribe<GameLoop, &GameLoop::KeyEventHandler>(KeyEvent::GetStaticType(), this);
+		InputEngine->GetEventQueue().Subscribe(KeyEvent::GetStaticType(), [this](const IEvent& Event) { KeyEventHandler(Event); });
 
 		AssetCache = std::make_unique<class AssetCache>();
 
@@ -118,7 +118,7 @@ namespace Hermes
 		return ApplicationWindow;
 	}
 
-	const InputEngine& GameLoop::GetInputEngine() const
+	InputEngine& GameLoop::GetInputEngine()
 	{
 		return *InputEngine;
 	}
@@ -135,14 +135,7 @@ namespace Hermes
 
 	void GameLoop::SetCamera(std::shared_ptr<Hermes::Camera> NewCamera)
 	{
-		Camera = NewCamera;
-	}
-
-	void GameLoop::WindowCloseEventHandler(const IEvent& Event)
-	{
-		HERMES_LOG_INFO("Window \"%s\" requested exit.", Event.ToString().c_str());
-
-		RequestedExit = true;
+		Camera = std::move(NewCamera);
 	}
 
 	/*

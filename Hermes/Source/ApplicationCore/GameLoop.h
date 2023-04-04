@@ -36,7 +36,7 @@ namespace Hermes
 		
 		std::shared_ptr<const IPlatformWindow> GetWindow() const;
 
-		const InputEngine& GetInputEngine() const;
+		InputEngine& GetInputEngine();
 
 		AssetCache& GetAssetCache();
 
@@ -49,10 +49,8 @@ namespace Hermes
 		void SetCamera(std::shared_ptr<Camera> NewCamera);
 
 	private:
-		void WindowCloseEventHandler(const IEvent& Event);
-
-		bool RequestedExit;
-		bool Paused; // TODO : separate 'game pause' and 'rendering pause'(e.g. when window is minimized)
+		bool RequestedExit = false;
+		bool Paused = false; // TODO : separate 'game pause' and 'rendering pause'(e.g. when window is minimized)
 
 		PlatformTimestamp PrevFrameEndTimestamp;
 

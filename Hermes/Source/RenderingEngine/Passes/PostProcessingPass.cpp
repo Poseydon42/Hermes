@@ -40,7 +40,7 @@ namespace Hermes
 		OutputColor.Binding = BindingMode::ColorAttachment;
 
 		Description.Attachments = { InputColor, OutputColor };
-		Description.Callback.Bind<PostProcessingPass, &PostProcessingPass::PassCallback>(this);
+		Description.Callback = [this](const PassCallbackInfo& CallbackInfo) { PassCallback(CallbackInfo); };
 	}
 
 	const PassDesc& PostProcessingPass::GetPassDescription() const

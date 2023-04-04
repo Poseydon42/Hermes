@@ -162,7 +162,7 @@ namespace Hermes
 
 		void ProcessDeferredEvents();
 
-		const EventQueue& GetEventQueue() const;
+		EventQueue& GetEventQueue();
 
 		bool IsKeyPressed(KeyCode Key) const;
 

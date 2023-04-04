@@ -149,7 +149,7 @@ namespace Hermes
 		return WindowHandle != nullptr;
 	}
 
-	const EventQueue& WindowsWindow::GetWindowQueue() const
+	EventQueue& WindowsWindow::GetWindowQueue()
 	{
 		return *MessagePump;
 	}

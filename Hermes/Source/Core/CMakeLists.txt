@@ -5,7 +5,6 @@ include(HermesSublib)
 set(SOURCES
     Compiler/CompilerMSVC.h
     Core.h
-    Delegate/Delegate.h
     Event/Event.h
     Event/EventQueue.cpp
     Event/EventQueue.h

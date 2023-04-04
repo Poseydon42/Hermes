@@ -16,7 +16,7 @@ namespace Hermes
 
 		SceneUBODescriptorSet = DescriptorAllocator.Allocate(Renderer::Get().GetGlobalDataDescriptorSetLayout());
 
-		Description.Callback.Bind<DepthPass, &DepthPass::PassCallback>(this);
+		Description.Callback = [this](const PassCallbackInfo& CallbackInfo) { PassCallback(CallbackInfo); };
 
 		Attachment DepthAttachment = {};
 		DepthAttachment.Name = "Depth";

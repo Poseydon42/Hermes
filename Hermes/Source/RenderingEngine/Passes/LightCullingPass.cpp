@@ -27,7 +27,7 @@ namespace Hermes
 			{ "LightClusterList", VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false },
 			{ "LightIndexList", VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false }
 		};
-		PassDescription.Callback.Bind<LightCullingPass, &LightCullingPass::PassCallback>(this);
+		PassDescription.Callback = [this](const PassCallbackInfo& CallbackInfo) { PassCallback(CallbackInfo); };
 	}
 
 	const PassDesc& LightCullingPass::GetPassDescription() const

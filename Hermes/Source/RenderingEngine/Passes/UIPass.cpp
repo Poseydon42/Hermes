@@ -10,7 +10,7 @@ namespace Hermes
 	{
 		Description.Attachments.emplace_back("Framebuffer", VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VkClearValue{}, BindingMode::ColorAttachment);
 		Description.Type = PassType::Graphics;
-		Description.Callback.Bind<UIPass, &UIPass::PassCallback>(this);
+		Description.Callback = [this](const PassCallbackInfo& CallbackInfo) { PassCallback(CallbackInfo); };
 
 		auto& Renderer = Renderer::Get();
 		auto& Device = Renderer.GetActiveDevice();

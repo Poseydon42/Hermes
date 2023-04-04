@@ -40,7 +40,7 @@ namespace Hermes
 		SamplerDesc.LODBias = 0.0f;
 		EnvmapSampler = Device.CreateSampler(SamplerDesc);
 
-		Description.Callback.Bind<ForwardPass, &ForwardPass::PassCallback>(this);
+		Description.Callback = [this](const PassCallbackInfo& CallbackInfo) { PassCallback(CallbackInfo); };
 
 		Attachment Color = {};
 		Color.Name = "Color";

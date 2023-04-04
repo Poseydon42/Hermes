@@ -46,7 +46,7 @@ namespace Hermes
 		SamplerDesc.MipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 		EnvmapSampler = Device.CreateSampler(SamplerDesc);
 
-		Description.Callback.Bind<SkyboxPass, &SkyboxPass::PassCallback>(this);
+		Description.Callback = [this](const PassCallbackInfo& CallbackInfo) { PassCallback(CallbackInfo); };
 
 		Description.Attachments.resize(2);
 		Description.Attachments[0].Name = "ColorBuffer";

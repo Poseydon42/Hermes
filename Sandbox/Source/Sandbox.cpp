@@ -221,7 +221,7 @@ public:
 
 		World.AddSystem(std::make_unique<CameraSystem>());
 
-		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe<SandboxApp, &SandboxApp::KeyEventHandler>(Hermes::KeyEvent::GetStaticType(), this);
+		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe(Hermes::KeyEvent::GetStaticType(), [this](const Hermes::IEvent& Event) { KeyEventHandler(Event); });
 
 		auto Panel = Hermes::UI::PanelWidget::Create(nullptr, { 10, 10 }, { 80, 80 }, { 1.0f, 0.0f, 0.0f });
 		UIWindow = std::make_unique<Hermes::UI::Window>(std::move(Panel), Hermes::Vec2ui{ 100, 100 });

@@ -1,10 +1,10 @@
 #pragma once
 
+#include <functional>
 #include <unordered_map>
 #include <queue>
 
 #include "Core/Event/Event.h"
-#include "Core/Delegate/Delegate.h"
 
 namespace Hermes
 {
@@ -15,26 +15,18 @@ namespace Hermes
 	class HERMES_API EventQueue
 	{
 	public:
-		using CallbackDelegate = TMulticastDelegate<const IEvent&>;
+		using CallbackFunctionPrototype = void(const IEvent&);
 
 		/**
 		 * Pushes new event to the top of event queue
 		 */
 		void PushEvent(const IEvent& Event);
-
-		/**
-		 * Adds new listener to given event type
-		 * Member function implementation
-		 */
-		template<class C, void(C::*Function)(const IEvent&)>
-		void Subscribe(IEvent::EventType Type, C* Instance) const;
-
+		
 		/**
 		 * Adds new listener to given event type
 		 * Free function implementation
 		 */
-		template<void(*Function)(const IEvent&)>
-		void Subscribe(IEvent::EventType Type) const;
+		void Subscribe(IEvent::EventType Type, std::function<CallbackFunctionPrototype> Callback);
 
 		/**
 		 * Removes all subscribers of given event type
@@ -47,21 +39,8 @@ namespace Hermes
 		 */
 		void Run();
 	private:
-		mutable std::unordered_map<IEvent::EventType, CallbackDelegate> CallbackList;
+		std::unordered_multimap<IEvent::EventType, std::function<CallbackFunctionPrototype>> Subscribers;
 
 		std::queue<IEvent*> Queue;
 	};
-
-	template<void(*Function)(const IEvent&)>
-	void EventQueue::Subscribe(IEvent::EventType Type) const
-	{
-		CallbackList[Type].Bind<Function>();
-	}
-
-	template<class C, void(C::* Function)(const IEvent&)>
-	void EventQueue::Subscribe(IEvent::EventType Type, C* Instance) const
-	{
-		CallbackList[Type].Bind<C, Function>(Instance);
-	}
-
 }

@@ -380,7 +380,7 @@ namespace Hermes
 		Queue.Run();
 	}
 
-	const EventQueue& InputEngine::GetEventQueue() const
+	EventQueue& InputEngine::GetEventQueue()
 	{
 		return Queue;
 	}

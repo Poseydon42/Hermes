@@ -1,10 +1,10 @@
 ﻿#pragma once
 
+#include <functional>
 #include <unordered_map>
 #include <variant>
 
 #include "Core/Core.h"
-#include "Core/Delegate/Delegate.h"
 #include "Vulkan/Forward.h"
 
 namespace Hermes
@@ -40,7 +40,7 @@ namespace Hermes
 
 	struct PassDesc
 	{
-		using PassCallbackType = TDelegate<void, const PassCallbackInfo&>;
+		using PassCallbackType = std::function<void(const PassCallbackInfo&)>;
 
 		std::vector<Attachment> Attachments;
 		std::vector<BufferInput> BufferInputs;

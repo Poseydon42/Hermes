@@ -36,7 +36,7 @@ namespace Hermes
 
 		virtual bool IsValid() const override;
 
-		virtual const EventQueue& GetWindowQueue() const override;
+		virtual EventQueue& GetWindowQueue() override;
 
 		virtual void Run() const override;
 

@@ -98,7 +98,7 @@ namespace Hermes
 		{
 			// NOTE: rectangles in the DrawingContext object have their coordinates and dimensions set in pixels,
 			//       so we need to transform them into [0;1] range relative to the window dimensions here
-			Rectangles.emplace_back(Vec2(Rectangle.Location) / WindowDimensions, Vec2(Rectangle.Location + Rectangle.Dimensions) / WindowDimensions, Rectangle.Color);
+			Rectangles.emplace_back(Vec2(Rectangle.Location) / WindowDimensions, Vec2(Rectangle.Location + Rectangle.Dimensions) / WindowDimensions, Vec4(Rectangle.Color, 1.0f));
 		}
 	}
 

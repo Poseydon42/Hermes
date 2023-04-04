@@ -104,7 +104,7 @@ namespace Hermes
 	{
 		Vec2 Min;
 		Vec2 Max;
-		Vec3 Color;
+		Vec4 Color;
 	};
 
 #ifndef _GLSL_

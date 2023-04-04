@@ -28,7 +28,7 @@ void main()
         if (i_FragmentPosition.x >= Rectangle.Min.x && i_FragmentPosition.x < Rectangle.Max.x &&
             i_FragmentPosition.y >= Rectangle.Min.y && i_FragmentPosition.y < Rectangle.Max.y)
         {
-            o_Color = vec4(Rectangle.Color, 1.0);
+            o_Color = Rectangle.Color;
         }
     }
 }

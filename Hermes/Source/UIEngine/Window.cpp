@@ -6,8 +6,8 @@ namespace Hermes::UI
 {
 	Window::Window(std::shared_ptr<Widget> InRootWidget, Vec2ui InDimensions)
 		: RootWidget(std::move(InRootWidget))
-		, Dimensions(InDimensions)
 	{
+		SetDimensions(InDimensions);
 	}
 
 	DrawingContext Window::Draw() const
@@ -27,6 +27,9 @@ namespace Hermes::UI
 
 	void Window::SetDimensions(Vec2ui NewDimensions)
 	{
+		auto MinimumDimensions = Vec2ui(RootWidget->ComputeMinimumDimensions());
+		NewDimensions.X = Math::Max(MinimumDimensions.X, NewDimensions.X);
+		NewDimensions.Y = Math::Max(MinimumDimensions.Y, NewDimensions.Y);
 		Dimensions = NewDimensions;
 	}
 }

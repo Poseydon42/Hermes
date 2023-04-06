@@ -226,17 +226,36 @@ public:
 
 		auto VerticalContainer = Hermes::UI::VerticalContainerWidget::Create(nullptr);
 
-		auto RedPanel = Hermes::UI::PanelWidget::Create(VerticalContainer, { 100, 20 }, { 1.0f, 0.0f, 0.0f });
+		auto RedPanel = Hermes::UI::PanelWidget::Create(VerticalContainer, { 80, 20 }, { 1.0f, 0.0f, 0.0f });
 		RedPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
 		VerticalContainer->AddChild(RedPanel);
 
 		auto GreenPanel = Hermes::UI::PanelWidget::Create(VerticalContainer, { 30, 80 }, { 0.0f, 1.0f, 0.0f });
 		GreenPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
-		GreenPanel->GetMargins().Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
-		GreenPanel->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
+		GreenPanel->GetMargins().Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
+		GreenPanel->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
 		VerticalContainer->AddChild(GreenPanel);
 
 		UIWindow = std::make_unique<Hermes::UI::Window>(std::move(VerticalContainer), Hermes::Vec2ui{ 100, 300 });
+
+		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe(Hermes::KeyEvent::GetStaticType(), [this](const Hermes::IEvent& Event)
+		{
+			const auto& KeyEvent = static_cast<const Hermes::KeyEvent&>(Event);
+			if (!KeyEvent.IsPressEvent())
+				return;
+
+			auto CurrentDimensions = UIWindow->GetDimensions();
+			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::ArrowUp)
+				CurrentDimensions.Y++;
+			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::ArrowDown)
+				CurrentDimensions.Y--;
+			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::ArrowLeft)
+				CurrentDimensions.X--;
+			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::ArrowRight)
+				CurrentDimensions.X++;
+			
+			UIWindow->SetDimensions(CurrentDimensions);
+		});
 
 		return true;
 	}

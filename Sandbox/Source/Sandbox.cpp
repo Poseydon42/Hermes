@@ -232,6 +232,8 @@ public:
 
 		auto GreenPanel = Hermes::UI::PanelWidget::Create(VerticalContainer, { 30, 80 }, { 0.0f, 1.0f, 0.0f });
 		GreenPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
+		GreenPanel->GetMargins().Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
+		GreenPanel->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
 		VerticalContainer->AddChild(GreenPanel);
 
 		UIWindow = std::make_unique<Hermes::UI::Window>(std::move(VerticalContainer), Hermes::Vec2ui{ 100, 300 });

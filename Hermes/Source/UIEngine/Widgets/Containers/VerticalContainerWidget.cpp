@@ -56,13 +56,25 @@ namespace Hermes::UI
 			float AbsoluteTopMargin = GetAbsoluteMarginValue(Child.GetMargins().Top, AvailableRect.Height()) * MarginScalingCoefficient;
 			float AbsoluteBottomMargin = GetAbsoluteMarginValue(Child.GetMargins().Bottom, AvailableRect.Height()) * MarginScalingCoefficient;
 
+			auto AbsoluteLeftMargin = GetAbsoluteMarginValue(Child.GetMargins().Left, AvailableRect.Width());
+			auto AbsoluteRightMargin = GetAbsoluteMarginValue(Child.GetMargins().Right, AvailableRect.Width());
+
 			auto ChildMinDimensions = Child.ComputeMinimumDimensions();
 
+			// Again, if the horizontal margins + minimum horizontal size exceed the available width, minimum horizontal size is prioritized
+			if (AbsoluteLeftMargin + AbsoluteRightMargin + ChildMinDimensions.X > AvailableRect.Width())
+			{
+				float ScaleFactor = (AvailableRect.Width() - ChildMinDimensions.X) / (AbsoluteLeftMargin + AbsoluteRightMargin);
+				AbsoluteLeftMargin *= ScaleFactor;
+				AbsoluteRightMargin *= ScaleFactor;
+			}
+
 			auto ChildRect = Rect2D {
-				.Min = { AvailableRect.Left(), NextWidgetY + AbsoluteTopMargin },
-				.Max = { AvailableRect.Right(), NextWidgetY + AbsoluteTopMargin + ChildMinDimensions.Y }
+				.Min = { AvailableRect.Left() + AbsoluteLeftMargin, NextWidgetY + AbsoluteTopMargin },
+				.Max = { AvailableRect.Right() - AbsoluteRightMargin, NextWidgetY + AbsoluteTopMargin + ChildMinDimensions.Y }
 			};
 			ChildRect.Bottom() = Math::Min(ChildRect.Bottom(), AvailableRect.Bottom());
+			HERMES_ASSERT(ChildRect.Right() <= AvailableRect.Right());
 
 			Child.Draw(Context, ChildRect);
 

@@ -5,6 +5,12 @@
 
 namespace Hermes::UI
 {
+	/*
+	 * A container that lays out its children vertically in the order they were added.
+	 *
+	 * Each child gets as much horizontal space as was allocated to the container, whereas the amount of
+	 * vertical space is equal to the minimum vertical size of the child.
+	 */
 	class HERMES_API VerticalContainerWidget : public ContainerWidget
 	{
 	public:
@@ -15,11 +21,11 @@ namespace Hermes::UI
 
 		static std::shared_ptr<VerticalContainerWidget> Create(std::shared_ptr<Widget> InParent);
 
-		virtual Vec2ui GetDimensions() const override;
+		virtual Vec2 ComputeMinimumDimensions() const override;
 
-		virtual void Draw(DrawingContext& Context, Vec2ui AbsoluteLocation, Vec2ui MaxDimensions) const override;
+		virtual void Draw(DrawingContext& Context, Rect2D AvailableRect) const override;
 
-	private:
+	protected:
 		explicit VerticalContainerWidget(std::shared_ptr<Widget> InParent);
 	};
 }

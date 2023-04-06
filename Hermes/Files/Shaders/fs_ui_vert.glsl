@@ -18,8 +18,8 @@ void main()
     VertexLocation = VertexLocation * 0.5 + 0.5; // Transforming into [0;1] space
     o_FragmentLocation = VertexLocation;
 
-    vec2 Scale = (u_PushConstants.Constants.TopRight - u_PushConstants.Constants.BottomLeft) * vec2(1.0, -1.0);
-    vec2 Offset = vec2(u_PushConstants.Constants.BottomLeft.x, 1.0 - u_PushConstants.Constants.BottomLeft.y);
+    vec2 Scale = u_PushConstants.Constants.BottomRight - u_PushConstants.Constants.TopLeft;
+    vec2 Offset = u_PushConstants.Constants.TopLeft;
 
     VertexLocation = VertexLocation * Scale + Offset;
 

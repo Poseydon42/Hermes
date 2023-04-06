@@ -14,6 +14,7 @@ set(SOURCES
     Plane.cpp
     Quaternion.cpp
     Quaternion.h
+    Rect2D.h
     Transform.cpp
     Transform.h
     Vector.h

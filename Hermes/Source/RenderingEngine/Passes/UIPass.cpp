@@ -77,8 +77,8 @@ namespace Hermes
 		for (size_t WindowIndex = 0; WindowIndex < Windows.size(); WindowIndex++)
 		{
 			UIShaderPushConstants PushConstants = {};
-			PushConstants.BottomLeft = Vec2(Windows[WindowIndex].second) / Vec2(ViewportDimensions);
-			PushConstants.TopRight = Vec2(Windows[WindowIndex].second + Windows[WindowIndex].first->GetDimensions()) / Vec2(ViewportDimensions);
+			PushConstants.TopLeft = Vec2(Windows[WindowIndex].second) / Vec2(ViewportDimensions);
+			PushConstants.BottomRight = Vec2(Windows[WindowIndex].second + Windows[WindowIndex].first->GetDimensions()) / Vec2(ViewportDimensions);
 			PushConstants.FirstRectangle = RectangleListRange[WindowIndex].first;
 			PushConstants.RectangleCount = RectangleListRange[WindowIndex].second;
 			CommandBuffer.UploadPushConstants(*Pipeline, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, &PushConstants, sizeof(PushConstants), 0);
@@ -98,7 +98,7 @@ namespace Hermes
 		{
 			// NOTE: rectangles in the DrawingContext object have their coordinates and dimensions set in pixels,
 			//       so we need to transform them into [0;1] range relative to the window dimensions here
-			Rectangles.emplace_back(Vec2(Rectangle.Location) / WindowDimensions, Vec2(Rectangle.Location + Rectangle.Dimensions) / WindowDimensions, Vec4(Rectangle.Color, 1.0f));
+			Rectangles.emplace_back(Vec2(Rectangle.Rect.Min) / WindowDimensions, Vec2(Rectangle.Rect.Max) / WindowDimensions, Vec4(Rectangle.Color, 1.0f));
 		}
 	}
 

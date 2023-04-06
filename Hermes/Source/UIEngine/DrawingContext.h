@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "Core/Core.h"
+#include "Math/Rect2D.h"
 #include "Math/Vector.h"
 #include "Math/Vector2.h"
 
@@ -20,14 +21,9 @@ namespace Hermes::UI
 		struct DrawableRectangle
 		{
 			/*
-			 * Location, in pixels, relative to the containing window
+			 * Position and dimensions of the rectangle
 			 */
-			Vec2ui Location = {};
-
-			/*
-			 * Dimensions, in pixels
-			 */
-			Vec2ui Dimensions = {};
+			Rect2Dui Rect;
 
 			/*
 			 * Color that the rectangle should be filled with
@@ -38,11 +34,10 @@ namespace Hermes::UI
 		/**
 		 * Issues a draw of a rectangle
 		 *
-		 * @param AbsoluteLocation Location of the rectangle within the window that contains it, in pixels
-		 * @param Dimensions Dimensions of the rectangle
+		 * @param Rect Rectangle to draw
 		 * @param Color Color of the rectangle
 		 */
-		void DrawRectangle(Vec2ui AbsoluteLocation, Vec2ui Dimensions, Vec3 Color);
+		void DrawRectangle(Rect2D Rect, Vec3 Color);
 
 		const std::vector<DrawableRectangle>& GetRectangles() const;
 

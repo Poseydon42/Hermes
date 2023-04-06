@@ -5,9 +5,10 @@
 
 namespace Hermes::UI
 {
-	void DrawingContext::DrawRectangle(Vec2ui AbsoluteLocation, Vec2ui Dimensions, Vec3 Color)
+	void DrawingContext::DrawRectangle(Rect2D Rect, Vec3 Color)
 	{
-		Rectangles.emplace_back(AbsoluteLocation, Dimensions, Color);
+		// FIXME: proper rounding
+		Rectangles.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), Color);
 	}
 
 	const std::vector<DrawingContext::DrawableRectangle>& DrawingContext::GetRectangles() const

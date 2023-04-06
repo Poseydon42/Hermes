@@ -2,26 +2,31 @@
 
 namespace Hermes::UI
 {
-	std::shared_ptr<PanelWidget> PanelWidget::Create(std::shared_ptr<Widget> InParent, Vec2ui InDimensions, Vec3 InColor)
+	std::shared_ptr<PanelWidget> PanelWidget::Create(std::shared_ptr<Widget> InParent, Vec2 InMinimumDimensions, Vec3 InColor)
 	{
-		return std::shared_ptr<PanelWidget>(new PanelWidget(std::move(InParent), InDimensions, InColor));
+		return std::shared_ptr<PanelWidget>(new PanelWidget(std::move(InParent), InMinimumDimensions, InColor));
 	}
 
-	Vec2ui PanelWidget::GetDimensions() const
+	void PanelWidget::Draw(DrawingContext& Context, Rect2D AvailableRect) const
 	{
-		return Dimensions;
+		auto PreferredRect = Rect2D{
+			.Min = { AvailableRect.Left(), AvailableRect.Top() },
+			.Max = { AvailableRect.Left() + MinimumDimensions.X, AvailableRect.Top() + MinimumDimensions.Y }
+		};
+
+		auto DrawingRect = AvailableRect.Intersect(PreferredRect);
+		Context.DrawRectangle(DrawingRect, Color);
 	}
 
-	void PanelWidget::Draw(DrawingContext& Context, Vec2ui AbsoluteLocation, Vec2ui MaxDimensions) const
-	{
-		Vec2ui RectDimensions = { Math::Min(Dimensions.X, MaxDimensions.X), Math::Min(Dimensions.Y, MaxDimensions.Y) };
-		Context.DrawRectangle(AbsoluteLocation, RectDimensions, Color);
-	}
-
-	PanelWidget::PanelWidget(std::shared_ptr<Widget> InParent, Vec2ui InDimensions, Vec3 InColor)
+	PanelWidget::PanelWidget(std::shared_ptr<Widget> InParent, Vec2 InMinimumDimensions, Vec3 InColor)
 		: Widget(std::move(InParent))
-		, Dimensions(InDimensions)
+		, MinimumDimensions(InMinimumDimensions)
 		, Color(InColor)
 	{
+	}
+
+	Vec2 PanelWidget::ComputeMinimumDimensions() const
+	{
+		return MinimumDimensions;
 	}
 }

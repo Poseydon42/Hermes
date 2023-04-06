@@ -15,7 +15,7 @@ namespace Hermes::UI
 		HERMES_PROFILE_FUNC();
 
 		DrawingContext Context;
-		RootWidget->Draw(Context, { 0, 0 }, Dimensions);
+		RootWidget->Draw(Context, { { 0, 0 }, Vec2(Dimensions) });
 
 		return Context;
 	}
@@ -23,5 +23,10 @@ namespace Hermes::UI
 	Vec2ui Window::GetDimensions() const
 	{
 		return Dimensions;
+	}
+
+	void Window::SetDimensions(Vec2ui NewDimensions)
+	{
+		Dimensions = NewDimensions;
 	}
 }

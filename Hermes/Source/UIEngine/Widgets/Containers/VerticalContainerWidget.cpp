@@ -7,39 +7,36 @@ namespace Hermes::UI
 		return std::shared_ptr<VerticalContainerWidget>(new VerticalContainerWidget(std::move(InParent)));
 	}
 
-	Vec2ui VerticalContainerWidget::GetDimensions() const
+	void VerticalContainerWidget::Draw(DrawingContext& Context, Rect2D AvailableRect) const
 	{
-		Vec2ui Dimensions = { 0 };
-
-		ForEachChild([&Dimensions](const Widget& Child)
-		{
-			auto ChildDimensions = Child.GetDimensions();
-			Dimensions.X = Math::Max(Dimensions.X, ChildDimensions.X);
-			Dimensions.Y += ChildDimensions.Y;
-		});
-
-		return Dimensions;
-	}
-
-	void VerticalContainerWidget::Draw(DrawingContext& Context, Vec2ui AbsoluteLocation, Vec2ui MaxDimensions) const
-	{
-		Vec2ui TopLeftCorner = { AbsoluteLocation.X, AbsoluteLocation.Y + MaxDimensions.Y };
-		Vec2ui LastChildLocation = TopLeftCorner;
+		float NextWidgetY = AvailableRect.Min.Y;
 		ForEachChild([&](const Widget& Child)
 		{
-			auto ChildDimensions = Child.GetDimensions();
+			auto ChildMinDimensions = Child.ComputeMinimumDimensions();
 
-			LastChildLocation.Y -= ChildDimensions.Y;
-			if (LastChildLocation.Y <= 0)
-				return;
+			auto ChildRect = Rect2D(Vec2(AvailableRect.Left(), NextWidgetY), Vec2(AvailableRect.Right(), NextWidgetY + ChildMinDimensions.Y));
+			ChildRect.Bottom() = Math::Min(ChildRect.Bottom(), AvailableRect.Bottom());
 
-			Vec2ui MaxChildDimensions = { MaxDimensions.X, LastChildLocation.Y };
-			Child.Draw(Context, LastChildLocation, MaxChildDimensions);
+			NextWidgetY += ChildRect.Height();
+
+			Child.Draw(Context, ChildRect);
 		});
 	}
 
 	VerticalContainerWidget::VerticalContainerWidget(std::shared_ptr<Widget> InParent)
 		: ContainerWidget(std::move(InParent))
 	{
+	}
+
+	Vec2 VerticalContainerWidget::ComputeMinimumDimensions() const
+	{
+		Vec2 Result = {};
+		ForEachChild([&](const Widget& Child)
+		{
+			auto ChildMinimumDimensions = Child.ComputeMinimumDimensions();
+			Result.X = Math::Max(Result.X, ChildMinimumDimensions.X);
+			Result.Y += ChildMinimumDimensions.Y;
+		});
+		return Result;
 	}
 }

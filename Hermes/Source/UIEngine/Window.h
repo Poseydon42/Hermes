@@ -21,6 +21,7 @@ namespace Hermes::UI
 		DrawingContext Draw() const;
 
 		Vec2ui GetDimensions() const;
+		void SetDimensions(Vec2ui NewDimensions);
 
 	private:
 		std::shared_ptr<Widget> RootWidget;

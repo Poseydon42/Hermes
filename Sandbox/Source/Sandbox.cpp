@@ -225,7 +225,7 @@ public:
 		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe(Hermes::KeyEvent::GetStaticType(), [this](const Hermes::IEvent& Event) { KeyEventHandler(Event); });
 
 		auto VerticalContainer = Hermes::UI::VerticalContainerWidget::Create(nullptr);
-		VerticalContainer->AddChild(Hermes::UI::PanelWidget::Create(VerticalContainer, { 130, 20 }, { 1.0f, 0.0f, 0.0f }));
+		VerticalContainer->AddChild(Hermes::UI::PanelWidget::Create(VerticalContainer, { 100, 20 }, { 1.0f, 0.0f, 0.0f }));
 		VerticalContainer->AddChild(Hermes::UI::PanelWidget::Create(VerticalContainer, { 30, 100 }, { 0.0f, 1.0f, 0.0f }));
 		UIWindow = std::make_unique<Hermes::UI::Window>(std::move(VerticalContainer), Hermes::Vec2ui{ 100, 300 });
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Math/Rect2D.h"
 #include "Math/Vector2.h"
 #include "UIEngine/DrawingContext.h"
 
@@ -25,18 +26,18 @@ namespace Hermes::UI
 		void SetParent(std::shared_ptr<Widget> NewParent);
 
 		/*
-		 * Returns calculated dimensions of this widget ensuring that all of its children have enough space for themselves
+		 * Computes the minimum dimensions needed to properly draw this widget
+		 * and its children.
 		 */
-		virtual Vec2ui GetDimensions() const = 0;
+		virtual Vec2 ComputeMinimumDimensions() const = 0;
 
 		/**
-		 * Draws this widget and its children
+		 * Draws this widget and its children within the space that was allocated by its parent.
 		 *
 		 * @param Context Drawing context used to record drawing primitives
-		 * @param AbsoluteLocation Absolute location of the bottom left corner of this widget within the window that contains it, in pixels
-		 * @param MaxDimensions Maximum dimensions that this widget can use for drawing
+		 * @param AvailableRect Rectangle that the widget can draw in
 		 */
-		virtual void Draw(DrawingContext& Context, Vec2ui AbsoluteLocation, Vec2ui MaxDimensions) const = 0;
+		virtual void Draw(DrawingContext& Context, Rect2D AvailableRect) const = 0;
 
 	protected:
 		explicit Widget(std::shared_ptr<Widget> InParent);

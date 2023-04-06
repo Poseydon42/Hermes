@@ -33,7 +33,11 @@ namespace Hermes::UI
 	/*
 	 * Base class for any UI element that can be drawn and interacted with.
 	 *
-	 * Stores a pointer to its parent, however does not itself hold any children.
+	 * Stores a pointer to its parent, however does not itself hold any children. Stores the margin
+	 * box associated with this widget, which is used by its parent to compute its position and dimensions
+	 * on the screen. The widget is not responsible for its own layout, it is provided by its parent, the
+	 * widget only has to lay out its children in accordance with its layout policy as well as the child's
+	 * dimensions and margins.
 	 */
 	class HERMES_API Widget : public std::enable_shared_from_this<Widget>
 	{

@@ -9,13 +9,7 @@ namespace Hermes::UI
 
 	void PanelWidget::Draw(DrawingContext& Context, Rect2D AvailableRect) const
 	{
-		auto PreferredRect = Rect2D{
-			.Min = { AvailableRect.Left(), AvailableRect.Top() },
-			.Max = { AvailableRect.Left() + MinimumDimensions.X, AvailableRect.Top() + MinimumDimensions.Y }
-		};
-
-		auto DrawingRect = AvailableRect.Intersect(PreferredRect);
-		Context.DrawRectangle(DrawingRect, Color);
+		Context.DrawRectangle(AvailableRect, Color);
 	}
 
 	PanelWidget::PanelWidget(std::shared_ptr<Widget> InParent, Vec2 InMinimumDimensions, Vec3 InColor)

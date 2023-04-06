@@ -7,7 +7,7 @@
 namespace Hermes::UI
 {
 	/*
-	 * A simple panel filled with a single color
+	 * A simple panel that fills all the space allocated to it with a single color.
 	 */
 	class HERMES_API PanelWidget : public Widget
 	{

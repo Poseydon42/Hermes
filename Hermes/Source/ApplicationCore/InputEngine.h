@@ -5,124 +5,11 @@
 #include "Core/Core.h"
 #include "Core/Event/Event.h"
 #include "Core/Event/EventQueue.h"
+#include "Core/Misc/KeyCode.h"
 #include "Math/Vector2.h"
 
 namespace Hermes
 {
-	enum class KeyCode : int16
-	{
-		LeftMouseButton = 0,
-		RightMouseButton,
-		MiddleMouseButton,
-		FourthMouseButton,
-		FifthMouseButton,
-		Space,
-		Backspace,
-		Tab,
-		Enter,
-		LeftShift,
-		RightShift,
-		LeftCtrl,
-		RightCtrl,
-		LeftAlt,
-		RightAlt,
-		Pause,
-		Esc,
-		PageUp,
-		PageDown,
-		End,
-		Home,
-		ArrowLeft,
-		ArrowRight,
-		ArrowUp,
-		ArrowDown,
-		PrintScreen,
-		Insert,
-		Delete,
-		Digit0,
-		Digit1,
-		Digit2,
-		Digit3,
-		Digit4,
-		Digit5,
-		Digit6,
-		Digit7,
-		Digit8,
-		Digit9,
-		A,
-		B,
-		C,
-		D,
-		E,
-		F,
-		G,
-		H,
-		I,
-		J,
-		K,
-		L,
-		M,
-		N,
-		O,
-		P,
-		Q,
-		R,
-		S,
-		T,
-		U,
-		V,
-		W,
-		X,
-		Y,
-		Z,
-		LeftWindows,
-		RightWindows,
-		Num0,
-		Num1,
-		Num2,
-		Num3,
-		Num4,
-		Num5,
-		Num6,
-		Num7,
-		Num8,
-		Num9,
-		Multiply,
-		Add,
-		Subtract,
-		Decimal,
-		Divide,
-		F1,
-		F2,
-		F3,
-		F4,
-		F5,
-		F6,
-		F7,
-		F8,
-		F9,
-		F10,
-		F11,
-		F12,
-		F13,
-		F14,
-		F15,
-		F16,
-		F17,
-		F18,
-		F19,
-		F20,
-		F21,
-		F22,
-		F23,
-		F24,
-		NumLock,
-		ScrollLock,
-		Count_
-	};
-
-	String KeyCodeToString(KeyCode Code);
-
 	enum class KeyEventType
 	{
 		Pressed,
@@ -136,7 +23,7 @@ namespace Hermes
 	public:
 		KeyEvent(KeyCode InCode, KeyEventType InEventType);
 
-		String ToString() const override;
+		virtual String ToString() const override;
 
 		KeyCode GetKeyCode() const;
 		KeyEventType GetEventType() const;

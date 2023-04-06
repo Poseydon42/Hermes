@@ -17,10 +17,6 @@ namespace Hermes
 		WindowsWindow(const String& Name, Vec2ui Size);
 
 		virtual ~WindowsWindow() override;
-		
-		WindowsWindow(WindowsWindow&& Other);
-		
-		WindowsWindow& operator=(WindowsWindow&& Other);
 
 		virtual void UpdateName(const String& NewName) override;
 
@@ -38,11 +34,9 @@ namespace Hermes
 
 		virtual EventQueue& GetWindowQueue() override;
 
-		virtual void Run() const override;
+		virtual void Run() override;
 
 		virtual void* GetNativeHandle() const override;
-
-		virtual void SetInputEngine(std::weak_ptr<class InputEngine> InInputEngine) override;
 
 		virtual void SetCursorVisibility(bool IsVisible) override;
 	
@@ -53,11 +47,9 @@ namespace Hermes
 
 		std::unique_ptr<EventQueue> MessagePump;
 
-		WINDOWPLACEMENT PrevPlacement;
+		WINDOWPLACEMENT PrevPlacement = {};
 
 		Vec2ui LastKnownSize;
-
-		std::weak_ptr<InputEngine> InputEngine;
 
 		static bool ClassRegistered;
 

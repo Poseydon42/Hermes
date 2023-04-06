@@ -10,6 +10,7 @@ set(SOURCES
     Event/EventQueue.h
     Misc/DefaultConstructors.h
     Misc/EnumClassOperators.h
+    Misc/KeyCode.h
     Misc/NonCopyableMovable.h
     Misc/ArgsParser.cpp
     Misc/ArgsParser.h

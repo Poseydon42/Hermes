@@ -1,27 +1,91 @@
 ﻿#pragma once
 
+#include <format>
 #include <memory>
 
 #include "Core/Core.h"
+#include "Core/Event/Event.h"
+#include "Core/Misc/KeyCode.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Math/Vector2.h"
-#include "Core/Event/Event.h"
 
 namespace Hermes
 {
-	class InputEngine;
 	class EventQueue;
+
+	class HERMES_API WindowKeyboardEvent : public IEvent
+	{
+		EVENT_BODY(WindowKeyboardEvent);
+
+	public:
+		WindowKeyboardEvent(KeyCode InKeyCode, bool InIsPressEvent)
+			: KeyCode(InKeyCode)
+			, IsPressEvent(InIsPressEvent)
+		{
+		}
+
+		virtual String ToString() const override
+		{
+			return std::format("WindowKeyboardEvent (KeyCode: {}, Type: {})", KeyCodeToString(KeyCode), IsPressEvent ? "pressed" : "released");
+		}
+
+		KeyCode GetKeyCode() const
+		{
+			return KeyCode;
+		}
+
+		bool IsPressed() const
+		{
+			return IsPressEvent;
+		}
+
+		bool IsReleased() const
+		{
+			return !IsPressed();
+		}
+
+	private:
+		KeyCode KeyCode;
+		bool IsPressEvent;
+	};
+
+	class WindowMouseEvent : public IEvent
+	{
+		EVENT_BODY(WindowMouseEvent);
+
+	public:
+		explicit WindowMouseEvent(Vec2i InMouseDelta)
+			: MouseDelta(InMouseDelta)
+		{
+		}
+
+		virtual String ToString() const override
+		{
+			return std::format("WindowMouseEvent (MouseDelta: ({}, {}))", MouseDelta.X, MouseDelta.Y);
+		}
+
+		Vec2i GetMouseDelta() const
+		{
+			return MouseDelta;
+		}
+
+	private:
+		Vec2i MouseDelta;
+	};
 
 	class HERMES_API WindowCloseEvent : public IEvent
 	{
 		EVENT_BODY(WindowCloseEvent)
 	
 	public:
-		WindowCloseEvent(const String& Name) : WindowName(Name) {}
-		
-		String ToString() const override
+		explicit WindowCloseEvent(String InName)
+			: WindowName(std::move(InName))
 		{
-			return WindowName;
+		}
+
+		virtual String ToString() const override
+		{
+			return std::format("WindowCloseEvent (WindowName: {})", WindowName);
 		}
 	
 	private:
@@ -86,7 +150,7 @@ namespace Hermes
 		/**
 		 * Processes window messages and message queue
 		 */
-		virtual void Run() const = 0;
+		virtual void Run() = 0;
 
 		/**
 		 * Single queue for all window messages that game loop should handle
@@ -99,10 +163,8 @@ namespace Hermes
 		virtual void* GetNativeHandle() const = 0;
 
 		/*
-		 * Updates pointer to input engine instance that is used to process window input messages
+		 * Sets whether the cursor should be visible
 		 */
-		virtual void SetInputEngine(std::weak_ptr<InputEngine> InputEngine) = 0;
-
 		virtual void SetCursorVisibility(bool IsVisible) = 0;
 
 		static std::unique_ptr<IPlatformWindow> CreatePlatformWindow(const String& Name, Vec2ui Size);

@@ -29,7 +29,7 @@ namespace Hermes
 	
 	WindowsWindow::WindowsWindow(const String& Name, Vec2ui Size) : IPlatformWindow()
 	{
-		HINSTANCE AppInstance = GetModuleHandleW(NULL);
+		HINSTANCE AppInstance = GetModuleHandleW(nullptr);
 		if (!ClassRegistered)
 		{
 			WNDCLASSEXW WndClass = {};
@@ -53,10 +53,8 @@ namespace Hermes
 		MultiByteToWideChar(CP_UTF8, 0, Name.c_str(), -1, UTF16NameBuffer, MaxWindowNameLength);
 
 		Vec2ui WindowSize = ClientRectToWindowSize(Size, WindowStyle, ExStyle);
-		WindowHandle = CreateWindowExW(
-			ExStyle, ClassName, UTF16NameBuffer, WindowStyle,
-			CW_USEDEFAULT, CW_USEDEFAULT, WindowSize.X, WindowSize.Y,
-			0, 0, AppInstance, this);
+		WindowHandle = CreateWindowExW(ExStyle, ClassName, UTF16NameBuffer, WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, static_cast<int>(WindowSize.X), static_cast<int>(WindowSize.Y), nullptr, nullptr, AppInstance, this);
+
 		if (WindowHandle)
 		{
 			UpdateVisibility(true);
@@ -71,21 +69,6 @@ namespace Hermes
 	{
 		if (WindowHandle)
 			DestroyWindow(WindowHandle);
-	}
-
-	WindowsWindow::WindowsWindow(WindowsWindow&& Other) : IPlatformWindow(std::move(Other))
-	{
-		*this = std::move(Other);
-	}
-
-	WindowsWindow& WindowsWindow::operator=(WindowsWindow&& Other)
-	{
-		std::swap(PrevPlacement, Other.PrevPlacement);
-		std::swap(MessagePump, Other.MessagePump);
-		std::swap(WindowHandle, Other.WindowHandle);
-		std::swap(CurrentName, Other.CurrentName);
-		std::swap(LastKnownSize, Other.LastKnownSize);
-		return *this;
 	}
 
 	void WindowsWindow::UpdateName(const String& NewName)
@@ -136,7 +119,7 @@ namespace Hermes
 	bool WindowsWindow::Resize(Vec2ui NewSize)
 	{
 		Vec2ui WindowSize = ClientRectToWindowSize(NewSize, WindowStyle, ExStyle);
-		return SetWindowPos(WindowHandle, HWND_NOTOPMOST, 0, 0, WindowSize.X, WindowSize.Y, SWP_NOMOVE | SWP_NOZORDER);
+		return SetWindowPos(WindowHandle, HWND_NOTOPMOST, 0, 0, static_cast<int>(WindowSize.X), static_cast<int>(WindowSize.Y), SWP_NOMOVE | SWP_NOZORDER);
 	}
 
 	Vec2ui WindowsWindow::GetSize() const
@@ -154,7 +137,7 @@ namespace Hermes
 		return *MessagePump;
 	}
 
-	void WindowsWindow::Run() const
+	void WindowsWindow::Run()
 	{
 		HERMES_PROFILE_FUNC();
 
@@ -170,17 +153,16 @@ namespace Hermes
 		{
 			if (GetCursorPos(&CursorPos) && ScreenToClient(WindowHandle, &CursorPos))
 			{
-				auto RelativeX = static_cast<float>(CursorPos.x) / static_cast<float>(LastKnownSize.X) * 2.0f - 1.0f;
-				auto RelativeY = static_cast<float>(CursorPos.y) / static_cast<float>(LastKnownSize.Y) * 2.0f - 1.0f;
-				if (auto Input = InputEngine.lock())
-				{
-					Input->SetDeltaMousePosition(Vec2{ RelativeX, RelativeY });
-				}
-				uint32 WindowCenterX = LastKnownSize.X / 2;
-				uint32 WindowCenterY = LastKnownSize.Y / 2;
+				Vec2ui WindowCenter = { LastKnownSize.X / 2, LastKnownSize.Y / 2 };
+
+				Vec2i CurrentMousePosition = { CursorPos.x, CursorPos.y };
+				auto DeltaMousePosition = CurrentMousePosition - Vec2i(WindowCenter);
+
+				MessagePump->PushEvent(WindowMouseEvent(DeltaMousePosition));
+
 				POINT CenterCoords;
-				CenterCoords.x = static_cast<decltype(CenterCoords.x)>(WindowCenterX);
-				CenterCoords.y = static_cast<decltype(CenterCoords.y)>(WindowCenterY);
+				CenterCoords.x = static_cast<decltype(CenterCoords.x)>(WindowCenter.X);
+				CenterCoords.y = static_cast<decltype(CenterCoords.y)>(WindowCenter.Y);
 				ClientToScreen(WindowHandle, &CenterCoords);
 				SetCursorPos(CenterCoords.x, CenterCoords.y);
 			}
@@ -196,12 +178,7 @@ namespace Hermes
 
 	void* WindowsWindow::GetNativeHandle() const
 	{
-		return (void*)WindowHandle;
-	}
-
-	void WindowsWindow::SetInputEngine(std::weak_ptr<class InputEngine> InInputEngine)
-	{
-		this->InputEngine = InInputEngine;
+		return WindowHandle;
 	}
 
 	void WindowsWindow::SetCursorVisibility(bool IsVisible)
@@ -361,20 +338,20 @@ namespace Hermes
 				};
 				bool IsPressEvent = Message == WM_KEYDOWN;
 				auto VKCode = static_cast<uint32>(WParam);
-				if (auto LockedInputEngine = InputEngine.lock())
+
+				auto Iterator = VKCodeToKeyCodeMap.find(VKCode);
+				if (Iterator == VKCodeToKeyCodeMap.end())
 				{
-					auto Iterator = VKCodeToKeyCodeMap.find(VKCode);
-					if (Iterator == VKCodeToKeyCodeMap.end())
-					{
-						HERMES_LOG_DEBUG("Failed to translate VK code: 0x%02hhx", VKCode);
-						break;
-					}
-					KeyCode Code = Iterator->second;
-					LockedInputEngine->PushEvent(Code, IsPressEvent);
+					HERMES_LOG_DEBUG("Failed to translate VK code: 0x%02hhx", VKCode);
+					break;
 				}
+
+				MessagePump->PushEvent(WindowKeyboardEvent(Iterator->second, IsPressEvent));
 				break;
 			}
+		default:;
 		}
+
 		return DefWindowProcW(Window, Message, WParam, LParam);
 	}
 

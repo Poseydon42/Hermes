@@ -7,6 +7,29 @@
 
 namespace Hermes::UI
 {
+	enum class MarginValueType
+	{
+		Absolute,
+		PercentOfParent
+	};
+
+	struct MarginValue
+	{
+		MarginValueType Type = MarginValueType::PercentOfParent;
+		float Value = 0.0f;
+	};
+
+	/*
+	 * Represent margins of the widget in four directions separately.
+	 */
+	struct MarginBox
+	{
+		MarginValue Left;
+		MarginValue Right;
+		MarginValue Top;
+		MarginValue Bottom;
+	};
+
 	/*
 	 * Base class for any UI element that can be drawn and interacted with.
 	 *
@@ -19,6 +42,10 @@ namespace Hermes::UI
 
 		Widget(Widget&&) = default;
 		Widget& operator=(Widget&&) = default;
+
+		const MarginBox& GetMargins() const;
+		MarginBox& GetMargins();
+		void SetMargins(MarginBox NewMargins);
 
 		/*
 		 * Sets the new parent for this widget
@@ -43,5 +70,6 @@ namespace Hermes::UI
 		explicit Widget(std::shared_ptr<Widget> InParent);
 
 		std::shared_ptr<Widget> Parent = nullptr;
+		MarginBox Margins = {};
 	};
 }

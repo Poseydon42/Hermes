@@ -27,7 +27,8 @@ namespace Hermes
 			auto Event = Queue.front();
 			Queue.pop();
 
-			for (auto Iterator = Subscribers.find(Event->GetType()); Iterator != Subscribers.end(); ++Iterator)
+			auto [Begin, End] = Subscribers.equal_range(Event->GetType());
+			for (auto Iterator = Begin; Iterator != End; ++Iterator)
 			{
 				Iterator->second(*Event);
 			}

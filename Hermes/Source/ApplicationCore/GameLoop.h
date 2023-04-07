@@ -4,6 +4,7 @@
 
 #include "Core/Core.h"
 #include "ApplicationCore/Application.h"
+#include "ApplicationCore/InputEngine.h"
 #include "AssetSystem/AssetCache.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
@@ -11,8 +12,6 @@
 
 namespace Hermes
 {
-	class InputEngine;
-	class IEvent;
 	class IPlatformWindow;
 
 	class HERMES_API GameLoop
@@ -20,7 +19,7 @@ namespace Hermes
 		MAKE_NON_COPYABLE(GameLoop)
 		
 	public:
-		GameLoop(IApplication* App);
+		explicit GameLoop(IApplication* App);
 
 		~GameLoop() = default;
 		GameLoop(GameLoop&&) = default;
@@ -56,7 +55,7 @@ namespace Hermes
 
 		std::unique_ptr<IApplication> Application;
 		std::shared_ptr<IPlatformWindow> ApplicationWindow;
-		std::shared_ptr<InputEngine> InputEngine;
+		std::unique_ptr<InputEngine> InputEngine;
 
 		std::unique_ptr<AssetCache> AssetCache;
 

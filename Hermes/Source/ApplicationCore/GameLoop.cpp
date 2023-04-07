@@ -44,7 +44,7 @@ namespace Hermes
 		if (!ApplicationWindow->IsValid())
 			return false;
 
-		InputEngine = std::make_shared<class InputEngine>();
+		InputEngine = std::make_unique<class InputEngine>(*ApplicationWindow);
 		ApplicationWindow->SetCursorVisibility(false);
 
 		ApplicationWindow->GetWindowQueue().Subscribe(WindowCloseEvent::GetStaticType(), [this](const IEvent&) { RequestedExit = true; });

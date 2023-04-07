@@ -154,10 +154,11 @@ namespace Hermes
 		}
 	}
 
-	void InputEngine::PushEvent(KeyCode Code, bool WasPressed)
+	InputEngine::InputEngine(IPlatformWindow& PlatformWindow)
 	{
-		KeyState[static_cast<int16>(Code)] = WasPressed;
-		Queue.PushEvent(KeyEvent(Code, WasPressed ? KeyEventType::Pressed : KeyEventType::Released));
+		auto& WindowEventQueue = PlatformWindow.GetWindowQueue();
+		WindowEventQueue.Subscribe(WindowKeyboardEvent::GetStaticType(), [this](const IEvent& Event) { KeyEventHandler(Event); });
+		WindowEventQueue.Subscribe(WindowMouseEvent::GetStaticType(), [this](const IEvent& Event) { MouseEventHandler(Event); });
 	}
 
 	void InputEngine::ProcessDeferredEvents()
@@ -183,5 +184,36 @@ namespace Hermes
 	Vec2 InputEngine::GetDeltaMousePosition() const
 	{
 		return DeltaMousePosition;
+	}
+
+	void InputEngine::KeyEventHandler(const IEvent& Event)
+	{
+		HERMES_ASSERT(Event.GetType() == WindowKeyboardEvent::GetStaticType());
+
+		const auto& WindowKeyEvent = static_cast<const WindowKeyboardEvent&>(Event);
+		
+		KeyState[static_cast<std::underlying_type_t<KeyCode>>(WindowKeyEvent.GetKeyCode())] = WindowKeyEvent.IsPressed();
+
+		KeyEventType EventType;
+		if (WindowKeyEvent.IsPressed())
+			EventType = KeyEventType::Pressed;
+		else if (WindowKeyEvent.IsReleased())
+			EventType = KeyEventType::Released;
+		else
+			HERMES_ASSERT(false);
+
+		Queue.PushEvent(KeyEvent(WindowKeyEvent.GetKeyCode(), EventType));
+	}
+
+	void InputEngine::MouseEventHandler(const IEvent& Event)
+	{
+		HERMES_ASSERT(Event.GetType() == WindowMouseEvent::GetStaticType());
+
+		const auto& MouseEvent = static_cast<const WindowMouseEvent&>(Event);
+
+		auto AbsoluteMouseDelta = Vec2(MouseEvent.GetMouseDelta());
+
+		auto ScaledMouseDelta = AbsoluteMouseDelta * MouseSensitivity;
+		DeltaMousePosition = ScaledMouseDelta;
 	}
 }

@@ -7,6 +7,7 @@
 #include "Core/Event/EventQueue.h"
 #include "Core/Misc/KeyCode.h"
 #include "Math/Vector2.h"
+#include "Platform/GenericPlatform/PlatformWindow.h"
 
 namespace Hermes
 {
@@ -45,7 +46,7 @@ namespace Hermes
 	class HERMES_API InputEngine
 	{
 	public:
-		void PushEvent(KeyCode Code, bool WasPressed);
+		explicit InputEngine(IPlatformWindow& PlatformWindow);
 
 		void ProcessDeferredEvents();
 
@@ -57,7 +58,13 @@ namespace Hermes
 		Vec2 GetDeltaMousePosition() const;
 	private:
 		EventQueue Queue;
+
 		bool KeyState[static_cast<int16>(KeyCode::Count_)] = {};
 		Vec2 DeltaMousePosition;
+
+		static constexpr float MouseSensitivity = 0.01f;
+
+		void KeyEventHandler(const IEvent& Event);
+		void MouseEventHandler(const IEvent& Event);
 	};
 }

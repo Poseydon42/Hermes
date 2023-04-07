@@ -58,6 +58,11 @@ namespace Hermes::Vulkan
 		bool IsDepthWriteEnabled;
 		VkCompareOp DepthCompareOperator;
 
+		/*
+		 * Dynamic states (things that can be changed before every draw call)
+		 */
+		std::vector<VkDynamicState> DynamicStates;
+
 		// TODO: add other aspects of the pipeline description (e.g. tessellation, depth bias, color blend etc.)
 	};
 

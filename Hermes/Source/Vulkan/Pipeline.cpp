@@ -90,6 +90,11 @@ namespace Hermes::Vulkan
 		ColorBlendCreateInfo.attachmentCount = static_cast<uint32>(AttachmentBlendStates.size());
 		ColorBlendCreateInfo.pAttachments = AttachmentBlendStates.data();
 
+		VkPipelineDynamicStateCreateInfo DynamicStateInfo = {};
+		DynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		DynamicStateInfo.dynamicStateCount = static_cast<uint32>(Description.DynamicStates.size());
+		DynamicStateInfo.pDynamicStates = Description.DynamicStates.data();
+
 		VkGraphicsPipelineCreateInfo CreateInfo = {};
 		CreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		CreateInfo.stageCount = static_cast<uint32>(ShaderCreateInfos.size());
@@ -102,7 +107,7 @@ namespace Hermes::Vulkan
 		CreateInfo.pMultisampleState = &MultisampleCreateInfo;
 		CreateInfo.pDepthStencilState = &DepthStencilCreateInfo;
 		CreateInfo.pColorBlendState = &ColorBlendCreateInfo;
-		CreateInfo.pDynamicState = nullptr; // TODO : implement
+		CreateInfo.pDynamicState = &DynamicStateInfo;
 		CreateInfo.layout = Layout;
 		CreateInfo.renderPass = RenderPass.GetRenderPass();
 		CreateInfo.subpass = 0;

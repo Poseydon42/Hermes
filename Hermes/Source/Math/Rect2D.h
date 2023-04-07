@@ -35,6 +35,9 @@ namespace Hermes
 		ComponentType Height() const;
 
 		Rectangle2D Intersect(const Rectangle2D& Other) const;
+
+		bool operator==(const Rectangle2D& Other) const;
+		bool operator!=(const Rectangle2D& Other) const;
 	};
 
 	template<typename ComponentType>
@@ -115,6 +118,18 @@ namespace Hermes
 			Result = { {}, {} };
 
 		return Result;
+	}
+
+	template<typename ComponentType>
+	bool Rectangle2D<ComponentType>::operator==(const Rectangle2D& Other) const
+	{
+		return Min == Other.Min && Max == Other.Max;
+	}
+
+	template<typename ComponentType>
+	bool Rectangle2D<ComponentType>::operator!=(const Rectangle2D& Other) const
+	{
+		return !(*this == Other);
 	}
 
 	using Rect2D = Rectangle2D<float>;

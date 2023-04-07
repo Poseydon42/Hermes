@@ -12,21 +12,23 @@ namespace Hermes
 		uint16 Hour;
 		uint16 Minute;
 		uint16 Second;
-		uint16 Milisecond;
+		uint16 Millisecond;
 	};
 	
 	/*
 	 * Opaque struct that represent a point on a timeline
 	 * It has to have maximum possible accuracy
 	 */
-	struct PlatformTimestamp;
+	using PlatformTimestamp = void*;
 
 	/*
 	 * Opaque struct that represents a duration of time between two PlatformTimestamps
 	 */
-	struct PlatformTimespan;
-
-	PlatformTimespan operator-(const PlatformTimestamp& Lhs, const PlatformTimestamp& Rhs);
+	struct PlatformTimespan
+	{
+		PlatformTimestamp Start;
+		PlatformTimestamp End;
+	};
 
 	struct HERMES_API PlatformTime
 	{
@@ -39,5 +41,3 @@ namespace Hermes
 		static float ToSeconds(const PlatformTimespan& Span);
 	};	
 }
-
-#include "Platform/Windows/WindowsTime.h"

@@ -91,7 +91,7 @@ namespace Hermes
 						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%02hu", Time.Second);
 						break;
 					case 'u':
-						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%03hu", Time.Milisecond);
+						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%03hu", Time.Millisecond);
 						break;
 					case 'y':
 						SpaceTaken = std::snprintf(Dest, SpaceLeft + 1, "%02hu", Time.Year % 1000);

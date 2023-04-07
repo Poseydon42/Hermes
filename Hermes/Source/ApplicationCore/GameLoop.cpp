@@ -82,7 +82,7 @@ namespace Hermes
 			if (!Paused && !RequestedExit)
 			{
 				auto CurrentTimestamp = PlatformTime::GetCurrentTimestamp();
-				float DeltaTime = PlatformTime::ToSeconds(CurrentTimestamp - PrevFrameEndTimestamp);
+				float DeltaTime = PlatformTime::ToSeconds({ .Start = PrevFrameEndTimestamp, .End = CurrentTimestamp });
 
 				GameWorld->Update(DeltaTime);
 

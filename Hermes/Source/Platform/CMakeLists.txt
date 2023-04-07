@@ -14,7 +14,6 @@ set(SOURCES
     Windows/WindowsLibrary.h
     Windows/WindowsMisc.cpp
     Windows/WindowsTime.cpp
-    Windows/WindowsTime.h
     Windows/WindowsWindow.cpp
     Windows/WindowsWindow.h
 )

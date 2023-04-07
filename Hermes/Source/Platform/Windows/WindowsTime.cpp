@@ -1,21 +1,16 @@
 #ifdef HERMES_PLATFORM_WINDOWS
 
-#include "Platform/Windows/WindowsTime.h"
+#include <Windows.h>
+
 #include "Platform/GenericPlatform/PlatformTime.h"
 
 namespace Hermes
 {
+	static_assert(sizeof(PlatformTimestamp) >= sizeof(LARGE_INTEGER));
+	
 	namespace WindowsTimeInternal
 	{
 		LARGE_INTEGER GFrequency;
-	}
-
-	PlatformTimespan operator-(const PlatformTimestamp& Lhs, const PlatformTimestamp& Rhs)
-	{
-		PlatformTimespan Result;
-		Result.Start = Rhs;
-		Result.End = Lhs;
-		return Result;
 	}
 
 	void PlatformTime::Init()
@@ -26,7 +21,7 @@ namespace Hermes
 	PlatformDateTime PlatformTime::GetPlatformTime()
 	{
 		SYSTEMTIME WinTime;
-		PlatformDateTime Result;
+		PlatformDateTime Result = {};
 
 		GetSystemTime(&WinTime);
 		Result.Year = WinTime.wYear;
@@ -35,21 +30,24 @@ namespace Hermes
 		Result.Hour = WinTime.wHour;
 		Result.Minute = WinTime.wMinute;
 		Result.Second = WinTime.wSecond;
-		Result.Milisecond = WinTime.wMilliseconds;
+		Result.Millisecond = WinTime.wMilliseconds;
 
 		return Result;
 	}
 
 	PlatformTimestamp PlatformTime::GetCurrentTimestamp()
 	{
-		PlatformTimestamp Result = {};
-		HERMES_ASSERT(QueryPerformanceCounter(&Result.Value));
-		return Result;
+		LARGE_INTEGER Time = {};
+		HERMES_ASSERT(QueryPerformanceCounter(&Time));
+
+		return reinterpret_cast<PlatformTimestamp>(Time.QuadPart);
 	}
 
 	float PlatformTime::ToSeconds(const PlatformTimespan& Span)
 	{
-		return static_cast<float>(Span.End.Value.QuadPart - Span.Start.Value.QuadPart) / static_cast<float>(WindowsTimeInternal::GFrequency.QuadPart);
+		auto Start = reinterpret_cast<LONGLONG>(Span.Start);
+		auto End = reinterpret_cast<LONGLONG>(Span.End);
+		return static_cast<float>(End - Start) / static_cast<float>(WindowsTimeInternal::GFrequency.QuadPart);
 	}
 }
 

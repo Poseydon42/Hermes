@@ -108,7 +108,7 @@ namespace Hermes
 	template <typename InternalType>
 	constexpr Vector2<InternalType> Vector2<InternalType>::operator-(const Vector2& V) const
 	{
-		return *this + (-V);
+		return Vector2(X - V.X, Y - V.Y);
 	}
 
 	template <typename InternalType>

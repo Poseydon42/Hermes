@@ -92,6 +92,7 @@ namespace Hermes
 				auto& Renderer = Renderer::Get();
 				auto& Scene = GameWorld->GetScene();
 
+				Renderer::Get().SetSceneViewport({ .Min = {}, .Max = Renderer::Get().GetSwapchain().GetDimensions() });
 				Renderer.RunFrame(Scene);
 
 				PrevFrameEndTimestamp = CurrentTimestamp;
@@ -140,10 +141,10 @@ namespace Hermes
 	/*
 	 * DEBUG ONLY
 	 */
-	void GameLoop::KeyEventHandler(const IEvent& Event)
+	void GameLoop::KeyEventHandler(const IEvent& RawEvent)
 	{
-		const auto& KeyEvent = static_cast<const class KeyEvent&>(Event);
-		if (KeyEvent.IsPressEvent() && KeyEvent.GetKeyCode() == KeyCode::F)
+		const auto& Event = static_cast<const KeyEvent&>(RawEvent);
+		if (Event.IsPressEvent() && Event.GetKeyCode() == KeyCode::F)
 		{
 			ApplicationWindow->ToggleFullscreen(!IsFullscreen);
 			IsFullscreen = !IsFullscreen;

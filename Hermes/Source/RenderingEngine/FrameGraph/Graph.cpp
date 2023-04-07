@@ -40,8 +40,7 @@ namespace Hermes
 		case BindingMode::InputAttachment:
 			return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		}
-		HERMES_ASSERT(false);
-		return VK_IMAGE_LAYOUT_UNDEFINED;
+		HERMES_ASSERT(false)
 	}
 
 	void FrameGraphScheme::AddPass(const String& Name, const PassDesc& Desc)
@@ -282,10 +281,21 @@ namespace Hermes
 		RecreateFramebuffers();
 	}
 
-	FrameMetrics FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList)
+	FrameMetrics FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList, Rect2Dui Viewport)
 	{
 		HERMES_PROFILE_FUNC();
+
+		if (Viewport.Max == Viewport.Min)
+			return {};
+
 		FrameMetrics Metrics = {};
+		if (Viewport != CurrentViewport)
+		{
+			CurrentViewport = Viewport;
+
+			RecreateResources();
+			RecreateFramebuffers();
+		}
 
 		if (FramebuffersNeedsInitialization)
 		{
@@ -467,12 +477,8 @@ namespace Hermes
 			BlitRegion.dstSubresource.mipLevel = 0;
 			BlitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			BlitRegion.dstSubresource.layerCount = 1;
-			BlitRegion.dstOffsets[0] = { 0, 0, 0 };
-			BlitRegion.dstOffsets[1] = {
-				static_cast<int32>(SwapchainImage.GetDimensions().X),
-				static_cast<int32>(SwapchainImage.GetDimensions().Y),
-				1
-			};
+			BlitRegion.dstOffsets[0] = { static_cast<int32>(CurrentViewport.Min.X), static_cast<int32>(CurrentViewport.Min.Y), 0 };
+			BlitRegion.dstOffsets[1] = { static_cast<int32>(CurrentViewport.Max.X), static_cast<int32>(CurrentViewport.Max.Y), 1 };
 
 			BlitAndPresentCommandBuffer->BlitImage(*BlitToSwapchainResource.Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 			                                       SwapchainImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -596,8 +602,7 @@ namespace Hermes
 					Type = Vulkan::AttachmentType::Input;
 					break;
 				default:
-					HERMES_ASSERT_LOG(false, "Unknown attachment binding mode");
-					break;
+					HERMES_ASSERT_LOG(false, "Unknown attachment binding mode")
 				}
 
 				RenderPassAttachments.emplace_back(AttachmentDesc, Type);
@@ -607,7 +612,7 @@ namespace Hermes
 			PassContainer NewPassContainer = {};
 			if (Pass.second.Type == PassType::Graphics)
 			{
-				HERMES_ASSERT(RenderPassAttachments.size() > 0);
+				HERMES_ASSERT(!RenderPassAttachments.empty());
 				NewPassContainer.Pass = Renderer::Get().GetActiveDevice().CreateRenderPass(RenderPassAttachments);
 			}
 			NewPassContainer.CommandBuffer = GraphicsQueue.CreateCommandBuffer(true);
@@ -794,8 +799,7 @@ namespace Hermes
 				Result |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 				break;
 			default:
-				HERMES_ASSERT(false);
-				break;
+				HERMES_ASSERT(false)
 			}
 
 			if (!Scheme.ForwardLinks.contains(NextAttachmentName))
@@ -882,15 +886,12 @@ namespace Hermes
 
 	void FrameGraph::RecreateResources()
 	{
-		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetDimensions();
+		auto ViewportDimensions = CurrentViewport.Max - CurrentViewport.Min;
 		for (auto& Resource : ImageResources)
 		{
 			if (Resource.second.Desc.Dimensions.IsRelative() && !Resource.second.IsExternal)
 			{
-				Resource.second.Image = Renderer::Get().GetActiveDevice().CreateImage(
-				 Resource.second.Desc.Dimensions.GetAbsoluteDimensions(SwapchainDimensions),
-				 TraverseImageResourceUsageType(Resource.first), Resource.second.Desc.Format,
-				 Resource.second.Desc.MipLevels);
+				Resource.second.Image = Renderer::Get().GetActiveDevice().CreateImage(Resource.second.Desc.Dimensions.GetAbsoluteDimensions(ViewportDimensions), TraverseImageResourceUsageType(Resource.first), Resource.second.Desc.Format, Resource.second.Desc.MipLevels);
 				Resource.second.View = Resource.second.Image->CreateDefaultImageView();
 
 				Resource.second.CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;

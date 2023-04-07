@@ -5,6 +5,7 @@
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
+#include "Math/Rect2D.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Passes/DepthPass.h"
@@ -44,6 +45,8 @@ namespace Hermes
 		const GraphicsSettings& GetGraphicsSettings() const;
 
 		void UpdateGraphicsSettings(GraphicsSettings NewSettings);
+
+		void SetSceneViewport(Rect2Dui NewViewport);
 		
 		void AddWindow(const UI::Window& Window, Vec2ui ScreenLocation);
 
@@ -94,7 +97,7 @@ namespace Hermes
 		std::unique_ptr<SkyboxPass> SkyboxPass;
 		std::unique_ptr<UIPass> UIPass;
 
-		Vec2ui LastSwapchainDimensions = {};
+		Rect2Dui SceneViewport;
 
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
 		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;

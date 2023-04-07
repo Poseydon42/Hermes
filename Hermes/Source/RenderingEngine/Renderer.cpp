@@ -114,19 +114,19 @@ namespace Hermes
 		Scheme.AddPass("UIPass", UIPass->GetPassDescription());
 
 		ImageResourceDescription HDRColorBufferResource = {};
-		HDRColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
+		HDRColorBufferResource.Dimensions = ViewportRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
 		HDRColorBufferResource.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
 		HDRColorBufferResource.MipLevels = 1;
 		Scheme.AddResource("HDRColorBuffer", HDRColorBufferResource);
 
 		ImageResourceDescription ColorBufferResource = {};
-		ColorBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f });
+		ColorBufferResource.Dimensions = ViewportRelativeDimensions::CreateFromRelativeDimensions({ 1.0f });
 		ColorBufferResource.Format = VK_FORMAT_B8G8R8A8_SRGB;
 		ColorBufferResource.MipLevels = 1;
 		Scheme.AddResource("ColorBuffer", ColorBufferResource);
 
 		ImageResourceDescription DepthBufferResource = {};
-		DepthBufferResource.Dimensions = SwapchainRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
+		DepthBufferResource.Dimensions = ViewportRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
 		DepthBufferResource.Format = VK_FORMAT_D32_SFLOAT;
 		DepthBufferResource.MipLevels = 1;
 		Scheme.AddResource("DepthBuffer", DepthBufferResource);
@@ -176,6 +176,15 @@ namespace Hermes
 		CurrentSettings = NewSettings;
 	}
 
+	void Renderer::SetSceneViewport(Rect2Dui NewViewport)
+	{
+		if (NewViewport == SceneViewport)
+			return;
+
+		HERMES_LOG_INFO("SetSceneViewport(%u, %u, %u, %u)", NewViewport.Min.X, NewViewport.Min.Y, NewViewport.Max.X, NewViewport.Max.Y);
+		SceneViewport = NewViewport;
+	}
+
 	void Renderer::AddWindow(const UI::Window& Window, Vec2ui ScreenLocation)
 	{
 		UIPass->AddWindow(&Window, ScreenLocation);
@@ -189,7 +198,7 @@ namespace Hermes
 
 		auto GeometryList = Scene.BakeGeometryList();
 
-		auto Metrics = FrameGraph->Execute(Scene, GeometryList);
+		auto Metrics = FrameGraph->Execute(Scene, GeometryList, SceneViewport);
 		HERMES_PROFILE_TAG("Draw call count", static_cast<int64>(Metrics.DrawCallCount));
 		HERMES_PROFILE_TAG("Pipeline bind count", static_cast<int64>(Metrics.PipelineBindCount));
 		HERMES_PROFILE_TAG("Descriptor set bind count", static_cast<int64>(Metrics.DescriptorSetBindCount));

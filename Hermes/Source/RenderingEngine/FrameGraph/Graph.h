@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "Core/Core.h"
+#include "Math/Rect2D.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "Vulkan/CommandBuffer.h"
@@ -78,7 +79,7 @@ namespace Hermes
 		                          std::shared_ptr<Vulkan::ImageView> View,
 		                          VkImageLayout CurrentLayout);
 
-		FrameMetrics Execute(const Scene& Scene, const GeometryList& GeometryList);
+		FrameMetrics Execute(const Scene& Scene, const GeometryList& GeometryList, Rect2Dui Viewport);
 
 		const Vulkan::RenderPass& GetRenderPassObject(const String& Name) const;
 
@@ -143,5 +144,7 @@ namespace Hermes
 
 		bool ResourcesWereRecreated = false;
 		bool FramebuffersNeedsInitialization = false;
+
+		Rect2Dui CurrentViewport = {};
 	};
 }

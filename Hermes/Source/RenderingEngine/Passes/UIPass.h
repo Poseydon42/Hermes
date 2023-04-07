@@ -31,6 +31,6 @@ namespace Hermes
 
 		void CollectPrimitives(const UI::Window* Window, std::vector<RectanglePrimitive>& Rectangles);
 
-		void CreatePipeline(const Vulkan::RenderPass& RenderPass, Vec2 ViewportDimensions);
+		void CreatePipeline(const Vulkan::RenderPass& RenderPass);
 	};
 }

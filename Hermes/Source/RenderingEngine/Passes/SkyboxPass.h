@@ -25,15 +25,13 @@ namespace Hermes
 		std::unique_ptr<Vulkan::DescriptorSetLayout> DataDescriptorLayout;
 		std::unique_ptr<Vulkan::DescriptorSet> DataDescriptorSet;
 		std::unique_ptr<Vulkan::Sampler> EnvmapSampler;
-
-		std::unique_ptr<Vulkan::Shader> VertexShader, FragmentShader;
+		
 		std::unique_ptr<Vulkan::Pipeline> Pipeline;
-		bool IsPipelineCreated = false;
 
 		PassDesc Description;
 
 		void PassCallback(const PassCallbackInfo& CallbackInfo);
 
-		void RecreatePipeline(const Vulkan::RenderPass& Pass);
+		void CreatePipeline(const Vulkan::RenderPass& Pass);
 	};
 }

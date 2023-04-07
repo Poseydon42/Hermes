@@ -84,6 +84,9 @@ namespace Hermes
 		auto& Metrics = CallbackInfo.Metrics;
 		const auto& Scene = CallbackInfo.Scene;
 
+		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Color"))->GetDimensions();
+		auto ViewportDimensions = Vec2(FramebufferDimensions);
+
 		const auto& GlobalSceneDataBuffer = Renderer::Get().GetGlobalSceneDataBuffer();
 		const auto& LightClusterListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightClusterList"));
 		const auto& LightIndexListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightIndexList"));
@@ -110,6 +113,10 @@ namespace Hermes
 
 			CommandBuffer.BindPipeline(MaterialPipeline);
 			Metrics.PipelineBindCount++;
+
+			CommandBuffer.SetViewport({ 0.0f, 0.0f, ViewportDimensions.X, ViewportDimensions.Y, 0.0f, 1.0f });
+			CommandBuffer.SetScissor({ { 0, 0 }, { FramebufferDimensions.X, FramebufferDimensions.Y } });
+
 			CommandBuffer.BindDescriptorSet(*SceneUBODescriptorSet, MaterialPipeline, 0);
 			Metrics.DescriptorSetBindCount++;
 			CommandBuffer.BindDescriptorSet(Material->GetMaterialDescriptorSet(), MaterialPipeline, 1);

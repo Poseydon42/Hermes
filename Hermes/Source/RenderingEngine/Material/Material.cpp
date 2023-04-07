@@ -98,18 +98,6 @@ namespace Hermes
 
 		PipelineDesc.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-		PipelineDesc.Viewport.x = 0;
-		PipelineDesc.Viewport.y = 0;
-		PipelineDesc.Viewport.minDepth = 0.0f;
-		PipelineDesc.Viewport.maxDepth = 1.0f;
-		// TODO : recreate pipeline on resize
-		PipelineDesc.Viewport.width = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().X);
-		PipelineDesc.Viewport.height = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().Y);
-		PipelineDesc.Scissor.offset = { 0, 0 };
-		PipelineDesc.Scissor.extent = {
-			Renderer::Get().GetSwapchain().GetDimensions().X, Renderer::Get().GetSwapchain().GetDimensions().Y
-		};
-
 		PipelineDesc.CullMode = VK_CULL_MODE_BACK_BIT;
 		PipelineDesc.FaceDirection = VK_FRONT_FACE_CLOCKWISE;
 		PipelineDesc.PolygonMode = VK_POLYGON_MODE_FILL;
@@ -117,6 +105,8 @@ namespace Hermes
 		PipelineDesc.DepthCompareOperator = VK_COMPARE_OP_GREATER_OR_EQUAL;
 		PipelineDesc.IsDepthTestEnabled = true;
 		PipelineDesc.IsDepthWriteEnabled = true;
+
+		PipelineDesc.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
 		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetGraphicsRenderPassObject(),
 		                                                            PipelineDesc);

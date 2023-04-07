@@ -37,10 +37,11 @@ namespace Hermes
 	{
 		HERMES_PROFILE_FUNC();
 
-		auto ViewportDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Framebuffer"))->GetDimensions();
+		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Framebuffer"))->GetDimensions();
+		auto ViewportDimensions = Vec2(FramebufferDimensions);
 
 		if (!Pipeline)
-			CreatePipeline(*CallbackInfo.RenderPass, Vec2(ViewportDimensions));
+			CreatePipeline(*CallbackInfo.RenderPass);
 
 		auto& Renderer = Renderer::Get();
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
@@ -72,12 +73,16 @@ namespace Hermes
 
 		CommandBuffer.BindPipeline(*Pipeline);
 		Metrics.PipelineBindCount++;
+
+		CommandBuffer.SetViewport({ 0.0f, 0.0f, ViewportDimensions.X, ViewportDimensions.Y, 0.0f, 1.0f });
+		CommandBuffer.SetScissor({ { 0, 0 }, { FramebufferDimensions.X, FramebufferDimensions.Y } });
+
 		CommandBuffer.BindDescriptorSet(*DescriptorSet, *Pipeline, 0);
 		Metrics.DescriptorSetBindCount++;
 		for (size_t WindowIndex = 0; WindowIndex < Windows.size(); WindowIndex++)
 		{
 			UIShaderPushConstants PushConstants = {};
-			PushConstants.TopLeft = Vec2(Windows[WindowIndex].second) / Vec2(ViewportDimensions);
+			PushConstants.TopLeft = Vec2(Windows[WindowIndex].second) / ViewportDimensions;
 			PushConstants.BottomRight = Vec2(Windows[WindowIndex].second + Windows[WindowIndex].first->GetDimensions()) / Vec2(ViewportDimensions);
 			PushConstants.FirstRectangle = RectangleListRange[WindowIndex].first;
 			PushConstants.RectangleCount = RectangleListRange[WindowIndex].second;
@@ -102,7 +107,7 @@ namespace Hermes
 		}
 	}
 
-	void UIPass::CreatePipeline(const Vulkan::RenderPass& RenderPass, Vec2 ViewportDimensions)
+	void UIPass::CreatePipeline(const Vulkan::RenderPass& RenderPass)
 	{
 		auto& Renderer = Renderer::Get();
 		auto& Device = Renderer.GetActiveDevice();
@@ -118,14 +123,13 @@ namespace Hermes
 			.VertexInputBindings = {},
 			.VertexInputAttributes = {},
 			.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			.Viewport = { 0.0f, 0.0f, ViewportDimensions.X, ViewportDimensions.Y, 0.0f, 1.0f },
-			.Scissor = { 0, 0, static_cast<uint32>(ViewportDimensions.X), static_cast<uint32>(ViewportDimensions.Y)	},
 			.PolygonMode = VK_POLYGON_MODE_FILL,
 			.CullMode = VK_CULL_MODE_NONE,
 			.FaceDirection = VK_FRONT_FACE_CLOCKWISE,
 			.IsDepthTestEnabled = false,
 			.IsDepthWriteEnabled = false,
-			.DepthCompareOperator = VK_COMPARE_OP_NEVER
+			.DepthCompareOperator = VK_COMPARE_OP_NEVER,
+			.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR }
 		};
 
 		Pipeline = Device.CreatePipeline(RenderPass, Desc);

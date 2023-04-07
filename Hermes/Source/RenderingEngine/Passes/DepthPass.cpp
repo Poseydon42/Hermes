@@ -35,6 +35,9 @@ namespace Hermes
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
 		auto& Metrics = CallbackInfo.Metrics;
 
+		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Depth"))->GetDimensions();
+		auto ViewportDimensions = Vec2(FramebufferDimensions);
+
 		const auto& GlobalSceneDataBuffer = Renderer::Get().GetGlobalSceneDataBuffer();
 		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
 
@@ -46,11 +49,15 @@ namespace Hermes
 
 			if (!Mesh)
 				continue;
-			
+
 			Material->PrepareForRender();
 
 			CommandBuffer.BindPipeline(MaterialPipeline);
 			Metrics.PipelineBindCount++;
+
+			CommandBuffer.SetViewport({ 0.0f, 0.0f, ViewportDimensions.X, ViewportDimensions.Y, 0.0f, 1.0f });
+			CommandBuffer.SetScissor({ { 0, 0 }, { FramebufferDimensions.X, FramebufferDimensions.Y } });
+
 			CommandBuffer.BindDescriptorSet(*SceneUBODescriptorSet, MaterialPipeline, 0);
 			Metrics.DescriptorSetBindCount++;
 			CommandBuffer.BindVertexBuffer(Mesh->GetVertexBuffer());

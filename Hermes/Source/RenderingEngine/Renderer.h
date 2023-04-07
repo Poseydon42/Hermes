@@ -94,6 +94,8 @@ namespace Hermes
 		std::unique_ptr<SkyboxPass> SkyboxPass;
 		std::unique_ptr<UIPass> UIPass;
 
+		Vec2ui LastSwapchainDimensions = {};
+
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
 		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;
 		static constexpr VkFormat DepthAttachmentFormat = VK_FORMAT_D32_SFLOAT;

@@ -23,8 +23,6 @@ namespace Hermes
 		DescriptorLayout = Device.CreateDescriptorSetLayout({ InputColorBinding });
 		DescriptorSet = DescriptorAllocator.Allocate(*DescriptorLayout);
 
-		VertexShader = Device.CreateShader("/Shaders/Bin/fs_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		FragmentShader = Device.CreateShader("/Shaders/Bin/fs_postprocessing_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		Attachment InputColor = {};
 		InputColor.Name = "InputColor";
@@ -51,12 +49,11 @@ namespace Hermes
 	void PostProcessingPass::PassCallback(const PassCallbackInfo& CallbackInfo)
 	{
 		HERMES_PROFILE_FUNC();
-		if (CallbackInfo.ResourcesWereChanged || !IsPipelineCreated)
-		{
-			HERMES_ASSERT(CallbackInfo.RenderPass);
-			RecreatePipeline(*CallbackInfo.RenderPass);
-			IsPipelineCreated = true;
-		}
+		if (!Pipeline)
+			CreatePipeline(*CallbackInfo.RenderPass);
+
+		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("InputColor"))->GetDimensions();
+		auto ViewportDimensions = Vec2(FramebufferDimensions);
 
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
 		auto& Metrics = CallbackInfo.Metrics;
@@ -68,33 +65,35 @@ namespace Hermes
 
 		CommandBuffer.BindPipeline(*Pipeline);
 		Metrics.PipelineBindCount++;
+
+		CommandBuffer.SetViewport({ 0.0f, 0.0f, ViewportDimensions.X, ViewportDimensions.Y, 0.0f, 1.0f });
+		CommandBuffer.SetScissor({ { 0, 0 }, { FramebufferDimensions.X, FramebufferDimensions.Y } });
+
 		CommandBuffer.BindDescriptorSet(*DescriptorSet, *Pipeline, 0);
 		Metrics.DescriptorSetBindCount++;
 		CommandBuffer.Draw(6, 1, 0, 0);
 		Metrics.DrawCallCount++;
 	}
 
-	void PostProcessingPass::RecreatePipeline(const Vulkan::RenderPass& Pass)
+	void PostProcessingPass::CreatePipeline(const Vulkan::RenderPass& RenderPass)
 	{
+		auto& ShaderCache = Renderer::Get().GetShaderCache();
+
+		const auto& VertexShader = ShaderCache.GetShader("/Shaders/Bin/fs_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
+		const auto& FragmentShader = ShaderCache.GetShader("/Shaders/Bin/fs_postprocessing_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+
 		Vulkan::PipelineDescription Desc = {};
 
-		Desc.ShaderStages = { VertexShader.get(), FragmentShader.get() };
+		Desc.ShaderStages = { &VertexShader, &FragmentShader };
 		Desc.DescriptorSetLayouts = { DescriptorLayout.get() };
 		Desc.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
-		Desc.Viewport.x = 0;
-		Desc.Viewport.y = 0;
-		Desc.Viewport.width = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().X);
-		Desc.Viewport.height = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().Y);
-		Desc.Scissor.offset = { 0, 0 };
-		Desc.Scissor.extent = {
-			Renderer::Get().GetSwapchain().GetDimensions().X, Renderer::Get().GetSwapchain().GetDimensions().Y
-		};
 		Desc.PolygonMode = VK_POLYGON_MODE_FILL;
 		Desc.CullMode = VK_CULL_MODE_BACK_BIT;
 		Desc.FaceDirection = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		Desc.IsDepthTestEnabled = false;
 		Desc.IsDepthWriteEnabled = false;
+		Desc.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
-		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Pass, Desc);
+		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(RenderPass, Desc);
 	}
 }

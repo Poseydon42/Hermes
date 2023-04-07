@@ -31,11 +31,6 @@ namespace Hermes
 
 		DataDescriptorSet = DescriptorAllocator.Allocate(*DataDescriptorLayout);
 
-		VertexShader = Device.CreateShader("/Shaders/Bin/skybox_vert.glsl.spv",
-		                                   VK_SHADER_STAGE_VERTEX_BIT);
-		FragmentShader = Device.CreateShader("/Shaders/Bin/skybox_frag.glsl.spv",
-		                                     VK_SHADER_STAGE_FRAGMENT_BIT);
-
 		Vulkan::SamplerDescription SamplerDesc = {};
 		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		// TODO : recreate when graphics settings change
@@ -68,12 +63,11 @@ namespace Hermes
 	void SkyboxPass::PassCallback(const PassCallbackInfo& CallbackInfo)
 	{
 		HERMES_PROFILE_FUNC();
-		if (CallbackInfo.ResourcesWereChanged || !IsPipelineCreated)
-		{
-			HERMES_ASSERT(CallbackInfo.RenderPass);
-			RecreatePipeline(*CallbackInfo.RenderPass);
-			IsPipelineCreated = true;
-		}
+		if (!Pipeline)
+			CreatePipeline(*CallbackInfo.RenderPass);
+
+		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("ColorBuffer"))->GetDimensions();
+		auto ViewportDimensions = Vec2(FramebufferDimensions);
 
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
 		auto& Metrics = CallbackInfo.Metrics;
@@ -94,6 +88,10 @@ namespace Hermes
 
 		CommandBuffer.BindPipeline(*Pipeline);
 		Metrics.PipelineBindCount++;
+
+		CommandBuffer.SetViewport({ 0.0f, 0.0f, ViewportDimensions.X, ViewportDimensions.Y, 0.0f, 1.0f });
+		CommandBuffer.SetScissor({ { 0, 0 }, { FramebufferDimensions.X, FramebufferDimensions.Y } });
+
 		CommandBuffer.BindDescriptorSet(*DataDescriptorSet, *Pipeline, 0);
 		Metrics.DescriptorSetBindCount++;
 		CommandBuffer.UploadPushConstants(*Pipeline, VK_SHADER_STAGE_VERTEX_BIT, &ViewProjectionMatrix,
@@ -104,27 +102,21 @@ namespace Hermes
 		Metrics.DrawCallCount++;
 	}
 
-	void SkyboxPass::RecreatePipeline(const Vulkan::RenderPass& Pass)
+	void SkyboxPass::CreatePipeline(const Vulkan::RenderPass& Pass)
 	{
+		auto& ShaderCache = Renderer::Get().GetShaderCache();
+
+		auto& VertexShader = ShaderCache.GetShader("/Shaders/Bin/skybox_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
+		auto& FragmentShader = ShaderCache.GetShader("/Shaders/Bin/skybox_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+
 		Vulkan::PipelineDescription PipelineDescription = {};
 
 		PipelineDescription.PushConstants = { { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Mat4) } };
-		PipelineDescription.ShaderStages = { VertexShader.get(), FragmentShader.get() };
+		PipelineDescription.ShaderStages = { &VertexShader, &FragmentShader };
 		PipelineDescription.DescriptorSetLayouts = { DataDescriptorLayout.get() };
 
 		PipelineDescription.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-
-		PipelineDescription.Viewport.x = 0;
-		PipelineDescription.Viewport.y = 0;
-		PipelineDescription.Viewport.width = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().X);
-		PipelineDescription.Viewport.height = static_cast<float>(Renderer::Get().GetSwapchain().GetDimensions().Y);
-		PipelineDescription.Viewport.minDepth = 0.0f;
-		PipelineDescription.Viewport.maxDepth = 1.0f;
-		PipelineDescription.Scissor.offset = { 0, 0 };
-		PipelineDescription.Scissor.extent = {
-			Renderer::Get().GetSwapchain().GetDimensions().X, Renderer::Get().GetSwapchain().GetDimensions().Y
-		};
-
+		
 		PipelineDescription.IsDepthTestEnabled = true;
 		PipelineDescription.DepthCompareOperator = VK_COMPARE_OP_GREATER_OR_EQUAL;
 		PipelineDescription.IsDepthWriteEnabled = false;
@@ -132,6 +124,8 @@ namespace Hermes
 		PipelineDescription.CullMode = VK_CULL_MODE_BACK_BIT;
 		PipelineDescription.FaceDirection = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		PipelineDescription.PolygonMode = VK_POLYGON_MODE_FILL;
+
+		PipelineDescription.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
 		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Pass, PipelineDescription);
 	}

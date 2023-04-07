@@ -26,15 +26,13 @@ namespace Hermes
 	private:
 		std::shared_ptr<Vulkan::DescriptorSetLayout> DescriptorLayout;
 		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
-
-		bool IsPipelineCreated = false;
+		
 		std::unique_ptr<Vulkan::Pipeline> Pipeline;
-		std::shared_ptr<Vulkan::Shader> VertexShader, FragmentShader;
 
 		PassDesc Description;
 
 		void PassCallback(const PassCallbackInfo& CallbackInfo);
 
-		void RecreatePipeline(const Vulkan::RenderPass& Pass);
+		void CreatePipeline(const Vulkan::RenderPass& RenderPass);
 	};
 }

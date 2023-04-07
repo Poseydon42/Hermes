@@ -6,14 +6,14 @@
 
 namespace Hermes
 {
-	class HERMES_API SwapchainRelativeDimensions
+	class HERMES_API ViewportRelativeDimensions
 	{
 	public:
-		SwapchainRelativeDimensions();
+		ViewportRelativeDimensions();
 
-		static SwapchainRelativeDimensions CreateFromAbsoluteDimensions(Vec2ui Dimensions);
+		static ViewportRelativeDimensions CreateFromAbsoluteDimensions(Vec2ui Dimensions);
 
-		static SwapchainRelativeDimensions CreateFromRelativeDimensions(Vec2 Dimensions);
+		static ViewportRelativeDimensions CreateFromRelativeDimensions(Vec2 Dimensions);
 
 		Vec2ui GetAbsoluteDimensions(Vec2ui SwapchainDimensions) const;
 
@@ -21,9 +21,9 @@ namespace Hermes
 
 		bool IsAbsolute() const;
 	private:
-		SwapchainRelativeDimensions(Vec2ui AbsoluteDimensions);
+		ViewportRelativeDimensions(Vec2ui AbsoluteDimensions);
 
-		SwapchainRelativeDimensions(Vec2 RelativeDimensions);
+		ViewportRelativeDimensions(Vec2 RelativeDimensions);
 
 		enum class ValueType
 		{
@@ -40,7 +40,7 @@ namespace Hermes
 	struct ImageResourceDescription
 	{
 		VkFormat Format = VK_FORMAT_UNDEFINED;
-		SwapchainRelativeDimensions Dimensions;
+		ViewportRelativeDimensions Dimensions;
 		uint32 MipLevels = 0;
 	};
 

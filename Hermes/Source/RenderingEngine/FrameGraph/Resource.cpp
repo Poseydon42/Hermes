@@ -2,23 +2,23 @@
 
 namespace Hermes
 {
-	SwapchainRelativeDimensions::SwapchainRelativeDimensions()
+	ViewportRelativeDimensions::ViewportRelativeDimensions()
 		: Type(ValueType::Absolute)
 	{
 		Absolute = { 0, 0 };
 	}
 
-	SwapchainRelativeDimensions SwapchainRelativeDimensions::CreateFromAbsoluteDimensions(Vec2ui Dimensions)
+	ViewportRelativeDimensions ViewportRelativeDimensions::CreateFromAbsoluteDimensions(Vec2ui Dimensions)
 	{
-		return SwapchainRelativeDimensions(Dimensions);
+		return ViewportRelativeDimensions(Dimensions);
 	}
 
-	SwapchainRelativeDimensions SwapchainRelativeDimensions::CreateFromRelativeDimensions(Vec2 Dimensions)
+	ViewportRelativeDimensions ViewportRelativeDimensions::CreateFromRelativeDimensions(Vec2 Dimensions)
 	{
-		return SwapchainRelativeDimensions(Dimensions);
+		return ViewportRelativeDimensions(Dimensions);
 	}
 
-	Vec2ui SwapchainRelativeDimensions::GetAbsoluteDimensions(Vec2ui SwapchainDimensions) const
+	Vec2ui ViewportRelativeDimensions::GetAbsoluteDimensions(Vec2ui SwapchainDimensions) const
 	{
 		if (Type == ValueType::Absolute)
 			return Absolute;
@@ -29,23 +29,23 @@ namespace Hermes
 		};
 	}
 
-	bool SwapchainRelativeDimensions::IsRelative() const
+	bool ViewportRelativeDimensions::IsRelative() const
 	{
 		return Type == ValueType::Relative;
 	}
 
-	bool SwapchainRelativeDimensions::IsAbsolute() const
+	bool ViewportRelativeDimensions::IsAbsolute() const
 	{
 		return Type == ValueType::Absolute;
 	}
 
-	SwapchainRelativeDimensions::SwapchainRelativeDimensions(Vec2ui AbsoluteDimensions)
+	ViewportRelativeDimensions::ViewportRelativeDimensions(Vec2ui AbsoluteDimensions)
 		: Type(ValueType::Absolute)
 	{
 		Absolute = AbsoluteDimensions;
 	}
 
-	SwapchainRelativeDimensions::SwapchainRelativeDimensions(Vec2 RelativeDimensions)
+	ViewportRelativeDimensions::ViewportRelativeDimensions(Vec2 RelativeDimensions)
 		: Type(ValueType::Relative)
 	{
 		Relative = RelativeDimensions;

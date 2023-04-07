@@ -72,6 +72,16 @@ namespace Hermes::Vulkan
 		vkCmdBindPipeline(Handle, VK_PIPELINE_BIND_POINT_COMPUTE, Pipeline.GetPipeline());
 	}
 
+	void CommandBuffer::SetViewport(const VkViewport& Viewport)
+	{
+		vkCmdSetViewport(Handle, 0, 1, &Viewport);
+	}
+
+	void CommandBuffer::SetScissor(const VkRect2D& Scissor)
+	{
+		vkCmdSetScissor(Handle, 0, 1, &Scissor);
+	}
+
 	void CommandBuffer::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 VertexOffset, uint32 InstanceOffset)
 	{
 		vkCmdDraw(Handle, VertexCount, InstanceCount, VertexOffset, InstanceOffset);

@@ -37,6 +37,10 @@ namespace Hermes::Vulkan
 
 		void BindPipeline(const ComputePipeline& Pipeline);
 
+		void SetViewport(const VkViewport& Viewport);
+
+		void SetScissor(const VkRect2D& Scissor);
+
 		void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 VertexOffset, uint32 InstanceOffset);
 
 		void DrawIndexed(uint32 IndexCount, uint32 InstanceCount, uint32 IndexOffset, int32 VertexOffset,

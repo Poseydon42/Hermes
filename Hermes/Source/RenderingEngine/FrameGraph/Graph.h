@@ -142,8 +142,6 @@ namespace Hermes
 		
 		String BlitToSwapchainResourceOwnName;
 
-		bool ResourcesWereRecreated = false;
-
 		Rect2Dui CurrentViewport = {};
 	};
 }

@@ -394,12 +394,9 @@ namespace Hermes
 				GeometryList,
 
 				Metrics,
-
-				ResourcesWereRecreated
 			};
 
 			Pass.Callback(CallbackInfo);
-			ResourcesWereRecreated = false;
 
 			if (Scheme.Passes[PassName].Type == PassType::Graphics)
 			{
@@ -853,8 +850,6 @@ namespace Hermes
 				Resource.second.CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			}
 		}
-
-		ResourcesWereRecreated = true;
 	}
 
 	void FrameGraph::RecreateFramebuffers()
@@ -888,7 +883,5 @@ namespace Hermes
 				Passes[Pass.first].Framebuffer = Renderer::Get().GetActiveDevice().CreateFramebuffer(*Passes[Pass.first].Pass, Attachments, FramebufferDimensions);
 			}
 		}
-
-		ResourcesWereRecreated = true;
 	}
 }

@@ -34,8 +34,6 @@ namespace Hermes
 		const GeometryList& GeometryList;
 
 		FrameMetrics& Metrics;
-
-		bool ResourcesWereChanged;
 	};
 
 	struct PassDesc

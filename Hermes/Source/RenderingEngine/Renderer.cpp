@@ -166,16 +166,6 @@ namespace Hermes
 		return true;
 	}
 
-	const GraphicsSettings& Renderer::GetGraphicsSettings() const
-	{
-		return CurrentSettings;
-	}
-
-	void Renderer::UpdateGraphicsSettings(GraphicsSettings NewSettings)
-	{
-		CurrentSettings = NewSettings;
-	}
-
 	void Renderer::SetSceneViewport(Rect2Dui NewViewport)
 	{
 		if (NewViewport == SceneViewport)

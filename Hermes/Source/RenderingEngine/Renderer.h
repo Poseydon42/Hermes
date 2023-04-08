@@ -42,10 +42,6 @@ namespace Hermes
 
 		bool Init();
 
-		const GraphicsSettings& GetGraphicsSettings() const;
-
-		void UpdateGraphicsSettings(GraphicsSettings NewSettings);
-
 		void SetSceneViewport(Rect2Dui NewViewport);
 		
 		void AddWindow(const UI::Window& Window, Vec2ui ScreenLocation);
@@ -76,7 +72,6 @@ namespace Hermes
 
 	private:
 		Vulkan::DeviceProperties GPUProperties;
-		GraphicsSettings CurrentSettings;
 
 		std::unique_ptr<Vulkan::Instance> VulkanInstance;
 		std::unique_ptr<Vulkan::Device> Device;

@@ -33,8 +33,7 @@ namespace Hermes
 
 		Vulkan::SamplerDescription SamplerDesc = {};
 		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		// TODO : recreate when graphics settings change
-		SamplerDesc.AnisotropyLevel = Renderer::Get().GetGraphicsSettings().AnisotropyLevel;
+		SamplerDesc.AnisotropyLevel = 0.0f;
 		SamplerDesc.CoordinateSystem = Vulkan::CoordinateSystem::Normalized;
 		SamplerDesc.MinificationFilter = VK_FILTER_LINEAR;
 		SamplerDesc.MagnificationFilter = VK_FILTER_LINEAR;

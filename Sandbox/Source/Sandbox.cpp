@@ -222,8 +222,6 @@ public:
 
 		World.AddSystem(std::make_unique<CameraSystem>());
 
-		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe(Hermes::KeyEvent::GetStaticType(), [this](const Hermes::IEvent& Event) { KeyEventHandler(Event); });
-
 		auto VerticalContainer = Hermes::UI::VerticalContainerWidget::Create(nullptr);
 
 		auto RedPanel = Hermes::UI::PanelWidget::Create(VerticalContainer, { 80, 20 }, { 1.0f, 0.0f, 0.0f });
@@ -264,13 +262,6 @@ public:
 	{
 		HERMES_PROFILE_FUNC();
 
-		if (AnisotropyChanged)
-		{
-			Hermes::GraphicsSettings Settings;
-			Settings.AnisotropyLevel = AnisotropyEnabled ? 16.0f : 0.0f;
-			Hermes::Renderer::Get().UpdateGraphicsSettings(Settings);
-		}
-
 		Hermes::Renderer::Get().AddWindow(*UIWindow, { 0, 0 });
 	}
 
@@ -279,22 +270,8 @@ public:
 	}
 
 private:
-	bool AnisotropyEnabled = false, AnisotropyChanged = false;
 	Hermes::AssetHandle SolidColorMaterialInstanceHandle = Hermes::GInvalidAssetHandle;
 	std::unique_ptr<Hermes::UI::Window> UIWindow;
-
-	void KeyEventHandler(const Hermes::IEvent& Event)
-	{
-		if (Event.GetType() == Hermes::KeyEvent::GetStaticType())
-		{
-			const auto& KeyEvent = static_cast<const Hermes::KeyEvent&>(Event);
-			if (KeyEvent.GetEventType() == Hermes::KeyEventType::Pressed && KeyEvent.GetKeyCode() == Hermes::KeyCode::M)
-			{
-				AnisotropyChanged = true;
-				AnisotropyEnabled = !AnisotropyEnabled;
-			}
-		}
-	}
 };
 
 extern "C" APP_API Hermes::IApplication* CreateApplicationInstance()

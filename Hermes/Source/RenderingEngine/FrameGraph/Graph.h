@@ -83,6 +83,12 @@ namespace Hermes
 
 		const Vulkan::RenderPass& GetRenderPassObject(const String& Name) const;
 
+		/*
+		 * Returns the image containing the result of rendering together with the layout it is currently in.
+		 * The user must return the image to the same layout before the next call to Execute().
+		 */
+		std::pair<const Vulkan::Image*, VkImageLayout> GetFinalImage() const;
+
 	private:
 		friend class FrameGraphScheme;
 
@@ -140,7 +146,7 @@ namespace Hermes
 
 		std::vector<String> PassExecutionOrder;
 		
-		String BlitToSwapchainResourceOwnName;
+		String FinalImageResourceName;
 
 		Rect2Dui CurrentViewport = {};
 	};

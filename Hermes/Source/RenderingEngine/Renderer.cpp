@@ -10,6 +10,7 @@
 #include "RenderingEngine/Passes/SkyboxPass.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"
+#include "Vulkan/Fence.h"
 
 namespace Hermes
 {
@@ -158,7 +159,7 @@ namespace Hermes
 
 		Scheme.AddLink("PostProcessingPass.OutputColor", "UIPass.Framebuffer");
 
-		Scheme.AddLink("UIPass.Framebuffer", "$.BLIT_TO_SWAPCHAIN");
+		Scheme.AddLink("UIPass.Framebuffer", "$.FINAL_IMAGE");
 
 		FrameGraph = Scheme.Compile();
 		HERMES_ASSERT_LOG(FrameGraph, "Failed to compile a frame graph");
@@ -193,6 +194,10 @@ namespace Hermes
 		HERMES_PROFILE_TAG("Pipeline bind count", static_cast<int64>(Metrics.PipelineBindCount));
 		HERMES_PROFILE_TAG("Descriptor set bind count", static_cast<int64>(Metrics.DescriptorSetBindCount));
 		HERMES_PROFILE_TAG("Buffer bind count", static_cast<int64>(Metrics.BufferBindCount));
+
+		auto [FinalImage, FinalImageLayout] = FrameGraph->GetFinalImage();
+
+		Present(*FinalImage, FinalImageLayout, SceneViewport);
 	}
 
 	Vulkan::Device& Renderer::GetActiveDevice()
@@ -317,5 +322,107 @@ namespace Hermes
 		SceneDataForCurrentFrame->DirectionalLightCount = static_cast<uint32>(NextDirectionalLightIndex);
 		
 		GlobalSceneDataBuffer->Unmap();
+	}
+
+	void Renderer::Present(const Vulkan::Image& SourceImage, VkImageLayout CurrentLayout, Rect2Dui Viewport) const
+	{
+		HERMES_PROFILE_FUNC();
+
+		HERMES_ASSERT(Viewport.Max.X <= Swapchain->GetDimensions().X);
+		HERMES_ASSERT(Viewport.Max.Y <= Swapchain->GetDimensions().Y);
+
+		auto& Queue = Device->GetQueue(VK_QUEUE_GRAPHICS_BIT);
+		auto CommandBuffer = Queue.CreateCommandBuffer();
+
+		bool Dummy;
+		auto SwapchainImageAcquireFence = Device->CreateFence();
+		auto MaybeSwapchainImageIndex = Swapchain->AcquireImage(UINT64_MAX, *SwapchainImageAcquireFence, Dummy);
+		if (!MaybeSwapchainImageIndex.has_value())
+		{
+			HERMES_LOG_ERROR("Presentation failed: swapchain did not return valid image index.");
+			return;
+		}
+		const auto& SwapchainImage = Swapchain->GetImage(MaybeSwapchainImageIndex.value());
+
+		CommandBuffer->BeginRecording();
+
+		VkImageMemoryBarrier BarriersBeforeBlit[2];
+		// Source image to transfer source optimal
+		BarriersBeforeBlit[0] = {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			.pNext = nullptr,
+			.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT,
+			.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+			.oldLayout = CurrentLayout,
+			.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			.srcQueueFamilyIndex = 0,
+			.dstQueueFamilyIndex = 0,
+			.image = SourceImage.GetImage(),
+			.subresourceRange = SourceImage.GetFullSubresourceRange()
+		};
+		// Swapchain image to transfer destination optimal
+		BarriersBeforeBlit[1] = {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			.pNext = nullptr,
+			.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT,
+			.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			.srcQueueFamilyIndex = 0,
+			.dstQueueFamilyIndex = 0,
+			.image = SwapchainImage.GetImage(),
+			.subresourceRange = SwapchainImage.GetFullSubresourceRange()
+		};
+		CommandBuffer->InsertImageMemoryBarriers(BarriersBeforeBlit, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+		VkImageBlit BlitRegion = {};
+		BlitRegion.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+		BlitRegion.srcOffsets[0] = { 0, 0, 0 };
+		BlitRegion.srcOffsets[1] = { static_cast<int32>(SourceImage.GetDimensions().X), static_cast<int32>(SourceImage.GetDimensions().Y), 1 };
+		BlitRegion.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+		BlitRegion.dstOffsets[0] = { static_cast<int32>(Viewport.Min.X), static_cast<int32>(Viewport.Min.Y), 0 };
+		BlitRegion.dstOffsets[1] = { static_cast<int32>(Viewport.Max.X), static_cast<int32>(Viewport.Max.Y), 1 };
+
+		CommandBuffer->BlitImage(SourceImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, SwapchainImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, { &BlitRegion, 1 }, VK_FILTER_LINEAR);
+
+		// Source image back to its original layout
+		VkImageMemoryBarrier SourceImageAfterBlitBarrier = {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			.pNext = nullptr,
+			.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+			.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			.newLayout = CurrentLayout,
+			.srcQueueFamilyIndex = 0,
+			.dstQueueFamilyIndex = 0,
+			.image = SourceImage.GetImage(),
+			.subresourceRange = SourceImage.GetFullSubresourceRange()
+		};
+		CommandBuffer->InsertImageMemoryBarrier(SourceImageAfterBlitBarrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+
+		// Swapchain image to presentation optimal
+		VkImageMemoryBarrier SwapchainImageToPresentationBarrier = {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			.pNext = nullptr,
+			.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+			.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			.srcQueueFamilyIndex = 0,
+			.dstQueueFamilyIndex = 0,
+			.image = SwapchainImage.GetImage(),
+			.subresourceRange = SwapchainImage.GetFullSubresourceRange()
+		};
+		CommandBuffer->InsertImageMemoryBarrier(SwapchainImageToPresentationBarrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+		CommandBuffer->EndRecording();
+
+		SwapchainImageAcquireFence->Wait(UINT64_MAX);
+
+		auto BlitFinishedFence = Device->CreateFence();
+		Queue.SubmitCommandBuffer(*CommandBuffer, BlitFinishedFence.get());
+		BlitFinishedFence->Wait(UINT64_MAX);
+
+		Swapchain->Present(MaybeSwapchainImageIndex.value(), Dummy);
 	}
 }

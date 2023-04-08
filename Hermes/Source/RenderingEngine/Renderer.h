@@ -101,5 +101,7 @@ namespace Hermes
 		void DumpGPUProperties() const;
 
 		void FillSceneDataBuffer(const Scene& Scene);
+
+		void Present(const Vulkan::Image& SourceImage, VkImageLayout CurrentLayout, Rect2Dui Viewport) const;
 	};
 }

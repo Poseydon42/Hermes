@@ -9,7 +9,6 @@
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Scene/Scene.h"
 #include "Vulkan/Buffer.h"
-#include "Vulkan/Swapchain.h"
 #include "Vulkan/Fence.h"
 #include "Vulkan/CommandBuffer.h"
 #include "Vulkan/RenderPass.h"
@@ -211,11 +210,11 @@ namespace Hermes
 			if (SecondPassName == "$")
 			{
 				// If the second pass is the external pass (pass that contains external resources)
-				// then check if the attachment name is equal to BLIT_TO_SWAPCHAIN as it is the
+				// then check if the attachment name is equal to FINAL_IMAGE as it is the
 				// only resource that can be pointed to by some render pass
-				if (SecondResourceName != "BLIT_TO_SWAPCHAIN")
+				if (SecondResourceName != "FINAL_IMAGE")
 				{
-					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': only BLIT_TO_SWAPCHAIN is allowed as attachment name for the external render pass",
+					HERMES_LOG_ERROR("Ill-formed link from '%s' to '%s': only FINAL_IMAGE is allowed as attachment name for the external render pass",
 					                 Link.first.c_str(), Link.second.c_str());
 					return false;
 				}
@@ -297,19 +296,7 @@ namespace Hermes
 			RecreateFramebuffers();
 		}
 
-		auto& Swapchain = Renderer::Get().GetSwapchain();
-
-		auto SwapchainImageAcquiredFence = Renderer::Get().GetActiveDevice().CreateFence();
-
-		bool SwapchainWasRecreated = false;
-		auto SwapchainImageIndex = Swapchain.AcquireImage(UINT64_MAX, *SwapchainImageAcquiredFence,
-		                                                  SwapchainWasRecreated);
-		if (SwapchainWasRecreated)
-		{
-			RecreateResources();
-			RecreateFramebuffers();
-		}
-
+		std::vector<std::unique_ptr<Vulkan::Fence>> Fences;
 		for (const auto& PassName : PassExecutionOrder)
 		{
 			HERMES_PROFILE_SCOPE("Hermes::FrameGraph::Execute per pass loop");
@@ -404,101 +391,13 @@ namespace Hermes
 			}
 			CommandBuffer->EndRecording();
 
-			Queue.SubmitCommandBuffer(*CommandBuffer, {});
+			auto Fence = Renderer::Get().GetActiveDevice().CreateFence();
+			Queue.SubmitCommandBuffer(*CommandBuffer, Fence.get());
+			Fences.push_back(std::move(Fence));
 		}
 
-		{
-			HERMES_PROFILE_SCOPE("Hermes::FrameGraph::Execute presentation");
-			auto& Queue = Renderer::Get().GetActiveDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
-			auto BlitAndPresentCommandBuffer = Queue.CreateCommandBuffer(true);
-
-			auto& BlitToSwapchainResource = ImageResources[BlitToSwapchainResourceOwnName];
-
-			SwapchainImageAcquiredFence->Wait(UINT64_MAX);
-			if (!SwapchainImageIndex.has_value())
-			{
-				HERMES_LOG_ERROR("Swapchain did not return valid image index");
-				// Waiting for previously submitted rendering command buffers to finish
-				// execution on rendering queue
-				// TODO : any more efficient way to do this?
-				Queue.WaitForIdle();
-				return Metrics; // Skip presentation of current frame
-			}
-			const auto& SwapchainImage = Swapchain.GetImage(SwapchainImageIndex.value());
-
-			BlitAndPresentCommandBuffer->BeginRecording();
-
-			VkImageMemoryBarrier SourceImageToTransferSourceBarrier = {};
-			SourceImageToTransferSourceBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			SourceImageToTransferSourceBarrier.image = BlitToSwapchainResource.Image->GetImage();
-			SourceImageToTransferSourceBarrier.oldLayout = BlitToSwapchainResource.CurrentLayout;
-			SourceImageToTransferSourceBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-			SourceImageToTransferSourceBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
-			SourceImageToTransferSourceBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-			SourceImageToTransferSourceBarrier.subresourceRange = BlitToSwapchainResource.Image->GetFullSubresourceRange();
-			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(SourceImageToTransferSourceBarrier,
-			                                                      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-			                                                      VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-			                                                      VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-			                                                      VK_PIPELINE_STAGE_TRANSFER_BIT);
-			BlitToSwapchainResource.CurrentLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-
-			VkImageMemoryBarrier SwapchainImageToTransferDestinationBarrier = {};
-			SwapchainImageToTransferDestinationBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			SwapchainImageToTransferDestinationBarrier.image = SwapchainImage.GetImage();
-			SwapchainImageToTransferDestinationBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			SwapchainImageToTransferDestinationBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			SwapchainImageToTransferDestinationBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-			SwapchainImageToTransferDestinationBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			SwapchainImageToTransferDestinationBarrier.subresourceRange = SwapchainImage.GetFullSubresourceRange();
-			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(SwapchainImageToTransferDestinationBarrier,
-			                                                      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-			                                                      VK_PIPELINE_STAGE_TRANSFER_BIT);
-
-			VkImageBlit BlitRegion = {};
-			BlitRegion.srcSubresource.mipLevel = 0;
-			BlitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			BlitRegion.srcSubresource.layerCount = 1;
-			BlitRegion.srcOffsets[0] = { 0, 0, 0 };
-			BlitRegion.srcOffsets[1] = {
-				static_cast<int32>(BlitToSwapchainResource.Image->GetDimensions().X),
-				static_cast<int32>(BlitToSwapchainResource.Image->GetDimensions().Y),
-				1
-			};
-			BlitRegion.dstSubresource.mipLevel = 0;
-			BlitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			BlitRegion.dstSubresource.layerCount = 1;
-			BlitRegion.dstOffsets[0] = { static_cast<int32>(CurrentViewport.Min.X), static_cast<int32>(CurrentViewport.Min.Y), 0 };
-			BlitRegion.dstOffsets[1] = { static_cast<int32>(CurrentViewport.Max.X), static_cast<int32>(CurrentViewport.Max.Y), 1 };
-
-			BlitAndPresentCommandBuffer->BlitImage(*BlitToSwapchainResource.Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			                                       SwapchainImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			                                       { &BlitRegion, 1 }, VK_FILTER_LINEAR);
-
-			VkImageMemoryBarrier SwapchainImageToReadyForPresentationBarrier = {};
-			SwapchainImageToReadyForPresentationBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			SwapchainImageToReadyForPresentationBarrier.image = SwapchainImage.GetImage();
-			SwapchainImageToReadyForPresentationBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			SwapchainImageToReadyForPresentationBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-			SwapchainImageToReadyForPresentationBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			SwapchainImageToReadyForPresentationBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-			SwapchainImageToReadyForPresentationBarrier.subresourceRange = SwapchainImage.GetFullSubresourceRange();
-			BlitAndPresentCommandBuffer->InsertImageMemoryBarrier(SwapchainImageToReadyForPresentationBarrier,
-			                                                      VK_PIPELINE_STAGE_TRANSFER_BIT,
-			                                                      VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-
-			BlitAndPresentCommandBuffer->EndRecording();
-			auto PresentationFence = Renderer::Get().GetActiveDevice().CreateFence();
-			Queue.SubmitCommandBuffer(*BlitAndPresentCommandBuffer, PresentationFence.get());
-			PresentationFence->Wait(UINT64_MAX);
-
-			Swapchain.Present(SwapchainImageIndex.value(), SwapchainWasRecreated);
-			if (SwapchainWasRecreated)
-			{
-				RecreateResources();
-				RecreateFramebuffers();
-			}
-		}
+		for (const auto& Fence : Fences)
+			Fence->Wait(UINT64_MAX);
 
 		return Metrics;
 	}
@@ -509,6 +408,13 @@ namespace Hermes
 		auto& Result = Passes.at(Name).Pass;
 		HERMES_ASSERT(Result);
 		return *Result;
+	}
+
+	std::pair<const Vulkan::Image*, VkImageLayout> FrameGraph::GetFinalImage() const
+	{
+		HERMES_ASSERT(!FinalImageResourceName.empty());
+		const auto& Resource = ImageResources.at(FinalImageResourceName);
+		return std::make_pair(Resource.Image.get(), Resource.CurrentLayout);
 	}
 
 	FrameGraph::FrameGraph(FrameGraphScheme InScheme)
@@ -630,11 +536,11 @@ namespace Hermes
 			Passes[Pass.first] = std::move(NewPassContainer);
 		}
 
-		HERMES_ASSERT_LOG(Scheme.BackwardLinks.contains("$.BLIT_TO_SWAPCHAIN"),
-		                  "Render graph scheme does not contain link that points to swapchain");
-		auto ResourceThatBlitsToSwapchain = TraverseResourceName("$.BLIT_TO_SWAPCHAIN");
+		HERMES_ASSERT_LOG(Scheme.BackwardLinks.contains("$.FINAL_IMAGE"),
+		                  "Render graph scheme does not contain link that points to a final image");
+		auto FinalImageResource = TraverseResourceName("$.FINAL_IMAGE");
 		String DummyDollarSign;
-		SplitResourceName(ResourceThatBlitsToSwapchain, DummyDollarSign, BlitToSwapchainResourceOwnName);
+		SplitResourceName(FinalImageResource, DummyDollarSign, FinalImageResourceName);
 
 		// NOTE : topological sort to get a linear sequence of render passes where every resource for render pass
 		//        is either fresh image or was generated by a previous render pass
@@ -727,7 +633,7 @@ namespace Hermes
 			String CurrentAttachmentRenderPassName, CurrentAttachmentOwnName;
 			SplitResourceName(NextAttachmentName, CurrentAttachmentRenderPassName, CurrentAttachmentOwnName);
 
-			if (NextAttachmentName == "$.BLIT_TO_SWAPCHAIN")
+			if (NextAttachmentName == "$.FINAL_IMAGE")
 			{
 				Result |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 				break;

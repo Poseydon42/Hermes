@@ -143,7 +143,6 @@ namespace Hermes
 		String BlitToSwapchainResourceOwnName;
 
 		bool ResourcesWereRecreated = false;
-		bool FramebuffersNeedsInitialization = false;
 
 		Rect2Dui CurrentViewport = {};
 	};

@@ -297,12 +297,6 @@ namespace Hermes
 			RecreateFramebuffers();
 		}
 
-		if (FramebuffersNeedsInitialization)
-		{
-			RecreateFramebuffers();
-			FramebuffersNeedsInitialization = false;
-		}
-
 		auto& Swapchain = Renderer::Get().GetSwapchain();
 
 		auto SwapchainImageAcquiredFence = Renderer::Get().GetActiveDevice().CreateFence();
@@ -523,25 +517,12 @@ namespace Hermes
 	FrameGraph::FrameGraph(FrameGraphScheme InScheme)
 		: Scheme(std::move(InScheme))
 	{
-		const auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetDimensions();
-
 		bool ContainsExternalResources = false;
 		for (const auto& Resource : Scheme.ImageResources)
 		{
 			ContainsExternalResources |= Resource.IsExternal;
 
 			ImageResourceContainer Container = {};
-			if (!Resource.IsExternal)
-			{
-				auto Image = Renderer::Get().GetActiveDevice().
-				                             CreateImage(Resource.Desc.Dimensions.
-				                                                  GetAbsoluteDimensions(SwapchainDimensions),
-				                                         TraverseImageResourceUsageType(Resource.Name), Resource.Desc.Format,
-				                                         Resource.Desc.MipLevels);
-
-				Container.Image = std::move(Image);
-				Container.View = Container.Image->CreateDefaultImageView();
-			}
 
 			Container.CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			Container.Desc = Resource.Desc;
@@ -619,9 +600,6 @@ namespace Hermes
 			NewPassContainer.Callback = Pass.second.Callback;
 
 			// TODO : clean this code up
-			std::vector<const Vulkan::ImageView*> FramebufferAttachments;
-			Vec2ui FramebufferDimensions;
-			FramebufferAttachments.reserve(Pass.second.Attachments.size());
 			NewPassContainer.ClearColors.reserve(Pass.second.Attachments.size());
 			NewPassContainer.AttachmentLayouts.reserve(Pass.second.Attachments.size());
 			for (const auto& Attachment : Pass.second.Attachments)
@@ -632,13 +610,6 @@ namespace Hermes
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
 
 				const auto& Resource = ImageResources[ResourceOwnName];
-				FramebufferAttachments.push_back(Resource.View.get());
-				if (!Resource.IsExternal)
-				{
-					HERMES_ASSERT(FramebufferDimensions == Vec2ui{} || FramebufferDimensions == Resource.Image->
-					              GetDimensions());
-					FramebufferDimensions = Resource.Image->GetDimensions();
-				}
 
 				NewPassContainer.ClearColors.push_back(Attachment.ClearColor);
 				
@@ -657,21 +628,6 @@ namespace Hermes
 				NewPassContainer.ResourceMap[BufferInput.Name] = BufferResources.at(ResourceOwnName).Buffer.get();
 
 				NewPassContainer.InputBufferResourceNames.push_back(std::move(ResourceOwnName));
-			}
-
-			if (Pass.second.Type == PassType::Graphics)
-			{
-				if (!ContainsExternalResources)
-				{
-					NewPassContainer.Framebuffer = Renderer::Get().GetActiveDevice().
-						CreateFramebuffer(*NewPassContainer.Pass,
-							FramebufferAttachments,
-							FramebufferDimensions);
-				}
-				else
-				{
-					FramebuffersNeedsInitialization = true;
-				}
 			}
 
 			Passes[Pass.first] = std::move(NewPassContainer);

@@ -18,9 +18,7 @@ namespace Hermes
 	GameLoop* GGameLoop = nullptr;
 	
 	GameLoop::GameLoop(IApplication* App)
-		: RequestedExit(false)
-		, Paused(false)
-		, PrevFrameEndTimestamp{}
+		: PrevFrameEndTimestamp{}
 	{
 		VirtualFilesystem::Mount("/", MountMode::ReadOnly, 0, std::make_unique<DirectoryFSDevice>("Hermes/Files"));
 		VirtualFilesystem::Mount("/", MountMode::ReadOnly, 1, std::make_unique<DirectoryFSDevice>(String(HERMES_GAME_NAME) + "/Files"));
@@ -93,7 +91,7 @@ namespace Hermes
 				auto& Scene = GameWorld->GetScene();
 
 				Renderer::Get().SetSceneViewport({ .Min = {}, .Max = Renderer::Get().GetSwapchain().GetDimensions() });
-				Renderer.RunFrame(Scene);
+				Renderer.RunFrame(Scene, RootWidget.get());
 
 				PrevFrameEndTimestamp = CurrentTimestamp;
 			}
@@ -111,6 +109,16 @@ namespace Hermes
 	{
 		HERMES_LOG_INFO("Game loop is%s paused now", IsPaused ? "" : " not");
 		Paused = IsPaused;
+	}
+
+	const UI::Widget& GameLoop::GetRootWidget() const
+	{
+		return *RootWidget;
+	}
+
+	void GameLoop::SetRootWidget(std::shared_ptr<UI::Widget> NewRootWidget)
+	{
+		RootWidget = std::move(NewRootWidget);
 	}
 
 	std::shared_ptr<const IPlatformWindow> GameLoop::GetWindow() const

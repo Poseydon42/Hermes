@@ -5,8 +5,6 @@ include(HermesSublib)
 set(SOURCES
     DrawingContext.cpp
     DrawingContext.h
-    Window.cpp
-    Window.h
     Widgets/Containers/ContainerWidget.cpp
     Widgets/Containers/ContainerWidget.h
     Widgets/Containers/VerticalContainerWidget.cpp

@@ -28,9 +28,9 @@ namespace Hermes
 		return Description;
 	}
 
-	void UIPass::AddWindow(const UI::Window* Window, Vec2ui ScreenLocation)
+	void UIPass::SetRootWidget(const UI::Widget* NewRootWidget)
 	{
-		Windows.emplace_back(Window, ScreenLocation);
+		RootWidget = NewRootWidget;
 	}
 
 	void UIPass::PassCallback(const PassCallbackInfo& CallbackInfo)
@@ -48,14 +48,19 @@ namespace Hermes
 		auto& Metrics = CallbackInfo.Metrics;
 
 		std::vector<RectanglePrimitive> Rectangles;
-		std::vector<std::pair<uint32, uint32>> RectangleListRange;
 
-		for (auto [Window, Location] : Windows)
+		Rect2D RootWidgetRect = {
+			.Min = { 0.0f, 0.0f },
+			.Max = { ViewportDimensions.X, ViewportDimensions.Y }
+		};
+		Vec2 RootWidgetDimensions = { RootWidgetRect.Width(), RootWidgetRect.Height() };
+
+		UI::DrawingContext DrawingContext;
+		RootWidget->Draw(DrawingContext, RootWidgetRect);
+
+		for (const auto& Rectangle : DrawingContext.GetRectangles())
 		{
-			auto FirstRectangle = static_cast<uint32>(Rectangles.size());
-			CollectPrimitives(Window, Rectangles);
-			auto RectangleCount = static_cast<uint32>(Rectangles.size()) - FirstRectangle;
-			RectangleListRange.emplace_back(FirstRectangle, RectangleCount);
+			Rectangles.emplace_back(Vec2(Rectangle.Rect.Min) / RootWidgetDimensions, Vec2(Rectangle.Rect.Max) / RootWidgetDimensions, Vec4(Rectangle.Color, 1.0f));
 		}
 
 		auto RectangleListSize = Rectangles.size() * sizeof(Rectangles[0]);
@@ -79,32 +84,11 @@ namespace Hermes
 
 		CommandBuffer.BindDescriptorSet(*DescriptorSet, *Pipeline, 0);
 		Metrics.DescriptorSetBindCount++;
-		for (size_t WindowIndex = 0; WindowIndex < Windows.size(); WindowIndex++)
-		{
-			UIShaderPushConstants PushConstants = {};
-			PushConstants.TopLeft = Vec2(Windows[WindowIndex].second) / ViewportDimensions;
-			PushConstants.BottomRight = Vec2(Windows[WindowIndex].second + Windows[WindowIndex].first->GetDimensions()) / Vec2(ViewportDimensions);
-			PushConstants.FirstRectangle = RectangleListRange[WindowIndex].first;
-			PushConstants.RectangleCount = RectangleListRange[WindowIndex].second;
-			CommandBuffer.UploadPushConstants(*Pipeline, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, &PushConstants, sizeof(PushConstants), 0);
-			CommandBuffer.Draw(6, 1, 0, 0);
-			Metrics.DrawCallCount++;
-		}
-
-		Windows.clear();
-	}
-
-	void UIPass::CollectPrimitives(const UI::Window* Window, std::vector<RectanglePrimitive>& Rectangles)
-	{
-		auto Context = Window->Draw();
-		auto WindowDimensions = Vec2(Window->GetDimensions());
-
-		for (const auto& Rectangle : Context.GetRectangles())
-		{
-			// NOTE: rectangles in the DrawingContext object have their coordinates and dimensions set in pixels,
-			//       so we need to transform them into [0;1] range relative to the window dimensions here
-			Rectangles.emplace_back(Vec2(Rectangle.Rect.Min) / WindowDimensions, Vec2(Rectangle.Rect.Max) / WindowDimensions, Vec4(Rectangle.Color, 1.0f));
-		}
+		UIShaderPushConstants PushConstants = {};
+		PushConstants.RectangleCount = static_cast<uint32>(Rectangles.size());
+		CommandBuffer.UploadPushConstants(*Pipeline, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, &PushConstants, sizeof(PushConstants), 0);
+		CommandBuffer.Draw(6, 1, 0, 0);
+		Metrics.DrawCallCount++;
 	}
 
 	void UIPass::CreatePipeline(const Vulkan::RenderPass& RenderPass)

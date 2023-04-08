@@ -94,9 +94,6 @@ namespace Hermes
 
 	struct ALIGNAS_16 UIShaderPushConstants
 	{
-		Vec2 BottomRight;
-		Vec2 TopLeft;
-		uint32 FirstRectangle;
 		uint32 RectangleCount;
 	};
 

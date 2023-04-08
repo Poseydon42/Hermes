@@ -1,19 +1,17 @@
-﻿#include "UIEngine/Widgets/Containers/VerticalContainerWidget.h"
-#ifdef HERMES_PLATFORM_WINDOWS
+﻿#ifdef HERMES_PLATFORM_WINDOWS
 
 #include "Core/Core.h"
 #include "Core/Profiling.h"
 #include "ApplicationCore/Application.h"
 #include "ApplicationCore/GameLoop.h"
 #include "ApplicationCore/InputEngine.h"
-#include "Core/Event/Event.h"
 #include "Math/Frustum.h"
 #include "Math/Vector.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "UIEngine/Widgets/PanelWidget.h"
-#include "UIEngine/Window.h"
+#include "UIEngine/Widgets/Containers/VerticalContainerWidget.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 #include "World/Components/DirectionalLightComponent.h"
 #include "World/Components/MeshComponent.h"
@@ -222,38 +220,19 @@ public:
 
 		World.AddSystem(std::make_unique<CameraSystem>());
 
-		auto VerticalContainer = Hermes::UI::VerticalContainerWidget::Create(nullptr);
+		auto RootWidget = Hermes::UI::VerticalContainerWidget::Create(nullptr);
 
-		auto RedPanel = Hermes::UI::PanelWidget::Create(VerticalContainer, { 80, 20 }, { 1.0f, 0.0f, 0.0f });
+		auto RedPanel = Hermes::UI::PanelWidget::Create(RootWidget, { 80, 20 }, { 1.0f, 0.0f, 0.0f });
 		RedPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
-		VerticalContainer->AddChild(RedPanel);
+		RootWidget->AddChild(RedPanel);
 
-		auto GreenPanel = Hermes::UI::PanelWidget::Create(VerticalContainer, { 30, 80 }, { 0.0f, 1.0f, 0.0f });
+		auto GreenPanel = Hermes::UI::PanelWidget::Create(RootWidget, { 30, 80 }, { 0.0f, 1.0f, 0.0f });
 		GreenPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
 		GreenPanel->GetMargins().Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
 		GreenPanel->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
-		VerticalContainer->AddChild(GreenPanel);
+		RootWidget->AddChild(GreenPanel);
 
-		UIWindow = std::make_unique<Hermes::UI::Window>(std::move(VerticalContainer), Hermes::Vec2ui{ 100, 300 });
-
-		Hermes::GGameLoop->GetInputEngine().GetEventQueue().Subscribe(Hermes::KeyEvent::GetStaticType(), [this](const Hermes::IEvent& Event)
-		{
-			const auto& KeyEvent = static_cast<const Hermes::KeyEvent&>(Event);
-			if (!KeyEvent.IsPressEvent())
-				return;
-
-			auto CurrentDimensions = UIWindow->GetDimensions();
-			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::ArrowUp)
-				CurrentDimensions.Y++;
-			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::ArrowDown)
-				CurrentDimensions.Y--;
-			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::ArrowLeft)
-				CurrentDimensions.X--;
-			if (KeyEvent.GetKeyCode() == Hermes::KeyCode::ArrowRight)
-				CurrentDimensions.X++;
-			
-			UIWindow->SetDimensions(CurrentDimensions);
-		});
+		Hermes::GGameLoop->SetRootWidget(RootWidget);
 
 		return true;
 	}
@@ -261,8 +240,6 @@ public:
 	void Run(float) override
 	{
 		HERMES_PROFILE_FUNC();
-
-		Hermes::Renderer::Get().AddWindow(*UIWindow, { 0, 0 });
 	}
 
 	void Shutdown() override
@@ -271,7 +248,6 @@ public:
 
 private:
 	Hermes::AssetHandle SolidColorMaterialInstanceHandle = Hermes::GInvalidAssetHandle;
-	std::unique_ptr<Hermes::UI::Window> UIWindow;
 };
 
 extern "C" APP_API Hermes::IApplication* CreateApplicationInstance()

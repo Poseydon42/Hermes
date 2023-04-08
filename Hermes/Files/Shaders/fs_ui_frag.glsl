@@ -23,7 +23,7 @@ void main()
 
     for (uint RectangleIndex = 0; RectangleIndex < u_PushConstants.Constants.RectangleCount; RectangleIndex++)
     {
-        RectanglePrimitive Rectangle = u_RectanglePrimitives.Array[u_PushConstants.Constants.FirstRectangle + RectangleIndex];
+        RectanglePrimitive Rectangle = u_RectanglePrimitives.Array[RectangleIndex];
 
         if (i_FragmentPosition.x >= Rectangle.Min.x && i_FragmentPosition.x < Rectangle.Max.x &&
             i_FragmentPosition.y >= Rectangle.Min.y && i_FragmentPosition.y < Rectangle.Max.y)

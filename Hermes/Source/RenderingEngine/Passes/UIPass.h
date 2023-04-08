@@ -3,7 +3,7 @@
 #include "Core/Core.h"
 #include "RenderingEngine/SharedData.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
-#include "UIEngine/Window.h"
+#include "UIEngine/Widgets/Widget.h"
 
 namespace Hermes
 {
@@ -14,10 +14,10 @@ namespace Hermes
 
 		const PassDesc& GetPassDescription() const;
 
-		void AddWindow(const UI::Window* Window, Vec2ui ScreenLocation);
+		void SetRootWidget(const UI::Widget* NewRootWidget);
 
 	private:
-		std::vector<std::pair<const UI::Window*, Vec2ui>> Windows;
+		const UI::Widget* RootWidget = nullptr;
 		
 		std::unique_ptr<Vulkan::Pipeline> Pipeline;
 		std::unique_ptr<Vulkan::DescriptorSetLayout> DescriptorSetLayout;
@@ -28,8 +28,6 @@ namespace Hermes
 		PassDesc Description;
 
 		void PassCallback(const PassCallbackInfo& CallbackInfo);
-
-		void CollectPrimitives(const UI::Window* Window, std::vector<RectanglePrimitive>& Rectangles);
 
 		void CreatePipeline(const Vulkan::RenderPass& RenderPass);
 	};

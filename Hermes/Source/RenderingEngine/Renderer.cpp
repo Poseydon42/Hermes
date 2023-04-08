@@ -176,18 +176,15 @@ namespace Hermes
 		SceneViewport = NewViewport;
 	}
 
-	void Renderer::AddWindow(const UI::Window& Window, Vec2ui ScreenLocation)
-	{
-		UIPass->AddWindow(&Window, ScreenLocation);
-	}
-
-	void Renderer::RunFrame(const Scene& Scene)
+	void Renderer::RunFrame(const Scene& Scene, const UI::Widget* RootWidget)
 	{
 		HERMES_PROFILE_FUNC();
 
 		FillSceneDataBuffer(Scene);
 
 		auto GeometryList = Scene.BakeGeometryList();
+
+		UIPass->SetRootWidget(RootWidget);
 
 		auto Metrics = FrameGraph->Execute(Scene, GeometryList, SceneViewport);
 		HERMES_PROFILE_TAG("Draw call count", static_cast<int64>(Metrics.DrawCallCount));

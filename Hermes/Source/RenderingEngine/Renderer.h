@@ -43,10 +43,8 @@ namespace Hermes
 		bool Init();
 
 		void SetSceneViewport(Rect2Dui NewViewport);
-		
-		void AddWindow(const UI::Window& Window, Vec2ui ScreenLocation);
 
-		void RunFrame(const Scene& Scene);
+		void RunFrame(const Scene& Scene, const UI::Widget* RootWidget);
 
 		Vulkan::Device& GetActiveDevice();
 

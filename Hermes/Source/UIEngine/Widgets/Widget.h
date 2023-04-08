@@ -30,6 +30,10 @@ namespace Hermes::UI
 		MarginValue Bottom;
 	};
 
+	HERMES_API float GetAbsoluteMarginValue(MarginValue Value, float ParentSize);
+
+	HERMES_API float GetRelativeMarginValue(MarginValue Value, float ParentSize);
+
 	/*
 	 * Base class for any UI element that can be drawn and interacted with.
 	 *

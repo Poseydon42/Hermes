@@ -8,6 +8,7 @@
 #include "AssetSystem/AssetCache.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
+#include "UIEngine/Widgets/Widget.h"
 #include "World/World.h"
 
 namespace Hermes
@@ -32,6 +33,9 @@ namespace Hermes
 		void RequestExit();
 
 		void SetPause(bool IsPaused);
+
+		const UI::Widget& GetRootWidget() const;
+		void SetRootWidget(std::shared_ptr<UI::Widget> NewRootWidget);
 		
 		std::shared_ptr<const IPlatformWindow> GetWindow() const;
 
@@ -60,6 +64,7 @@ namespace Hermes
 		std::unique_ptr<AssetCache> AssetCache;
 
 		std::unique_ptr<World> GameWorld;
+		std::shared_ptr<UI::Widget> RootWidget;
 
 		/*
 		 * DEBUG ONLY

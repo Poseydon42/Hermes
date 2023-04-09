@@ -72,6 +72,9 @@ namespace Hermes
 		std::shared_ptr<Camera> Camera;
 		void KeyEventHandler(const IEvent& Event);
 		bool IsFullscreen = false;
+
+		float TotalTime = 0.0f;
+		uint32 NumFrames = 0;
 	};
 
 	HERMES_API extern GameLoop* GGameLoop;

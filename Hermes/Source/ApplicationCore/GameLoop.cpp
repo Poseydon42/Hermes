@@ -82,6 +82,9 @@ namespace Hermes
 				auto CurrentTimestamp = PlatformTime::GetCurrentTimestamp();
 				float DeltaTime = PlatformTime::ToSeconds({ .Start = PrevFrameEndTimestamp, .End = CurrentTimestamp });
 
+				TotalTime += DeltaTime;
+				NumFrames++;
+
 				GameWorld->Update(DeltaTime);
 
 				Application->Run(DeltaTime);
@@ -95,6 +98,8 @@ namespace Hermes
 				PrevFrameEndTimestamp = CurrentTimestamp;
 			}
 		}
+
+		HERMES_LOG_INFO("Average time per frame: %f", static_cast<double>(TotalTime) / static_cast<double>(NumFrames));
 
 		Application->Shutdown();
 		Renderer::Shutdown();

@@ -19,8 +19,8 @@ namespace Hermes
 {
 	SkyboxPass::SkyboxPass()
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
-		auto& DescriptorAllocator = Renderer::Get().GetDescriptorAllocator();
+		auto& Device = Renderer::GetDevice();
+		auto& DescriptorAllocator = Renderer::GetDescriptorAllocator();
 
 		VkDescriptorSetLayoutBinding CubemapTextureBinding = {};
 		CubemapTextureBinding.binding = 0;
@@ -103,7 +103,7 @@ namespace Hermes
 
 	void SkyboxPass::CreatePipeline(const Vulkan::RenderPass& Pass)
 	{
-		auto& ShaderCache = Renderer::Get().GetShaderCache();
+		auto& ShaderCache = Renderer::GetShaderCache();
 
 		auto& VertexShader = ShaderCache.GetShader("/Shaders/Bin/skybox_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
 		auto& FragmentShader = ShaderCache.GetShader("/Shaders/Bin/skybox_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
@@ -126,6 +126,6 @@ namespace Hermes
 
 		PipelineDescription.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
-		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Pass, PipelineDescription);
+		Pipeline = Renderer::GetDevice().CreatePipeline(Pass, PipelineDescription);
 	}
 }

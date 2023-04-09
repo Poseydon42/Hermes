@@ -64,7 +64,7 @@ namespace Hermes
 
 	void MaterialInstance::SetTextureProperty(const MaterialProperty& Property, const Texture2D& Value, ColorSpace ColorSpace)
 	{
-		DescriptorSet->UpdateWithImageAndSampler(Property.Binding, 0, Value.GetView(ColorSpace), Renderer::Get().GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		DescriptorSet->UpdateWithImageAndSampler(Property.Binding, 0, Value.GetView(ColorSpace), Renderer::GetDefaultSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void MaterialInstance::SetTextureProperty(const String& PropertyName, AssetHandle TextureHandle, ColorSpace ColorSpace)
@@ -132,8 +132,8 @@ namespace Hermes
 
 		CPUBuffer.resize(UniformBufferSize);
 
-		auto& Device = Renderer::Get().GetActiveDevice();
-		auto& DescriptorAllocator = Renderer::Get().GetDescriptorAllocator();
+		auto& Device = Renderer::GetDevice();
+		auto& DescriptorAllocator = Renderer::GetDescriptorAllocator();
 
 		DescriptorSet = DescriptorAllocator.Allocate(BaseMaterial.GetDescriptorSetLayout());
 

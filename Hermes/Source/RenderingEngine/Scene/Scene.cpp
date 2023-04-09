@@ -12,6 +12,7 @@
 #include "Vulkan/CommandBuffer.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Fence.h"
+#include "Vulkan/Framebuffer.h"
 #include "Vulkan/Pipeline.h"
 #include "Vulkan/Queue.h"
 #include "Vulkan/RenderPass.h"
@@ -58,7 +59,7 @@ namespace Hermes
 
 		std::unique_ptr<TextureCube> Result = TextureCube::CreateEmpty(Dimensions, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 1);
 
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 		auto& Queue = Device.GetQueue(VK_QUEUE_GRAPHICS_BIT);
 
 		auto CommandBuffer = Queue.CreateCommandBuffer(true);
@@ -85,7 +86,7 @@ namespace Hermes
 		SourceTextureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		SourceTextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		auto DescriptorLayout = Device.CreateDescriptorSetLayout({ SourceTextureBinding });
-		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
+		auto DescriptorSet = Renderer::GetDescriptorAllocator().Allocate(*DescriptorLayout);
 		DescriptorSet->UpdateWithImageAndSampler(0, 0, Source.GetView(), *Sampler,
 		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -220,7 +221,7 @@ namespace Hermes
 
 		auto Result = TextureCube::CreateEmpty(Dimensions, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, MipLevelCount);
 
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 		auto& Queue = Device.GetQueue(VK_QUEUE_GRAPHICS_BIT);
 
 		auto CommandBuffer = Queue.CreateCommandBuffer(true);
@@ -247,7 +248,7 @@ namespace Hermes
 		SourceTextureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		SourceTextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		auto DescriptorLayout = Device.CreateDescriptorSetLayout({ SourceTextureBinding });
-		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
+		auto DescriptorSet = Renderer::GetDescriptorAllocator().Allocate(*DescriptorLayout);
 		DescriptorSet->UpdateWithImageAndSampler(0, 0, Source.GetView(), *Sampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		VkAttachmentDescription OutputAttachmentDesc = {};

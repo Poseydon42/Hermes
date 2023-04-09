@@ -2,17 +2,19 @@
 
 #include "Core/Profiling.h"
 #include "RenderingEngine/DescriptorAllocator.h"
+#include "RenderingEngine/FrameGraph/Graph.h"
+#include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Renderer.h"
+#include "Vulkan/CommandBuffer.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Pipeline.h"
-#include "Vulkan/Swapchain.h"
 
 namespace Hermes
 {
 	PostProcessingPass::PostProcessingPass()
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
-		auto& DescriptorAllocator = Renderer::Get().GetDescriptorAllocator();
+		auto& Device = Renderer::GetDevice();
+		auto& DescriptorAllocator = Renderer::GetDescriptorAllocator();
 
 		VkDescriptorSetLayoutBinding InputColorBinding = {};
 		InputColorBinding.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
@@ -77,7 +79,7 @@ namespace Hermes
 
 	void PostProcessingPass::CreatePipeline(const Vulkan::RenderPass& RenderPass)
 	{
-		auto& ShaderCache = Renderer::Get().GetShaderCache();
+		auto& ShaderCache = Renderer::GetShaderCache();
 
 		const auto& VertexShader = ShaderCache.GetShader("/Shaders/Bin/fs_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
 		const auto& FragmentShader = ShaderCache.GetShader("/Shaders/Bin/fs_postprocessing_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
@@ -94,6 +96,6 @@ namespace Hermes
 		Desc.IsDepthWriteEnabled = false;
 		Desc.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
-		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(RenderPass, Desc);
+		Pipeline = Renderer::GetDevice().CreatePipeline(RenderPass, Desc);
 	}
 }

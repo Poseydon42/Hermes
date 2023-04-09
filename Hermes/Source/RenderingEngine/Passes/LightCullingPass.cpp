@@ -1,14 +1,18 @@
 #include "LightCullingPass.h"
 
 #include "Core/Profiling.h"
+#include "RenderingEngine/FrameGraph/Graph.h"
+#include "RenderingEngine/FrameGraph/Pass.h"
+#include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Renderer.h"
+#include "Vulkan/CommandBuffer.h"
 
 namespace Hermes
 {
 	LightCullingPass::LightCullingPass()
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
-		auto& DescriptorAllocator = Renderer::Get().GetDescriptorAllocator();
+		auto& Device = Renderer::GetDevice();
+		auto& DescriptorAllocator = Renderer::GetDescriptorAllocator();
 
 		auto DescriptorSetLayout = Device.CreateDescriptorSetLayout(
 			{
@@ -39,7 +43,7 @@ namespace Hermes
 	{
 		HERMES_PROFILE_FUNC();
 
-		const auto& GlobalSceneDataBuffer = Renderer::Get().GetGlobalSceneDataBuffer();
+		const auto& GlobalSceneDataBuffer = Renderer::GetGlobalSceneDataBuffer();
 		const auto& LightClusterListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightClusterList"));
 		const auto& LightIndexListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightIndexList"));
 
@@ -47,7 +51,8 @@ namespace Hermes
 		DescriptorSet->UpdateWithBuffer(1, 0, LightClusterListBuffer, 0, static_cast<uint32>(LightClusterListBuffer.GetSize()));
 		DescriptorSet->UpdateWithBuffer(2, 0, LightIndexListBuffer, 0, static_cast<uint32>(LightIndexListBuffer.GetSize()));
 
-		auto SwapchainDimensions = Renderer::Get().GetSwapchain().GetDimensions();
+		// FIXME: we shouldn't depend on swapchain dimensions
+		auto SwapchainDimensions = Renderer::GetSwapchainDimensions();
 		auto NumOfClustersXY = (SwapchainDimensions + ClusterSizeInPixels - 1) / ClusterSizeInPixels;
 
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;

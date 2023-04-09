@@ -51,8 +51,8 @@ namespace Hermes
 		InputEngine->GetEventQueue().Subscribe(KeyEvent::GetStaticType(), [this](const IEvent& Event) { KeyEventHandler(Event); });
 
 		AssetCache = std::make_unique<class AssetCache>();
-
-		Renderer::Get().Init();
+		
+		HERMES_ASSERT_LOG(Renderer::Init(), "Failed to initialize the renderer");
 
 		GameWorld = std::make_unique<World>();
 
@@ -87,16 +87,17 @@ namespace Hermes
 				Application->Run(DeltaTime);
 				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
 
-				auto& Renderer = Renderer::Get();
 				auto& Scene = GameWorld->GetScene();
 
-				Renderer::Get().SetSceneViewport({ .Min = {}, .Max = Renderer::Get().GetSwapchain().GetDimensions() });
-				Renderer.RunFrame(Scene, RootWidget.get());
+				Renderer::SetViewport({ .Min = {}, .Max = Renderer::GetSwapchainDimensions() });
+				Renderer::RunFrame(Scene, RootWidget.get());
 
 				PrevFrameEndTimestamp = CurrentTimestamp;
 			}
 		}
+
 		Application->Shutdown();
+		Renderer::Shutdown();
 	}
 
 	void GameLoop::RequestExit()

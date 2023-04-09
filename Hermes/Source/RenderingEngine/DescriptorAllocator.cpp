@@ -26,7 +26,7 @@ namespace Hermes
 
 	void DescriptorAllocator::AllocateNewPool()
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 		PoolList.push_back(Device.CreateDescriptorSetPool(DescriptorSetsPerPool, { Subpools.begin(), Subpools.end() }));
 	}
 }

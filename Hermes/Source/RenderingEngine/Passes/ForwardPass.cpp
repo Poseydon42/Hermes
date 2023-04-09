@@ -13,7 +13,6 @@
 #include "Vulkan/Device.h"
 #include "Vulkan/Fence.h"
 #include "Vulkan/Pipeline.h"
-#include "Vulkan/Queue.h"
 #include "Vulkan/RenderPass.h"
 
 namespace Hermes
@@ -24,10 +23,9 @@ namespace Hermes
 
 	ForwardPass::ForwardPass(bool ReuseDataInDepthBuffer)
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 
-		SceneUBODescriptorSet = Renderer::Get().GetDescriptorAllocator().
-		                                        Allocate(Renderer::Get().GetGlobalDataDescriptorSetLayout());
+		SceneUBODescriptorSet = Renderer::GetDescriptorAllocator().Allocate(Renderer::GetGlobalDataDescriptorSetLayout());
 
 		Vulkan::SamplerDescription SamplerDesc = {};
 		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -87,7 +85,7 @@ namespace Hermes
 		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Color"))->GetDimensions();
 		auto ViewportDimensions = Vec2(FramebufferDimensions);
 
-		const auto& GlobalSceneDataBuffer = Renderer::Get().GetGlobalSceneDataBuffer();
+		const auto& GlobalSceneDataBuffer = Renderer::GetGlobalSceneDataBuffer();
 		const auto& LightClusterListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightClusterList"));
 		const auto& LightIndexListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightIndexList"));
 		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
@@ -150,7 +148,7 @@ namespace Hermes
 		PrecomputedBRDFSampler.reset();
 
 		// Compute the BRDF
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 
 		PrecomputedBRDFImage = Device.CreateImage(Dimensions,
 		                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,

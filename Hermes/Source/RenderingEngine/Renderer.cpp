@@ -6,14 +6,54 @@
 #include "Core/Profiling.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
+#include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/SharedData.h"
+#include "RenderingEngine/Passes/DepthPass.h"
+#include "RenderingEngine/Passes/ForwardPass.h"
+#include "RenderingEngine/Passes/LightCullingPass.h"
+#include "RenderingEngine/Passes/PostProcessingPass.h"
 #include "RenderingEngine/Passes/SkyboxPass.h"
+#include "RenderingEngine/Passes/UIPass.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/Scene.h"
+#include "Vulkan/Device.h"
 #include "Vulkan/Fence.h"
+#include "Vulkan/Swapchain.h"
 
 namespace Hermes
 {
+	struct RendererState
+	{
+		Vulkan::DeviceProperties GPUProperties;
+
+		std::unique_ptr<Vulkan::Instance> VulkanInstance;
+		std::unique_ptr<Vulkan::Device> Device;
+		std::unique_ptr<Vulkan::Swapchain> Swapchain;
+
+		std::unique_ptr<DescriptorAllocator> DescriptorAllocator;
+		std::unique_ptr<Vulkan::DescriptorSetLayout> GlobalDataDescriptorSetLayout;
+		std::unique_ptr<Vulkan::Buffer> GlobalSceneDataBuffer;
+		std::unique_ptr<Vulkan::Sampler> DefaultSampler;
+
+		ShaderCache ShaderCache;
+
+		std::unique_ptr<FrameGraph> FrameGraph;
+		std::unique_ptr<LightCullingPass> LightCullingPass;
+		std::unique_ptr<DepthPass> DepthPass;
+		std::unique_ptr<ForwardPass> ForwardPass;
+		std::unique_ptr<PostProcessingPass> PostProcessingPass;
+		std::unique_ptr<SkyboxPass> SkyboxPass;
+		std::unique_ptr<UIPass> UIPass;
+
+		Rect2Dui SceneViewport;
+
+		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
+		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;
+		static constexpr VkFormat DepthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
+	};
+
+	RendererState* GRendererState = nullptr;
+
 	static size_t PickGPU(const std::vector<Vulkan::DeviceProperties>& GPUs)
 	{
 		for (size_t Index = 0; Index < GPUs.size(); Index++)
@@ -27,29 +67,26 @@ namespace Hermes
 		return 0;
 	}
 
-	Renderer& Renderer::Get()
-	{
-		static Renderer Instance;
-		return Instance;
-	}
-
 	bool Renderer::Init()
 	{
-		VulkanInstance = std::make_unique<Vulkan::Instance>(*GGameLoop->GetWindow());
+		HERMES_ASSERT_LOG(GRendererState == nullptr, "Trying to initialize the renderer twice");
+		GRendererState = new RendererState;
+
+		GRendererState->VulkanInstance = std::make_unique<Vulkan::Instance>(*GGameLoop->GetWindow());
 		
-		const auto& AvailableGPUs = VulkanInstance->EnumerateAvailableDevices();
+		const auto& AvailableGPUs = GRendererState->VulkanInstance->EnumerateAvailableDevices();
 		auto GPUIndex = PickGPU(AvailableGPUs);
-		GPUProperties = AvailableGPUs[GPUIndex];
-		Device = VulkanInstance->CreateDevice(GPUIndex);
-		if (!Device)
+		GRendererState->GPUProperties = AvailableGPUs[GPUIndex];
+		GRendererState->Device = GRendererState->VulkanInstance->CreateDevice(GPUIndex);
+		if (!GRendererState->Device)
 			return false;
 		DumpGPUProperties();
 
-		Swapchain = Device->CreateSwapchain(NumberOfBackBuffers);
-		if (!Swapchain)
+		GRendererState->Swapchain = GRendererState->Device->CreateSwapchain(RendererState::NumberOfBackBuffers);
+		if (!GRendererState->Swapchain)
 			return false;
 
-		DescriptorAllocator = std::make_unique<class DescriptorAllocator>();
+		GRendererState->DescriptorAllocator = std::make_unique<DescriptorAllocator>();
 
 		VkDescriptorSetLayoutBinding SceneUBOBinding = {};
 		SceneUBOBinding.binding = 0;
@@ -82,11 +119,11 @@ namespace Hermes
 		LightIndexListBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		LightIndexListBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 
-		GlobalDataDescriptorSetLayout = Device->CreateDescriptorSetLayout({
+		GRendererState->GlobalDataDescriptorSetLayout = GRendererState->Device->CreateDescriptorSetLayout({
 			SceneUBOBinding, IrradianceCubemapBinding, SpecularCubemapBinding, PrecomputedBRDFBinding, LightClusterListBinding, LightIndexListBinding
 		});
 
-		GlobalSceneDataBuffer = Device->CreateBuffer(sizeof(GlobalSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, true);
+		GRendererState->GlobalSceneDataBuffer = GRendererState->Device->CreateBuffer(sizeof(GlobalSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, true);
 
 		Vulkan::SamplerDescription SamplerDesc = {};
 		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -97,22 +134,22 @@ namespace Hermes
 		SamplerDesc.MinLOD = 0.0f;
 		SamplerDesc.MaxLOD = 13.0f; // 8192x8192 texture is probably enough for everyone :)
 		SamplerDesc.LODBias = 0.0f;
-		DefaultSampler = Device->CreateSampler(SamplerDesc);
+		GRendererState->DefaultSampler = GRendererState->Device->CreateSampler(SamplerDesc);
 
-		LightCullingPass = std::make_unique<class LightCullingPass>();
-		DepthPass = std::make_unique<class DepthPass>();
-		ForwardPass = std::make_unique<class ForwardPass>(true);
-		PostProcessingPass = std::make_unique<class PostProcessingPass>();
-		SkyboxPass = std::make_unique<class SkyboxPass>();
-		UIPass = std::make_unique<class UIPass>();
+		GRendererState->LightCullingPass = std::make_unique<LightCullingPass>();
+		GRendererState->DepthPass = std::make_unique<DepthPass>();
+		GRendererState->ForwardPass = std::make_unique<ForwardPass>(true);
+		GRendererState->PostProcessingPass = std::make_unique<PostProcessingPass>();
+		GRendererState->SkyboxPass = std::make_unique<SkyboxPass>();
+		GRendererState->UIPass = std::make_unique<UIPass>();
 
 		FrameGraphScheme Scheme;
-		Scheme.AddPass("LightCullingPass", LightCullingPass->GetPassDescription());
-		Scheme.AddPass("DepthPass", DepthPass->GetPassDescription());
-		Scheme.AddPass("ForwardPass", ForwardPass->GetPassDescription());
-		Scheme.AddPass("PostProcessingPass", PostProcessingPass->GetPassDescription());
-		Scheme.AddPass("SkyboxPass", SkyboxPass->GetPassDescription());
-		Scheme.AddPass("UIPass", UIPass->GetPassDescription());
+		Scheme.AddPass("LightCullingPass", GRendererState->LightCullingPass->GetPassDescription());
+		Scheme.AddPass("DepthPass", GRendererState->DepthPass->GetPassDescription());
+		Scheme.AddPass("ForwardPass", GRendererState->ForwardPass->GetPassDescription());
+		Scheme.AddPass("PostProcessingPass", GRendererState->PostProcessingPass->GetPassDescription());
+		Scheme.AddPass("SkyboxPass", GRendererState->SkyboxPass->GetPassDescription());
+		Scheme.AddPass("UIPass", GRendererState->UIPass->GetPassDescription());
 
 		ImageResourceDescription HDRColorBufferResource = {};
 		HDRColorBufferResource.Dimensions = ViewportRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
@@ -161,101 +198,122 @@ namespace Hermes
 
 		Scheme.AddLink("UIPass.Framebuffer", "$.FINAL_IMAGE");
 
-		FrameGraph = Scheme.Compile();
-		HERMES_ASSERT_LOG(FrameGraph, "Failed to compile a frame graph");
+		GRendererState->FrameGraph = Scheme.Compile();
+		HERMES_ASSERT_LOG(GRendererState->FrameGraph, "Failed to compile a frame graph");
 
 		return true;
 	}
 
-	void Renderer::SetSceneViewport(Rect2Dui NewViewport)
+	void Renderer::SetViewport(Rect2Dui NewViewport)
 	{
-		if (NewViewport == SceneViewport)
+		HERMES_ASSERT(GRendererState);
+		if (NewViewport == GRendererState->SceneViewport)
 			return;
 
 		HERMES_LOG_INFO("SetSceneViewport(%u, %u, %u, %u)", NewViewport.Min.X, NewViewport.Min.Y, NewViewport.Max.X, NewViewport.Max.Y);
-		SceneViewport = NewViewport;
+		GRendererState->SceneViewport = NewViewport;
 	}
 
 	void Renderer::RunFrame(const Scene& Scene, const UI::Widget* RootWidget)
 	{
 		HERMES_PROFILE_FUNC();
 
+		HERMES_ASSERT(GRendererState);
+
 		FillSceneDataBuffer(Scene);
 
 		auto GeometryList = Scene.BakeGeometryList();
 
-		UIPass->SetRootWidget(RootWidget);
+		GRendererState->UIPass->SetRootWidget(RootWidget);
 
-		auto Metrics = FrameGraph->Execute(Scene, GeometryList, SceneViewport);
+		auto Metrics = GRendererState->FrameGraph->Execute(Scene, GeometryList, GRendererState->SceneViewport);
 		HERMES_PROFILE_TAG("Draw call count", static_cast<int64>(Metrics.DrawCallCount));
 		HERMES_PROFILE_TAG("Pipeline bind count", static_cast<int64>(Metrics.PipelineBindCount));
 		HERMES_PROFILE_TAG("Descriptor set bind count", static_cast<int64>(Metrics.DescriptorSetBindCount));
 		HERMES_PROFILE_TAG("Buffer bind count", static_cast<int64>(Metrics.BufferBindCount));
 
-		auto [FinalImage, FinalImageLayout] = FrameGraph->GetFinalImage();
+		auto [FinalImage, FinalImageLayout] = GRendererState->FrameGraph->GetFinalImage();
 
-		Present(*FinalImage, FinalImageLayout, SceneViewport);
+		Present(*FinalImage, FinalImageLayout, GRendererState->SceneViewport);
 	}
 
-	Vulkan::Device& Renderer::GetActiveDevice()
+	void Renderer::Shutdown()
 	{
-		return *Device;
+		HERMES_ASSERT_LOG(GRendererState, "Trying to shut down the renderer twice");
+		delete GRendererState;
+		GRendererState = nullptr;
 	}
 
-	Vulkan::Swapchain& Renderer::GetSwapchain()
+	Vulkan::Device& Renderer::GetDevice()
 	{
-		return *Swapchain;
+		HERMES_ASSERT(GRendererState);
+		return *GRendererState->Device;
+	}
+
+	Vec2ui Renderer::GetSwapchainDimensions()
+	{
+		HERMES_ASSERT(GRendererState);
+		return GRendererState->Swapchain->GetDimensions();
 	}
 
 	DescriptorAllocator& Renderer::GetDescriptorAllocator()
 	{
-		return *DescriptorAllocator;
+		HERMES_ASSERT(GRendererState);
+		return *GRendererState->DescriptorAllocator;
 	}
 
 	ShaderCache& Renderer::GetShaderCache()
 	{
-		return ShaderCache;
+		HERMES_ASSERT(GRendererState);
+		return GRendererState->ShaderCache;
 	}
 
-	const Vulkan::DescriptorSetLayout& Renderer::GetGlobalDataDescriptorSetLayout() const
+	const Vulkan::DescriptorSetLayout& Renderer::GetGlobalDataDescriptorSetLayout()
 	{
-		return *GlobalDataDescriptorSetLayout;
+		HERMES_ASSERT(GRendererState);
+		return *GRendererState->GlobalDataDescriptorSetLayout;
 	}
 
-	const Vulkan::RenderPass& Renderer::GetGraphicsRenderPassObject() const
+	const Vulkan::RenderPass& Renderer::GetGraphicsRenderPassObject()
 	{
-		return FrameGraph->GetRenderPassObject("ForwardPass");
+		HERMES_ASSERT(GRendererState);
+		return GRendererState->FrameGraph->GetRenderPassObject("ForwardPass");
 	}
 
-	const Vulkan::RenderPass& Renderer::GetVertexRenderPassObject() const
+	const Vulkan::RenderPass& Renderer::GetVertexRenderPassObject()
 	{
-		return FrameGraph->GetRenderPassObject("DepthPass");
+		HERMES_ASSERT(GRendererState);
+		return GRendererState->FrameGraph->GetRenderPassObject("DepthPass");
 	}
 
-	const Vulkan::Buffer& Renderer::GetGlobalSceneDataBuffer() const
+	const Vulkan::Buffer& Renderer::GetGlobalSceneDataBuffer()
 	{
-		return *GlobalSceneDataBuffer;
+		HERMES_ASSERT(GRendererState);
+		return *GRendererState->GlobalSceneDataBuffer;
 	}
 
-	const Vulkan::Sampler& Renderer::GetDefaultSampler() const
+	const Vulkan::Sampler& Renderer::GetDefaultSampler()
 	{
-		return *DefaultSampler;
+		HERMES_ASSERT(GRendererState);
+		return *GRendererState->DefaultSampler;
 	}
 
-	void Renderer::DumpGPUProperties() const
+	void Renderer::DumpGPUProperties()
 	{
+		HERMES_ASSERT(GRendererState);
 		HERMES_LOG_INFO("======== GPU Information ========");
-		HERMES_LOG_INFO("Name: %s", GPUProperties.Name.c_str());
-		HERMES_LOG_INFO("Anisotropy: %s, %f", GPUProperties.AnisotropySupport ? "true" : "false", GPUProperties.MaxAnisotropyLevel);
+		HERMES_LOG_INFO("Name: %s", GRendererState->GPUProperties.Name.c_str());
+		HERMES_LOG_INFO("Anisotropy: %s, %f", GRendererState->GPUProperties.AnisotropySupport ? "true" : "false", GRendererState->GPUProperties.MaxAnisotropyLevel);
 	}
 
 	void Renderer::FillSceneDataBuffer(const Scene& Scene)
 	{
+		HERMES_ASSERT(GRendererState);
 		HERMES_PROFILE_FUNC();
 
 		auto& Camera = Scene.GetActiveCamera();
 
-		auto* SceneDataForCurrentFrame = static_cast<GlobalSceneData*>(GlobalSceneDataBuffer->Map());
+		auto* SceneDataForCurrentFrame = static_cast<GlobalSceneData*>(GRendererState->GlobalSceneDataBuffer->Map());
 
 		auto ViewMatrix = Camera.GetViewMatrix();
 		auto ProjectionMatrix = Camera.GetProjectionMatrix();
@@ -265,10 +323,10 @@ namespace Hermes
 		SceneDataForCurrentFrame->InverseProjection = ProjectionMatrix.Inverse();
 		SceneDataForCurrentFrame->CameraLocation = { Camera.GetLocation(), 1.0f };
 
-		SceneDataForCurrentFrame->ScreenDimensions = static_cast<Vec2>(Swapchain->GetDimensions());
-		SceneDataForCurrentFrame->MaxPixelsPerLightCluster = static_cast<Vec2>(LightCullingPass->ClusterSizeInPixels);
+		SceneDataForCurrentFrame->ScreenDimensions = static_cast<Vec2>(GRendererState->Swapchain->GetDimensions());
+		SceneDataForCurrentFrame->MaxPixelsPerLightCluster = static_cast<Vec2>(GRendererState->LightCullingPass->ClusterSizeInPixels);
 		SceneDataForCurrentFrame->CameraZBounds = { Camera.GetNearZPlane(), Camera.GetFarZPlane() };
-		SceneDataForCurrentFrame->NumberOfZClusters.X = LightCullingPass->NumberOfZSlices;
+		SceneDataForCurrentFrame->NumberOfZClusters.X = GRendererState->LightCullingPass->NumberOfZSlices;
 
 		size_t NextPointLightIndex = 0, NextDirectionalLightIndex = 0;
 		std::function<void(const SceneNode&)> TraverseSceneHierarchy = [&](const SceneNode& Node) -> void
@@ -318,28 +376,29 @@ namespace Hermes
 		SceneDataForCurrentFrame->PointLightCount = static_cast<uint32>(NextPointLightIndex);
 		SceneDataForCurrentFrame->DirectionalLightCount = static_cast<uint32>(NextDirectionalLightIndex);
 		
-		GlobalSceneDataBuffer->Unmap();
+		GRendererState->GlobalSceneDataBuffer->Unmap();
 	}
 
-	void Renderer::Present(const Vulkan::Image& SourceImage, VkImageLayout CurrentLayout, Rect2Dui Viewport) const
+	void Renderer::Present(const Vulkan::Image& SourceImage, VkImageLayout CurrentLayout, Rect2Dui Viewport)
 	{
+		HERMES_ASSERT(GRendererState);
 		HERMES_PROFILE_FUNC();
 
-		HERMES_ASSERT(Viewport.Max.X <= Swapchain->GetDimensions().X);
-		HERMES_ASSERT(Viewport.Max.Y <= Swapchain->GetDimensions().Y);
+		HERMES_ASSERT(Viewport.Max.X <= GRendererState->Swapchain->GetDimensions().X);
+		HERMES_ASSERT(Viewport.Max.Y <= GRendererState->Swapchain->GetDimensions().Y);
 
-		auto& Queue = Device->GetQueue(VK_QUEUE_GRAPHICS_BIT);
+		auto& Queue = GRendererState->Device->GetQueue(VK_QUEUE_GRAPHICS_BIT);
 		auto CommandBuffer = Queue.CreateCommandBuffer();
 
 		bool Dummy;
-		auto SwapchainImageAcquireFence = Device->CreateFence();
-		auto MaybeSwapchainImageIndex = Swapchain->AcquireImage(UINT64_MAX, *SwapchainImageAcquireFence, Dummy);
+		auto SwapchainImageAcquireFence = GRendererState->Device->CreateFence();
+		auto MaybeSwapchainImageIndex = GRendererState->Swapchain->AcquireImage(UINT64_MAX, *SwapchainImageAcquireFence, Dummy);
 		if (!MaybeSwapchainImageIndex.has_value())
 		{
 			HERMES_LOG_ERROR("Presentation failed: swapchain did not return valid image index.");
 			return;
 		}
-		const auto& SwapchainImage = Swapchain->GetImage(MaybeSwapchainImageIndex.value());
+		const auto& SwapchainImage = GRendererState->Swapchain->GetImage(MaybeSwapchainImageIndex.value());
 
 		CommandBuffer->BeginRecording();
 
@@ -416,10 +475,10 @@ namespace Hermes
 
 		SwapchainImageAcquireFence->Wait(UINT64_MAX);
 
-		auto BlitFinishedFence = Device->CreateFence();
+		auto BlitFinishedFence = GRendererState->Device->CreateFence();
 		Queue.SubmitCommandBuffer(*CommandBuffer, BlitFinishedFence.get());
 		BlitFinishedFence->Wait(UINT64_MAX);
 
-		Swapchain->Present(MaybeSwapchainImageIndex.value(), Dummy);
+		GRendererState->Swapchain->Present(MaybeSwapchainImageIndex.value(), Dummy);
 	}
 }

@@ -15,7 +15,7 @@ namespace Hermes
 		, Primitives(std::move(InPrimitives))
 		, BoundingVolume(CalculateMeshRadius(Vertices))
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 
 		auto VertexBufferSize = Vertices.size() * sizeof(Vertex);
 		VertexBuffer = Device.CreateBuffer(VertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);

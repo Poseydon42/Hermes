@@ -21,11 +21,11 @@ namespace Hermes
 		, VertexShaderName(std::move(InVertexShaderPath))
 		, FragmentShaderName(std::move(InFragmentShaderPath))
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 
 		std::vector<VkDescriptorSetLayoutBinding> PerMaterialDataBindings;
 
-		auto& ShaderCache = Renderer::Get().GetShaderCache();
+		auto& ShaderCache = Renderer::GetShaderCache();
 
 		const auto& Reflection = ShaderCache.GetShaderReflection(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
 		if (Reflection.RequiresUniformBuffer())
@@ -62,7 +62,7 @@ namespace Hermes
 		PipelineDesc.PushConstants.push_back({ VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GlobalDrawcallData) });
 		PipelineDesc.ShaderStages = { &VertexShader, &FragmentShader };
 		PipelineDesc.DescriptorSetLayouts = {
-			&Renderer::Get().GetGlobalDataDescriptorSetLayout(), DescriptorSetLayout.get()
+			&Renderer::GetGlobalDataDescriptorSetLayout(), DescriptorSetLayout.get()
 		};
 
 		VkVertexInputBindingDescription VertexInput = {};
@@ -108,12 +108,12 @@ namespace Hermes
 
 		PipelineDesc.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
-		Pipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetGraphicsRenderPassObject(),
+		Pipeline = Renderer::GetDevice().CreatePipeline(Renderer::GetGraphicsRenderPassObject(),
 		                                                            PipelineDesc);
 		PipelineDesc.ShaderStages = { &VertexShader };
 		// NOTE: vertex shaders don't have any user-defined material properties for now
-		PipelineDesc.DescriptorSetLayouts = { &Renderer::Get().GetGlobalDataDescriptorSetLayout() };
-		VertexPipeline = Renderer::Get().GetActiveDevice().CreatePipeline(Renderer::Get().GetVertexRenderPassObject(), PipelineDesc);
+		PipelineDesc.DescriptorSetLayouts = { &Renderer::GetGlobalDataDescriptorSetLayout() };
+		VertexPipeline = Renderer::GetDevice().CreatePipeline(Renderer::GetVertexRenderPassObject(), PipelineDesc);
 	}
 
 	std::unique_ptr<Material> Material::Create(String Name, AssetHandle Handle, String VertexShaderPath, String FragmentShaderPath)
@@ -151,7 +151,7 @@ namespace Hermes
 
 	const MaterialProperty* Material::FindProperty(const String& PropertyName) const
 	{
-		auto& ShaderCache = Renderer::Get().GetShaderCache();
+		auto& ShaderCache = Renderer::GetShaderCache();
 		const auto& Reflection = ShaderCache.GetShaderReflection(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		return Reflection.FindProperty(PropertyName);
@@ -174,7 +174,7 @@ namespace Hermes
 
 	size_t Material::GetUniformBufferSize() const
 	{
-		auto& ShaderCache = Renderer::Get().GetShaderCache();
+		auto& ShaderCache = Renderer::GetShaderCache();
 		const auto& Reflection = ShaderCache.GetShaderReflection(FragmentShaderName, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		return Reflection.GetTotalSizeForUniformBuffer();

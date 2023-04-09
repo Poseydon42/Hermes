@@ -3,103 +3,53 @@
 #include <memory>
 
 #include "Core/Core.h"
-#include "Core/Misc/DefaultConstructors.h"
-#include "Core/Misc/NonCopyableMovable.h"
 #include "Math/Rect2D.h"
 #include "RenderingEngine/DescriptorAllocator.h"
-#include "RenderingEngine/FrameGraph/Graph.h"
-#include "RenderingEngine/Passes/DepthPass.h"
-#include "RenderingEngine/Passes/LightCullingPass.h"
-#include "RenderingEngine/Passes/ForwardPass.h"
-#include "RenderingEngine/Passes/PostProcessingPass.h"
-#include "RenderingEngine/Passes/SkyboxPass.h"
-#include "RenderingEngine/Passes/UIPass.h"
+#include "RenderingEngine/Scene/Scene.h"
 #include "RenderingEngine/ShaderCache.h"
-#include "Vulkan/Device.h"
-#include "Vulkan/Swapchain.h"
-#include "Vulkan/VulkanCore.h"
+#include "UIEngine/Widgets/Widget.h"
+#include "Vulkan/Forward.h"
 
 namespace Hermes
 {
-	class DescriptorAllocator;
-	class Scene;
-	class IPlatformWindow;
-
-	struct GraphicsSettings
-	{
-		float AnisotropyLevel = 1.0;
-	};
-
 	class HERMES_API Renderer
 	{
-		MAKE_NON_COPYABLE(Renderer)
-		ADD_DEFAULT_MOVE_CONSTRUCTOR(Renderer)
-		ADD_DEFAULT_DESTRUCTOR(Renderer)
-		ADD_DEFAULT_CONSTRUCTOR(Renderer)
-
 	public:
-		static Renderer& Get();
+		static bool Init();
 
-		bool Init();
+		static void RunFrame(const Scene& Scene, const UI::Widget* RootWidget);
 
-		void SetSceneViewport(Rect2Dui NewViewport);
+		static void Shutdown();
 
-		void RunFrame(const Scene& Scene, const UI::Widget* RootWidget);
+		static void SetViewport(Rect2Dui NewViewport);
 
-		Vulkan::Device& GetActiveDevice();
+		static Vulkan::Device& GetDevice();
 
-		Vulkan::Swapchain& GetSwapchain();
+		static Vec2ui GetSwapchainDimensions();
 
-		DescriptorAllocator& GetDescriptorAllocator();
+		static DescriptorAllocator& GetDescriptorAllocator();
 
-		ShaderCache& GetShaderCache();
+		static ShaderCache& GetShaderCache();
 
-		const Vulkan::DescriptorSetLayout& GetGlobalDataDescriptorSetLayout() const;
+		static const Vulkan::DescriptorSetLayout& GetGlobalDataDescriptorSetLayout();
 
-		const Vulkan::RenderPass& GetGraphicsRenderPassObject() const;
+		static const Vulkan::RenderPass& GetGraphicsRenderPassObject();
 
 		/*
 		 * Returns a render pass object that will be compatible with any render pass that
 		 * will utilize a 'vertex-only' pipeline of some material
 		 */
-		const Vulkan::RenderPass& GetVertexRenderPassObject() const;
+		static const Vulkan::RenderPass& GetVertexRenderPassObject();
 
-		const Vulkan::Buffer& GetGlobalSceneDataBuffer() const;
+		static const Vulkan::Buffer& GetGlobalSceneDataBuffer();
 
-		const Vulkan::Sampler& GetDefaultSampler() const;
+		static const Vulkan::Sampler& GetDefaultSampler();
 
 	private:
-		Vulkan::DeviceProperties GPUProperties;
+		static void DumpGPUProperties();
 
-		std::unique_ptr<Vulkan::Instance> VulkanInstance;
-		std::unique_ptr<Vulkan::Device> Device;
-		std::unique_ptr<Vulkan::Swapchain> Swapchain;
+		static void FillSceneDataBuffer(const Scene& Scene);
 
-		std::unique_ptr<DescriptorAllocator> DescriptorAllocator;
-		std::unique_ptr<Vulkan::DescriptorSetLayout> GlobalDataDescriptorSetLayout;
-		std::unique_ptr<Vulkan::Buffer> GlobalSceneDataBuffer;
-		std::unique_ptr<Vulkan::Sampler> DefaultSampler;
-
-		ShaderCache ShaderCache;
-		
-		std::unique_ptr<FrameGraph> FrameGraph;
-		std::unique_ptr<LightCullingPass> LightCullingPass;
-		std::unique_ptr<DepthPass> DepthPass;
-		std::unique_ptr<ForwardPass> ForwardPass;
-		std::unique_ptr<PostProcessingPass> PostProcessingPass;
-		std::unique_ptr<SkyboxPass> SkyboxPass;
-		std::unique_ptr<UIPass> UIPass;
-
-		Rect2Dui SceneViewport;
-
-		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
-		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;
-		static constexpr VkFormat DepthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
-
-		void DumpGPUProperties() const;
-
-		void FillSceneDataBuffer(const Scene& Scene);
-
-		void Present(const Vulkan::Image& SourceImage, VkImageLayout CurrentLayout, Rect2Dui Viewport) const;
+		static void Present(const Vulkan::Image& SourceImage, VkImageLayout CurrentLayout, Rect2Dui Viewport);
 	};
 }

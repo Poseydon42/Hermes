@@ -1,8 +1,11 @@
 #include "UIPass.h"
 
 #include "Core/Profiling.h"
+#include "RenderingEngine/FrameGraph/Graph.h"
+#include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Renderer.h"
 #include "Vulkan/Buffer.h"
+#include "Vulkan/CommandBuffer.h"
 
 namespace Hermes
 {
@@ -11,10 +14,9 @@ namespace Hermes
 		Description.Attachments.emplace_back("Framebuffer", VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VkClearValue{}, BindingMode::ColorAttachment);
 		Description.Type = PassType::Graphics;
 		Description.Callback = [this](const PassCallbackInfo& CallbackInfo) { PassCallback(CallbackInfo); };
-
-		auto& Renderer = Renderer::Get();
-		auto& Device = Renderer.GetActiveDevice();
-		auto& DescriptorAllocator = Renderer.GetDescriptorAllocator();
+		
+		auto& Device = Renderer::GetDevice();
+		auto& DescriptorAllocator = Renderer::GetDescriptorAllocator();
 
 
 		DescriptorSetLayout = Device.CreateDescriptorSetLayout({
@@ -43,7 +45,6 @@ namespace Hermes
 		if (!Pipeline)
 			CreatePipeline(*CallbackInfo.RenderPass);
 
-		auto& Renderer = Renderer::Get();
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
 		auto& Metrics = CallbackInfo.Metrics;
 
@@ -68,7 +69,7 @@ namespace Hermes
 		{
 			// NOTE: easier to create a small buffer even if it's unused rather than handle 2 cases
 			auto RectangleListBufferSize = Math::Max(RectangleListSize, sizeof(RectanglePrimitive));
-			RectangleListBuffer = Renderer.GetActiveDevice().CreateBuffer(RectangleListBufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, true);
+			RectangleListBuffer = Renderer::GetDevice().CreateBuffer(RectangleListBufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, true);
 			DescriptorSet->UpdateWithBuffer(0, 0, *RectangleListBuffer, 0, static_cast<uint32>(RectangleListBufferSize));
 		}
 
@@ -93,9 +94,8 @@ namespace Hermes
 
 	void UIPass::CreatePipeline(const Vulkan::RenderPass& RenderPass)
 	{
-		auto& Renderer = Renderer::Get();
-		auto& Device = Renderer.GetActiveDevice();
-		auto& ShaderCache = Renderer.GetShaderCache();
+		auto& Device = Renderer::GetDevice();
+		auto& ShaderCache = Renderer::GetShaderCache();
 
 		const auto& VertexShader = ShaderCache.GetShader("/Shaders/Bin/fs_ui_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
 		const auto& FragmentShader = ShaderCache.GetShader("/Shaders/Bin/fs_ui_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);

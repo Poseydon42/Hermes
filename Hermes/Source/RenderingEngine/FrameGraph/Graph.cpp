@@ -307,7 +307,7 @@ namespace Hermes
 				QueueType = VK_QUEUE_GRAPHICS_BIT;
 			else if (Scheme.Passes[PassName].Type == PassType::Compute)
 				QueueType = VK_QUEUE_COMPUTE_BIT;
-			auto& Queue = Renderer::Get().GetActiveDevice().GetQueue(QueueType);
+			auto& Queue = Renderer::GetDevice().GetQueue(QueueType);
 
 			auto& CommandBuffer = Pass.CommandBuffer;
 			CommandBuffer->BeginRecording();
@@ -391,7 +391,7 @@ namespace Hermes
 			}
 			CommandBuffer->EndRecording();
 
-			auto Fence = Renderer::Get().GetActiveDevice().CreateFence();
+			auto Fence = Renderer::GetDevice().CreateFence();
 			Queue.SubmitCommandBuffer(*CommandBuffer, Fence.get());
 			Fences.push_back(std::move(Fence));
 		}
@@ -440,7 +440,7 @@ namespace Hermes
 
 			Container.Desc = Resource.Desc;
 
-			Container.Buffer = Renderer::Get().GetActiveDevice().CreateBuffer(Resource.Desc.Size, TraverseBufferResourceUsageType(Resource.Name), TraverseCheckIfBufferIsMappable(Resource.Name));
+			Container.Buffer = Renderer::GetDevice().CreateBuffer(Resource.Desc.Size, TraverseBufferResourceUsageType(Resource.Name), TraverseCheckIfBufferIsMappable(Resource.Name));
 
 			BufferResources[Resource.Name] = std::move(Container);
 		}
@@ -492,12 +492,12 @@ namespace Hermes
 				RenderPassAttachments.emplace_back(AttachmentDesc, Type);
 			}
 
-			const auto& GraphicsQueue = Renderer::Get().GetActiveDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
+			const auto& GraphicsQueue = Renderer::GetDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
 			PassContainer NewPassContainer = {};
 			if (Pass.second.Type == PassType::Graphics)
 			{
 				HERMES_ASSERT(!RenderPassAttachments.empty());
-				NewPassContainer.Pass = Renderer::Get().GetActiveDevice().CreateRenderPass(RenderPassAttachments);
+				NewPassContainer.Pass = Renderer::GetDevice().CreateRenderPass(RenderPassAttachments);
 			}
 			NewPassContainer.CommandBuffer = GraphicsQueue.CreateCommandBuffer(true);
 			NewPassContainer.Callback = Pass.second.Callback;
@@ -750,7 +750,7 @@ namespace Hermes
 		{
 			if (Resource.second.Desc.Dimensions.IsRelative() && !Resource.second.IsExternal)
 			{
-				Resource.second.Image = Renderer::Get().GetActiveDevice().CreateImage(Resource.second.Desc.Dimensions.GetAbsoluteDimensions(ViewportDimensions), TraverseImageResourceUsageType(Resource.first), Resource.second.Desc.Format, Resource.second.Desc.MipLevels);
+				Resource.second.Image = Renderer::GetDevice().CreateImage(Resource.second.Desc.Dimensions.GetAbsoluteDimensions(ViewportDimensions), TraverseImageResourceUsageType(Resource.first), Resource.second.Desc.Format, Resource.second.Desc.MipLevels);
 				Resource.second.View = Resource.second.Image->CreateDefaultImageView();
 
 				Resource.second.CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -786,7 +786,7 @@ namespace Hermes
 			}
 			if (Pass.second.Type == PassType::Graphics)
 			{
-				Passes[Pass.first].Framebuffer = Renderer::Get().GetActiveDevice().CreateFramebuffer(*Passes[Pass.first].Pass, Attachments, FramebufferDimensions);
+				Passes[Pass.first].Framebuffer = Renderer::GetDevice().CreateFramebuffer(*Passes[Pass.first].Pass, Attachments, FramebufferDimensions);
 			}
 		}
 	}

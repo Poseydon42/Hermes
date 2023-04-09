@@ -18,7 +18,7 @@ namespace Hermes
 	// TODO : do we need to perform ownership transfer between render and transfer queue and vice-versa?
 	void GPUInteractionUtilities::UploadDataToGPUBuffer(const void* Data, size_t DataSize, size_t TargetOffset, const Vulkan::Buffer& Target)
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 
 		auto& CurrentStagingBuffer = EnsureStagingBuffer();
 		auto& TransferQueue = Device.GetQueue(VK_QUEUE_TRANSFER_BIT);
@@ -57,7 +57,7 @@ namespace Hermes
 	                                                   VkImageLayout LayoutToTransitionTo,
 	                                                   std::optional<Vulkan::CubemapSide> Side)
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 
 		auto& CurrentStagingBuffer = EnsureStagingBuffer();
 		auto& TransferQueue = Device.GetQueue(VK_QUEUE_TRANSFER_BIT);
@@ -147,7 +147,7 @@ namespace Hermes
 	                                              VkImageLayout LayoutToTransitionTo,
 	                                              std::optional<Vulkan::CubemapSide> Side)
 	{
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 		
 		auto& Queue = Device.GetQueue(VK_QUEUE_GRAPHICS_BIT);
 		auto CommandBuffer = Queue.CreateCommandBuffer(true);
@@ -258,7 +258,7 @@ namespace Hermes
 
 		static constexpr size_t StagingBufferSize = 8ull * 1024 * 1024;
 
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 		StagingBuffer = Device.CreateBuffer(StagingBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true);
 		HERMES_ASSERT_LOG(StagingBuffer, "Failed to create staging buffer with size %ull", StagingBufferSize);
 		return *StagingBuffer;

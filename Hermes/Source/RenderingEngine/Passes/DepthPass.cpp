@@ -5,16 +5,18 @@
 #include "RenderingEngine/Material/MaterialInstance.h"
 #include "RenderingEngine/Mesh.h"
 #include "RenderingEngine/Renderer.h"
+#include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "RenderingEngine/Scene/GeometryList.h"
+#include "Vulkan/CommandBuffer.h"
 
 namespace Hermes
 {
 	DepthPass::DepthPass()
 	{
-		auto& DescriptorAllocator = Renderer::Get().GetDescriptorAllocator();
+		auto& DescriptorAllocator = Renderer::GetDescriptorAllocator();
 
-		SceneUBODescriptorSet = DescriptorAllocator.Allocate(Renderer::Get().GetGlobalDataDescriptorSetLayout());
+		SceneUBODescriptorSet = DescriptorAllocator.Allocate(Renderer::GetGlobalDataDescriptorSetLayout());
 
 		Description.Callback = [this](const PassCallbackInfo& CallbackInfo) { PassCallback(CallbackInfo); };
 
@@ -38,7 +40,7 @@ namespace Hermes
 		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Depth"))->GetDimensions();
 		auto ViewportDimensions = Vec2(FramebufferDimensions);
 
-		const auto& GlobalSceneDataBuffer = Renderer::Get().GetGlobalSceneDataBuffer();
+		const auto& GlobalSceneDataBuffer = Renderer::GetGlobalSceneDataBuffer();
 		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
 
 		for (const auto& DrawableMesh : CallbackInfo.GeometryList.GetMeshList())

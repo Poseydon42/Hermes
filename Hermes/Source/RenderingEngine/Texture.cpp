@@ -5,12 +5,15 @@
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/GPUInteractionUtilities.h"
 #include "RenderingEngine/Renderer.h"
+#include "Vulkan/CommandBuffer.h"
 #include "Vulkan/Descriptor.h"
-#include "Vulkan/Image.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Fence.h"
+#include "Vulkan/Framebuffer.h"
+#include "Vulkan/Image.h"
 #include "Vulkan/Pipeline.h"
 #include "Vulkan/Queue.h"
+#include "Vulkan/RenderPass.h"
 #include "Vulkan/Sampler.h"
 
 namespace Hermes
@@ -268,7 +271,7 @@ namespace Hermes
 		}
 
 		auto VulkanFormat = ChooseFormatFromImageType(Format, BytesPerChannel);
-		Image = Renderer::Get().GetActiveDevice().CreateImage(Dimensions, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VulkanFormat, MipLevelCount);
+		Image = Renderer::GetDevice().CreateImage(Dimensions, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VulkanFormat, MipLevelCount);
 
 		// NOTE : normally, after loading image we will move it into
 		// transfer source layout for further blitting to generate mip
@@ -373,7 +376,7 @@ namespace Hermes
 
 	TextureCube::TextureCube(Vec2ui InDimensions, VkFormat InFormat, VkImageUsageFlags InUsage, uint32 InMipLevelCount)
 	{
-		Image = Renderer::Get().GetActiveDevice().CreateCubemap(InDimensions, InUsage, InFormat, InMipLevelCount);
+		Image = Renderer::GetDevice().CreateCubemap(InDimensions, InUsage, InFormat, InMipLevelCount);
 		View = Image->CreateDefaultImageView();
 	}
 
@@ -390,7 +393,7 @@ namespace Hermes
 		if (EnableMipMaps)
 			MipMapCount = Math::FloorLog2(Math::Max(CubemapDimensions.X, CubemapDimensions.Y)) + 1;
 
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 		Image = Device.CreateCubemap(CubemapDimensions,
 		                             VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
 		                             VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
@@ -431,7 +434,7 @@ namespace Hermes
 		TextureResourceBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		TextureResourceBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		std::shared_ptr DescriptorLayout = Device.CreateDescriptorSetLayout({ TextureResourceBinding });
-		auto DescriptorSet = Renderer::Get().GetDescriptorAllocator().Allocate(*DescriptorLayout);
+		auto DescriptorSet = Renderer::GetDescriptorAllocator().Allocate(*DescriptorLayout);
 		DescriptorSet->UpdateWithImageAndSampler(0, 0, EquirectangularTexture.GetView(ColorSpace::Linear),
 		                                         *EquirectangularTextureResourceSampler,
 		                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

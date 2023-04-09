@@ -13,7 +13,7 @@ namespace Hermes
 			return MaybeLoadedShader->second;
 		}
 
-		auto& Device = Renderer::Get().GetActiveDevice();
+		auto& Device = Renderer::GetDevice();
 		auto NewShader = Device.CreateShader(Name, Stage);
 		auto NewShaderReflection = ShaderReflection(Name);
 		

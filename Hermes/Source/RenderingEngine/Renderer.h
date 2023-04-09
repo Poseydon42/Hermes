@@ -33,14 +33,6 @@ namespace Hermes
 
 		static const Vulkan::DescriptorSetLayout& GetGlobalDataDescriptorSetLayout();
 
-		static const Vulkan::RenderPass& GetGraphicsRenderPassObject();
-
-		/*
-		 * Returns a render pass object that will be compatible with any render pass that
-		 * will utilize a 'vertex-only' pipeline of some material
-		 */
-		static const Vulkan::RenderPass& GetVertexRenderPassObject();
-
 		static const Vulkan::Buffer& GetGlobalSceneDataBuffer();
 
 		static const Vulkan::Sampler& GetDefaultSampler();

@@ -32,6 +32,6 @@ namespace Hermes
 
 		void PassCallback(const PassCallbackInfo& CallbackInfo);
 
-		void CreatePipeline(const Vulkan::RenderPass& Pass);
+		void CreatePipeline(VkFormat ColorAttachmentFormat, VkFormat DepthAttachmentFormat);
 	};
 }

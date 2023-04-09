@@ -81,8 +81,6 @@ namespace Hermes
 
 		FrameMetrics Execute(const Scene& Scene, const GeometryList& GeometryList, Rect2Dui Viewport);
 
-		const Vulkan::RenderPass& GetRenderPassObject(const String& Name) const;
-
 		/*
 		 * Returns the image containing the result of rendering together with the layout it is currently in.
 		 * The user must return the image to the same layout before the next call to Execute().
@@ -105,7 +103,6 @@ namespace Hermes
 		VkFormat TraverseAttachmentDataFormat(const String& AttachmentName) const;
 
 		void RecreateResources();
-		void RecreateFramebuffers();
 
 		FrameGraphScheme Scheme;
 
@@ -129,14 +126,15 @@ namespace Hermes
 
 		struct PassContainer
 		{
-			std::unique_ptr<Vulkan::RenderPass> Pass;
-			std::unique_ptr<Vulkan::Framebuffer> Framebuffer;
-			std::unique_ptr<Vulkan::CommandBuffer> CommandBuffer;
-
 			std::unordered_map<String, PassResourceVariant> ResourceMap;
 
-			// NOTE : pair<ResourceOwnName, LayoutAtStart>
-			std::vector<std::pair<String, VkImageLayout>> AttachmentLayouts;
+			// Pair of the name of the resource (not attachment) and the corresponding attachment info
+			std::vector<std::pair<String, VkRenderingAttachmentInfo>> ColorAttachments;
+			std::optional<std::pair<String, VkRenderingAttachmentInfo>> DepthAttachment;
+
+			// Pair of resource name and its layout at the start of render pass
+			std::vector<std::pair<String, VkImageLayout>> ImageResourceLayouts;
+
 			std::vector<String> InputBufferResourceNames;
 
 			std::vector<VkClearValue> ClearColors;

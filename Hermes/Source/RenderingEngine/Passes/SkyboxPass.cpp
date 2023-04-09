@@ -62,11 +62,14 @@ namespace Hermes
 	void SkyboxPass::PassCallback(const PassCallbackInfo& CallbackInfo)
 	{
 		HERMES_PROFILE_FUNC();
-		if (!Pipeline)
-			CreatePipeline(*CallbackInfo.RenderPass);
 
-		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("ColorBuffer"))->GetDimensions();
+		const auto* ColorBuffer = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("ColorBuffer"));
+		const auto* DepthBuffer = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("DepthBuffer"));
+		auto FramebufferDimensions = ColorBuffer->GetDimensions();
 		auto ViewportDimensions = Vec2(FramebufferDimensions);
+
+		if (!Pipeline)
+			CreatePipeline(ColorBuffer->GetFormat(), DepthBuffer->GetFormat());
 
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
 		auto& Metrics = CallbackInfo.Metrics;
@@ -101,7 +104,7 @@ namespace Hermes
 		Metrics.DrawCallCount++;
 	}
 
-	void SkyboxPass::CreatePipeline(const Vulkan::RenderPass& Pass)
+	void SkyboxPass::CreatePipeline(VkFormat ColorAttachmentFormat, VkFormat DepthAttachmentFormat)
 	{
 		auto& ShaderCache = Renderer::GetShaderCache();
 
@@ -126,6 +129,6 @@ namespace Hermes
 
 		PipelineDescription.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
-		Pipeline = Renderer::GetDevice().CreatePipeline(Pass, PipelineDescription);
+		Pipeline = Renderer::GetDevice().CreatePipeline(PipelineDescription, { &ColorAttachmentFormat, 1 }, DepthAttachmentFormat);
 	}
 }

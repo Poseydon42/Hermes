@@ -30,12 +30,12 @@ namespace Hermes
 
 		const Vulkan::DescriptorSetLayout& GetDescriptorSetLayout() const;
 
-		const Vulkan::Pipeline& GetPipeline() const;
+		const Vulkan::Pipeline& GetFullPipeline(VkFormat ColorAttachmentFormat, VkFormat DepthAttachmentFormat) const;
 
 		/*
 		 * Returns a pipeline with vertex shader only that can be used for things like depth pass etc.
 		 */
-		const Vulkan::Pipeline& GetVertexPipeline() const;
+		const Vulkan::Pipeline& GetVertexOnlyPipeline(VkFormat DepthAttachmentFormat) const;
 
 		size_t GetUniformBufferSize() const;
 
@@ -43,8 +43,16 @@ namespace Hermes
 		String VertexShaderName, FragmentShaderName;
 
 		std::unique_ptr<Vulkan::DescriptorSetLayout> DescriptorSetLayout;
-		std::unique_ptr<Vulkan::Pipeline> Pipeline, VertexPipeline;
+
+		mutable std::unique_ptr<Vulkan::Pipeline> FullPipeline;
+		mutable std::unique_ptr<Vulkan::Pipeline> VertexOnlyPipeline;
+
+		mutable VkFormat CachedPipelineColorAttachmentFormat = VK_FORMAT_UNDEFINED;
+		mutable VkFormat CachedPipelineDepthAttachmentFormat = VK_FORMAT_UNDEFINED;
+
 
 		Material(String InName, AssetHandle InHandle, String InVertexShaderPath, String InFragmentShaderPath);
+
+		void CreatePipelines(VkFormat ColorAttachmentFormat, VkFormat DepthAttachmentFormat) const;
 	};
 }

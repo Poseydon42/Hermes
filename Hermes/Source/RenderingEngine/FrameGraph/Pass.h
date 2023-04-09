@@ -26,7 +26,6 @@ namespace Hermes
 	struct PassCallbackInfo
 	{
 		Vulkan::CommandBuffer& CommandBuffer;
-		Vulkan::RenderPass* RenderPass;
 
 		const std::unordered_map<String, PassResourceVariant>& Resources;
 

@@ -4,7 +4,7 @@
 #include "RenderingEngine/FrameGraph/Graph.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "RenderingEngine/Renderer.h"
-#include "Vulkan/Buffer.h"
+#include "RenderingEngine/SharedData.h"
 #include "Vulkan/CommandBuffer.h"
 
 namespace Hermes
@@ -39,11 +39,13 @@ namespace Hermes
 	{
 		HERMES_PROFILE_FUNC();
 
-		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Framebuffer"))->GetDimensions();
+		const auto* Framebuffer = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Framebuffer"));
+		HERMES_ASSERT(Framebuffer);
+		auto FramebufferDimensions = Framebuffer->GetDimensions();
 		auto ViewportDimensions = Vec2(FramebufferDimensions);
 
 		if (!Pipeline)
-			CreatePipeline(*CallbackInfo.RenderPass);
+			CreatePipeline(Framebuffer->GetFormat());
 
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
 		auto& Metrics = CallbackInfo.Metrics;
@@ -92,7 +94,7 @@ namespace Hermes
 		Metrics.DrawCallCount++;
 	}
 
-	void UIPass::CreatePipeline(const Vulkan::RenderPass& RenderPass)
+	void UIPass::CreatePipeline(VkFormat ColorAttachmentFormat)
 	{
 		auto& Device = Renderer::GetDevice();
 		auto& ShaderCache = Renderer::GetShaderCache();
@@ -116,6 +118,6 @@ namespace Hermes
 			.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR }
 		};
 
-		Pipeline = Device.CreatePipeline(RenderPass, Desc);
+		Pipeline = Device.CreatePipeline(Desc, { &ColorAttachmentFormat, 1 }, std::nullopt);
 	}
 }

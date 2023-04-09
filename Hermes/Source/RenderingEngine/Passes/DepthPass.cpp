@@ -37,7 +37,9 @@ namespace Hermes
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
 		auto& Metrics = CallbackInfo.Metrics;
 
-		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Depth"))->GetDimensions();
+		const auto* DepthBuffer = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Depth"));
+		HERMES_ASSERT(DepthBuffer);
+		auto FramebufferDimensions = DepthBuffer->GetDimensions();
 		auto ViewportDimensions = Vec2(FramebufferDimensions);
 
 		const auto& GlobalSceneDataBuffer = Renderer::GetGlobalSceneDataBuffer();
@@ -46,7 +48,7 @@ namespace Hermes
 		for (const auto& DrawableMesh : CallbackInfo.GeometryList.GetMeshList())
 		{
 			auto& Material = DrawableMesh.Material;
-			auto& MaterialPipeline = Material->GetBaseMaterial().GetVertexPipeline();
+			auto& MaterialPipeline = Material->GetBaseMaterial().GetVertexOnlyPipeline(DepthBuffer->GetFormat());
 			const auto* Mesh = DrawableMesh.Mesh;
 
 			if (!Mesh)

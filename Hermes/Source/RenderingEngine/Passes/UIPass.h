@@ -1,9 +1,12 @@
 #pragma once
 
 #include "Core/Core.h"
-#include "RenderingEngine/SharedData.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
 #include "UIEngine/Widgets/Widget.h"
+#include "Vulkan/Buffer.h"
+#include "Vulkan/Descriptor.h"
+#include "Vulkan/Pipeline.h"
+#include "Vulkan/VulkanCore.h"
 
 namespace Hermes
 {
@@ -29,6 +32,6 @@ namespace Hermes
 
 		void PassCallback(const PassCallbackInfo& CallbackInfo);
 
-		void CreatePipeline(const Vulkan::RenderPass& RenderPass);
+		void CreatePipeline(VkFormat ColorAttachmentFormat);
 	};
 }

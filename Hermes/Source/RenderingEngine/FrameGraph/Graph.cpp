@@ -11,7 +11,6 @@
 #include "Vulkan/Buffer.h"
 #include "Vulkan/Fence.h"
 #include "Vulkan/CommandBuffer.h"
-#include "Vulkan/RenderPass.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Image.h"
 #include "Vulkan/Queue.h"
@@ -273,11 +272,6 @@ namespace Hermes
 		Resource.Image = std::move(Image);
 		Resource.View = std::move(View);
 		Resource.CurrentLayout = CurrentLayout;
-
-		// TODO : recreate render targets that were using this resource instead of all
-		// TODO : recreate render targets in Execute() on flag so that we do not recreate them multiple times
-		//        in the same frame if multiple resources were changed
-		RecreateFramebuffers();
 	}
 
 	FrameMetrics FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList, Rect2Dui Viewport)
@@ -293,10 +287,10 @@ namespace Hermes
 			CurrentViewport = Viewport;
 
 			RecreateResources();
-			RecreateFramebuffers();
 		}
 
 		std::vector<std::unique_ptr<Vulkan::Fence>> Fences;
+		std::vector<std::unique_ptr<Vulkan::CommandBuffer>> CommandBuffers;
 		for (const auto& PassName : PassExecutionOrder)
 		{
 			HERMES_PROFILE_SCOPE("Hermes::FrameGraph::Execute per pass loop");
@@ -309,28 +303,28 @@ namespace Hermes
 				QueueType = VK_QUEUE_COMPUTE_BIT;
 			auto& Queue = Renderer::GetDevice().GetQueue(QueueType);
 
-			auto& CommandBuffer = Pass.CommandBuffer;
+			auto CommandBuffer = Renderer::GetDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT).CreateCommandBuffer();
 			CommandBuffer->BeginRecording();
 
-			std::vector<VkImageMemoryBarrier> Barriers(Pass.AttachmentLayouts.size());
+			std::vector<VkImageMemoryBarrier> Barriers(Pass.ImageResourceLayouts.size());
 			size_t BarrierIndex = 0;
-			for (const auto& Attachment : Pass.AttachmentLayouts)
+			for (const auto& [ResourceName, Layout] : Pass.ImageResourceLayouts)
 			{
-				auto& Resource = ImageResources[Attachment.first];
+				auto& Resource = ImageResources[ResourceName];
 
 				Barriers[BarrierIndex].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 				Barriers[BarrierIndex].image = Resource.Image->GetImage();
 
 				Barriers[BarrierIndex].subresourceRange = Resource.Image->GetFullSubresourceRange();
 				Barriers[BarrierIndex].oldLayout = Resource.CurrentLayout;
-				Barriers[BarrierIndex].newLayout = Attachment.second;
+				Barriers[BarrierIndex].newLayout = Layout;
 
 				// TODO : this is a general solution that covers all required synchronization cases, but we should rather
 				// detect or require from user which types of operations would be performed and implement proper barrier
 				Barriers[BarrierIndex].srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
 				Barriers[BarrierIndex].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
 
-				Resource.CurrentLayout = Attachment.second;
+				Resource.CurrentLayout = Layout;
 				BarrierIndex++;
 			}
 			VkPipelineStageFlags ImageBarrierSourceStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
@@ -364,50 +358,47 @@ namespace Hermes
 
 			if (Scheme.Passes[PassName].Type == PassType::Graphics)
 			{
-				CommandBuffer->BeginRenderPass(*Pass.Pass, *Pass.Framebuffer, {
-					                               // const_cast because vector::data() returns const pointer by default
-					                               const_cast<VkClearValue*>(Pass.ClearColors.data()),
-					                               Pass.ClearColors.size()
-				                               });
+				VkRect2D RenderingArea = {
+					.offset = { 0, 0 },
+					.extent = { Viewport.Width(), Viewport.Height() }
+				};
+
+				std::vector<VkRenderingAttachmentInfo> ColorAttachmentsInfo;
+				for (const auto& [Name, Info] : Pass.ColorAttachments)
+					ColorAttachmentsInfo.push_back(Info);
+
+				auto DepthAttachmentInfo = Pass.DepthAttachment.has_value() ? std::make_optional(Pass.DepthAttachment.value().second) : std::nullopt;
+				CommandBuffer->BeginRendering(RenderingArea, ColorAttachmentsInfo, DepthAttachmentInfo, std::nullopt);
 			}
 
 			PassCallbackInfo CallbackInfo = {
-				*CommandBuffer,
-				Pass.Pass.get(),
-
-				Pass.ResourceMap,
-
-				Scene,
-				GeometryList,
-
-				Metrics,
+				.CommandBuffer = *CommandBuffer,
+				.Resources = Pass.ResourceMap,
+				.Scene = Scene,
+				.GeometryList = GeometryList,
+				.Metrics = Metrics,
 			};
 
 			Pass.Callback(CallbackInfo);
 
 			if (Scheme.Passes[PassName].Type == PassType::Graphics)
 			{
-				CommandBuffer->EndRenderPass();
+				CommandBuffer->EndRendering();
 			}
 			CommandBuffer->EndRecording();
 
 			auto Fence = Renderer::GetDevice().CreateFence();
 			Queue.SubmitCommandBuffer(*CommandBuffer, Fence.get());
 			Fences.push_back(std::move(Fence));
+
+			// NOTE: this way we can delay the destruction of command buffer until the end of function scope after we wait for it to finish
+			CommandBuffers.push_back(std::move(CommandBuffer));
 		}
 
 		for (const auto& Fence : Fences)
 			Fence->Wait(UINT64_MAX);
 
 		return Metrics;
-	}
-
-	const Vulkan::RenderPass& FrameGraph::GetRenderPassObject(const String& Name) const
-	{
-		HERMES_ASSERT(Passes.contains(Name));
-		auto& Result = Passes.at(Name).Pass;
-		HERMES_ASSERT(Result);
-		return *Result;
 	}
 
 	std::pair<const Vulkan::Image*, VkImageLayout> FrameGraph::GetFinalImage() const
@@ -445,95 +436,59 @@ namespace Hermes
 			BufferResources[Resource.Name] = std::move(Container);
 		}
 
-		for (const auto& Pass : Scheme.Passes)
+		for (const auto& [PassName, PassDesc] : Scheme.Passes)
 		{
-			std::vector<std::pair<VkAttachmentDescription, Vulkan::AttachmentType>> RenderPassAttachments;
-			for (const auto& Attachment : Pass.second.Attachments)
-			{
-				if (Attachment.Binding == BindingMode::SampledImage)
-					continue;
-
-				auto FullAttachmentName = Pass.first + '.' + Attachment.Name;
-				bool IsUsedLater = Scheme.ForwardLinks.contains(FullAttachmentName);
-				VkAttachmentDescription AttachmentDesc = {};
-				AttachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
-				AttachmentDesc.format = TraverseAttachmentDataFormat(FullAttachmentName);
-				// NOTE : because the moment of layout transition after end of the render pass
-				// is not synchronized we won't use this feature and would rather perform
-				// layout transition ourselves using resource barriers
-				AttachmentDesc.initialLayout = AttachmentDesc.finalLayout =
-					PickImageLayoutForBindingMode(Attachment.Binding);
-				AttachmentDesc.loadOp = Attachment.LoadOp;
-				AttachmentDesc.stencilLoadOp = Attachment.StencilLoadOp;
-				if (IsUsedLater)
-				{
-					AttachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-					AttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-				}
-				else
-				{
-					AttachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-					AttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-				}
-
-				Vulkan::AttachmentType Type;
-				switch (Attachment.Binding)
-				{
-				case BindingMode::ColorAttachment:
-					Type = Vulkan::AttachmentType::Color;
-					break;
-				case BindingMode::DepthStencilAttachment:
-					Type = Vulkan::AttachmentType::DepthStencil;
-					break;
-				default:
-					HERMES_ASSERT_LOG(false, "Unknown attachment binding mode")
-				}
-
-				RenderPassAttachments.emplace_back(AttachmentDesc, Type);
-			}
-
-			const auto& GraphicsQueue = Renderer::GetDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
 			PassContainer NewPassContainer = {};
-			if (Pass.second.Type == PassType::Graphics)
-			{
-				HERMES_ASSERT(!RenderPassAttachments.empty());
-				NewPassContainer.Pass = Renderer::GetDevice().CreateRenderPass(RenderPassAttachments);
-			}
-			NewPassContainer.CommandBuffer = GraphicsQueue.CreateCommandBuffer(true);
-			NewPassContainer.Callback = Pass.second.Callback;
+			NewPassContainer.Callback = PassDesc.Callback;
 
 			// TODO : clean this code up
-			NewPassContainer.ClearColors.reserve(Pass.second.Attachments.size());
-			NewPassContainer.AttachmentLayouts.reserve(Pass.second.Attachments.size());
-			for (const auto& Attachment : Pass.second.Attachments)
+			NewPassContainer.ClearColors.reserve(PassDesc.Attachments.size());
+			NewPassContainer.ImageResourceLayouts.reserve(PassDesc.Attachments.size());
+			for (const auto& Attachment : PassDesc.Attachments)
 			{
-				String FullResourceName = TraverseResourceName(Pass.first + "." + Attachment.Name);
+				String FullResourceName = TraverseResourceName(PassName + "." + Attachment.Name);
 
-				String PassName, ResourceOwnName;
-				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
+				String Dummy, ResourceOwnName;
+				SplitResourceName(FullResourceName, Dummy, ResourceOwnName);
+				
+				VkRenderingAttachmentInfo AttachmentInfo = {
+					.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+					.pNext = nullptr,
+					.imageView = VK_NULL_HANDLE,
+					.imageLayout = PickImageLayoutForBindingMode(Attachment.Binding),
+					.resolveMode = VK_RESOLVE_MODE_NONE,
+					.resolveImageView = VK_NULL_HANDLE,
+					.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+					.loadOp = Attachment.LoadOp,
+					.storeOp = VK_ATTACHMENT_STORE_OP_STORE, // FIXME: can we really just set it to a fixed value
+					.clearValue = Attachment.ClearColor
+				};
+
+				if (Attachment.Binding == BindingMode::ColorAttachment)
+					NewPassContainer.ColorAttachments.emplace_back(ResourceOwnName, AttachmentInfo);
+				else if (Attachment.Binding == BindingMode::DepthStencilAttachment)
+					NewPassContainer.DepthAttachment = std::make_pair(ResourceOwnName, AttachmentInfo);
 
 				const auto& Resource = ImageResources[ResourceOwnName];
 
 				NewPassContainer.ClearColors.push_back(Attachment.ClearColor);
-				
 				NewPassContainer.ResourceMap[Attachment.Name] = Resource.View.get();
-				NewPassContainer.AttachmentLayouts.emplace_back(ResourceOwnName,
-				                                                PickImageLayoutForBindingMode(Attachment.Binding));
+				NewPassContainer.ImageResourceLayouts.emplace_back(ResourceOwnName, PickImageLayoutForBindingMode(Attachment.Binding));
 			}
 
-			for (const auto& BufferInput : Pass.second.BufferInputs)
+			for (const auto& BufferInput : PassDesc.BufferInputs)
 			{
-				String FullResourceName = TraverseResourceName(Pass.first + "." + BufferInput.Name);
+				String FullResourceName = TraverseResourceName(PassName + "." + BufferInput.Name);
 
-				String PassName, ResourceOwnName;
-				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
+				String Dummy, ResourceOwnName;
+				SplitResourceName(FullResourceName, Dummy, ResourceOwnName);
 
 				NewPassContainer.ResourceMap[BufferInput.Name] = BufferResources.at(ResourceOwnName).Buffer.get();
 
 				NewPassContainer.InputBufferResourceNames.push_back(std::move(ResourceOwnName));
 			}
 
-			Passes[Pass.first] = std::move(NewPassContainer);
+			Passes[PassName] = std::move(NewPassContainer);
 		}
 
 		HERMES_ASSERT_LOG(Scheme.BackwardLinks.contains("$.FINAL_IMAGE"),
@@ -756,42 +711,33 @@ namespace Hermes
 				Resource.second.CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			}
 		}
-	}
 
-	void FrameGraph::RecreateFramebuffers()
-	{
-		// TODO : only recreate render targets if their images were recreated
-		for (const auto& Pass : Scheme.Passes)
+		// Now we need to update VkRenderingAttachmentInfos for every render pass we have
+		for (auto& [PassName, Pass] : Passes)
 		{
-			std::vector<const Vulkan::ImageView*> Attachments;
-			Vec2ui FramebufferDimensions = {};
-			Attachments.reserve(Pass.second.Attachments.size());
-
-			for (const auto& Attachment : Pass.second.Attachments)
+			for (auto& [ResourceName, AttachmentInfo] : Pass.ColorAttachments)
 			{
-				String FullResourceName = TraverseResourceName(Pass.first + "." + Attachment.Name);
+				auto& Resource = ImageResources.at(ResourceName);
+				AttachmentInfo.imageView = Resource.View->GetImageView();
+			}
 
-				String PassName, ResourceOwnName;
-				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
+			if (Pass.DepthAttachment.has_value())
+			{
+				auto& Resource = ImageResources.at(Pass.DepthAttachment.value().first);
+				Pass.DepthAttachment.value().second.imageView = Resource.View->GetImageView();
+			}
 
-				const auto& Resource = ImageResources[ResourceOwnName];
-				Passes[Pass.first].ResourceMap[Attachment.Name] = Resource.View.get();
-
-				// NOTE: sampled images don't need to be added to the framebuffer
-				if (Attachment.Binding == BindingMode::SampledImage)
+			for (auto& [ResourceName, Value] : Pass.ResourceMap)
+			{
+				if (!std::holds_alternative<const Vulkan::ImageView*>(Value))
 					continue;
 
-				Attachments.push_back(Resource.View.get());
-				if (!Resource.IsExternal)
-				{
-					HERMES_ASSERT(FramebufferDimensions == Vec2ui{} || FramebufferDimensions == Resource.Image->
-					              GetDimensions());
-					FramebufferDimensions = Resource.Image->GetDimensions();
-				}
-			}
-			if (Pass.second.Type == PassType::Graphics)
-			{
-				Passes[Pass.first].Framebuffer = Renderer::GetDevice().CreateFramebuffer(*Passes[Pass.first].Pass, Attachments, FramebufferDimensions);
+				// NOTE: taking the substring to skip the '$.' part of the resource name
+				auto ResourceOwnName = TraverseResourceName(PassName + "." + ResourceName).substr(2);
+				HERMES_ASSERT(ImageResources.contains(ResourceOwnName));
+				const auto* View = ImageResources[ResourceOwnName].View.get();
+
+				Value = View;
 			}
 		}
 	}

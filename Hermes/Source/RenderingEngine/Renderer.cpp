@@ -274,18 +274,6 @@ namespace Hermes
 		return *GRendererState->GlobalDataDescriptorSetLayout;
 	}
 
-	const Vulkan::RenderPass& Renderer::GetGraphicsRenderPassObject()
-	{
-		HERMES_ASSERT(GRendererState);
-		return GRendererState->FrameGraph->GetRenderPassObject("ForwardPass");
-	}
-
-	const Vulkan::RenderPass& Renderer::GetVertexRenderPassObject()
-	{
-		HERMES_ASSERT(GRendererState);
-		return GRendererState->FrameGraph->GetRenderPassObject("DepthPass");
-	}
-
 	const Vulkan::Buffer& Renderer::GetGlobalSceneDataBuffer()
 	{
 		HERMES_ASSERT(GRendererState);

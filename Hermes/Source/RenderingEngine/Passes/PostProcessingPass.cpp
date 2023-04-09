@@ -65,11 +65,15 @@ namespace Hermes
 	void PostProcessingPass::PassCallback(const PassCallbackInfo& CallbackInfo)
 	{
 		HERMES_PROFILE_FUNC();
-		if (!Pipeline)
-			CreatePipeline(*CallbackInfo.RenderPass);
 
-		auto FramebufferDimensions = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("InputColor"))->GetDimensions();
+		const auto* Framebuffer = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("OutputColor"));
+		HERMES_ASSERT(Framebuffer);
+
+		auto FramebufferDimensions = Framebuffer->GetDimensions();
 		auto ViewportDimensions = Vec2(FramebufferDimensions);
+
+		if (!Pipeline)
+			CreatePipeline(Framebuffer->GetFormat());
 
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
 		auto& Metrics = CallbackInfo.Metrics;
@@ -89,7 +93,7 @@ namespace Hermes
 		Metrics.DrawCallCount++;
 	}
 
-	void PostProcessingPass::CreatePipeline(const Vulkan::RenderPass& RenderPass)
+	void PostProcessingPass::CreatePipeline(VkFormat ColorAttachmentFormat)
 	{
 		auto& ShaderCache = Renderer::GetShaderCache();
 
@@ -108,6 +112,6 @@ namespace Hermes
 		Desc.IsDepthWriteEnabled = false;
 		Desc.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
-		Pipeline = Renderer::GetDevice().CreatePipeline(RenderPass, Desc);
+		Pipeline = Renderer::GetDevice().CreatePipeline(Desc, { &ColorAttachmentFormat, 1}, std::nullopt);
 	}
 }

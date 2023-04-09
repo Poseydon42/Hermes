@@ -16,6 +16,27 @@
 
 namespace Hermes::Vulkan
 {
+	template<typename StructureType>
+	StructureType* TryFindExtensionStructure(void* Start, VkStructureType Type)
+	{
+		struct VulkanStructureHeader
+		{
+			VkStructureType Type;
+			VulkanStructureHeader* Next;
+		};
+
+		auto* Current = static_cast<VulkanStructureHeader*>(Start);
+		while (Current)
+		{
+			if (Current->Type == Type)
+				return reinterpret_cast<StructureType*>(Current);
+
+			Current = Current->Next;
+		}
+
+		return nullptr;
+	}
+
 	Device::VkDeviceHolder::~VkDeviceHolder()
 	{
 		vkDeviceWaitIdle(Device);
@@ -24,7 +45,7 @@ namespace Hermes::Vulkan
 	}
 
 	Device::Device(std::shared_ptr<Instance::VkInstanceHolder> InInstance, VkPhysicalDevice InPhysicalDevice,
-	               const IPlatformWindow& InWindow)
+		const IPlatformWindow& InWindow)
 		: Holder(std::make_shared<VkDeviceHolder>())
 		, Window(InWindow)
 	{
@@ -81,7 +102,7 @@ namespace Hermes::Vulkan
 		vkEnumerateDeviceExtensionProperties(Holder->PhysicalDevice, nullptr, &AvailableExtensionsCount, nullptr);
 		AvailableExtensions.resize(AvailableExtensionsCount);
 		vkEnumerateDeviceExtensionProperties(Holder->PhysicalDevice, nullptr, &AvailableExtensionsCount,
-		                                     AvailableExtensions.data());
+			AvailableExtensions.data());
 
 		bool SwapchainExtensionSupported = false;
 		bool MemoryBudgetExtensionSupported = false;
@@ -102,10 +123,11 @@ namespace Hermes::Vulkan
 		if (!SwapchainExtensionSupported)
 		{
 			PlatformMisc::ExitWithMessageBox(1, "Vulkan error",
-			                                 "Selected Vulkan device does not support VK_KHR_swapchain extension. Update your GPU driver and try again.");
+				"Selected Vulkan device does not support VK_KHR_swapchain extension. Update your GPU driver and try again.");
 		}
 		HERMES_LOG_INFO("VK_EXT_memory_budget extension support: %s",
-		                MemoryBudgetExtensionSupported ? "true" : "false");
+			MemoryBudgetExtensionSupported ? "true" : "false");
+
 
 		VkDeviceCreateInfo CreateInfo = {};
 		CreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -118,6 +140,24 @@ namespace Hermes::Vulkan
 		VkPhysicalDeviceFeatures AvailableFeatures;
 		vkGetPhysicalDeviceFeatures(Holder->PhysicalDevice, &AvailableFeatures);
 		IsAnisotropyAvailable = AvailableFeatures.samplerAnisotropy;
+		
+		VkPhysicalDeviceVulkan13Features Available13Features = {};
+		Available13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+
+		VkPhysicalDeviceFeatures2 AvailableFeatures2 = {};
+		AvailableFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		AvailableFeatures2.pNext = &Available13Features;
+
+		vkGetPhysicalDeviceFeatures2(Holder->PhysicalDevice, &AvailableFeatures2);
+
+		HERMES_ASSERT_LOG(Available13Features.dynamicRendering, "Dynamic rendering is not supported on the selected Vulkan device");
+
+		VkPhysicalDeviceDynamicRenderingFeatures DynamicRenderingFeature = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
+			.pNext = nullptr,
+			.dynamicRendering = VK_TRUE
+		};
+		CreateInfo.pNext = &DynamicRenderingFeature;
 
 		VkPhysicalDeviceFeatures RequiredFeatures = {};
 		RequiredFeatures.samplerAnisotropy = IsAnisotropyAvailable;

@@ -21,8 +21,7 @@ namespace Hermes::Vulkan
 		case CubemapSide::NegativeZ:
 			return 5;
 		default:
-			HERMES_ASSERT(false);
-			return 0;
+			HERMES_ASSERT(false)
 		}
 	}
 
@@ -191,8 +190,9 @@ namespace Hermes::Vulkan
 		}
 	}
 
-	ImageView::ImageView(std::shared_ptr<Image::VkImageHolder> InImage, const VkImageSubresourceRange& Range, VkFormat Format, bool IsCubemap)
+	ImageView::ImageView(std::shared_ptr<Image::VkImageHolder> InImage, const VkImageSubresourceRange& Range, VkFormat InFormat, bool IsCubemap)
 		: Image(std::move(InImage))
+		, Format(InFormat)
 	{
 		VkImageViewCreateInfo CreateInfo = {};
 		CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -221,5 +221,10 @@ namespace Hermes::Vulkan
 	Vec2ui ImageView::GetDimensions() const
 	{
 		return Image->Dimensions;
+	}
+
+	VkFormat ImageView::GetFormat() const
+	{
+		return Format;
 	}
 }

@@ -139,17 +139,20 @@ namespace Hermes::Vulkan
 		MAKE_NON_MOVABLE(ImageView)
 
 	public:
-		ImageView(std::shared_ptr<Image::VkImageHolder> InImage, const VkImageSubresourceRange& Range, VkFormat Format, bool IsCubemap);
+		ImageView(std::shared_ptr<Image::VkImageHolder> InImage, const VkImageSubresourceRange& Range, VkFormat InFormat, bool IsCubemap);
 
 		~ImageView();
 
 		VkImageView GetImageView() const;
-
+		
 		Vec2ui GetDimensions() const;
+
+		VkFormat GetFormat() const;
 
 	private:
 		std::shared_ptr<Image::VkImageHolder> Image;
 
 		VkImageView View = VK_NULL_HANDLE;
+		VkFormat Format;
 	};
 }

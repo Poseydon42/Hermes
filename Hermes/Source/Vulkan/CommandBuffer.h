@@ -31,7 +31,11 @@ namespace Hermes::Vulkan
 		void BeginRenderPass(const RenderPass& RenderPass, const Framebuffer& Framebuffer,
 		                     std::span<VkClearValue> ClearColors);
 
+		void BeginRendering(VkRect2D RenderingArea, std::span<const VkRenderingAttachmentInfo> ColorAttachments, std::optional<VkRenderingAttachmentInfo> DepthAttachment, std::optional<VkRenderingAttachmentInfo> StencilAttachment);
+
 		void EndRenderPass();
+
+		void EndRendering();
 
 		void BindPipeline(const Pipeline& Pipeline);
 

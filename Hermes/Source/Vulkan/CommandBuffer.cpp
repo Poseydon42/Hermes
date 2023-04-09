@@ -57,9 +57,32 @@ namespace Hermes::Vulkan
 		vkCmdBeginRenderPass(Handle, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 	}
 
+	void CommandBuffer::BeginRendering(VkRect2D RenderingArea, std::span<const VkRenderingAttachmentInfo> ColorAttachments, std::optional<VkRenderingAttachmentInfo> DepthAttachment, std::optional<VkRenderingAttachmentInfo> StencilAttachment)
+	{
+		VkRenderingInfo RenderingInfo = {
+			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+			.pNext = nullptr,
+			.flags = 0,
+			.renderArea = RenderingArea,
+			.layerCount = 1,
+			.viewMask = 0,
+			.colorAttachmentCount = static_cast<uint32>(ColorAttachments.size()),
+			.pColorAttachments = ColorAttachments.data(),
+			.pDepthAttachment = DepthAttachment.has_value() ? &DepthAttachment.value() : nullptr,
+			.pStencilAttachment = StencilAttachment.has_value() ? &StencilAttachment.value() : nullptr
+		};
+
+		vkCmdBeginRendering(Handle, &RenderingInfo);
+	}
+
 	void CommandBuffer::EndRenderPass()
 	{
 		vkCmdEndRenderPass(Handle);
+	}
+
+	void CommandBuffer::EndRendering()
+	{
+		vkCmdEndRendering(Handle);
 	}
 
 	void CommandBuffer::BindPipeline(const Pipeline& Pipeline)

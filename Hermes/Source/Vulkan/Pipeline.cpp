@@ -8,6 +8,33 @@ namespace Hermes::Vulkan
 {
 	Pipeline::Pipeline(std::shared_ptr<Device::VkDeviceHolder> InDevice, const RenderPass& RenderPass,
 	                   const PipelineDescription& Description)
+		: Pipeline(std::move(InDevice), Description, &RenderPass, {}, std::nullopt)
+	{
+		
+	}
+
+	Pipeline::Pipeline(std::shared_ptr<Device::VkDeviceHolder> InDevice, const PipelineDescription& Description, std::span<const VkFormat> ColorAttachmentFormats, std::optional<VkFormat> DepthAttachmentFormat)
+		: Pipeline(std::move(InDevice), Description, nullptr, ColorAttachmentFormats, DepthAttachmentFormat)
+	{
+	}
+
+	Pipeline::~Pipeline()
+	{
+		vkDestroyPipelineLayout(Device->Device, Layout, GVulkanAllocator);
+		vkDestroyPipeline(Device->Device, Handle, GVulkanAllocator);
+	}
+
+	VkPipeline Pipeline::GetPipeline() const
+	{
+		return Handle;
+	}
+
+	VkPipelineLayout Pipeline::GetPipelineLayout() const
+	{
+		return Layout;
+	}
+
+	Pipeline::Pipeline(std::shared_ptr<Device::VkDeviceHolder> InDevice, const PipelineDescription& Description, const RenderPass* RenderPass, std::span<const VkFormat> ColorAttachmentFormats, std::optional<VkFormat> DepthAttachmentFormat)
 		: Device(std::move(InDevice))
 	{
 		VkPipelineLayoutCreateInfo LayoutCreateInfo = {};
@@ -75,15 +102,19 @@ namespace Hermes::Vulkan
 		DepthStencilCreateInfo.depthBoundsTestEnable = false;
 		DepthStencilCreateInfo.stencilTestEnable = false; // TODO : implement
 
+		uint32 ColorAttachmentCount = 0;
+		if (RenderPass)
+			ColorAttachmentCount = RenderPass->GetColorAttachmentCount();
+		else
+			ColorAttachmentCount = static_cast<uint32>(ColorAttachmentFormats.size());
+
 		VkPipelineColorBlendStateCreateInfo ColorBlendCreateInfo = {};
 		std::vector<VkPipelineColorBlendAttachmentState> AttachmentBlendStates;
-		AttachmentBlendStates.reserve(RenderPass.GetColorAttachmentCount());
-		for (uint32 AttachmentIndex = 0; AttachmentIndex < RenderPass.GetColorAttachmentCount(); AttachmentIndex++)
+		for (uint32 AttachmentIndex = 0; AttachmentIndex < ColorAttachmentCount; AttachmentIndex++)
 		{
 			VkPipelineColorBlendAttachmentState NewAttachmentBlendState = {};
 			NewAttachmentBlendState.blendEnable = false;
-			NewAttachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-				VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			NewAttachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 			AttachmentBlendStates.push_back(NewAttachmentBlendState);
 		}
 		ColorBlendCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -94,7 +125,7 @@ namespace Hermes::Vulkan
 		DynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 		DynamicStateInfo.dynamicStateCount = static_cast<uint32>(Description.DynamicStates.size());
 		DynamicStateInfo.pDynamicStates = Description.DynamicStates.data();
-
+		
 		VkGraphicsPipelineCreateInfo CreateInfo = {};
 		CreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		CreateInfo.stageCount = static_cast<uint32>(ShaderCreateInfos.size());
@@ -109,27 +140,26 @@ namespace Hermes::Vulkan
 		CreateInfo.pColorBlendState = &ColorBlendCreateInfo;
 		CreateInfo.pDynamicState = &DynamicStateInfo;
 		CreateInfo.layout = Layout;
-		CreateInfo.renderPass = RenderPass.GetRenderPass();
+		CreateInfo.renderPass = RenderPass ? RenderPass->GetRenderPass() : VK_NULL_HANDLE;
 		CreateInfo.subpass = 0;
 		CreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 		CreateInfo.basePipelineIndex = -1;
 
+		VkPipelineRenderingCreateInfo PipelineRenderingCreateInfo;
+		if (DepthAttachmentFormat.has_value() || !ColorAttachmentFormats.empty())
+		{
+			PipelineRenderingCreateInfo = {
+				.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+				.pNext = nullptr,
+				.viewMask = 0,
+				.colorAttachmentCount = static_cast<uint32>(ColorAttachmentFormats.size()),
+				.pColorAttachmentFormats = ColorAttachmentFormats.data(),
+				.depthAttachmentFormat = DepthAttachmentFormat.value_or(VK_FORMAT_UNDEFINED),
+				.stencilAttachmentFormat = VK_FORMAT_UNDEFINED
+			};
+			CreateInfo.pNext = &PipelineRenderingCreateInfo;
+		}
+
 		vkCreateGraphicsPipelines(Device->Device, VK_NULL_HANDLE, 1, &CreateInfo, GVulkanAllocator, &Handle);
-	}
-
-	Pipeline::~Pipeline()
-	{
-		vkDestroyPipelineLayout(Device->Device, Layout, GVulkanAllocator);
-		vkDestroyPipeline(Device->Device, Handle, GVulkanAllocator);
-	}
-
-	VkPipeline Pipeline::GetPipeline() const
-	{
-		return Handle;
-	}
-
-	VkPipelineLayout Pipeline::GetPipelineLayout() const
-	{
-		return Layout;
 	}
 }

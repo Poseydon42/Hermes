@@ -72,8 +72,9 @@ namespace Hermes::Vulkan
 		MAKE_NON_MOVABLE(Pipeline)
 
 	public:
-		Pipeline(std::shared_ptr<Device::VkDeviceHolder> InDevice, const RenderPass& RenderPass,
-		         const PipelineDescription& Description);
+		Pipeline(std::shared_ptr<Device::VkDeviceHolder> InDevice, const RenderPass& RenderPass, const PipelineDescription& Description);
+
+		Pipeline(std::shared_ptr<Device::VkDeviceHolder> InDevice, const PipelineDescription& Description, std::span<const VkFormat> ColorAttachmentFormats, std::optional<VkFormat> DepthAttachmentFormat);
 
 		~Pipeline();
 
@@ -82,6 +83,8 @@ namespace Hermes::Vulkan
 		VkPipelineLayout GetPipelineLayout() const;
 
 	private:
+		Pipeline(std::shared_ptr<Device::VkDeviceHolder> InDevice, const PipelineDescription& Description, const RenderPass* RenderPass, std::span<const VkFormat> ColorAttachmentFormats, std::optional<VkFormat> DepthAttachmentFormat);
+
 		std::shared_ptr<Device::VkDeviceHolder> Device;
 
 		VkPipeline Handle = VK_NULL_HANDLE;

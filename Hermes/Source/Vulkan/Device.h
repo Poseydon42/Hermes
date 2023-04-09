@@ -1,5 +1,8 @@
 ﻿#pragma once
 
+#include <optional>
+#include <span>
+
 #include "Core/Core.h"
 #include "Core/Misc/DefaultConstructors.h"
 #include "Core/Misc/NonCopyableMovable.h"
@@ -44,8 +47,9 @@ namespace Hermes::Vulkan
 		std::unique_ptr<RenderPass> CreateRenderPass(
 			const std::vector<std::pair<VkAttachmentDescription, AttachmentType>>& Attachments) const;
 
-		std::unique_ptr<Pipeline> CreatePipeline(const RenderPass& RenderPass,
-		                                         const PipelineDescription& Description) const;
+		std::unique_ptr<Pipeline> CreatePipeline(const RenderPass& RenderPass, const PipelineDescription& Description) const;
+
+		std::unique_ptr<Pipeline> CreatePipeline(const PipelineDescription& Description, std::span<const VkFormat> ColorAttachmentFormats, std::optional<VkFormat> DepthAttachmentFormat);
 
 		std::unique_ptr<Framebuffer> CreateFramebuffer(const RenderPass& RenderPass,
 		                                               const std::vector<const ImageView*>& Attachments,

@@ -269,6 +269,11 @@ namespace Hermes::Vulkan
 		return std::make_unique<Pipeline>(Holder, RenderPass, Description);
 	}
 
+	std::unique_ptr<Pipeline> Device::CreatePipeline(const PipelineDescription& Description, std::span<const VkFormat> ColorAttachmentFormats, std::optional<VkFormat> DepthAttachmentFormat)
+	{
+		return std::make_unique<Pipeline>(Holder, Description, ColorAttachmentFormats, DepthAttachmentFormat);
+	}
+
 	std::unique_ptr<Framebuffer> Device::CreateFramebuffer(const RenderPass& RenderPass,
 	                                                       const std::vector<const ImageView*>& Attachments,
 	                                                       Vec2ui Dimensions) const

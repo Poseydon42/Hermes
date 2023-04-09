@@ -17,7 +17,7 @@ namespace Hermes
 		auto& DescriptorAllocator = Renderer::GetDescriptorAllocator();
 
 		VkDescriptorSetLayoutBinding InputColorBinding = {};
-		InputColorBinding.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+		InputColorBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		InputColorBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		InputColorBinding.binding = 0;
 		InputColorBinding.descriptorCount = 1;
@@ -25,12 +25,26 @@ namespace Hermes
 		DescriptorLayout = Device.CreateDescriptorSetLayout({ InputColorBinding });
 		DescriptorSet = DescriptorAllocator.Allocate(*DescriptorLayout);
 
+		Vulkan::SamplerDescription InputSamplerDesc = {
+			.MagnificationFilter = VK_FILTER_NEAREST,
+			.MinificationFilter = VK_FILTER_NEAREST,
+			.MipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST,
+			.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+			.CoordinateSystem = Vulkan::CoordinateSystem::Normalized,
+			.Anisotropy = false,
+			.AnisotropyLevel = 0.0f,
+			.MinLOD = 0.0f,
+			.MaxLOD = 0.0f,
+			.LODBias = 0.0f
+		};
+
+		InputColorSampler = Device.CreateSampler(InputSamplerDesc);
 
 		Attachment InputColor = {};
 		InputColor.Name = "InputColor";
 		InputColor.LoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		InputColor.StencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		InputColor.Binding = BindingMode::InputAttachment;
+		InputColor.Binding = BindingMode::SampledImage;
 
 		Attachment OutputColor = {};
 		OutputColor.Name = "OutputColor";
@@ -61,9 +75,7 @@ namespace Hermes
 		auto& Metrics = CallbackInfo.Metrics;
 
 		HERMES_ASSERT(CallbackInfo.Resources.contains("InputColor"));
-		DescriptorSet->UpdateWithImage(0, 0,
-		                               *std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("InputColor")),
-		                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		DescriptorSet->UpdateWithImageAndSampler(0, 0, *std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("InputColor")), *InputColorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		CommandBuffer.BindPipeline(*Pipeline);
 		Metrics.PipelineBindCount++;

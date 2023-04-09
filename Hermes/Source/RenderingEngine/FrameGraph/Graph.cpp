@@ -36,7 +36,7 @@ namespace Hermes
 			return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		case BindingMode::ColorAttachment:
 			return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		case BindingMode::InputAttachment:
+		case BindingMode::SampledImage:
 			return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		}
 		HERMES_ASSERT(false)
@@ -450,6 +450,9 @@ namespace Hermes
 			std::vector<std::pair<VkAttachmentDescription, Vulkan::AttachmentType>> RenderPassAttachments;
 			for (const auto& Attachment : Pass.second.Attachments)
 			{
+				if (Attachment.Binding == BindingMode::SampledImage)
+					continue;
+
 				auto FullAttachmentName = Pass.first + '.' + Attachment.Name;
 				bool IsUsedLater = Scheme.ForwardLinks.contains(FullAttachmentName);
 				VkAttachmentDescription AttachmentDesc = {};
@@ -481,9 +484,6 @@ namespace Hermes
 					break;
 				case BindingMode::DepthStencilAttachment:
 					Type = Vulkan::AttachmentType::DepthStencil;
-					break;
-				case BindingMode::InputAttachment:
-					Type = Vulkan::AttachmentType::Input;
 					break;
 				default:
 					HERMES_ASSERT_LOG(false, "Unknown attachment binding mode")
@@ -651,8 +651,8 @@ namespace Hermes
 			case BindingMode::ColorAttachment:
 				Result |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 				break;
-			case BindingMode::InputAttachment:
-				Result |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+			case BindingMode::SampledImage:
+				Result |= VK_IMAGE_USAGE_SAMPLED_BIT;
 				break;
 			case BindingMode::DepthStencilAttachment:
 				Result |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -775,6 +775,12 @@ namespace Hermes
 				SplitResourceName(FullResourceName, PassName, ResourceOwnName);
 
 				const auto& Resource = ImageResources[ResourceOwnName];
+				Passes[Pass.first].ResourceMap[Attachment.Name] = Resource.View.get();
+
+				// NOTE: sampled images don't need to be added to the framebuffer
+				if (Attachment.Binding == BindingMode::SampledImage)
+					continue;
+
 				Attachments.push_back(Resource.View.get());
 				if (!Resource.IsExternal)
 				{
@@ -782,7 +788,6 @@ namespace Hermes
 					              GetDimensions());
 					FramebufferDimensions = Resource.Image->GetDimensions();
 				}
-				Passes[Pass.first].ResourceMap[Attachment.Name] = Resource.View.get();
 			}
 			if (Pass.second.Type == PassType::Graphics)
 			{

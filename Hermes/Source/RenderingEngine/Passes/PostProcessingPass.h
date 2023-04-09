@@ -7,6 +7,7 @@
 #include "Core/Misc/DefaultConstructors.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
 #include "Vulkan/Descriptor.h"
+#include "Vulkan/Sampler.h"
 
 namespace Hermes
 {
@@ -28,6 +29,7 @@ namespace Hermes
 		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
 		
 		std::unique_ptr<Vulkan::Pipeline> Pipeline;
+		std::unique_ptr<Vulkan::Sampler> InputColorSampler;
 
 		PassDesc Description;
 

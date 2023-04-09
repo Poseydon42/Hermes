@@ -49,11 +49,11 @@ namespace Hermes
 		uint32 Size = 0;
 	};
 
-	enum class BindingMode : uint32_t
+	enum class BindingMode
 	{
-		InputAttachment = 0,
-		ColorAttachment = 1,
-		DepthStencilAttachment = 2,
+		SampledImage,
+		ColorAttachment,
+		DepthStencilAttachment
 	};
 
 	struct Attachment

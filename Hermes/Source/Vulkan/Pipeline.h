@@ -52,6 +52,14 @@ namespace Hermes::Vulkan
 		VkFrontFace FaceDirection;
 
 		/*
+		 * Blending
+		 *
+		 * NOTE: if this vector is uninitialized then pipeline will be constructed with color blending disabled
+		 */
+		std::vector<VkPipelineColorBlendAttachmentState> AttachmentColorBlending;
+		float BlendingConstants[4];
+
+		/*
 		 * Depth-stencil
 		 */
 		bool IsDepthTestEnabled;
@@ -62,8 +70,6 @@ namespace Hermes::Vulkan
 		 * Dynamic states (things that can be changed before every draw call)
 		 */
 		std::vector<VkDynamicState> DynamicStates;
-
-		// TODO: add other aspects of the pipeline description (e.g. tessellation, depth bias, color blend etc.)
 	};
 
 	class HERMES_API Pipeline

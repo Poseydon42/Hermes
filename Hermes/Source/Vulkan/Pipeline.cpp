@@ -109,17 +109,26 @@ namespace Hermes::Vulkan
 			ColorAttachmentCount = static_cast<uint32>(ColorAttachmentFormats.size());
 
 		VkPipelineColorBlendStateCreateInfo ColorBlendCreateInfo = {};
-		std::vector<VkPipelineColorBlendAttachmentState> AttachmentBlendStates;
-		for (uint32 AttachmentIndex = 0; AttachmentIndex < ColorAttachmentCount; AttachmentIndex++)
-		{
-			VkPipelineColorBlendAttachmentState NewAttachmentBlendState = {};
-			NewAttachmentBlendState.blendEnable = false;
-			NewAttachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-			AttachmentBlendStates.push_back(NewAttachmentBlendState);
-		}
 		ColorBlendCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+
+		std::vector<VkPipelineColorBlendAttachmentState> AttachmentBlendStates = Description.AttachmentColorBlending;
+		// NOTE: if the caller did not specify colo blending states, we need to default to no blending ourselves
+		if (AttachmentBlendStates.empty())
+		{
+			for (uint32 AttachmentIndex = 0; AttachmentIndex < ColorAttachmentCount; AttachmentIndex++)
+			{
+				VkPipelineColorBlendAttachmentState NewAttachmentBlendState = {};
+				NewAttachmentBlendState.blendEnable = false;
+				NewAttachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+				AttachmentBlendStates.push_back(NewAttachmentBlendState);
+			}
+		}
 		ColorBlendCreateInfo.attachmentCount = static_cast<uint32>(AttachmentBlendStates.size());
 		ColorBlendCreateInfo.pAttachments = AttachmentBlendStates.data();
+		ColorBlendCreateInfo.blendConstants[0] = Description.BlendingConstants[0];
+		ColorBlendCreateInfo.blendConstants[1] = Description.BlendingConstants[1];
+		ColorBlendCreateInfo.blendConstants[2] = Description.BlendingConstants[2];
+		ColorBlendCreateInfo.blendConstants[3] = Description.BlendingConstants[3];
 
 		VkPipelineDynamicStateCreateInfo DynamicStateInfo = {};
 		DynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;

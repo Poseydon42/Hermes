@@ -19,8 +19,6 @@ namespace Hermes
 		Invalid = 0xFF
 	};
 
-	class Resource;
-
 	using AssetHandle = uint32;
 	constexpr AssetHandle GInvalidAssetHandle = 0;
 
@@ -45,8 +43,6 @@ namespace Hermes
 
 		virtual bool IsValid() const;
 
-		virtual const Resource* GetResource() const;
-		
 		template<class AssetType>
 		static const AssetType& As(const Asset& From);
 

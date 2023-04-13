@@ -11,8 +11,24 @@ namespace Hermes::UI
 		Rectangles.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), Color);
 	}
 
+	void DrawingContext::SetSceneViewport(Rect2D NewViewport)
+	{
+		Viewport = {
+			Vec2ui(NewViewport.Min),
+			Vec2ui(NewViewport.Max)
+		};
+	}
+
 	const std::vector<DrawingContext::DrawableRectangle>& DrawingContext::GetRectangles() const
 	{
 		return Rectangles;
+	}
+
+	Rect2Dui DrawingContext::GetViewport() const
+	{
+		return {
+			.Min = Vec2ui(Viewport.Min),
+			.Max = Vec2ui(Viewport.Max)
+		};
 	}
 }

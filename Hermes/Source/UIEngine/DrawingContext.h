@@ -39,9 +39,18 @@ namespace Hermes::UI
 		 */
 		void DrawRectangle(Rect2D Rect, Vec3 Color);
 
+		/*
+		 * Sets the viewport where the game scene would be rendered.
+		 */
+		void SetSceneViewport(Rect2D NewViewport);
+
 		const std::vector<DrawableRectangle>& GetRectangles() const;
+
+		Rect2Dui GetViewport() const;
 
 	private:
 		std::vector<DrawableRectangle> Rectangles;
+
+		Rect2Dui Viewport;
 	};
 }

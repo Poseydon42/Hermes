@@ -17,10 +17,10 @@ namespace Hermes
 
 		const PassDesc& GetPassDescription() const;
 
-		void SetRootWidget(const UI::Widget* NewRootWidget);
+		void SetDrawingContext(const UI::DrawingContext* NewDrawingContext);
 
 	private:
-		const UI::Widget* RootWidget = nullptr;
+		const UI::DrawingContext* DrawingContext = nullptr;
 		
 		std::unique_ptr<Vulkan::Pipeline> Pipeline;
 		std::unique_ptr<Vulkan::DescriptorSetLayout> DescriptorSetLayout;

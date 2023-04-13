@@ -11,7 +11,7 @@
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "UIEngine/Widgets/PanelWidget.h"
-#include "UIEngine/Widgets/Containers/VerticalContainerWidget.h"
+#include "UIEngine/Widgets/Containers/ViewportContainerWidget.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 #include "World/Components/DirectionalLightComponent.h"
 #include "World/Components/MeshComponent.h"
@@ -220,16 +220,17 @@ public:
 
 		World.AddSystem(std::make_unique<CameraSystem>());
 
-		auto RootWidget = Hermes::UI::VerticalContainerWidget::Create(nullptr);
+		auto RootWidget = Hermes::UI::ViewportContainerWidget::Create(nullptr);
 
 		auto RedPanel = Hermes::UI::PanelWidget::Create(RootWidget, { 80, 20 }, { 1.0f, 0.0f, 0.0f });
-		RedPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
+		RedPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.03f };
+		RedPanel->GetMargins().Bottom = { Hermes::UI::MarginValueType::PercentOfParent, 0.92f };
 		RootWidget->AddChild(RedPanel);
 
 		auto GreenPanel = Hermes::UI::PanelWidget::Create(RootWidget, { 30, 80 }, { 0.0f, 1.0f, 0.0f });
-		GreenPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
-		GreenPanel->GetMargins().Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
-		GreenPanel->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.1f };
+		GreenPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.7f };
+		GreenPanel->GetMargins().Left = { Hermes::UI::MarginValueType::Absolute, 10.0f };
+		GreenPanel->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.9f };
 		RootWidget->AddChild(GreenPanel);
 
 		Hermes::GGameLoop->SetRootWidget(RootWidget);

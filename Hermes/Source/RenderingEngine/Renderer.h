@@ -21,8 +21,6 @@ namespace Hermes
 
 		static void Shutdown();
 
-		static void SetViewport(Rect2Dui NewViewport);
-
 		static Vulkan::Device& GetDevice();
 
 		static Vec2ui GetSwapchainDimensions();

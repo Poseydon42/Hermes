@@ -30,9 +30,9 @@ namespace Hermes
 		return Description;
 	}
 
-	void UIPass::SetRootWidget(const UI::Widget* NewRootWidget)
+	void UIPass::SetDrawingContext(const UI::DrawingContext* NewDrawingContext)
 	{
-		RootWidget = NewRootWidget;
+		DrawingContext = NewDrawingContext;
 	}
 
 	void UIPass::PassCallback(const PassCallbackInfo& CallbackInfo)
@@ -52,18 +52,9 @@ namespace Hermes
 
 		std::vector<RectanglePrimitive> Rectangles;
 
-		Rect2D RootWidgetRect = {
-			.Min = { 0.0f, 0.0f },
-			.Max = { ViewportDimensions.X, ViewportDimensions.Y }
-		};
-		Vec2 RootWidgetDimensions = { RootWidgetRect.Width(), RootWidgetRect.Height() };
-
-		UI::DrawingContext DrawingContext;
-		RootWidget->Draw(DrawingContext, RootWidgetRect);
-
-		for (const auto& Rectangle : DrawingContext.GetRectangles())
+		for (const auto& Rectangle : DrawingContext->GetRectangles())
 		{
-			Rectangles.emplace_back(Vec2(Rectangle.Rect.Min) / RootWidgetDimensions, Vec2(Rectangle.Rect.Max) / RootWidgetDimensions, Vec4(Rectangle.Color, 1.0f));
+			Rectangles.emplace_back(Vec2(Rectangle.Rect.Min) / ViewportDimensions, Vec2(Rectangle.Rect.Max) / ViewportDimensions, Vec4(Rectangle.Color, 1.0f));
 		}
 
 		auto RectangleListSize = Rectangles.size() * sizeof(Rectangles[0]);

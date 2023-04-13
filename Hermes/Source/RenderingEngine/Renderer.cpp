@@ -45,8 +45,6 @@ namespace Hermes
 		std::unique_ptr<SkyboxPass> SkyboxPass;
 		std::unique_ptr<UIPass> UIPass;
 
-		Rect2Dui SceneViewport;
-
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
 		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;
 		static constexpr VkFormat DepthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
@@ -204,16 +202,6 @@ namespace Hermes
 		return true;
 	}
 
-	void Renderer::SetViewport(Rect2Dui NewViewport)
-	{
-		HERMES_ASSERT(GRendererState);
-		if (NewViewport == GRendererState->SceneViewport)
-			return;
-
-		HERMES_LOG_INFO("SetSceneViewport(%u, %u, %u, %u)", NewViewport.Min.X, NewViewport.Min.Y, NewViewport.Max.X, NewViewport.Max.Y);
-		GRendererState->SceneViewport = NewViewport;
-	}
-
 	void Renderer::RunFrame(const Scene& Scene, const UI::Widget* RootWidget)
 	{
 		HERMES_PROFILE_FUNC();
@@ -224,9 +212,16 @@ namespace Hermes
 
 		auto GeometryList = Scene.BakeGeometryList();
 
-		GRendererState->UIPass->SetRootWidget(RootWidget);
+		UI::DrawingContext UIDrawingContext;
+		Rect2D RootWidgetRect = {
+			.Min = { 0.0f, 0.0f },
+			.Max = Vec2(GetSwapchainDimensions())
+		};
+		RootWidget->Draw(UIDrawingContext, RootWidgetRect);
 
-		auto Metrics = GRendererState->FrameGraph->Execute(Scene, GeometryList, GRendererState->SceneViewport);
+		GRendererState->UIPass->SetDrawingContext(&UIDrawingContext);
+
+		auto Metrics = GRendererState->FrameGraph->Execute(Scene, GeometryList, UIDrawingContext.GetViewport());
 		HERMES_PROFILE_TAG("Draw call count", static_cast<int64>(Metrics.DrawCallCount));
 		HERMES_PROFILE_TAG("Pipeline bind count", static_cast<int64>(Metrics.PipelineBindCount));
 		HERMES_PROFILE_TAG("Descriptor set bind count", static_cast<int64>(Metrics.DescriptorSetBindCount));
@@ -234,7 +229,7 @@ namespace Hermes
 
 		auto [FinalImage, FinalImageLayout] = GRendererState->FrameGraph->GetFinalImage();
 
-		Present(*FinalImage, FinalImageLayout, GRendererState->SceneViewport);
+		Present(*FinalImage, FinalImageLayout, UIDrawingContext.GetViewport());
 	}
 
 	void Renderer::Shutdown()

@@ -92,7 +92,6 @@ namespace Hermes
 
 				auto& Scene = GameWorld->GetScene();
 
-				Renderer::SetViewport({ .Min = {}, .Max = Renderer::GetSwapchainDimensions() });
 				Renderer::RunFrame(Scene, RootWidget.get());
 
 				PrevFrameEndTimestamp = CurrentTimestamp;

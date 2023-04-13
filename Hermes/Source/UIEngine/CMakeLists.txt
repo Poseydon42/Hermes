@@ -9,6 +9,8 @@ set(SOURCES
     Widgets/Containers/ContainerWidget.h
     Widgets/Containers/VerticalContainerWidget.cpp
     Widgets/Containers/VerticalContainerWidget.h
+    Widgets/Containers/ViewportContainerWidget.cpp
+    Widgets/Containers/ViewportContainerWidget.h
     Widgets/PanelWidget.cpp
     Widgets/PanelWidget.h
     Widgets/Widget.cpp

@@ -8,6 +8,8 @@
 
 namespace Hermes
 {
+	class Asset;
+
 	enum class AssetType : uint8
 	{
 		Texture2D = 1,
@@ -19,48 +21,56 @@ namespace Hermes
 		Invalid = 0xFF
 	};
 
-	using AssetHandle = uint32;
-	constexpr AssetHandle GInvalidAssetHandle = 0;
+	template<typename AssetClass>
+	using AssetHandle = std::shared_ptr<AssetClass>;
+
+	template<typename To, typename From>
+	requires (std::derived_from<To, Asset> && std::derived_from<From, Asset>)
+	AssetHandle<To> AssetCast(AssetHandle<From> Asset)
+	{
+		HERMES_ASSERT(Asset->GetType() == To::GetStaticType());
+		return std::static_pointer_cast<To>(Asset);
+	}
+
+	template<typename To, typename From>
+	requires (std::derived_from<To, Asset> && std::derived_from<From, Asset>)
+	AssetHandle<const To> AssetCast(AssetHandle<const From> Asset)
+	{
+		HERMES_ASSERT(Asset->GetType() == To::GetStaticType());
+		return std::static_pointer_cast<To>(Asset);
+	}
 
 	/*
 	 * A generic asset representation
 	 * Hermes assumes every file that is loaded by engine to be asset(with exceptions being dynamically linked libraries and configuration files)
 	 * This class should be inherited for each known asset type to implement behaviour specific to it
 	 */
-	class HERMES_API Asset
+	class HERMES_API Asset : public std::enable_shared_from_this<Asset>
 	{
 		MAKE_NON_COPYABLE(Asset)
 		ADD_DEFAULT_MOVE_CONSTRUCTOR(Asset)
 		ADD_DEFAULT_VIRTUAL_DESTRUCTOR(Asset)
 	public:
-		Asset(String InName, AssetType InType, AssetHandle InSelfHandle);
+		Asset(String InName, AssetType InType);
 
 		String GetName() const;
 
 		AssetType GetType() const;
 
-		AssetHandle GetSelfHandle() const;
+		AssetHandle<const Asset> GetSelfHandle() const;
+		AssetHandle<Asset> GetSelfHandle();
 
 		virtual bool IsValid() const;
-
-		template<class AssetType>
-		static const AssetType& As(const Asset& From);
-
-		template<class AssetType>
-		static std::unique_ptr<AssetType> As(std::unique_ptr<Asset> From);
 
 	private:
 		String Name;
 		AssetType Type;
-
-		AssetHandle SelfHandle;
 	};
 }
 
-#define DEFINE_ASSET_TYPE(ClassName, Type)                                                             \
-	template<>                                                                                         \
-	HERMES_API const ClassName& Asset::As<ClassName>(const Asset& From)                                \
-	{                                                                                                  \
-		HERMES_ASSERT(From.GetType() == AssetType::Type);                                              \
-		return static_cast<const ClassName&>(From);                                                    \
+#define HERMES_DECLARE_ASSET(Type)          \
+	public:                                 \
+	inline static AssetType GetStaticType() \
+	{                                       \
+		return AssetType::Type;             \
 	}

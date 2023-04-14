@@ -15,28 +15,27 @@ namespace Hermes
 	struct AssetLoaderCallbackInfo
 	{
 		StringView Name;
-		AssetHandle Handle;
-		std::vector<AssetHandle> Dependencies;
+		std::vector<AssetHandle<Asset>> Dependencies;
 	};
 
 	class HERMES_API AssetLoader
 	{
 	public:
-		using BinaryAssetLoaderFunction = std::unique_ptr<Asset>(*)(String, AssetHandle, std::span<const uint8>);
-		using TextAssetLoaderFunction = std::unique_ptr<Asset>(*)(const AssetLoaderCallbackInfo&, const JSONObject&);
+		using BinaryAssetLoaderFunction = AssetHandle<Asset>(*)(String, std::span<const uint8>);
+		using TextAssetLoaderFunction = AssetHandle<Asset>(*)(const AssetLoaderCallbackInfo&, const JSONObject&);
 
 		static void RegisterBinaryAssetLoader(AssetType Type, BinaryAssetLoaderFunction Loader);
 		static void RegisterTextAssetLoader(String Type, TextAssetLoaderFunction Loader);
 
-		static std::unique_ptr<Asset> Load(StringView Name, AssetHandle Handle);
+		static AssetHandle<Asset> Load(StringView Name);
 
 	private:
 		static std::unordered_map<AssetType, BinaryAssetLoaderFunction> BinaryLoaders;
 		static std::unordered_map<String, TextAssetLoaderFunction> TextLoaders;
 
-		static std::unique_ptr<Asset> LoadBinary(IPlatformFile& File, StringView Name, AssetHandle Handle);
+		static AssetHandle<Asset> LoadBinary(IPlatformFile& File, StringView Name);
 
-		static std::unique_ptr<Asset> LoadText(const JSONObject& JSONRoot, StringView Name, AssetHandle Handle);
+		static AssetHandle<Asset> LoadText(const JSONObject& JSONRoot, StringView Name);
 	};
 }
 

@@ -91,42 +91,36 @@ namespace Hermes
 		return *Children.back();
 	}
 
-	MeshNode::MeshNode(Transform Transform, AssetHandle InMeshHandle, AssetHandle InMaterialInstanceHandle)
+	MeshNode::MeshNode(Transform Transform, AssetHandle<Hermes::Mesh> InMesh, AssetHandle<Hermes::MaterialInstance> InMaterialInstance)
 		: SceneNode(SceneNodeType::Mesh, Transform)
-		, MeshHandle(InMeshHandle)
-		, MaterialInstanceHandle(InMaterialInstanceHandle)
+		, Mesh(std::move(InMesh))
+		, MaterialInstance(std::move(InMaterialInstance))
 	{
 	}
 
 	const SphereBoundingVolume& MeshNode::GetBoundingVolume() const
 	{
-		auto& AssetCache = GGameLoop->GetAssetCache();
-
-		auto Mesh = AssetCache.Get<class Mesh>(MeshHandle);
-		HERMES_ASSERT(Mesh.has_value());
-
-		return Mesh.value()->GetBoundingVolume();
+		return Mesh->GetBoundingVolume();
 	}
 
-	AssetHandle MeshNode::GetMesh() const
+	AssetHandle<Mesh> MeshNode::GetMesh() const
 	{
-		return MeshHandle;
+		return Mesh;
 	}
 
-	void MeshNode::SetMesh(AssetHandle NewMeshHandle)
+	void MeshNode::SetMesh(AssetHandle<class Mesh> NewMesh)
 	{
-		MeshHandle = NewMeshHandle;
+		Mesh = std::move(NewMesh);
 	}
 
-	void MeshNode::SetMaterialInstance(AssetHandle NewMaterialInstance)
+	void MeshNode::SetMaterialInstance(AssetHandle<class MaterialInstance> NewMaterialInstance)
 	{
-		MaterialInstanceHandle = NewMaterialInstance;
+		MaterialInstance = std::move(NewMaterialInstance);
 	}
 
-	AssetHandle MeshNode::GetMaterialInstance() const
+	AssetHandle<MaterialInstance> MeshNode::GetMaterialInstance() const
 	{
-		HERMES_ASSERT(MaterialInstanceHandle);
-		return MaterialInstanceHandle;
+		return MaterialInstance;
 	}
 
 	PointLightNode::PointLightNode(Transform Transform, Vec3 InColor, float InIntensity)

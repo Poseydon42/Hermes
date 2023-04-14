@@ -6,7 +6,6 @@
 #include "Core/Profiling.h"
 #include "Math/Frustum.h"
 #include "RenderingEngine/DescriptorAllocator.h"
-#include "RenderingEngine/Mesh.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "Vulkan/CommandBuffer.h"
@@ -397,10 +396,9 @@ namespace Hermes
 		static constexpr auto EnvmapName = "/Textures/envmap";
 
 		auto& AssetCache = GGameLoop->GetAssetCache();
-		auto MaybeRawReflectionEnvmap = AssetCache.Get<Texture2D>(EnvmapName);
-		HERMES_ASSERT_LOG(MaybeRawReflectionEnvmap.has_value() && MaybeRawReflectionEnvmap.value(), "Cannot load envmap %s", EnvmapName);
+		auto RawReflectionEnvmap = AssetCache.Get<Texture2D>(EnvmapName);
+		HERMES_ASSERT(RawReflectionEnvmap);
 
-		const auto* RawReflectionEnvmap = MaybeRawReflectionEnvmap.value();
 		ReflectionEnvmap = TextureCube::CreateFromEquirectangularTexture(*RawReflectionEnvmap, VK_FORMAT_R16G16B16A16_SFLOAT, true);
 		IrradianceEnvmap = ComputeIrradianceCubemap(*ReflectionEnvmap);
 		SpecularEnvmap = ComputeSpecularEnvmap(*ReflectionEnvmap);
@@ -458,8 +456,6 @@ namespace Hermes
 
 		auto Frustum = GetActiveCamera().GetFrustum();
 
-		auto& AssetCache = GGameLoop->GetAssetCache();
-
 		std::function<void(const SceneNode&)> MeshTraversal = [&](const SceneNode& CurrentNode) -> void
 		{
 			for (size_t ChildIndex = 0; ChildIndex < CurrentNode.GetChildrenCount(); ChildIndex++)
@@ -474,16 +470,10 @@ namespace Hermes
 
 			if (!Frustum.IsInside(CurrentMeshNode.GetBoundingVolume(), TransformationMatrix))
 				return;
-
-			auto MaybeMesh = AssetCache.Get<Mesh>(CurrentMeshNode.GetMesh());
-			if (!MaybeMesh.has_value() || !MaybeMesh.value())
-				return;
-			const auto* Mesh = MaybeMesh.value();
-
-			auto MaybeMaterialInstance = AssetCache.Get<MaterialInstance>(CurrentMeshNode.GetMaterialInstance());
-			if (!MaybeMaterialInstance.has_value() || !MaybeMaterialInstance.value())
-				return;
-			const auto* MaterialInstance = MaybeMaterialInstance.value();
+			
+			const auto* Mesh = CurrentMeshNode.GetMesh().get();
+			const auto* MaterialInstance = CurrentMeshNode.GetMaterialInstance().get();
+			
 			CulledMeshes.emplace_back(TransformationMatrix, Mesh, MaterialInstance);
 		};
 		MeshTraversal(RootNode);

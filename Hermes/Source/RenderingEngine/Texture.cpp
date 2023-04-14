@@ -18,7 +18,6 @@
 
 namespace Hermes
 {
-	DEFINE_ASSET_TYPE(Texture2D, Texture2D);
 	HERMES_ADD_BINARY_ASSET_LOADER(Texture2D, Texture2D);
 
 	static VkFormat ChooseFormatFromImageType(ImageFormat Format, size_t BytesPerChannel)
@@ -164,12 +163,12 @@ namespace Hermes
 		return Result;
 	}
 
-	std::unique_ptr<Texture2D> Texture2D::Create(String Name, AssetHandle Handle, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
+	AssetHandle<Texture2D> Texture2D::Create(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
 	{
-		return std::unique_ptr<Texture2D>(new Texture2D(std::move(Name), Handle, Dimensions, Format, BytesPerChannel, Data, MipmapMode));
+		return AssetHandle<Texture2D>(new Texture2D(std::move(Name), Dimensions, Format, BytesPerChannel, Data, MipmapMode));
 	}
 
-	std::unique_ptr<Asset> Texture2D::Load(String Name, AssetHandle Handle, std::span<const uint8> BinaryData)
+	AssetHandle<Asset> Texture2D::Load(String Name, std::span<const uint8> BinaryData)
 	{
 		const uint8* DataPtr = BinaryData.data();
 
@@ -218,7 +217,7 @@ namespace Hermes
 		auto MipmapGenerationMode = MipmapGenerationMode::Generate;
 		if (Header->MipLevelCount > 1)
 			MipmapGenerationMode = MipmapGenerationMode::LoadExisting;
-		auto Result = Texture2D::Create(String(Name), Handle, { Header->Width, Header->Height }, Header->Format, Header->BytesPerChannel, ImageData.data(), MipmapGenerationMode);
+		auto Result = Texture2D::Create(String(Name), { Header->Width, Header->Height }, Header->Format, Header->BytesPerChannel, ImageData.data(), MipmapGenerationMode);
 
 		return Result;
 	}
@@ -254,8 +253,8 @@ namespace Hermes
 		return Image->GetDataFormat();
 	}
 
-	Texture2D::Texture2D(String Name, AssetHandle Handle, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
-		: Asset(std::move(Name), AssetType::Texture2D, Handle)
+	Texture2D::Texture2D(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode)
+		: Asset(std::move(Name), AssetType::Texture2D)
 	{
 		uint32 BiggestDimension = Math::Max(Dimensions.X, Dimensions.Y);
 		HERMES_ASSERT(BiggestDimension > 0);

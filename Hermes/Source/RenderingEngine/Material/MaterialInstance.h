@@ -26,10 +26,12 @@ namespace Hermes
 	 */
 	class HERMES_API MaterialInstance : public Asset
 	{
-	public:
-		static std::unique_ptr<MaterialInstance> Create(String Name, AssetHandle Handle, AssetHandle BaseMaterialHandle);
+		HERMES_DECLARE_ASSET(MaterialInstance)
 
-		static std::unique_ptr<Asset> Load(const AssetLoaderCallbackInfo& CallbackInfo, const JSONObject& Data);
+	public:
+		static AssetHandle<MaterialInstance> Create(String Name, AssetHandle<Material> InBaseMaterialHandle);
+
+		static AssetHandle<Asset> Load(const AssetLoaderCallbackInfo& CallbackInfo, const JSONObject& Data);
 
 		template<typename ValueType>
 		void SetNumericProperty(const String& Name, const ValueType& Value, size_t ArrayIndex = 0);
@@ -37,11 +39,7 @@ namespace Hermes
 		template<typename ValueType>
 		void SetNumericProperty(const MaterialProperty& Property, const ValueType& Value, size_t ArrayIndex = 0);
 		
-		void SetTextureProperty(const String& PropertyName, const Texture2D& Value, ColorSpace ColorSpace);
-		void SetTextureProperty(const MaterialProperty& Property, const Texture2D& Value, ColorSpace ColorSpace);
-		
-		void SetTextureProperty(const String& PropertyName, AssetHandle TextureHandle, ColorSpace ColorSpace);
-		void SetTextureProperty(const MaterialProperty& Property, AssetHandle TextureHandle, ColorSpace ColorSpace);
+		void SetTextureProperty(const String& PropertyName, AssetHandle<Texture2D> Texture, ColorSpace ColorSpace);
 
 		void PrepareForRender() const;
 
@@ -53,12 +51,15 @@ namespace Hermes
 		mutable bool IsDirty = false;
 		bool HasUniformBuffer = false;
 
-		AssetHandle BaseMaterialHandle;
+		AssetHandle<Material> BaseMaterial;
+
 		std::vector<uint8> CPUBuffer;
+		std::unordered_map<String, AssetHandle<Texture2D>> CurrentlyBoundTextures;
+
 		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
 		std::unique_ptr<Vulkan::Buffer> UniformBuffer;
 
-		MaterialInstance(String InName, AssetHandle InHandle, AssetHandle InBaseMaterialHandle);
+		MaterialInstance(String InName, AssetHandle<Material> InBaseMaterial);
 
 		/*
 		 * Loading from JSON routines
@@ -67,11 +68,11 @@ namespace Hermes
 
 		void SetVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue);
 
-		void SetTexturePropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue, std::span<const AssetHandle> Dependencies);
+		void SetTexturePropertyFromJSON(StringView PropertyName, const JSONValue& JSONValue, std::span<const AssetHandle<Asset>> Dependencies);
 		
 		void SetFloatVectorPropertyFromJSON(StringView PropertyName, const MaterialProperty& Property, const JSONValue& JSONValue);
 		
-		void SetPropertyFromJSON(const String& PropertyName, const JSONValue& Value, std::span<const AssetHandle> Dependencies);
+		void SetPropertyFromJSON(const String& PropertyName, const JSONValue& Value, std::span<const AssetHandle<Asset>> Dependencies);
 	};
 
 	// TODO : add type checking

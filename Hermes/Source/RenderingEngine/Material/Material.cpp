@@ -13,11 +13,10 @@
 
 namespace Hermes
 {
-	DEFINE_ASSET_TYPE(Material, Material);
 	HERMES_ADD_TEXT_ASSET_LOADER(Material, "material");
 
-	Material::Material(String InName, AssetHandle InHandle, String InVertexShaderPath, String InFragmentShaderPath)
-		: Asset(std::move(InName), AssetType::Material, InHandle)
+	Material::Material(String InName, String InVertexShaderPath, String InFragmentShaderPath)
+		: Asset(std::move(InName), AssetType::Material)
 		, VertexShaderName(std::move(InVertexShaderPath))
 		, FragmentShaderName(std::move(InFragmentShaderPath))
 	{
@@ -52,12 +51,12 @@ namespace Hermes
 		DescriptorSetLayout = Renderer::GetDevice().CreateDescriptorSetLayout(PerMaterialDataBindings);
 	}
 
-	std::unique_ptr<Material> Material::Create(String Name, AssetHandle Handle, String VertexShaderPath, String FragmentShaderPath)
+	AssetHandle<Material> Material::Create(String Name, String VertexShaderPath, String FragmentShaderPath)
 	{
-		return std::unique_ptr<Material>(new Material(std::move(Name), Handle, std::move(VertexShaderPath), std::move(FragmentShaderPath)));
+		return AssetHandle<Material>(new Material(std::move(Name), std::move(VertexShaderPath), std::move(FragmentShaderPath)));
 	}
 
-	std::unique_ptr<Asset> Material::Load(const AssetLoaderCallbackInfo& CallbackInfo, const JSONObject& Data)
+	AssetHandle<Asset> Material::Load(const AssetLoaderCallbackInfo& CallbackInfo, const JSONObject& Data)
 	{
 		if (!Data.Contains("shaders") || !Data["shaders"].Is(JSONValueType::Object))
 		{
@@ -82,7 +81,7 @@ namespace Hermes
 				FragmentShader = String(Path);
 		}
 
-		return Create(String(CallbackInfo.Name), CallbackInfo.Handle, std::move(VertexShader), std::move(FragmentShader));
+		return Create(String(CallbackInfo.Name), std::move(VertexShader), std::move(FragmentShader));
 	}
 
 	const MaterialProperty* Material::FindProperty(const String& PropertyName) const

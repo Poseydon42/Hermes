@@ -20,48 +20,33 @@ namespace Hermes
 	public:
 		AssetCache() = default;
 
-		AssetHandle Create(StringView AssetName);
-
-		template<class AssetClass>
+		template<typename AssetClass>
 		requires (std::derived_from<AssetClass, Asset>)
-		std::optional<const AssetClass*> Get(AssetHandle Handle);
-
-		// FIXME: at some point we would probably want to remove this function and make every asset be acquired via a handle
-		template<class AssetClass>
-		requires (std::derived_from<AssetClass, Asset>)
-		std::optional<const AssetClass*> Get(StringView Name);
+		AssetHandle<AssetClass> Get(const String& AssetName);
 
 	private:
-		AssetHandle NextHandle = GInvalidAssetHandle + 1;
-		std::unordered_map<AssetHandle, std::unique_ptr<Asset>> LoadedAssets;
+		std::unordered_map<String, AssetHandle<Asset>> LoadedAssets;
+		
+		AssetHandle<Asset> GetImpl(const String& Name);
 
-		std::optional<const Asset*> GetImpl(AssetHandle Handle);
-		std::optional<const Asset*> GetImpl(StringView Name);
-
-		AssetHandle LoadAsset(StringView Name);
+		AssetHandle<Asset> LoadAsset(const String& Name);
 	};
 
-	template<class AssetClass>
+	template<typename AssetClass>
 	requires (std::derived_from<AssetClass, Asset>)
-	std::optional<const AssetClass*> AssetCache::Get(AssetHandle Handle)
+	AssetHandle<AssetClass> AssetCache::Get(const String& AssetName)
 	{
-		auto MaybeAsset = GetImpl(Handle);
+		auto Result = GetImpl(AssetName);
 
-		if (!MaybeAsset.has_value())
-			return {};
+		if (Result->GetType() != AssetClass::GetStaticType())
+			return nullptr;
 
-		return &Asset::As<AssetClass>(*MaybeAsset.value());
+		return AssetCast<AssetClass>(Result);
 	}
 
-	template<class AssetClass>
-	requires (std::derived_from<AssetClass, Asset>)
-	std::optional<const AssetClass*> AssetCache::Get(StringView Name)
+	template<>
+	inline AssetHandle<Asset> AssetCache::Get(const String& Name)
 	{
-		auto MaybeAsset = GetImpl(Name);
-
-		if (!MaybeAsset.has_value())
-			return {};
-
-		return &Asset::As<AssetClass>(*MaybeAsset.value());
+		return GetImpl(Name);
 	}
 }

@@ -21,10 +21,12 @@ namespace Hermes
 	 */
 	class HERMES_API Material : public Asset
 	{
-	public:
-		static std::unique_ptr<Material> Create(String Name, AssetHandle Handle, String VertexShaderPath, String FragmentShaderPath);
+		HERMES_DECLARE_ASSET(Material)
 
-		static std::unique_ptr<Asset> Load(const AssetLoaderCallbackInfo& CallbackInfo, const JSONObject& Data);
+	public:
+		static AssetHandle<Material> Create(String Name, String VertexShaderPath, String FragmentShaderPath);
+
+		static AssetHandle<Asset> Load(const AssetLoaderCallbackInfo& CallbackInfo, const JSONObject& Data);
 
 		const MaterialProperty* FindProperty(const String& PropertyName) const;
 
@@ -50,8 +52,7 @@ namespace Hermes
 		mutable VkFormat CachedPipelineColorAttachmentFormat = VK_FORMAT_UNDEFINED;
 		mutable VkFormat CachedPipelineDepthAttachmentFormat = VK_FORMAT_UNDEFINED;
 
-
-		Material(String InName, AssetHandle InHandle, String InVertexShaderPath, String InFragmentShaderPath);
+		Material(String InName, String InVertexShaderPath, String InFragmentShaderPath);
 
 		void CreatePipelines(VkFormat ColorAttachmentFormat, VkFormat DepthAttachmentFormat) const;
 	};

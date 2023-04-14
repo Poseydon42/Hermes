@@ -25,7 +25,7 @@ namespace Hermes
 		TextLoaders[std::move(Type)] = Loader;
 	}
 
-	std::unique_ptr<Asset> AssetLoader::Load(StringView Name, AssetHandle Handle)
+	AssetHandle<Asset> AssetLoader::Load(StringView Name)
 	{
 		String Filename = String(Name) + ".hac";
 
@@ -40,7 +40,7 @@ namespace Hermes
 		if (File->Read(Signature, sizeof(Signature)) && memcmp(Signature, AssetHeader::ExpectedSignature, sizeof(Signature)) == 0)
 		{
 			File->Seek(0);
-			return LoadBinary(*File, Name, Handle);
+			return LoadBinary(*File, Name);
 		}
 
 		String FileContents(File->Size(), 0);
@@ -58,10 +58,10 @@ namespace Hermes
 			return nullptr;
 		}
 
-		return LoadText(*MaybeJSONRoot.value(), Name, Handle);
+		return LoadText(*MaybeJSONRoot.value(), Name);
 	}
 
-	std::unique_ptr<Asset> AssetLoader::LoadBinary(IPlatformFile& File, StringView Name, AssetHandle Handle)
+	AssetHandle<Asset> AssetLoader::LoadBinary(IPlatformFile& File, StringView Name)
 	{
 		AssetHeader Header = {};
 		if (!File.Read(&Header, sizeof(Header)))
@@ -90,10 +90,10 @@ namespace Hermes
 		}
 
 		auto Loader = BinaryLoaders[Header.Type];
-		return Loader(String(Name), Handle, AssetData);
+		return Loader(String(Name), AssetData);
 	}
 
-	std::unique_ptr<Asset> AssetLoader::LoadText(const JSONObject& JSONRoot, StringView Name, AssetHandle Handle)
+	AssetHandle<Asset> AssetLoader::LoadText(const JSONObject& JSONRoot, StringView Name)
 	{
 		if (!JSONRoot.Contains("meta") || !JSONRoot["meta"].Is(JSONValueType::Object))
 		{
@@ -125,12 +125,12 @@ namespace Hermes
 			}
 		}
 
-		std::vector<AssetHandle> DependencyHandles;
+		std::vector<AssetHandle<Asset>> DependencyHandles;
 		auto& AssetCache = GGameLoop->GetAssetCache();
 		for (const auto& DependencyName : DependencyNames)
 		{
-			auto DependencyHandle = AssetCache.Create(DependencyName);
-			if (Handle == GInvalidAssetHandle)
+			auto DependencyHandle = AssetCache.Get<Asset>(String(DependencyName));
+			if (!DependencyHandle)
 			{
 				HERMES_LOG_ERROR("Asset %s depends on asset %s which cannot be loaded", DependencyName.data());
 				return nullptr;
@@ -155,7 +155,6 @@ namespace Hermes
 
 		AssetLoaderCallbackInfo CallbackInfo = {
 			.Name = Name,
-			.Handle = Handle,
 			.Dependencies = std::move(DependencyHandles)
 		};
 

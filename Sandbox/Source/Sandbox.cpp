@@ -174,10 +174,10 @@ public:
 	bool Init() override
 	{
 		auto& AssetCache = Hermes::GGameLoop->GetAssetCache();
-		auto SphereAssetHandle = AssetCache.Create("/sphere");
+		auto SphereAssetHandle = AssetCache.Get<Hermes::Mesh>("/sphere");
 
-		SolidColorMaterialInstanceHandle = AssetCache.Create("/mi_metal");
-		HERMES_ASSERT(SolidColorMaterialInstanceHandle != Hermes::GInvalidAssetHandle);
+		SolidColorMaterialInstanceHandle = AssetCache.Get<Hermes::MaterialInstance>("/mi_metal");
+		HERMES_ASSERT(SolidColorMaterialInstanceHandle);
 
 		auto& World = Hermes::GGameLoop->GetWorld();
 
@@ -248,7 +248,7 @@ public:
 	}
 
 private:
-	Hermes::AssetHandle SolidColorMaterialInstanceHandle = Hermes::GInvalidAssetHandle;
+	Hermes::AssetHandle<Hermes::MaterialInstance> SolidColorMaterialInstanceHandle;
 };
 
 extern "C" APP_API Hermes::IApplication* CreateApplicationInstance()

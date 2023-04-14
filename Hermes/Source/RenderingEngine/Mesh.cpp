@@ -7,11 +7,10 @@
 
 namespace Hermes
 {
-	DEFINE_ASSET_TYPE(Mesh, Mesh);
 	HERMES_ADD_BINARY_ASSET_LOADER(Mesh, Mesh);
 
-	Mesh::Mesh(String Name, AssetHandle Handle, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> InPrimitives)
-		: Asset(std::move(Name), AssetType::Mesh, Handle)
+	Mesh::Mesh(String Name, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> InPrimitives)
+		: Asset(std::move(Name), AssetType::Mesh)
 		, Primitives(std::move(InPrimitives))
 		, BoundingVolume(CalculateMeshRadius(Vertices))
 	{
@@ -38,12 +37,12 @@ namespace Hermes
 		return Math::Sqrt(MaxDistanceSquared);
 	}
 
-	std::unique_ptr<Mesh> Mesh::Create(String Name, AssetHandle Handle, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> Primitives)
+	AssetHandle<Mesh> Mesh::Create(String Name, std::span<const Vertex> Vertices, std::span<const uint32> Indices, std::vector<PrimitiveDrawInformation> Primitives)
 	{
-		return std::unique_ptr<Mesh>(new Mesh(std::move(Name), Handle, Vertices, Indices, std::move(Primitives)));
+		return AssetHandle<Mesh>(new Mesh(std::move(Name), Vertices, Indices, std::move(Primitives)));
 	}
 
-	std::unique_ptr<Asset> Mesh::Load(String Name, AssetHandle Handle, std::span<const uint8> BinaryData)
+	AssetHandle<Asset> Mesh::Load(String Name, std::span<const uint8> BinaryData)
 	{
 		const uint8* DataPtr = BinaryData.data();
 		const auto* Header = reinterpret_cast<const MeshAssetHeader*>(DataPtr);
@@ -69,7 +68,7 @@ namespace Hermes
 		
 		HERMES_ASSERT(DataPtr == BinaryData.data() + BinaryData.size());
 
-		return Create(std::move(Name), Handle, Vertices, Indices, Primitives);
+		return Create(std::move(Name), Vertices, Indices, Primitives);
 	}
 
 	const Vulkan::Buffer& Mesh::GetVertexBuffer() const

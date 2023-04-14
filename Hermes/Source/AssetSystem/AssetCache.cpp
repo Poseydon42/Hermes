@@ -5,51 +5,25 @@
 
 namespace Hermes
 {
-	AssetHandle AssetCache::Create(StringView AssetName)
+	AssetHandle<Asset> AssetCache::GetImpl(const String& Name)
 	{
 		HERMES_PROFILE_FUNC();
-		for (const auto& [Handle, Asset] : LoadedAssets)
-		{
-			if (Asset->GetName() == AssetName)
-				return Handle;
-		}
+		if (!LoadedAssets.contains(Name))
+			return LoadAsset(Name);
 
-		auto Result = LoadAsset(AssetName);
+		auto Result = LoadedAssets.at(Name);
 		return Result;
 	}
 
-	std::optional<const Asset*> AssetCache::GetImpl(AssetHandle Handle)
+	AssetHandle<Asset> AssetCache::LoadAsset(const String& Name)
 	{
-		HERMES_PROFILE_FUNC();
-		if (!LoadedAssets.contains(Handle))
-			return nullptr;
+		auto Asset = AssetLoader::Load(Name);
 
-		auto Asset = LoadedAssets.at(Handle).get();;
-		if (!Asset)
-			return nullptr;
-		
-		return Asset;
-	}
-
-	std::optional<const Asset*> AssetCache::GetImpl(StringView Name)
-	{
-		auto Handle = Create(Name);
-		return GetImpl(Handle);
-	}
-
-	AssetHandle AssetCache::LoadAsset(StringView Name)
-	{
-		auto Handle = NextHandle++;
-
-		auto Asset = AssetLoader::Load(Name, Handle);
-		if (!Asset)
+		if (Asset)
 		{
-			NextHandle--; // Since we didn't actually use the handle that we've allocated
-			return GInvalidAssetHandle;
+			LoadedAssets.insert(std::make_pair(Name, Asset));
+			return Asset;
 		}
-		
-		LoadedAssets.insert(std::make_pair(Handle, std::move(Asset)));
-
-		return Handle;
+		return nullptr;
 	}
 }

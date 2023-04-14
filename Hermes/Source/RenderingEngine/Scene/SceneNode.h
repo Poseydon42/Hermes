@@ -9,6 +9,7 @@
 #include "Math/BoundingVolume.h"
 #include "Math/Transform.h"
 #include "RenderingEngine/Material/MaterialInstance.h"
+#include "RenderingEngine/Mesh.h"
 
 namespace Hermes
 {
@@ -94,19 +95,19 @@ namespace Hermes
 	public:
 		virtual ~MeshNode() override = default;
 
-		MeshNode(Transform Transform, AssetHandle InMeshHandle, AssetHandle InMaterialInstanceHandle);
+		MeshNode(Transform Transform, AssetHandle<Mesh> InMesh, AssetHandle<MaterialInstance> InMaterialInstance);
 
 		const SphereBoundingVolume& GetBoundingVolume() const;
 
-		AssetHandle GetMesh() const;
-		void SetMesh(AssetHandle NewMeshHandle);
+		AssetHandle<Mesh> GetMesh() const;
+		void SetMesh(AssetHandle<Mesh> NewMesh);
 
-		AssetHandle GetMaterialInstance() const;
-		void SetMaterialInstance(AssetHandle NewMaterialInstance);
+		AssetHandle<MaterialInstance> GetMaterialInstance() const;
+		void SetMaterialInstance(AssetHandle<MaterialInstance> NewMaterialInstance);
 
 	private:
-		AssetHandle MeshHandle;
-		AssetHandle MaterialInstanceHandle;
+		AssetHandle<Mesh> Mesh;
+		AssetHandle<MaterialInstance> MaterialInstance;
 	};
 
 	class HERMES_API PointLightNode : public SceneNode

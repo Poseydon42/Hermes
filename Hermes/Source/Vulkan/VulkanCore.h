@@ -16,6 +16,18 @@ namespace Hermes::Vulkan
 	extern VkAllocationCallbacks* GVulkanAllocator;
 	constexpr uint32 GVulkanVersion = VK_API_VERSION_1_3;
 
+	struct ProfilingMetrics
+	{
+		uint32 DrawCallCount = 0;
+		uint32 ComputeDispatchCount = 0;
+
+		uint32 PipelineBindCount = 0;
+		uint32 BufferBindCount = 0;
+		uint32 DescriptorSetBindCount = 0;
+	};
+
+	extern ProfilingMetrics GProfilingMetrics;
+
 	inline String VkResultToString(VkResult Result)
 	{
 		switch (Result)

@@ -274,14 +274,13 @@ namespace Hermes
 		Resource.CurrentLayout = CurrentLayout;
 	}
 
-	FrameMetrics FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList, Rect2Dui Viewport)
+	void FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList, Rect2Dui Viewport)
 	{
 		HERMES_PROFILE_FUNC();
 
 		if (Viewport.Max == Viewport.Min)
-			return {};
+			return;
 
-		FrameMetrics Metrics = {};
 		if (Viewport != CurrentViewport)
 		{
 			CurrentViewport = Viewport;
@@ -376,7 +375,6 @@ namespace Hermes
 				.Resources = Pass.ResourceMap,
 				.Scene = Scene,
 				.GeometryList = GeometryList,
-				.Metrics = Metrics,
 			};
 
 			Pass.Callback(CallbackInfo);
@@ -397,8 +395,6 @@ namespace Hermes
 
 		for (const auto& Fence : Fences)
 			Fence->Wait(UINT64_MAX);
-
-		return Metrics;
 	}
 
 	std::pair<const Vulkan::Image*, VkImageLayout> FrameGraph::GetFinalImage() const

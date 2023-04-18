@@ -76,21 +76,17 @@ namespace Hermes
 			CreatePipeline(Framebuffer->GetFormat());
 
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
-		auto& Metrics = CallbackInfo.Metrics;
 
 		HERMES_ASSERT(CallbackInfo.Resources.contains("InputColor"));
 		DescriptorSet->UpdateWithImageAndSampler(0, 0, *std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("InputColor")), *InputColorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		CommandBuffer.BindPipeline(*Pipeline);
-		Metrics.PipelineBindCount++;
 
 		CommandBuffer.SetViewport({ 0.0f, 0.0f, ViewportDimensions.X, ViewportDimensions.Y, 0.0f, 1.0f });
 		CommandBuffer.SetScissor({ { 0, 0 }, { FramebufferDimensions.X, FramebufferDimensions.Y } });
 
 		CommandBuffer.BindDescriptorSet(*DescriptorSet, *Pipeline, 0);
-		Metrics.DescriptorSetBindCount++;
 		CommandBuffer.Draw(6, 1, 0, 0);
-		Metrics.DrawCallCount++;
 	}
 
 	void PostProcessingPass::CreatePipeline(VkFormat ColorAttachmentFormat)

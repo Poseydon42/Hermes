@@ -221,15 +221,17 @@ namespace Hermes
 
 		GRendererState->UIPass->SetDrawingContext(&UIDrawingContext);
 
-		auto Metrics = GRendererState->FrameGraph->Execute(Scene, GeometryList, UIDrawingContext.GetViewport());
-		HERMES_PROFILE_TAG("Draw call count", static_cast<int64>(Metrics.DrawCallCount));
-		HERMES_PROFILE_TAG("Pipeline bind count", static_cast<int64>(Metrics.PipelineBindCount));
-		HERMES_PROFILE_TAG("Descriptor set bind count", static_cast<int64>(Metrics.DescriptorSetBindCount));
-		HERMES_PROFILE_TAG("Buffer bind count", static_cast<int64>(Metrics.BufferBindCount));
+		GRendererState->FrameGraph->Execute(Scene, GeometryList, UIDrawingContext.GetViewport());
 
 		auto [FinalImage, FinalImageLayout] = GRendererState->FrameGraph->GetFinalImage();
-
 		Present(*FinalImage, FinalImageLayout, UIDrawingContext.GetViewport());
+
+		HERMES_PROFILE_TAG("Draw call count", static_cast<int64>(Vulkan::GProfilingMetrics.DrawCallCount));
+		HERMES_PROFILE_TAG("Compute dispatch count", static_cast<int64>(Vulkan::GProfilingMetrics.ComputeDispatchCount));
+		HERMES_PROFILE_TAG("Pipeline bind count", static_cast<int64>(Vulkan::GProfilingMetrics.PipelineBindCount));
+		HERMES_PROFILE_TAG("Descriptor set bind count", static_cast<int64>(Vulkan::GProfilingMetrics.DescriptorSetBindCount));
+		HERMES_PROFILE_TAG("Buffer bind count", static_cast<int64>(Vulkan::GProfilingMetrics.BufferBindCount));
+		Vulkan::GProfilingMetrics = {};
 	}
 
 	void Renderer::Shutdown()

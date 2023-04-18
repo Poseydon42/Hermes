@@ -79,7 +79,6 @@ namespace Hermes
 		}
 
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
-		auto& Metrics = CallbackInfo.Metrics;
 		const auto& Scene = CallbackInfo.Scene;
 
 		const auto* ColorBuffer = std::get<const Vulkan::ImageView*>(CallbackInfo.Resources.at("Color"));
@@ -113,19 +112,14 @@ namespace Hermes
 			Material->PrepareForRender();
 
 			CommandBuffer.BindPipeline(MaterialPipeline);
-			Metrics.PipelineBindCount++;
 
 			CommandBuffer.SetViewport({ 0.0f, 0.0f, ViewportDimensions.X, ViewportDimensions.Y, 0.0f, 1.0f });
 			CommandBuffer.SetScissor({ { 0, 0 }, { FramebufferDimensions.X, FramebufferDimensions.Y } });
 
 			CommandBuffer.BindDescriptorSet(*SceneUBODescriptorSet, MaterialPipeline, 0);
-			Metrics.DescriptorSetBindCount++;
 			CommandBuffer.BindDescriptorSet(Material->GetMaterialDescriptorSet(), MaterialPipeline, 1);
-			Metrics.DescriptorSetBindCount++;
 			CommandBuffer.BindVertexBuffer(Mesh->GetVertexBuffer());
-			Metrics.BufferBindCount++;
 			CommandBuffer.BindIndexBuffer(Mesh->GetIndexBuffer(), VK_INDEX_TYPE_UINT32);
-			Metrics.BufferBindCount++;
 
 			auto TransformationMatrix = DrawableMesh.TransformationMatrix;
 
@@ -135,7 +129,6 @@ namespace Hermes
 			for (const auto& Primitive : Mesh->GetPrimitives())
 			{
 				CommandBuffer.DrawIndexed(Primitive.IndexCount, 1, Primitive.IndexOffset, 0, 0);
-				Metrics.DrawCallCount++;
 			}
 		}
 	}

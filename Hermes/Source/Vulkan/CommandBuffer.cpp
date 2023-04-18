@@ -87,11 +87,13 @@ namespace Hermes::Vulkan
 
 	void CommandBuffer::BindPipeline(const Pipeline& Pipeline)
 	{
+		GProfilingMetrics.PipelineBindCount++;
 		vkCmdBindPipeline(Handle, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline.GetPipeline());
 	}
 
 	void CommandBuffer::BindPipeline(const ComputePipeline& Pipeline)
 	{
+		GProfilingMetrics.PipelineBindCount++;
 		vkCmdBindPipeline(Handle, VK_PIPELINE_BIND_POINT_COMPUTE, Pipeline.GetPipeline());
 	}
 
@@ -107,22 +109,25 @@ namespace Hermes::Vulkan
 
 	void CommandBuffer::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 VertexOffset, uint32 InstanceOffset)
 	{
+		GProfilingMetrics.DrawCallCount++;
 		vkCmdDraw(Handle, VertexCount, InstanceCount, VertexOffset, InstanceOffset);
 	}
 
-	void CommandBuffer::DrawIndexed(uint32 IndexCount, uint32 InstanceCount, uint32 IndexOffset,
-	                                int32 VertexOffset, uint32 InstanceOffset)
+	void CommandBuffer::DrawIndexed(uint32 IndexCount, uint32 InstanceCount, uint32 IndexOffset, int32 VertexOffset, uint32 InstanceOffset)
 	{
+		GProfilingMetrics.DrawCallCount++;
 		vkCmdDrawIndexed(Handle, IndexCount, InstanceCount, IndexOffset, VertexOffset, InstanceOffset);
 	}
 
 	void CommandBuffer::Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ)
 	{
+		GProfilingMetrics.ComputeDispatchCount++;
 		vkCmdDispatch(Handle, GroupCountX, GroupCountY, GroupCountZ);
 	}
 
 	void CommandBuffer::BindVertexBuffer(const Buffer& Buffer)
 	{
+		GProfilingMetrics.BufferBindCount++;
 		VkBuffer TmpBuffer = Buffer.GetBuffer();
 		VkDeviceSize Offset = 0;
 		vkCmdBindVertexBuffers(Handle, 0, 1, &TmpBuffer, &Offset);
@@ -130,12 +135,14 @@ namespace Hermes::Vulkan
 
 	void CommandBuffer::BindIndexBuffer(const Buffer& Buffer, VkIndexType IndexType)
 	{
+		GProfilingMetrics.BufferBindCount++;
 		VkDeviceSize Offset = 0;
 		vkCmdBindIndexBuffer(Handle, Buffer.GetBuffer(), Offset, IndexType);
 	}
 
 	void CommandBuffer::BindDescriptorSet(const DescriptorSet& Set, const Pipeline& Pipeline, uint32 BindingIndex)
 	{
+		GProfilingMetrics.DescriptorSetBindCount++;
 		auto DescriptorSet = Set.GetDescriptorSet();
 		vkCmdBindDescriptorSets(Handle, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline.GetPipelineLayout(), BindingIndex, 1,
 		                        &DescriptorSet, 0, nullptr);
@@ -143,6 +150,7 @@ namespace Hermes::Vulkan
 
 	void CommandBuffer::BindDescriptorSet(const DescriptorSet& Set, const ComputePipeline& Pipeline, uint32 BindingIndex)
 	{
+		GProfilingMetrics.DescriptorSetBindCount++;
 		auto DescriptorSet = Set.GetDescriptorSet();
 		vkCmdBindDescriptorSets(Handle, VK_PIPELINE_BIND_POINT_COMPUTE, Pipeline.GetPipelineLayout(), BindingIndex, 1,
 		                        &DescriptorSet, 0, nullptr);

@@ -61,14 +61,6 @@ namespace Hermes
 		bool Validate() const;
 	};
 
-	struct FrameMetrics
-	{
-		uint32 DrawCallCount = 0;
-		uint32 PipelineBindCount = 0;
-		uint32 BufferBindCount = 0;
-		uint32 DescriptorSetBindCount = 0;
-	};
-
 	class HERMES_API FrameGraph
 	{
 		MAKE_NON_COPYABLE(FrameGraph)
@@ -79,7 +71,7 @@ namespace Hermes
 		                          std::shared_ptr<Vulkan::ImageView> View,
 		                          VkImageLayout CurrentLayout);
 
-		FrameMetrics Execute(const Scene& Scene, const GeometryList& GeometryList, Rect2Dui Viewport);
+		void Execute(const Scene& Scene, const GeometryList& GeometryList, Rect2Dui Viewport);
 
 		/*
 		 * Returns the image containing the result of rendering together with the layout it is currently in.

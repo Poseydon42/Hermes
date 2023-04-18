@@ -48,7 +48,6 @@ namespace Hermes
 			CreatePipeline(Framebuffer->GetFormat());
 
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
-		auto& Metrics = CallbackInfo.Metrics;
 
 		std::vector<RectanglePrimitive> Rectangles;
 
@@ -71,18 +70,15 @@ namespace Hermes
 		RectangleListBuffer->Unmap();
 
 		CommandBuffer.BindPipeline(*Pipeline);
-		Metrics.PipelineBindCount++;
 
 		CommandBuffer.SetViewport({ 0.0f, 0.0f, ViewportDimensions.X, ViewportDimensions.Y, 0.0f, 1.0f });
 		CommandBuffer.SetScissor({ { 0, 0 }, { FramebufferDimensions.X, FramebufferDimensions.Y } });
 
 		CommandBuffer.BindDescriptorSet(*DescriptorSet, *Pipeline, 0);
-		Metrics.DescriptorSetBindCount++;
 		UIShaderPushConstants PushConstants = {};
 		PushConstants.RectangleCount = static_cast<uint32>(Rectangles.size());
 		CommandBuffer.UploadPushConstants(*Pipeline, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, &PushConstants, sizeof(PushConstants), 0);
 		CommandBuffer.Draw(6, 1, 0, 0);
-		Metrics.DrawCallCount++;
 	}
 
 	void UIPass::CreatePipeline(VkFormat ColorAttachmentFormat)

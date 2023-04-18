@@ -59,9 +59,5 @@ namespace Hermes
 		CommandBuffer.BindPipeline(*Pipeline);
 		CommandBuffer.BindDescriptorSet(*DescriptorSet, *Pipeline, 0);
 		CommandBuffer.Dispatch(NumOfClustersXY.X, NumOfClustersXY.Y, NumberOfZSlices);
-
-		auto& Metrics = CallbackInfo.Metrics;
-		Metrics.PipelineBindCount++;
-		Metrics.DescriptorSetBindCount++;
 	}
 }

@@ -72,7 +72,6 @@ namespace Hermes
 			CreatePipeline(ColorBuffer->GetFormat(), DepthBuffer->GetFormat());
 
 		auto& CommandBuffer = CallbackInfo.CommandBuffer;
-		auto& Metrics = CallbackInfo.Metrics;
 		const auto& Scene = CallbackInfo.Scene;
 
 		const auto& Camera = Scene.GetActiveCamera();
@@ -89,19 +88,16 @@ namespace Hermes
 		                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		CommandBuffer.BindPipeline(*Pipeline);
-		Metrics.PipelineBindCount++;
 
 		CommandBuffer.SetViewport({ 0.0f, 0.0f, ViewportDimensions.X, ViewportDimensions.Y, 0.0f, 1.0f });
 		CommandBuffer.SetScissor({ { 0, 0 }, { FramebufferDimensions.X, FramebufferDimensions.Y } });
 
 		CommandBuffer.BindDescriptorSet(*DataDescriptorSet, *Pipeline, 0);
-		Metrics.DescriptorSetBindCount++;
 		CommandBuffer.UploadPushConstants(*Pipeline, VK_SHADER_STAGE_VERTEX_BIT, &ViewProjectionMatrix,
 		                                  sizeof(ViewProjectionMatrix), 0);
 		// Drawing 36 vertices without bound vertex buffer because their coordinates
 		// are hardcoded in shader code
 		CommandBuffer.Draw(36, 1, 0, 0);
-		Metrics.DrawCallCount++;
 	}
 
 	void SkyboxPass::CreatePipeline(VkFormat ColorAttachmentFormat, VkFormat DepthAttachmentFormat)

@@ -1,4 +1,10 @@
 #define VMA_IMPLEMENTATION
+
 #include "VulkanCore.h"
 
-VkAllocationCallbacks* Hermes::Vulkan::GVulkanAllocator = nullptr;
+namespace Hermes::Vulkan
+{
+	VkAllocationCallbacks* GVulkanAllocator = nullptr;
+	ProfilingMetrics GProfilingMetrics = {};
+}
+

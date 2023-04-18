@@ -31,8 +31,6 @@ namespace Hermes
 
 		const Scene& Scene;
 		const GeometryList& GeometryList;
-
-		FrameMetrics& Metrics;
 	};
 
 	struct PassDesc

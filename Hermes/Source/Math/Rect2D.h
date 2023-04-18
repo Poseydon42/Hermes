@@ -31,8 +31,9 @@ namespace Hermes
 		ComponentType& Right();
 
 		ComponentType Width() const;
-
 		ComponentType Height() const;
+
+		Vector2<ComponentType> Dimensions() const;
 
 		Rectangle2D Intersect(const Rectangle2D& Other) const;
 
@@ -104,6 +105,12 @@ namespace Hermes
 	ComponentType Rectangle2D<ComponentType>::Height() const
 	{
 		return Max.Y - Min.Y;
+	}
+
+	template<typename ComponentType>
+	Vector2<ComponentType> Rectangle2D<ComponentType>::Dimensions() const
+	{
+		return { Width(), Height() };
 	}
 
 	template<typename ComponentType>

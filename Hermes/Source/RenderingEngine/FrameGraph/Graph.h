@@ -4,13 +4,10 @@
 #include <unordered_map>
 
 #include "Core/Core.h"
-#include "Math/Rect2D.h"
 #include "RenderingEngine/FrameGraph/Pass.h"
 #include "RenderingEngine/FrameGraph/Resource.h"
 #include "Vulkan/CommandBuffer.h"
 #include "Vulkan/Image.h"
-#include "Vulkan/RenderPass.h"
-#include "Vulkan/Framebuffer.h"
 
 namespace Hermes
 {
@@ -24,11 +21,9 @@ namespace Hermes
 
 		void AddLink(const String& From, const String& To);
 
-		void AddResource(const String& Name, const ImageResourceDescription& Description);
+		void AddResource(const String& Name, const ImageResourceDescription& Description, bool IsExternal);
 
-		void AddResource(const String& Name, const BufferResourceDescription& Description);
-
-		void DeclareExternalResource(const String& Name, const ImageResourceDescription& Description);
+		void AddResource(const String& Name, const BufferResourceDescription& Description, bool IsExternal);
 
 		std::unique_ptr<FrameGraph> Compile() const;
 
@@ -41,7 +36,6 @@ namespace Hermes
 		{
 			String Name;
 			ImageResourceDescription Desc;
-
 			bool IsExternal = false;
 		};
 		std::vector<ImageResourceContainer> ImageResources;
@@ -50,6 +44,7 @@ namespace Hermes
 		{
 			String Name;
 			BufferResourceDescription Desc;
+			bool IsExternal = false;
 		};
 		std::vector<BufferResourceContainer> BufferResources;
 
@@ -67,11 +62,11 @@ namespace Hermes
 		ADD_DEFAULT_MOVE_CONSTRUCTOR(FrameGraph)
 		ADD_DEFAULT_DESTRUCTOR(FrameGraph)
 	public:
-		void BindExternalResource(const String& Name, std::shared_ptr<Vulkan::Image> Image,
-		                          std::shared_ptr<Vulkan::ImageView> View,
-		                          VkImageLayout CurrentLayout);
+		void BindExternalResource(const String& Name, const Vulkan::Image& Image, const Vulkan::ImageView& View, VkImageLayout CurrentLayout);
 
-		void Execute(const Scene& Scene, const GeometryList& GeometryList, Rect2Dui Viewport);
+		void BindExternalResource(const String& Name, const Vulkan::Buffer& Buffer);
+
+		void Execute(const Scene& Scene, const GeometryList& GeometryList, Vec2ui ViewportDimensions);
 
 		/*
 		 * Returns the image containing the result of rendering together with the layout it is currently in.
@@ -100,26 +95,35 @@ namespace Hermes
 
 		struct ImageResourceContainer
 		{
-			std::shared_ptr<Vulkan::Image> Image;
-			std::shared_ptr<Vulkan::ImageView> View;
+			std::unique_ptr<Vulkan::Image> Image;
+			const Vulkan::Image* ExternalImage = nullptr;
+
+			std::unique_ptr<Vulkan::ImageView> View;
+			const Vulkan::ImageView* ExternalView = nullptr;
+
 			VkImageLayout CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			ImageResourceDescription Desc;
-
 			bool IsExternal = false;
+
+			const Vulkan::Image& GetImage() const;
+			const Vulkan::ImageView& GetView() const;
 		};
 		std::unordered_map<String, ImageResourceContainer> ImageResources;
 
 		struct BufferResourceContainer
 		{
 			std::unique_ptr<Vulkan::Buffer> Buffer;
+			const Vulkan::Buffer* ExternalBuffer = nullptr;
+
 			BufferResourceDescription Desc;
+			bool IsExternal = false;
+
+			const Vulkan::Buffer& GetBuffer() const;
 		};
 		std::unordered_map<String, BufferResourceContainer> BufferResources;
 
 		struct PassContainer
 		{
-			std::unordered_map<String, PassResourceVariant> ResourceMap;
-
 			// Pair of the name of the resource (not attachment) and the corresponding attachment info
 			std::vector<std::pair<String, VkRenderingAttachmentInfo>> ColorAttachments;
 			std::optional<std::pair<String, VkRenderingAttachmentInfo>> DepthAttachment;
@@ -127,7 +131,8 @@ namespace Hermes
 			// Pair of resource name and its layout at the start of render pass
 			std::vector<std::pair<String, VkImageLayout>> ImageResourceLayouts;
 
-			std::vector<String> InputBufferResourceNames;
+			std::vector<std::pair<String, String>> ImageAttachmentResourceNames;
+			std::vector<std::pair<String, String>> BufferInputResourceNames;
 
 			std::vector<VkClearValue> ClearColors;
 			PassDesc::PassCallbackType Callback;
@@ -138,6 +143,6 @@ namespace Hermes
 		
 		String FinalImageResourceName;
 
-		Rect2Dui CurrentViewport = {};
+		Vec2ui CurrentViewportDimensions = {};
 	};
 }

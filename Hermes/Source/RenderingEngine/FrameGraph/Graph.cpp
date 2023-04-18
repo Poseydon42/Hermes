@@ -57,19 +57,14 @@ namespace Hermes
 		ForwardLinks[From] = To;
 	}
 
-	void FrameGraphScheme::AddResource(const String& Name, const ImageResourceDescription& Description)
+	void FrameGraphScheme::AddResource(const String& Name, const ImageResourceDescription& Description, bool IsExternal)
 	{
-		ImageResources.emplace_back(Name, Description, false);
+		ImageResources.emplace_back(Name, Description, IsExternal);
 	}
 
-	void FrameGraphScheme::AddResource(const String& Name, const BufferResourceDescription& Description)
+	void FrameGraphScheme::AddResource(const String& Name, const BufferResourceDescription& Description, bool IsExternal)
 	{
-		BufferResources.emplace_back(Name, Description);
-	}
-
-	void FrameGraphScheme::DeclareExternalResource(const String& Name, const ImageResourceDescription& Description)
-	{
-		ImageResources.emplace_back(Name, Description, true);
+		BufferResources.emplace_back(Name, Description, IsExternal);
 	}
 
 	std::unique_ptr<FrameGraph> FrameGraphScheme::Compile() const
@@ -262,28 +257,32 @@ namespace Hermes
 		return true;
 	}
 
-	void FrameGraph::BindExternalResource(const String& Name, std::shared_ptr<Vulkan::Image> Image,
-	                                      std::shared_ptr<Vulkan::ImageView> View,
-	                                      VkImageLayout CurrentLayout)
+	void FrameGraph::BindExternalResource(const String& Name, const Vulkan::Image& Image, const Vulkan::ImageView& View, VkImageLayout CurrentLayout)
 	{
-		auto& Resource = ImageResources.at(Name);
-		HERMES_ASSERT_LOG(Resource.IsExternal, "Trying to rebind non-external frame graph resource");
+		HERMES_ASSERT(ImageResources.contains(Name) && ImageResources[Name].IsExternal);
 
-		Resource.Image = std::move(Image);
-		Resource.View = std::move(View);
-		Resource.CurrentLayout = CurrentLayout;
+		ImageResources[Name].ExternalImage = &Image;
+		ImageResources[Name].ExternalView = &View;
+		ImageResources[Name].CurrentLayout = CurrentLayout;
 	}
 
-	void FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList, Rect2Dui Viewport)
+	void FrameGraph::BindExternalResource(const String& Name, const Vulkan::Buffer& Buffer)
+	{
+		HERMES_ASSERT(BufferResources.contains(Name) && BufferResources[Name].IsExternal);
+
+		BufferResources[Name].ExternalBuffer = &Buffer;
+	}
+
+	void FrameGraph::Execute(const Scene& Scene, const GeometryList& GeometryList, Vec2ui ViewportDimensions)
 	{
 		HERMES_PROFILE_FUNC();
 
-		if (Viewport.Max == Viewport.Min)
+		if (ViewportDimensions.X == 0 || ViewportDimensions.Y == 0)
 			return;
 
-		if (Viewport != CurrentViewport)
+		if (ViewportDimensions != CurrentViewportDimensions)
 		{
-			CurrentViewport = Viewport;
+			CurrentViewportDimensions = ViewportDimensions;
 
 			RecreateResources();
 		}
@@ -312,7 +311,7 @@ namespace Hermes
 				auto& Resource = ImageResources[ResourceName];
 
 				Barriers[BarrierIndex].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-				Barriers[BarrierIndex].image = Resource.Image->GetImage();
+				Barriers[BarrierIndex].image = Resource.GetImage().GetImage();
 
 				Barriers[BarrierIndex].subresourceRange = Resource.Image->GetFullSubresourceRange();
 				Barriers[BarrierIndex].oldLayout = Resource.CurrentLayout;
@@ -332,13 +331,13 @@ namespace Hermes
 			                                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
 			std::vector<VkBufferMemoryBarrier> BufferBarriers;
-			for (const auto& BufferName : Pass.InputBufferResourceNames)
+			for (const auto& [BufferName, ResourceName] :Pass.BufferInputResourceNames)
 			{
-				const auto& Buffer = BufferResources[BufferName];
+				const auto& Buffer = BufferResources[ResourceName];
 
 				VkBufferMemoryBarrier Barrier = {};
 				Barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-				Barrier.buffer = Buffer.Buffer->GetBuffer();
+				Barrier.buffer = Buffer.GetBuffer().GetBuffer();
 
 				// TODO : this is a general solution that covers all required synchronization cases, but we should rather
 				// detect or require from user which types of operations would be performed and implement proper barrier
@@ -346,7 +345,7 @@ namespace Hermes
 				Barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
 
 				Barrier.offset = 0;
-				Barrier.size = static_cast<uint32>(Buffer.Buffer->GetSize());
+				Barrier.size = static_cast<uint32>(Buffer.GetBuffer().GetSize());
 
 				BufferBarriers.push_back(Barrier);
 			}
@@ -359,7 +358,7 @@ namespace Hermes
 			{
 				VkRect2D RenderingArea = {
 					.offset = { 0, 0 },
-					.extent = { Viewport.Width(), Viewport.Height() }
+					.extent = { ViewportDimensions.X, ViewportDimensions.Y }
 				};
 
 				std::vector<VkRenderingAttachmentInfo> ColorAttachmentsInfo;
@@ -370,9 +369,21 @@ namespace Hermes
 				CommandBuffer->BeginRendering(RenderingArea, ColorAttachmentsInfo, DepthAttachmentInfo, std::nullopt);
 			}
 
+			std::unordered_map<String, PassResourceVariant> PassResources;
+			for (const auto& [AttachmentName, ResourceName] : Pass.ImageAttachmentResourceNames)
+			{
+				const auto& Resource = ImageResources.at(ResourceName);
+				PassResources[AttachmentName] = &Resource.GetView();
+			}
+			for (const auto& [BufferName, ResourceName] : Pass.BufferInputResourceNames)
+			{
+				const auto& Resource = BufferResources.at(ResourceName);
+				PassResources[BufferName] = &Resource.GetBuffer();
+			}
+
 			PassCallbackInfo CallbackInfo = {
 				.CommandBuffer = *CommandBuffer,
-				.Resources = Pass.ResourceMap,
+				.Resources = PassResources,
 				.Scene = Scene,
 				.GeometryList = GeometryList,
 			};
@@ -401,17 +412,14 @@ namespace Hermes
 	{
 		HERMES_ASSERT(!FinalImageResourceName.empty());
 		const auto& Resource = ImageResources.at(FinalImageResourceName);
-		return std::make_pair(Resource.Image.get(), Resource.CurrentLayout);
+		return std::make_pair(&Resource.GetImage(), Resource.CurrentLayout);
 	}
 
 	FrameGraph::FrameGraph(FrameGraphScheme InScheme)
 		: Scheme(std::move(InScheme))
 	{
-		bool ContainsExternalResources = false;
 		for (const auto& Resource : Scheme.ImageResources)
 		{
-			ContainsExternalResources |= Resource.IsExternal;
-
 			ImageResourceContainer Container = {};
 
 			Container.CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -426,8 +434,10 @@ namespace Hermes
 			BufferResourceContainer Container = {};
 
 			Container.Desc = Resource.Desc;
+			Container.IsExternal = Resource.IsExternal;
 
-			Container.Buffer = Renderer::GetDevice().CreateBuffer(Resource.Desc.Size, TraverseBufferResourceUsageType(Resource.Name), TraverseCheckIfBufferIsMappable(Resource.Name));
+			if (!Resource.IsExternal)
+				Container.Buffer = Renderer::GetDevice().CreateBuffer(Resource.Desc.Size, TraverseBufferResourceUsageType(Resource.Name), TraverseCheckIfBufferIsMappable(Resource.Name));
 
 			BufferResources[Resource.Name] = std::move(Container);
 		}
@@ -465,11 +475,10 @@ namespace Hermes
 				else if (Attachment.Binding == BindingMode::DepthStencilAttachment)
 					NewPassContainer.DepthAttachment = std::make_pair(ResourceOwnName, AttachmentInfo);
 
-				const auto& Resource = ImageResources[ResourceOwnName];
-
 				NewPassContainer.ClearColors.push_back(Attachment.ClearColor);
-				NewPassContainer.ResourceMap[Attachment.Name] = Resource.View.get();
 				NewPassContainer.ImageResourceLayouts.emplace_back(ResourceOwnName, PickImageLayoutForBindingMode(Attachment.Binding));
+
+				NewPassContainer.ImageAttachmentResourceNames.emplace_back(Attachment.Name, ResourceOwnName);
 			}
 
 			for (const auto& BufferInput : PassDesc.BufferInputs)
@@ -479,9 +488,7 @@ namespace Hermes
 				String Dummy, ResourceOwnName;
 				SplitResourceName(FullResourceName, Dummy, ResourceOwnName);
 
-				NewPassContainer.ResourceMap[BufferInput.Name] = BufferResources.at(ResourceOwnName).Buffer.get();
-
-				NewPassContainer.InputBufferResourceNames.push_back(std::move(ResourceOwnName));
+				NewPassContainer.BufferInputResourceNames.emplace_back(BufferInput.Name, ResourceOwnName);
 			}
 
 			Passes[PassName] = std::move(NewPassContainer);
@@ -696,12 +703,11 @@ namespace Hermes
 
 	void FrameGraph::RecreateResources()
 	{
-		auto ViewportDimensions = CurrentViewport.Max - CurrentViewport.Min;
 		for (auto& Resource : ImageResources)
 		{
 			if (Resource.second.Desc.Dimensions.IsRelative() && !Resource.second.IsExternal)
 			{
-				Resource.second.Image = Renderer::GetDevice().CreateImage(Resource.second.Desc.Dimensions.GetAbsoluteDimensions(ViewportDimensions), TraverseImageResourceUsageType(Resource.first), Resource.second.Desc.Format, Resource.second.Desc.MipLevels);
+				Resource.second.Image = Renderer::GetDevice().CreateImage(Resource.second.Desc.Dimensions.GetAbsoluteDimensions(CurrentViewportDimensions), TraverseImageResourceUsageType(Resource.first), Resource.second.Desc.Format, Resource.second.Desc.MipLevels);
 				Resource.second.View = Resource.second.Image->CreateDefaultImageView();
 
 				Resource.second.CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -722,19 +728,30 @@ namespace Hermes
 				auto& Resource = ImageResources.at(Pass.DepthAttachment.value().first);
 				Pass.DepthAttachment.value().second.imageView = Resource.View->GetImageView();
 			}
-
-			for (auto& [ResourceName, Value] : Pass.ResourceMap)
-			{
-				if (!std::holds_alternative<const Vulkan::ImageView*>(Value))
-					continue;
-
-				// NOTE: taking the substring to skip the '$.' part of the resource name
-				auto ResourceOwnName = TraverseResourceName(PassName + "." + ResourceName).substr(2);
-				HERMES_ASSERT(ImageResources.contains(ResourceOwnName));
-				const auto* View = ImageResources[ResourceOwnName].View.get();
-
-				Value = View;
-			}
 		}
+	}
+
+	const Vulkan::Image& FrameGraph::ImageResourceContainer::GetImage() const
+	{
+		if (IsExternal)
+			return *ExternalImage;
+		else
+			return *Image;
+	}
+
+	const Vulkan::ImageView& FrameGraph::ImageResourceContainer::GetView() const
+	{
+		if (IsExternal)
+			return *ExternalView;
+		else
+			return *View;
+	}
+
+	const Vulkan::Buffer& FrameGraph::BufferResourceContainer::GetBuffer() const
+	{
+		if (IsExternal)
+			return *ExternalBuffer;
+		else
+			return *Buffer;
 	}
 }

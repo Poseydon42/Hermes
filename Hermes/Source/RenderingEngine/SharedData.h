@@ -57,7 +57,7 @@ namespace Hermes
 		Mat4 ModelMatrix;
 	};
 
-	struct ALIGNAS_16 GlobalSceneData
+	struct ALIGNAS_16 SceneData
 	{
 #define MAX_POINT_LIGHT_COUNT 1024
 #ifndef _GLSL_

@@ -29,7 +29,8 @@ namespace Hermes
 		PassDescription.BufferInputs =
 		{
 			{ "LightClusterList", VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false },
-			{ "LightIndexList", VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false }
+			{ "LightIndexList", VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false },
+			{ "SceneData", VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, false }
 		};
 		PassDescription.Callback = [this](const PassCallbackInfo& CallbackInfo) { PassCallback(CallbackInfo); };
 	}
@@ -43,11 +44,11 @@ namespace Hermes
 	{
 		HERMES_PROFILE_FUNC();
 
-		const auto& GlobalSceneDataBuffer = Renderer::GetGlobalSceneDataBuffer();
+		const auto& SceneDataBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("SceneData"));
 		const auto& LightClusterListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightClusterList"));
 		const auto& LightIndexListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightIndexList"));
 
-		DescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
+		DescriptorSet->UpdateWithBuffer(0, 0, SceneDataBuffer, 0, static_cast<uint32>(SceneDataBuffer.GetSize()));
 		DescriptorSet->UpdateWithBuffer(1, 0, LightClusterListBuffer, 0, static_cast<uint32>(LightClusterListBuffer.GetSize()));
 		DescriptorSet->UpdateWithBuffer(2, 0, LightIndexListBuffer, 0, static_cast<uint32>(LightIndexListBuffer.GetSize()));
 

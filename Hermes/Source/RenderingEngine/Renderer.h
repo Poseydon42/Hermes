@@ -31,14 +31,10 @@ namespace Hermes
 
 		static const Vulkan::DescriptorSetLayout& GetGlobalDataDescriptorSetLayout();
 
-		static const Vulkan::Buffer& GetGlobalSceneDataBuffer();
-
 		static const Vulkan::Sampler& GetDefaultSampler();
 
 	private:
 		static void DumpGPUProperties();
-
-		static void FillSceneDataBuffer(const Scene& Scene);
 
 		static void Present(const Vulkan::Image& SourceImage, VkImageLayout CurrentLayout, Rect2Dui Viewport);
 	};

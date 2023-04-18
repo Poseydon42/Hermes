@@ -6,15 +6,7 @@
 #include "Core/Profiling.h"
 #include "Logging/Logger.h"
 #include "RenderingEngine/DescriptorAllocator.h"
-#include "RenderingEngine/FrameGraph/Graph.h"
-#include "RenderingEngine/SharedData.h"
-#include "RenderingEngine/Passes/DepthPass.h"
-#include "RenderingEngine/Passes/ForwardPass.h"
-#include "RenderingEngine/Passes/LightCullingPass.h"
-#include "RenderingEngine/Passes/PostProcessingPass.h"
-#include "RenderingEngine/Passes/SkyboxPass.h"
-#include "RenderingEngine/Passes/UIPass.h"
-#include "RenderingEngine/Scene/Camera.h"
+#include "RenderingEngine/SceneRenderer.h"
 #include "RenderingEngine/Scene/Scene.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Fence.h"
@@ -32,18 +24,11 @@ namespace Hermes
 
 		std::unique_ptr<DescriptorAllocator> DescriptorAllocator;
 		std::unique_ptr<Vulkan::DescriptorSetLayout> GlobalDataDescriptorSetLayout;
-		std::unique_ptr<Vulkan::Buffer> GlobalSceneDataBuffer;
 		std::unique_ptr<Vulkan::Sampler> DefaultSampler;
 
-		ShaderCache ShaderCache;
+		std::unique_ptr<SceneRenderer> SceneRenderer;
 
-		std::unique_ptr<FrameGraph> FrameGraph;
-		std::unique_ptr<LightCullingPass> LightCullingPass;
-		std::unique_ptr<DepthPass> DepthPass;
-		std::unique_ptr<ForwardPass> ForwardPass;
-		std::unique_ptr<PostProcessingPass> PostProcessingPass;
-		std::unique_ptr<SkyboxPass> SkyboxPass;
-		std::unique_ptr<UIPass> UIPass;
+		ShaderCache ShaderCache;
 
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
 		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;
@@ -121,8 +106,6 @@ namespace Hermes
 			SceneUBOBinding, IrradianceCubemapBinding, SpecularCubemapBinding, PrecomputedBRDFBinding, LightClusterListBinding, LightIndexListBinding
 		});
 
-		GRendererState->GlobalSceneDataBuffer = GRendererState->Device->CreateBuffer(sizeof(GlobalSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, true);
-
 		Vulkan::SamplerDescription SamplerDesc = {};
 		SamplerDesc.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		SamplerDesc.MinificationFilter = VK_FILTER_LINEAR;
@@ -134,97 +117,21 @@ namespace Hermes
 		SamplerDesc.LODBias = 0.0f;
 		GRendererState->DefaultSampler = GRendererState->Device->CreateSampler(SamplerDesc);
 
-		GRendererState->LightCullingPass = std::make_unique<LightCullingPass>();
-		GRendererState->DepthPass = std::make_unique<DepthPass>();
-		GRendererState->ForwardPass = std::make_unique<ForwardPass>(true);
-		GRendererState->PostProcessingPass = std::make_unique<PostProcessingPass>();
-		GRendererState->SkyboxPass = std::make_unique<SkyboxPass>();
-		GRendererState->UIPass = std::make_unique<UIPass>();
-
-		FrameGraphScheme Scheme;
-		Scheme.AddPass("LightCullingPass", GRendererState->LightCullingPass->GetPassDescription());
-		Scheme.AddPass("DepthPass", GRendererState->DepthPass->GetPassDescription());
-		Scheme.AddPass("ForwardPass", GRendererState->ForwardPass->GetPassDescription());
-		Scheme.AddPass("PostProcessingPass", GRendererState->PostProcessingPass->GetPassDescription());
-		Scheme.AddPass("SkyboxPass", GRendererState->SkyboxPass->GetPassDescription());
-		Scheme.AddPass("UIPass", GRendererState->UIPass->GetPassDescription());
-
-		ImageResourceDescription HDRColorBufferResource = {};
-		HDRColorBufferResource.Dimensions = ViewportRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		HDRColorBufferResource.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
-		HDRColorBufferResource.MipLevels = 1;
-		Scheme.AddResource("HDRColorBuffer", HDRColorBufferResource);
-
-		ImageResourceDescription ColorBufferResource = {};
-		ColorBufferResource.Dimensions = ViewportRelativeDimensions::CreateFromRelativeDimensions({ 1.0f });
-		ColorBufferResource.Format = VK_FORMAT_B8G8R8A8_SRGB;
-		ColorBufferResource.MipLevels = 1;
-		Scheme.AddResource("ColorBuffer", ColorBufferResource);
-
-		ImageResourceDescription DepthBufferResource = {};
-		DepthBufferResource.Dimensions = ViewportRelativeDimensions::CreateFromRelativeDimensions({ 1.0f, 1.0f });
-		DepthBufferResource.Format = VK_FORMAT_D32_SFLOAT;
-		DepthBufferResource.MipLevels = 1;
-		Scheme.AddResource("DepthBuffer", DepthBufferResource);
-
-		BufferResourceDescription LightClusterListResource = {};
-		// FIXME: find a way to compute this value instead of guessing
-		LightClusterListResource.Size = 4 * 1024 * 1024;
-		Scheme.AddResource("LightClusterList", LightClusterListResource);
-
-		BufferResourceDescription LightIndexListResource = {};
- 		LightIndexListResource.Size = 64 * 1024 * 1024; // FIXME: see above
-		Scheme.AddResource("LightIndexList", LightIndexListResource);
-
-		Scheme.AddLink("$.LightClusterList", "LightCullingPass.LightClusterList");
-		Scheme.AddLink("$.LightIndexList", "LightCullingPass.LightIndexList");
-
-		Scheme.AddLink("$.DepthBuffer", "DepthPass.Depth");
-
-		Scheme.AddLink("$.HDRColorBuffer", "ForwardPass.Color");
-		Scheme.AddLink("DepthPass.Depth", "ForwardPass.Depth");
-		Scheme.AddLink("LightCullingPass.LightClusterList", "ForwardPass.LightClusterList");
-		Scheme.AddLink("LightCullingPass.LightIndexList", "ForwardPass.LightIndexList");
-
-		Scheme.AddLink("ForwardPass.Color", "SkyboxPass.ColorBuffer");
-		Scheme.AddLink("ForwardPass.Depth", "SkyboxPass.DepthBuffer");
-
-		Scheme.AddLink("SkyboxPass.ColorBuffer", "PostProcessingPass.InputColor");
-		Scheme.AddLink("$.ColorBuffer", "PostProcessingPass.OutputColor");
-
-		Scheme.AddLink("PostProcessingPass.OutputColor", "UIPass.Framebuffer");
-
-		Scheme.AddLink("UIPass.Framebuffer", "$.FINAL_IMAGE");
-
-		GRendererState->FrameGraph = Scheme.Compile();
-		HERMES_ASSERT_LOG(GRendererState->FrameGraph, "Failed to compile a frame graph");
+		GRendererState->SceneRenderer = std::make_unique<SceneRenderer>();
 
 		return true;
 	}
 
-	void Renderer::RunFrame(const Scene& Scene, const UI::Widget* RootWidget)
+	void Renderer::RunFrame(const Scene& Scene, const UI::Widget*)
 	{
 		HERMES_PROFILE_FUNC();
 
 		HERMES_ASSERT(GRendererState);
 
-		FillSceneDataBuffer(Scene);
+		auto [SceneImage, SceneImageLayout] = GRendererState->SceneRenderer->Run(Scene, { 1280, 720 });
+		HERMES_ASSERT(SceneImage);
 
-		auto GeometryList = Scene.BakeGeometryList();
-
-		UI::DrawingContext UIDrawingContext;
-		Rect2D RootWidgetRect = {
-			.Min = { 0.0f, 0.0f },
-			.Max = Vec2(GetSwapchainDimensions())
-		};
-		RootWidget->Draw(UIDrawingContext, RootWidgetRect);
-
-		GRendererState->UIPass->SetDrawingContext(&UIDrawingContext);
-
-		GRendererState->FrameGraph->Execute(Scene, GeometryList, UIDrawingContext.GetViewport());
-
-		auto [FinalImage, FinalImageLayout] = GRendererState->FrameGraph->GetFinalImage();
-		Present(*FinalImage, FinalImageLayout, UIDrawingContext.GetViewport());
+		Present(*SceneImage, SceneImageLayout, { { 0, 0 }, { 1280, 720 } });
 
 		HERMES_PROFILE_TAG("Draw call count", static_cast<int64>(Vulkan::GProfilingMetrics.DrawCallCount));
 		HERMES_PROFILE_TAG("Compute dispatch count", static_cast<int64>(Vulkan::GProfilingMetrics.ComputeDispatchCount));
@@ -271,12 +178,6 @@ namespace Hermes
 		return *GRendererState->GlobalDataDescriptorSetLayout;
 	}
 
-	const Vulkan::Buffer& Renderer::GetGlobalSceneDataBuffer()
-	{
-		HERMES_ASSERT(GRendererState);
-		return *GRendererState->GlobalSceneDataBuffer;
-	}
-
 	const Vulkan::Sampler& Renderer::GetDefaultSampler()
 	{
 		HERMES_ASSERT(GRendererState);
@@ -289,79 +190,6 @@ namespace Hermes
 		HERMES_LOG_INFO("======== GPU Information ========");
 		HERMES_LOG_INFO("Name: %s", GRendererState->GPUProperties.Name.c_str());
 		HERMES_LOG_INFO("Anisotropy: %s, %f", GRendererState->GPUProperties.AnisotropySupport ? "true" : "false", GRendererState->GPUProperties.MaxAnisotropyLevel);
-	}
-
-	void Renderer::FillSceneDataBuffer(const Scene& Scene)
-	{
-		HERMES_ASSERT(GRendererState);
-		HERMES_PROFILE_FUNC();
-
-		auto& Camera = Scene.GetActiveCamera();
-
-		auto* SceneDataForCurrentFrame = static_cast<GlobalSceneData*>(GRendererState->GlobalSceneDataBuffer->Map());
-
-		auto ViewMatrix = Camera.GetViewMatrix();
-		auto ProjectionMatrix = Camera.GetProjectionMatrix();
-
-		SceneDataForCurrentFrame->ViewProjection = ProjectionMatrix * ViewMatrix;
-		SceneDataForCurrentFrame->View = ViewMatrix;
-		SceneDataForCurrentFrame->InverseProjection = ProjectionMatrix.Inverse();
-		SceneDataForCurrentFrame->CameraLocation = { Camera.GetLocation(), 1.0f };
-
-		SceneDataForCurrentFrame->ScreenDimensions = static_cast<Vec2>(GRendererState->Swapchain->GetDimensions());
-		SceneDataForCurrentFrame->MaxPixelsPerLightCluster = static_cast<Vec2>(GRendererState->LightCullingPass->ClusterSizeInPixels);
-		SceneDataForCurrentFrame->CameraZBounds = { Camera.GetNearZPlane(), Camera.GetFarZPlane() };
-		SceneDataForCurrentFrame->NumberOfZClusters.X = GRendererState->LightCullingPass->NumberOfZSlices;
-
-		size_t NextPointLightIndex = 0, NextDirectionalLightIndex = 0;
-		std::function<void(const SceneNode&)> TraverseSceneHierarchy = [&](const SceneNode& Node) -> void
-		{
-			for (size_t ChildIndex = 0; ChildIndex < Node.GetChildrenCount(); ChildIndex++)
-				TraverseSceneHierarchy(Node.GetChild(ChildIndex));
-
-			if (Node.GetType() == SceneNodeType::PointLight)
-			{
-				if (NextPointLightIndex > GlobalSceneData::MaxPointLightCount)
-					return;
-				
-				const auto& PointLight = static_cast<const PointLightNode&>(Node);
-				auto WorldTransform = PointLight.GetWorldTransformationMatrix();
-				Vec4 WorldPosition = { WorldTransform[0][3], WorldTransform[1][3], WorldTransform[2][3], 1.0f };
-
-				SceneDataForCurrentFrame->PointLights[NextPointLightIndex].Position = WorldPosition;
-				SceneDataForCurrentFrame->PointLights[NextPointLightIndex].Color = Vec4(PointLight.GetColor(), PointLight.GetIntensity());
-
-				NextPointLightIndex++;
-			}
-
-			if (Node.GetType() == SceneNodeType::DirectionalLight)
-			{
-				if (NextDirectionalLightIndex > GlobalSceneData::MaxDirectionalLightCount)
-					return;
-
-				const auto& DirectionalLight = static_cast<const DirectionalLightNode&>(Node);
-
-				auto WorldTransform = Node.GetWorldTransformationMatrix();
-				auto WorldDirection = WorldTransform * Vec4(DirectionalLight.GetDirection(), 0.0f);
-
-				SceneDataForCurrentFrame->DirectionalLights[NextDirectionalLightIndex].Direction = WorldDirection;
-				SceneDataForCurrentFrame->DirectionalLights[NextDirectionalLightIndex].Color = Vec4(DirectionalLight.GetColor(), DirectionalLight.GetIntensity());
-
-				NextDirectionalLightIndex++;
-			}
-		};
-
-		TraverseSceneHierarchy(Scene.GetRootNode());
-
-		if (NextPointLightIndex >= GlobalSceneData::MaxPointLightCount)
-			HERMES_LOG_WARNING("There are more point lights in the scene than the shader can process, some of them will be ignored");
-		if (NextDirectionalLightIndex >= GlobalSceneData::MaxDirectionalLightCount)
-			HERMES_LOG_WARNING("There are more directional lights in the scene than the shader can process, some of them will be ignored");
-
-		SceneDataForCurrentFrame->PointLightCount = static_cast<uint32>(NextPointLightIndex);
-		SceneDataForCurrentFrame->DirectionalLightCount = static_cast<uint32>(NextDirectionalLightIndex);
-		
-		GRendererState->GlobalSceneDataBuffer->Unmap();
 	}
 
 	void Renderer::Present(const Vulkan::Image& SourceImage, VkImageLayout CurrentLayout, Rect2Dui Viewport)

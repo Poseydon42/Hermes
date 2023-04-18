@@ -12,6 +12,7 @@
 #include "Vulkan/CommandBuffer.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Fence.h"
+#include "Vulkan/Framebuffer.h"
 #include "Vulkan/Pipeline.h"
 #include "Vulkan/RenderPass.h"
 
@@ -61,7 +62,8 @@ namespace Hermes
 		Description.BufferInputs =
 		{
 			{ "LightClusterList", VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false },
-			{ "LightIndexList", VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false }
+			{ "LightIndexList", VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false },
+			{ "SceneData", VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, false }
 		};
 	}
 
@@ -87,10 +89,10 @@ namespace Hermes
 		auto FramebufferDimensions = ColorBuffer->GetDimensions();
 		auto ViewportDimensions = Vec2(FramebufferDimensions);
 
-		const auto& GlobalSceneDataBuffer = Renderer::GetGlobalSceneDataBuffer();
+		const auto& SceneDataBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("SceneData"));
 		const auto& LightClusterListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightClusterList"));
 		const auto& LightIndexListBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("LightIndexList"));
-		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
+		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, SceneDataBuffer, 0, static_cast<uint32>(SceneDataBuffer.GetSize()));
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(1, 0, Scene.GetIrradianceEnvmap().GetView(),
 		                                                 *EnvmapSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		SceneUBODescriptorSet->UpdateWithImageAndSampler(2, 0, Scene.GetSpecularEnvmap().GetView(),

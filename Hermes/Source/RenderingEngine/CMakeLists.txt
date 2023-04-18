@@ -34,6 +34,8 @@ set(SOURCES
     Passes/UIPass.h
     Renderer.cpp
     Renderer.h
+    SceneRenderer.cpp
+    SceneRenderer.h
     Scene/Camera.h
     Scene/GeometryList.cpp
     Scene/GeometryList.h

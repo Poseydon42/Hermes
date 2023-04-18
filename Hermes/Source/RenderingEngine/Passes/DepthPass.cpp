@@ -28,6 +28,11 @@ namespace Hermes
 		DepthAttachment.Binding = BindingMode::DepthStencilAttachment;
 
 		Description.Attachments = { std::move(DepthAttachment) };
+
+		Description.BufferInputs =
+		{
+			{ "SceneData", VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, false }
+		};
 	}
 
 	void DepthPass::PassCallback(const PassCallbackInfo& CallbackInfo)
@@ -41,8 +46,8 @@ namespace Hermes
 		auto FramebufferDimensions = DepthBuffer->GetDimensions();
 		auto ViewportDimensions = Vec2(FramebufferDimensions);
 
-		const auto& GlobalSceneDataBuffer = Renderer::GetGlobalSceneDataBuffer();
-		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, GlobalSceneDataBuffer, 0, static_cast<uint32>(GlobalSceneDataBuffer.GetSize()));
+		const auto& SceneDataBuffer = *std::get<const Vulkan::Buffer*>(CallbackInfo.Resources.at("SceneData"));
+		SceneUBODescriptorSet->UpdateWithBuffer(0, 0, SceneDataBuffer, 0, static_cast<uint32>(SceneDataBuffer.GetSize()));
 
 		for (const auto& DrawableMesh : CallbackInfo.GeometryList.GetMeshList())
 		{

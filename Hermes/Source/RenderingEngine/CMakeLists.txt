@@ -30,8 +30,6 @@ set(SOURCES
     Passes/PostProcessingPass.h
     Passes/SkyboxPass.cpp
     Passes/SkyboxPass.h
-    Passes/UIPass.cpp
-    Passes/UIPass.h
     Renderer.cpp
     Renderer.h
     SceneRenderer.cpp
@@ -48,6 +46,8 @@ set(SOURCES
     SharedData.h
     Texture.cpp
     Texture.h
+    UIRenderer.cpp
+    UIRenderer.h
 )
 
 include(HermesSublib)

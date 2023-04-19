@@ -92,7 +92,7 @@ namespace Hermes
 
 				auto& Scene = GameWorld->GetScene();
 
-				Renderer::RunFrame(Scene, RootWidget.get());
+				Renderer::RunFrame(Scene, *RootWidget);
 
 				PrevFrameEndTimestamp = CurrentTimestamp;
 			}

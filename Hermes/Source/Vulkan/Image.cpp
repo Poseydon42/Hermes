@@ -218,6 +218,11 @@ namespace Hermes::Vulkan
 		return View;
 	}
 
+	VkImage ImageView::GetImage() const
+	{
+		return Image->Image;
+	}
+
 	Vec2ui ImageView::GetDimensions() const
 	{
 		return Image->Dimensions;

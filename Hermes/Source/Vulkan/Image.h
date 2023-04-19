@@ -144,6 +144,8 @@ namespace Hermes::Vulkan
 		~ImageView();
 
 		VkImageView GetImageView() const;
+
+		VkImage GetImage() const;
 		
 		Vec2ui GetDimensions() const;
 
@@ -153,6 +155,7 @@ namespace Hermes::Vulkan
 		std::shared_ptr<Image::VkImageHolder> Image;
 
 		VkImageView View = VK_NULL_HANDLE;
+
 		VkFormat Format;
 	};
 }

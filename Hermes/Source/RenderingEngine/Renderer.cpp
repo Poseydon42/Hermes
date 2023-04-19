@@ -8,6 +8,7 @@
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/SceneRenderer.h"
 #include "RenderingEngine/Scene/Scene.h"
+#include "RenderingEngine/UIRenderer.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Fence.h"
 #include "Vulkan/Swapchain.h"
@@ -27,12 +28,11 @@ namespace Hermes
 		std::unique_ptr<Vulkan::Sampler> DefaultSampler;
 
 		std::unique_ptr<SceneRenderer> SceneRenderer;
+		std::unique_ptr<UIRenderer> UIRenderer;
 
 		ShaderCache ShaderCache;
 
 		static constexpr uint32 NumberOfBackBuffers = 3; // TODO : let user modify
-		static constexpr VkFormat ColorAttachmentFormat = VK_FORMAT_B8G8R8A8_UNORM;
-		static constexpr VkFormat DepthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
 	};
 
 	RendererState* GRendererState = nullptr;
@@ -118,20 +118,23 @@ namespace Hermes
 		GRendererState->DefaultSampler = GRendererState->Device->CreateSampler(SamplerDesc);
 
 		GRendererState->SceneRenderer = std::make_unique<SceneRenderer>();
+		GRendererState->UIRenderer = std::make_unique<UIRenderer>();
 
 		return true;
 	}
 
-	void Renderer::RunFrame(const Scene& Scene, const UI::Widget*)
+	void Renderer::RunFrame(const Scene& Scene, const UI::Widget& RootWidget)
 	{
 		HERMES_PROFILE_FUNC();
 
 		HERMES_ASSERT(GRendererState);
 
-		auto [SceneImage, SceneImageLayout] = GRendererState->SceneRenderer->Run(Scene, { 1280, 720 });
+		auto [SceneImage, SceneImageLayout] = GRendererState->SceneRenderer->Render(Scene, { 1280, 720 });
 		HERMES_ASSERT(SceneImage);
 
-		Present(*SceneImage, SceneImageLayout, { { 0, 0 }, { 1280, 720 } });
+		auto [FinalImage, FinalImageLayout] = GRendererState->UIRenderer->Render(RootWidget, GetSwapchainDimensions(), *SceneImage, SceneImageLayout);
+
+		Present(*FinalImage, FinalImageLayout, { { 0, 0 }, GetSwapchainDimensions() });
 
 		HERMES_PROFILE_TAG("Draw call count", static_cast<int64>(Vulkan::GProfilingMetrics.DrawCallCount));
 		HERMES_PROFILE_TAG("Compute dispatch count", static_cast<int64>(Vulkan::GProfilingMetrics.ComputeDispatchCount));

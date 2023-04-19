@@ -92,7 +92,7 @@ namespace Hermes
 		uint32 DirectionalLightCount;
 	};
 
-	struct ALIGNAS_16 UIShaderPushConstants
+	struct UIShaderPushConstants
 	{
 		uint32 RectangleCount;
 	};

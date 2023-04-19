@@ -129,10 +129,13 @@ namespace Hermes
 
 		HERMES_ASSERT(GRendererState);
 
-		auto [SceneImage, SceneImageLayout] = GRendererState->SceneRenderer->Render(Scene, { 1280, 720 });
+		auto SceneViewport = GRendererState->UIRenderer->PrepareToRender(RootWidget, GetSwapchainDimensions());
+
+		auto [SceneImage, SceneImageLayout] = GRendererState->SceneRenderer->Render(Scene, SceneViewport.Dimensions());
 		HERMES_ASSERT(SceneImage);
 
-		auto [FinalImage, FinalImageLayout] = GRendererState->UIRenderer->Render(RootWidget, GetSwapchainDimensions(), *SceneImage, SceneImageLayout);
+		auto [FinalImage, FinalImageLayout] = GRendererState->UIRenderer->Render(*SceneImage, SceneImageLayout);
+		HERMES_ASSERT(FinalImage);
 
 		Present(*FinalImage, FinalImageLayout, { { 0, 0 }, GetSwapchainDimensions() });
 

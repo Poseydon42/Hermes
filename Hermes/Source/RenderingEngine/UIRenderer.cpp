@@ -61,7 +61,7 @@ namespace Hermes
 		DescriptorSet->UpdateWithBuffer(0, 0, *RectangleListBuffer, 0, static_cast<uint32>(RectangleListBuffer->GetSize()));
 	}
 
-	std::pair<const Vulkan::Image*, VkImageLayout> UIRenderer::Render(const UI::Widget& RootWidget, Vec2ui RequiredDimensions, const Vulkan::Image& RenderedScene, VkImageLayout RenderedSceneLayout)
+	Rect2Dui UIRenderer::PrepareToRender(const UI::Widget& RootWidget, Vec2ui RequiredDimensions)
 	{
 		HERMES_PROFILE_FUNC();
 
@@ -72,11 +72,7 @@ namespace Hermes
 			RecreateDestinationImage();
 		}
 
-
-		/*
-		 * Recording UI draw commands and preparing data for the shader
-		 */
-		UI::DrawingContext DrawingContext;
+		DrawingContext = {};
 		Rect2D AvailableRect = { { 0, 0 }, Vec2(CurrentDimensions) };
 		RootWidget.Draw(DrawingContext, AvailableRect);
 
@@ -91,9 +87,16 @@ namespace Hermes
 		}
 		RectangleListBuffer->Unmap();
 
-		UIShaderPushConstants PushConstants = {
+		PushConstants = {
 			.RectangleCount = static_cast<uint32>(DrawingContext.GetRectangles().size())
 		};
+
+		return DrawingContext.GetViewport();
+	}
+
+	std::pair<const Vulkan::Image*, VkImageLayout> UIRenderer::Render(const Vulkan::Image& RenderedScene, VkImageLayout RenderedSceneLayout)
+	{
+		HERMES_PROFILE_FUNC();
 
 
 		/*

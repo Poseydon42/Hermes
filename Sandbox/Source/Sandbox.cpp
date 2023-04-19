@@ -160,7 +160,7 @@ public:
 
 			Transform->Transform.Translation += DeltaLocation;
 
-			Scene.ChangeActiveCamera(std::make_shared<SimpleCamera>(Transform->Transform.Translation, Direction, RightVector, 50.0f, 0.1f, 1000.0f, Hermes::Vec2{ 1280.0f, 720.0f }));
+			Scene.ChangeActiveCamera(std::make_shared<SimpleCamera>(Transform->Transform.Translation, Direction, RightVector, 50.0f, 0.1f, 1000.0f, Hermes::Vec2{}));
 
 			break;
 		}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "RenderingEngine/SharedData.h"
 #include "UIEngine/Widgets/Widget.h"
 #include "Vulkan/Buffer.h"
 #include "Vulkan/Descriptor.h"
@@ -13,7 +14,9 @@ namespace Hermes
 	public:
 		UIRenderer();
 
-		std::pair<const Vulkan::Image*, VkImageLayout> Render(const UI::Widget& RootWidget, Vec2ui RequiredDimensions, const Vulkan::Image& RenderedScene, VkImageLayout RenderedSceneLayout);
+		Rect2Dui PrepareToRender(const UI::Widget& RootWidget, Vec2ui RequiredDimensions);
+
+		std::pair<const Vulkan::Image*, VkImageLayout> Render(const Vulkan::Image& RenderedScene, VkImageLayout RenderedSceneLayout);
 
 	private:
 		std::unique_ptr<Vulkan::Pipeline> Pipeline;
@@ -27,6 +30,8 @@ namespace Hermes
 		std::unique_ptr<Vulkan::Buffer> RectangleListBuffer;
 
 		Vec2ui CurrentDimensions = {};
+		UI::DrawingContext DrawingContext;
+		UIShaderPushConstants PushConstants = {};
 
 		void RecreateDestinationImage();
 	};

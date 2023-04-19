@@ -100,6 +100,7 @@ namespace Hermes
 		HERMES_PROFILE_FUNC();
 
 		auto& Camera = Scene.GetActiveCamera();
+		Camera.UpdateViewportDimensions(Vec2(ViewportDimensions));
 
 		auto* SceneDataForCurrentFrame = static_cast<SceneData*>(SceneDataBuffer->Map());
 

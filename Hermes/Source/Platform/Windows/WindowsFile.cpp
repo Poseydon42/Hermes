@@ -122,8 +122,7 @@ namespace Hermes
 			Win32OpenMode = TRUNCATE_EXISTING;
 			break;
 		default:
-			HERMES_ASSERT_LOG(false, "Unknown IPlatformFile::OpenMode value in WindowsFile::WindowsFile");
-			break;
+			HERMES_ASSERT(false);
 		}
 		// TODO : sharing?
 

@@ -1,6 +1,5 @@
 ﻿#include "WindowsWindow.h"
 
-#include "ApplicationCore/GameLoop.h"
 #include "ApplicationCore/InputEngine.h"
 #include "Core/Profiling.h"
 #include "Logging/Logger.h"
@@ -204,7 +203,7 @@ namespace Hermes
 			{
 				if (WParam == SIZE_MINIMIZED)
 				{
-					GGameLoop->SetPause(true);
+					MessagePump->PushEvent(WindowStateEvent(WindowStateEvent::State::Minimized));
 					break;
 				}
 				if (WParam == SIZE_RESTORED)
@@ -213,7 +212,7 @@ namespace Hermes
 					WORD NewHeight = (LParam >> 16) & 0xFFFF;
 					if (NewWidth == LastKnownSize.X && NewHeight == LastKnownSize.Y)
 					{
-						GGameLoop->SetPause(false); // If size wasn't changed then window was restored from minimized state
+						MessagePump->PushEvent(WindowStateEvent(WindowStateEvent::State::Maximized)); // If size wasn't changed then window was restored from minimized state
 					}
 					else
 					{

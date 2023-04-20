@@ -31,8 +31,6 @@ namespace Hermes
 
 		void RequestExit();
 
-		void SetPause(bool IsPaused);
-
 		const UI::Widget& GetRootWidget() const;
 		void SetRootWidget(std::shared_ptr<UI::Widget> NewRootWidget);
 		

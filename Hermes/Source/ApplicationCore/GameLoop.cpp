@@ -46,6 +46,14 @@ namespace Hermes
 		ApplicationWindow->SetCursorVisibility(false);
 
 		ApplicationWindow->GetWindowQueue().Subscribe(WindowCloseEvent::GetStaticType(), [this](const IEvent&) { RequestedExit = true; });
+		ApplicationWindow->GetWindowQueue().Subscribe(WindowStateEvent::GetStaticType(), [this](const IEvent& Event)
+		{
+			const auto& StateEvent = static_cast<const WindowStateEvent&>(Event);
+			if (StateEvent.GetState() == WindowStateEvent::State::Maximized)
+				Paused = false;
+			else
+				Paused = true;
+		});
 
 		// DEBUG ONLY
 		InputEngine->GetEventQueue().Subscribe(KeyEvent::GetStaticType(), [this](const IEvent& Event) { KeyEventHandler(Event); });
@@ -106,12 +114,6 @@ namespace Hermes
 	{
 		HERMES_LOG_INFO("Game loop received exit request");
 		RequestedExit = true;
-	}
-
-	void GameLoop::SetPause(bool IsPaused)
-	{
-		HERMES_LOG_INFO("Game loop is%s paused now", IsPaused ? "" : " not");
-		Paused = IsPaused;
 	}
 
 	const UI::Widget& GameLoop::GetRootWidget() const

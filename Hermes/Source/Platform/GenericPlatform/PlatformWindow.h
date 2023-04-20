@@ -73,6 +73,48 @@ namespace Hermes
 		Vec2i MouseDelta;
 	};
 
+	class HERMES_API WindowStateEvent : public IEvent
+	{
+		EVENT_BODY(WindowStateEvent)
+
+	public:
+		enum class State
+		{
+			Minimized,
+			Maximized
+		};
+
+		explicit WindowStateEvent(State InState)
+			: State(InState)
+		{
+		}
+
+		virtual String ToString() const override
+		{
+			StringView StateString;
+			switch (State)
+			{
+			case State::Maximized:
+				StateString = "Maximized";
+				break;
+			case State::Minimized:
+				StateString = "Minimized";
+				break;
+			default:
+				HERMES_ASSERT(false);
+			}
+			return std::format("WindowStateEvent (State: {})", StateString);
+		}
+
+		State GetState() const
+		{
+			return State;
+		}
+
+	private:
+		State State;
+	};
+
 	class HERMES_API WindowCloseEvent : public IEvent
 	{
 		EVENT_BODY(WindowCloseEvent)

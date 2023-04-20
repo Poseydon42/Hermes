@@ -20,3 +20,7 @@ set(SOURCES
 add_hermes_sublib(Hermes_UIEngine "${SOURCES}")
 target_link_libraries(Hermes_UIEngine PUBLIC Hermes_Core Hermes_Math)
 target_link_libraries(Hermes_UIEngine PRIVATE Hermes_Logging Hermes_RenderingEngine)
+
+target_include_directories(Hermes_UIEngine PRIVATE ${HERMES_THIRD_PARTY_DIR}/freetype/include)
+target_link_directories(Hermes_UIEngine PUBLIC ${HERMES_THIRD_PARTY_DIR}/freetype/lib)
+target_link_libraries(Hermes_UIEngine PRIVATE freetype)

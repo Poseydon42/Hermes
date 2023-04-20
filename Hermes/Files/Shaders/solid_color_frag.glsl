@@ -5,7 +5,7 @@
 
 layout(set = 0, binding = 0) uniform GlobalSceneDataWrapper
 {
-    GlobalSceneData Data;
+    SceneData Data;
 } u_GlobalSceneDataWrapper;
 
 layout(set = 1, binding = 0) uniform MaterialData

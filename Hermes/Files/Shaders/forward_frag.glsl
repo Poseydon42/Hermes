@@ -8,7 +8,7 @@
 
 layout(set = 0, binding = 0, row_major) uniform GlobalSceneDataWrapper
 {
-    GlobalSceneData Data;
+    SceneData Data;
 } u_SceneData;
 layout(set = 0, binding = 1) uniform samplerCube u_IrradianceMap;
 layout(set = 0, binding = 2) uniform samplerCube u_SpecularMap;

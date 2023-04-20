@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include "AssetSystem/AssetLoader.h"
 #include "ApplicationCore/GameLoop.h"
 #include "Core/Profiling.h"
 #include "Math/Frustum.h"
@@ -395,8 +396,7 @@ namespace Hermes
 	{
 		static constexpr auto EnvmapName = "/Textures/envmap";
 
-		auto& AssetCache = GGameLoop->GetAssetCache();
-		auto RawReflectionEnvmap = AssetCache.Get<Texture2D>(EnvmapName);
+		auto RawReflectionEnvmap = AssetLoader::Load<Texture2D>(EnvmapName);
 		HERMES_ASSERT(RawReflectionEnvmap);
 
 		ReflectionEnvmap = TextureCube::CreateFromEquirectangularTexture(*RawReflectionEnvmap, VK_FORMAT_R16G16B16A16_SFLOAT, true);

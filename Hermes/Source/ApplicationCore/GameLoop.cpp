@@ -50,8 +50,6 @@ namespace Hermes
 		// DEBUG ONLY
 		InputEngine->GetEventQueue().Subscribe(KeyEvent::GetStaticType(), [this](const IEvent& Event) { KeyEventHandler(Event); });
 
-		AssetCache = std::make_unique<class AssetCache>();
-		
 		HERMES_ASSERT_LOG(Renderer::Init(), "Failed to initialize the renderer");
 
 		GameWorld = std::make_unique<World>();
@@ -134,11 +132,6 @@ namespace Hermes
 	InputEngine& GameLoop::GetInputEngine()
 	{
 		return *InputEngine;
-	}
-
-	AssetCache& GameLoop::GetAssetCache()
-	{
-		return *AssetCache;
 	}
 
 	World& GameLoop::GetWorld()

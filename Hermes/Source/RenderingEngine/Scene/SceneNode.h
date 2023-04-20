@@ -4,7 +4,6 @@
 #include <span>
 #include <vector>
 
-#include "AssetSystem/AssetCache.h"
 #include "Core/Core.h"
 #include "Math/BoundingVolume.h"
 #include "Math/Transform.h"

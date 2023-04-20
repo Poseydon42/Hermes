@@ -27,16 +27,34 @@ namespace Hermes
 		static void RegisterBinaryAssetLoader(AssetType Type, BinaryAssetLoaderFunction Loader);
 		static void RegisterTextAssetLoader(String Type, TextAssetLoaderFunction Loader);
 
-		static AssetHandle<Asset> Load(StringView Name);
+		template<typename AssetClass>
+		requires (std::derived_from<AssetClass, Asset>)
+		static AssetHandle<AssetClass> Load(const String& AssetName);
 
 	private:
+		static std::unordered_map<String, AssetHandle<Asset>> LoadedAssets;
+
 		static std::unordered_map<AssetType, BinaryAssetLoaderFunction> BinaryLoaders;
 		static std::unordered_map<String, TextAssetLoaderFunction> TextLoaders;
 
 		static AssetHandle<Asset> LoadBinary(IPlatformFile& File, StringView Name);
 
 		static AssetHandle<Asset> LoadText(const JSONObject& JSONRoot, StringView Name);
+
+		static AssetHandle<Asset> LoadImpl(const String& Name);
 	};
+
+	template<typename AssetClass>
+	requires (std::derived_from<AssetClass, Asset>)
+	AssetHandle<AssetClass> AssetLoader::Load(const String& AssetName)
+	{
+		auto Result = LoadImpl(AssetName);
+
+		if (Result->GetType() != AssetClass::GetStaticType())
+			return nullptr;
+
+		return AssetCast<AssetClass>(Result);
+	}
 }
 
 #define HERMES_ADD_BINARY_ASSET_LOADER(ClassName, Type)                               \

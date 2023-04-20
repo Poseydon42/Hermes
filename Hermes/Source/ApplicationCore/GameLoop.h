@@ -5,7 +5,6 @@
 #include "Core/Core.h"
 #include "ApplicationCore/Application.h"
 #include "ApplicationCore/InputEngine.h"
-#include "AssetSystem/AssetCache.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
 #include "UIEngine/Widgets/Widget.h"
@@ -41,8 +40,6 @@ namespace Hermes
 
 		InputEngine& GetInputEngine();
 
-		AssetCache& GetAssetCache();
-
 		World& GetWorld();
 
 
@@ -60,8 +57,6 @@ namespace Hermes
 		std::unique_ptr<IApplication> Application;
 		std::shared_ptr<IPlatformWindow> ApplicationWindow;
 		std::unique_ptr<InputEngine> InputEngine;
-
-		std::unique_ptr<AssetCache> AssetCache;
 
 		std::unique_ptr<World> GameWorld;
 		std::shared_ptr<UI::Widget> RootWidget;

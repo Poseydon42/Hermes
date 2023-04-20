@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "Core/Profiling.h"
+#include "AssetSystem/AssetLoader.h"
 #include "ApplicationCore/Application.h"
 #include "ApplicationCore/GameLoop.h"
 #include "ApplicationCore/InputEngine.h"
@@ -173,10 +174,9 @@ public:
 
 	bool Init() override
 	{
-		auto& AssetCache = Hermes::GGameLoop->GetAssetCache();
-		auto SphereAssetHandle = AssetCache.Get<Hermes::Mesh>("/sphere");
+		auto SphereAssetHandle = Hermes::AssetLoader::Load<Hermes::Mesh>("/sphere");
 
-		SolidColorMaterialInstanceHandle = AssetCache.Get<Hermes::MaterialInstance>("/mi_metal");
+		SolidColorMaterialInstanceHandle = Hermes::AssetLoader::Load<Hermes::MaterialInstance>("/mi_metal");
 		HERMES_ASSERT(SolidColorMaterialInstanceHandle);
 
 		auto& World = Hermes::GGameLoop->GetWorld();

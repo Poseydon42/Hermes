@@ -1,6 +1,5 @@
 ﻿#include "AssetLoader.h"
 
-#include "ApplicationCore/GameLoop.h"
 #include "AssetSystem/AssetHeaders.h"
 #include "JSON/JSONParser.h"
 #include "Logging/Logger.h"
@@ -9,6 +8,7 @@
 
 namespace Hermes
 {
+	std::unordered_map<String, AssetHandle<Asset>> AssetLoader::LoadedAssets;
 	std::unordered_map<AssetType, AssetLoader::BinaryAssetLoaderFunction> AssetLoader::BinaryLoaders;
 	std::unordered_map<String, AssetLoader::TextAssetLoaderFunction> AssetLoader::TextLoaders;
 
@@ -25,8 +25,11 @@ namespace Hermes
 		TextLoaders[std::move(Type)] = Loader;
 	}
 
-	AssetHandle<Asset> AssetLoader::Load(StringView Name)
+	AssetHandle<Asset> AssetLoader::LoadImpl(const String& Name)
 	{
+		if (LoadedAssets.contains(Name))
+			return LoadedAssets.at(Name);
+
 		String Filename = String(Name) + ".hac";
 
 		auto File = VirtualFilesystem::Open(Filename, FileOpenMode::OpenExisting, FileAccessMode::Read);
@@ -40,7 +43,9 @@ namespace Hermes
 		if (File->Read(Signature, sizeof(Signature)) && memcmp(Signature, AssetHeader::ExpectedSignature, sizeof(Signature)) == 0)
 		{
 			File->Seek(0);
-			return LoadBinary(*File, Name);
+			auto Result = LoadBinary(*File, Name);
+			LoadedAssets[Name] = Result;
+			return Result;
 		}
 
 		String FileContents(File->Size(), 0);
@@ -58,7 +63,9 @@ namespace Hermes
 			return nullptr;
 		}
 
-		return LoadText(*MaybeJSONRoot.value(), Name);
+		auto Result = LoadText(*MaybeJSONRoot.value(), Name);
+		LoadedAssets[Name] = Result;
+		return Result;
 	}
 
 	AssetHandle<Asset> AssetLoader::LoadBinary(IPlatformFile& File, StringView Name)
@@ -126,10 +133,9 @@ namespace Hermes
 		}
 
 		std::vector<AssetHandle<Asset>> DependencyHandles;
-		auto& AssetCache = GGameLoop->GetAssetCache();
 		for (const auto& DependencyName : DependencyNames)
 		{
-			auto DependencyHandle = AssetCache.Get<Asset>(String(DependencyName));
+			auto DependencyHandle = LoadImpl(String(DependencyName));
 			if (!DependencyHandle)
 			{
 				HERMES_LOG_ERROR("Asset %s depends on asset %s which cannot be loaded", DependencyName.data());

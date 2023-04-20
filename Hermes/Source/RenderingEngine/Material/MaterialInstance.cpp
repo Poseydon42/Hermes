@@ -1,7 +1,6 @@
 #include "MaterialInstance.h"
 
 #include "ApplicationCore/GameLoop.h"
-#include "AssetSystem/AssetCache.h"
 #include "JSON/JSONParser.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/Renderer.h"

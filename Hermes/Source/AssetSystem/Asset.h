@@ -14,6 +14,7 @@ namespace Hermes
 	{
 		Texture2D = 1,
 		Mesh = 2,
+		Font = 3,
 
 		Material = 64,
 		MaterialInstance = 65,

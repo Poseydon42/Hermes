@@ -11,6 +11,7 @@
 #include "RenderingEngine/Material/MaterialInstance.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
+#include "UIEngine/Font.h"
 #include "UIEngine/Widgets/PanelWidget.h"
 #include "UIEngine/Widgets/Containers/ViewportContainerWidget.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
@@ -174,6 +175,10 @@ public:
 
 	bool Init() override
 	{
+		auto Font = Hermes::AssetLoader::Load<Hermes::UI::Font>("/Fonts/arial");
+		auto Glyph = Font->RenderGlyph('A');
+		(void)Glyph;
+
 		auto SphereAssetHandle = Hermes::AssetLoader::Load<Hermes::Mesh>("/sphere");
 
 		SolidColorMaterialInstanceHandle = Hermes::AssetLoader::Load<Hermes::MaterialInstance>("/mi_metal");

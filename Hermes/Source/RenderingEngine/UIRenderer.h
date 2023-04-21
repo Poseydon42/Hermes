@@ -5,7 +5,9 @@
 #include "UIEngine/Widgets/Widget.h"
 #include "Vulkan/Buffer.h"
 #include "Vulkan/Descriptor.h"
+#include "Vulkan/Image.h"
 #include "Vulkan/Pipeline.h"
+#include "vulkan/Sampler.h"
 
 namespace Hermes
 {
@@ -14,25 +16,41 @@ namespace Hermes
 	public:
 		UIRenderer();
 
+		/**
+		 * Processes the UI tree and prepares resources that will later be needed to actually draw the UI.
+		 *
+		 * @return Viewport rectangle where the scene will be rendered to
+		 */
 		Rect2Dui PrepareToRender(const UI::Widget& RootWidget, Vec2ui RequiredDimensions);
 
 		std::pair<const Vulkan::Image*, VkImageLayout> Render(const Vulkan::Image& RenderedScene, VkImageLayout RenderedSceneLayout);
 
 	private:
-		std::unique_ptr<Vulkan::Pipeline> Pipeline;
-		std::unique_ptr<Vulkan::DescriptorSet> DescriptorSet;
+		std::unique_ptr<Vulkan::Pipeline> RectanglePipeline;
+		std::unique_ptr<Vulkan::DescriptorSet> RectangleDescriptorSet;
+		static constexpr size_t MaxRectangleCount = 1024;
+		std::unique_ptr<Vulkan::Buffer> RectangleListBuffer;
+
+		static constexpr VkFormat TextFontImageFormat = VK_FORMAT_R8_UNORM;
+		bool HasTextToDraw = false;
+		std::unique_ptr<Vulkan::Pipeline> TextPipeline;
+		std::unique_ptr<Vulkan::DescriptorSet> TextDescriptorSet;
+		std::unique_ptr<Vulkan::Buffer> TextMeshBuffer;
+		std::unique_ptr<Vulkan::Image> TextFontImage;
+		std::unique_ptr<Vulkan::ImageView> TextFontImageView;
+		std::unique_ptr<Vulkan::Sampler> TextFontSampler;
 
 		static constexpr VkFormat DestinationImageFormat = VK_FORMAT_B8G8R8A8_SRGB;
 		std::unique_ptr<Vulkan::Image> DestinationImage;
 		std::unique_ptr<Vulkan::ImageView> DestinationImageView;
 
-		static constexpr size_t MaxRectangleCount = 1024;
-		std::unique_ptr<Vulkan::Buffer> RectangleListBuffer;
-
 		Vec2ui CurrentDimensions = {};
-		UI::DrawingContext DrawingContext;
-		UIShaderPushConstants PushConstants = {};
+		Rect2Dui SceneViewport = {};
+		UIShaderPushConstants RectanglePushConstants = {};
 
 		void RecreateDestinationImage();
+
+		void PrepareToRenderRectangles(const UI::DrawingContext& DrawingContext);
+		void PrepareToRenderText(const UI::DrawingContext& DrawingContext);
 	};
 }

@@ -7,6 +7,8 @@ set(SHADERS
     forward_vert.glsl
     fs_postprocessing_frag.glsl
     fs_ui_frag.glsl
+    fs_ui_text_frag.glsl
+    fs_ui_text_vert.glsl
     fs_ui_vert.glsl
     fs_vert.glsl
     irradiance_convolution.glsl

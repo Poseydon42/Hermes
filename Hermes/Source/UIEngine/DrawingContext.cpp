@@ -11,6 +11,11 @@ namespace Hermes::UI
 		Rectangles.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), Color);
 	}
 
+	void DrawingContext::DrawText(Rect2D Rect, String Text, AssetHandle<Font> Font)
+	{
+		Texts.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), std::move(Text), std::move(Font));
+	}
+
 	void DrawingContext::SetSceneViewport(Rect2D NewViewport)
 	{
 		Viewport = {
@@ -22,6 +27,11 @@ namespace Hermes::UI
 	const std::vector<DrawingContext::DrawableRectangle>& DrawingContext::GetRectangles() const
 	{
 		return Rectangles;
+	}
+
+	const std::vector<DrawingContext::DrawableText>& DrawingContext::GetDrawableTexts() const
+	{
+		return Texts;
 	}
 
 	Rect2Dui DrawingContext::GetViewport() const

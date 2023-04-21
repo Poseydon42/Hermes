@@ -4,6 +4,7 @@
 #include FT_FREETYPE_H
 
 #include "AssetSystem/AssetLoader.h"
+#include "Core/Profiling.h"
 #include "Logging/Logger.h"
 
 namespace Hermes::UI
@@ -36,8 +37,18 @@ namespace Hermes::UI
 		return AssetHandle<Font>(new Font(std::move(Name), BinaryData));
 	}
 
+	Vec2ui Font::GetGlyphDimensions(uint32 CharacterCode) const
+	{
+		auto RenderedGlyph = RenderGlyph(CharacterCode);
+		if (!RenderedGlyph.has_value())
+			return {};
+		return RenderedGlyph.value().Dimensions;
+	}
+
 	std::optional<FontGlyph> Font::RenderGlyph(uint32 CharacterCode) const
 	{
+		HERMES_PROFILE_FUNC();
+
 		auto GlyphIndex = FT_Get_Char_Index(FontData->Face, CharacterCode);
 		if (!GlyphIndex)
 			return std::nullopt;
@@ -62,7 +73,15 @@ namespace Hermes::UI
 
 		auto Bitmap = std::vector(FontData->Face->glyph->bitmap.buffer, FontData->Face->glyph->bitmap.buffer + TotalBytes);
 
-		return FontGlyph{ Dimensions, Bitmap };
+		// NOTE: FreeType gives some dimensions in 1/64 of a pixel
+		static constexpr float PixelScalingFactor = 1.0f / 64.0f;
+
+		return FontGlyph{
+			.Dimensions = Dimensions,
+			.Bearing = Vec2(Vec2ui(FontData->Face->glyph->metrics.horiBearingX, FontData->Face->glyph->metrics.horiBearingY)) * PixelScalingFactor,
+			.Advance = static_cast<float>(FontData->Face->glyph->metrics.horiAdvance) * PixelScalingFactor,
+			.Bitmap = std::move(Bitmap)
+		};
 	}
 
 	Font::Font(String InName, std::span<const uint8> BinaryData)

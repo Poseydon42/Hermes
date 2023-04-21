@@ -1,6 +1,7 @@
 #include "UIRenderer.h"
 
 #include "Core/Profiling.h"
+#include "RenderingEngine/GPUInteractionUtilities.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/SharedData.h"
 #include "Vulkan/CommandBuffer.h"
@@ -10,10 +11,21 @@
 
 namespace Hermes
 {
+	struct TextVertex
+	{
+		Vec2 Position;
+		Vec2 TextureCoordinates;
+	};
+
 	UIRenderer::UIRenderer()
 	{
 		auto& Device = Renderer::GetDevice();
+		auto& ShaderCache = Renderer::GetShaderCache();
 
+
+		/*
+		 * Rectangle pipeline initialization
+		 */
 		VkDescriptorSetLayoutBinding RectangleListBinding = {
 			.binding = 0,
 			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -21,17 +33,16 @@ namespace Hermes
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 			.pImmutableSamplers = nullptr
 		};
-		auto DescriptorSetLayout = Device.CreateDescriptorSetLayout({ RectangleListBinding });
-		DescriptorSet = Renderer::GetDescriptorAllocator().Allocate(*DescriptorSetLayout);
+		auto RectangleDescriptorSetLayout = Device.CreateDescriptorSetLayout({ RectangleListBinding });
+		RectangleDescriptorSet = Renderer::GetDescriptorAllocator().Allocate(*RectangleDescriptorSetLayout);
 
-		auto& ShaderCache = Renderer::GetShaderCache();
-		const auto& VertexShader = ShaderCache.GetShader("/Shaders/Bin/fs_ui_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		const auto& FragmentShader = ShaderCache.GetShader("/Shaders/Bin/fs_ui_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
-
-		Vulkan::PipelineDescription Desc = {
+		Vulkan::PipelineDescription RectanglePipelineDesc = {
 			.PushConstants = { VkPushConstantRange {.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, .offset = 0, .size = sizeof(UIShaderPushConstants)}},
-			.DescriptorSetLayouts = { DescriptorSetLayout.get() },
-			.ShaderStages = { &VertexShader, &FragmentShader },
+			.DescriptorSetLayouts = { RectangleDescriptorSetLayout.get() },
+			.ShaderStages = {
+				&ShaderCache.GetShader("/Shaders/Bin/fs_ui_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT),
+				&ShaderCache.GetShader("/Shaders/Bin/fs_ui_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
+			},
 			.VertexInputBindings = {},
 			.VertexInputAttributes = {},
 			.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -55,10 +66,92 @@ namespace Hermes
 			.DepthCompareOperator = VK_COMPARE_OP_NEVER,
 			.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR }
 		};
-		Pipeline = Device.CreatePipeline(Desc, { &DestinationImageFormat, 1 }, std::nullopt);
+		RectanglePipeline = Device.CreatePipeline(RectanglePipelineDesc, { &DestinationImageFormat, 1 }, std::nullopt);
 
 		RectangleListBuffer = Device.CreateBuffer(sizeof(RectanglePrimitive) * MaxRectangleCount, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, true);
-		DescriptorSet->UpdateWithBuffer(0, 0, *RectangleListBuffer, 0, static_cast<uint32>(RectangleListBuffer->GetSize()));
+		RectangleDescriptorSet->UpdateWithBuffer(0, 0, *RectangleListBuffer, 0, static_cast<uint32>(RectangleListBuffer->GetSize()));
+
+
+		/*
+		 * Text pipeline initialization
+		 */
+		VkDescriptorSetLayoutBinding GlyphTextureBinding = {
+			.binding = 0,
+			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			.descriptorCount = 1,
+			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+			.pImmutableSamplers = nullptr
+		};
+		auto TextDescriptorSetLayout = Device.CreateDescriptorSetLayout({ GlyphTextureBinding });
+		TextDescriptorSet = Renderer::GetDescriptorAllocator().Allocate(*TextDescriptorSetLayout);
+
+		VkVertexInputBindingDescription TextVertexInputBindingDescription = {
+			.binding = 0,
+			.stride = sizeof(TextVertex),
+			.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+		};
+		VkVertexInputAttributeDescription TextVertexPositionAttribute = {
+			.location = 0,
+			.binding = 0,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(TextVertex, Position)
+		};
+		VkVertexInputAttributeDescription TextTextureCoordinateAttribute = {
+			.location = 1,
+			.binding = 0,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(TextVertex, TextureCoordinates)
+		};
+		Vulkan::PipelineDescription TextPipelineDesc = {
+			.PushConstants = {},
+			.DescriptorSetLayouts = { TextDescriptorSetLayout.get() },
+			.ShaderStages = {
+				&ShaderCache.GetShader("/Shaders/Bin/fs_ui_text_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT),
+				&ShaderCache.GetShader("/Shaders/Bin/fs_ui_text_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
+			},
+			.VertexInputBindings = { TextVertexInputBindingDescription },
+			.VertexInputAttributes = { TextVertexPositionAttribute, TextTextureCoordinateAttribute },
+			.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.Viewport = {},
+			.Scissor = {},
+			.PolygonMode = VK_POLYGON_MODE_FILL,
+			.CullMode = VK_CULL_MODE_NONE,
+			.FaceDirection = VK_FRONT_FACE_CLOCKWISE,
+			.AttachmentColorBlending = {
+				VkPipelineColorBlendAttachmentState {
+					.blendEnable = true,
+					.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+					.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+					.colorBlendOp = VK_BLEND_OP_ADD,
+					.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+					.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+					.alphaBlendOp = VK_BLEND_OP_ADD,
+					.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+				}
+			},
+			.BlendingConstants = {},
+			.IsDepthTestEnabled = false,
+			.IsDepthWriteEnabled = false,
+			.DepthCompareOperator = VK_COMPARE_OP_ALWAYS,
+			.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR }
+		};
+		TextPipeline = Device.CreatePipeline(TextPipelineDesc, { &DestinationImageFormat, 1 }, std::nullopt);
+
+		Vulkan::SamplerDescription TextFontSamplerDesc = {
+			.MagnificationFilter = VK_FILTER_LINEAR,
+			.MinificationFilter = VK_FILTER_LINEAR,
+			.MipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+			.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+			.CoordinateSystem = Vulkan::CoordinateSystem::Normalized,
+			.Anisotropy = false,
+			.AnisotropyLevel = 0.0f,
+			.MinLOD = 0.0f,
+			.MaxLOD = 0.0f,
+			.LODBias = 0.0f
+		};
+		TextFontSampler = Device.CreateSampler(TextFontSamplerDesc);
+
+		TextMeshBuffer = Device.CreateBuffer(6 * sizeof(TextVertex), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 	}
 
 	Rect2Dui UIRenderer::PrepareToRender(const UI::Widget& RootWidget, Vec2ui RequiredDimensions)
@@ -72,26 +165,16 @@ namespace Hermes
 			RecreateDestinationImage();
 		}
 
-		DrawingContext = {};
+		UI::DrawingContext DrawingContext = {};
 		Rect2D AvailableRect = { { 0, 0 }, Vec2(CurrentDimensions) };
 		RootWidget.Draw(DrawingContext, AvailableRect);
 
-		HERMES_ASSERT(DrawingContext.GetRectangles().size() < MaxRectangleCount);
-		auto* NextRectangle = static_cast<RectanglePrimitive*>(RectangleListBuffer->Map());
-		for (const auto& SourceRectangle : DrawingContext.GetRectangles())
-		{
-			NextRectangle->Min = Vec2(SourceRectangle.Rect.Min) / Vec2(CurrentDimensions);
-			NextRectangle->Max = Vec2(SourceRectangle.Rect.Max) / Vec2(CurrentDimensions);
-			NextRectangle->Color = Vec4(SourceRectangle.Color, 1.0f);
-			NextRectangle++;
-		}
-		RectangleListBuffer->Unmap();
+		SceneViewport = DrawingContext.GetViewport();
 
-		PushConstants = {
-			.RectangleCount = static_cast<uint32>(DrawingContext.GetRectangles().size())
-		};
+		PrepareToRenderRectangles(DrawingContext);
+		PrepareToRenderText(DrawingContext);
 
-		return DrawingContext.GetViewport();
+		return SceneViewport;
 	}
 
 	std::pair<const Vulkan::Image*, VkImageLayout> UIRenderer::Render(const Vulkan::Image& RenderedScene, VkImageLayout RenderedSceneLayout)
@@ -139,7 +222,6 @@ namespace Hermes
 		};
 		CommandBuffer->InsertImageMemoryBarriers(BeforeBlitBarriers, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
 
-		auto SceneViewport = DrawingContext.GetViewport();
 		VkImageBlit Blit = {
 			.srcSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1 },
 			.srcOffsets = { { 0, 0, 0 }, { static_cast<int32>(RenderedScene.GetDimensions().X), static_cast<int32>(RenderedScene.GetDimensions().Y), 1 } },
@@ -179,7 +261,7 @@ namespace Hermes
 
 
 		/*
-		 * Rendering UI
+		 * Beginning rendering
 		 */
 		VkRect2D RenderingArea = {
 			.offset = { 0, 0 },
@@ -199,7 +281,11 @@ namespace Hermes
 		};
 		CommandBuffer->BeginRendering(RenderingArea, { &Attachment, 1 }, std::nullopt, std::nullopt);
 
-		CommandBuffer->BindPipeline(*Pipeline);
+
+		/*
+		 * Rendering rectangles
+		 */
+		CommandBuffer->BindPipeline(*RectanglePipeline);
 		VkViewport Viewport = {
 			.x = 0.0f,
 			.y = 0.0f,
@@ -215,11 +301,30 @@ namespace Hermes
 		};
 		CommandBuffer->SetScissor(Scissor);
 
-		CommandBuffer->BindDescriptorSet(*DescriptorSet, *Pipeline, 0);
-		CommandBuffer->UploadPushConstants(*Pipeline, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, &PushConstants, sizeof(PushConstants), 0);
+		CommandBuffer->BindDescriptorSet(*RectangleDescriptorSet, *RectanglePipeline, 0);
+		CommandBuffer->UploadPushConstants(*RectanglePipeline, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, &RectanglePushConstants, sizeof(RectanglePushConstants), 0);
 
 		CommandBuffer->Draw(6, 1, 0, 0);
 
+
+		/*
+		 * Rendering text
+		 */
+		if (HasTextToDraw)
+		{
+			CommandBuffer->BindPipeline(*TextPipeline);
+			CommandBuffer->SetViewport(Viewport);
+			CommandBuffer->SetScissor(Scissor);
+
+			CommandBuffer->BindDescriptorSet(*TextDescriptorSet, *TextPipeline, 0);
+			CommandBuffer->BindVertexBuffer(*TextMeshBuffer);
+
+			CommandBuffer->Draw(6, 1, 0, 0);
+		}
+
+		/*
+		 * Finishing command buffer recording
+		 */
 		CommandBuffer->EndRendering();
 		CommandBuffer->EndRecording();
 
@@ -238,5 +343,65 @@ namespace Hermes
 	{
 		DestinationImage = Renderer::GetDevice().CreateImage(CurrentDimensions, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, DestinationImageFormat, 1);
 		DestinationImageView = DestinationImage->CreateDefaultImageView();
+	}
+
+	void UIRenderer::PrepareToRenderRectangles(const UI::DrawingContext& DrawingContext)
+	{
+		HERMES_PROFILE_FUNC();
+
+		HERMES_ASSERT(DrawingContext.GetRectangles().size() < MaxRectangleCount);
+		auto* NextRectangle = static_cast<RectanglePrimitive*>(RectangleListBuffer->Map());
+		for (const auto& SourceRectangle : DrawingContext.GetRectangles())
+		{
+			NextRectangle->Min = Vec2(SourceRectangle.Rect.Min) / Vec2(CurrentDimensions);
+			NextRectangle->Max = Vec2(SourceRectangle.Rect.Max) / Vec2(CurrentDimensions);
+			NextRectangle->Color = Vec4(SourceRectangle.Color, 1.0f);
+			NextRectangle++;
+		}
+		RectangleListBuffer->Unmap();
+		RectanglePushConstants = {
+			.RectangleCount = static_cast<uint32>(DrawingContext.GetRectangles().size())
+		};
+	}
+
+	void UIRenderer::PrepareToRenderText(const UI::DrawingContext& DrawingContext)
+	{
+		HERMES_PROFILE_FUNC();
+
+		if (DrawingContext.GetDrawableTexts().empty())
+			return;
+
+		// FIXME: this is so, soo bad
+		const auto& Text = DrawingContext.GetDrawableTexts()[0];
+		HERMES_ASSERT(!Text.Text.empty());
+
+		auto Character = Text.Text[0];
+
+		auto MaybeGlyph = Text.Font->RenderGlyph(Character);
+		HERMES_ASSERT(MaybeGlyph.has_value());
+		auto Glyph = std::move(MaybeGlyph.value());
+
+		TextFontImage = Renderer::GetDevice().CreateImage(Glyph.Dimensions, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, TextFontImageFormat, 1);
+		TextFontImageView = TextFontImage->CreateDefaultImageView();
+		GPUInteractionUtilities::UploadDataToGPUImage(Glyph.Bitmap.data(), { 0, 0 }, Glyph.Dimensions, 1, 0, *TextFontImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		TextDescriptorSet->UpdateWithImageAndSampler(0, 0, *TextFontImageView, *TextFontSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		auto TopLeft     = Vec2(Vec2ui(Text.Rect.Min.X, Text.Rect.Min.Y)) / Vec2(CurrentDimensions) * 2.0f - 1.0f;
+		auto TopRight    = Vec2(Vec2ui(Text.Rect.Max.X, Text.Rect.Min.Y)) / Vec2(CurrentDimensions) * 2.0f - 1.0f;
+		auto BottomLeft  = Vec2(Vec2ui(Text.Rect.Min.X, Text.Rect.Max.Y)) / Vec2(CurrentDimensions) * 2.0f - 1.0f;
+		auto BottomRight = Vec2(Vec2ui(Text.Rect.Max.X, Text.Rect.Max.Y)) / Vec2(CurrentDimensions) * 2.0f - 1.0f;
+
+		std::vector<TextVertex> TextVertices(6);
+		TextVertices[0] = { TopLeft, { 0.0f, 0.0f } };
+		TextVertices[1] = { TopRight, { 1.0f, 0.0f } };
+		TextVertices[2] = { BottomLeft, { 0.0f, 1.0f } };
+
+		TextVertices[3] = { BottomLeft, { 0.0f, 1.0f } };
+		TextVertices[4] = { TopRight, { 1.0f, 0.0f } };
+		TextVertices[5] = { BottomRight, { 1.0f, 1.0f } };
+
+		GPUInteractionUtilities::UploadDataToGPUBuffer(TextVertices.data(), TextVertices.size() * sizeof(TextVertex), 0, *TextMeshBuffer);
+
+		HasTextToDraw = true;
 	}
 }

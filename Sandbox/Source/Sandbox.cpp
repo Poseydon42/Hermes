@@ -12,6 +12,7 @@
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "UIEngine/Font.h"
+#include "UIEngine/Widgets/LabelWidget.h"
 #include "UIEngine/Widgets/PanelWidget.h"
 #include "UIEngine/Widgets/Containers/ViewportContainerWidget.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
@@ -175,10 +176,6 @@ public:
 
 	bool Init() override
 	{
-		auto Font = Hermes::AssetLoader::Load<Hermes::UI::Font>("/Fonts/arial");
-		auto Glyph = Font->RenderGlyph('A');
-		(void)Glyph;
-
 		auto SphereAssetHandle = Hermes::AssetLoader::Load<Hermes::Mesh>("/sphere");
 
 		SolidColorMaterialInstanceHandle = Hermes::AssetLoader::Load<Hermes::MaterialInstance>("/mi_metal");
@@ -237,6 +234,10 @@ public:
 		GreenPanel->GetMargins().Left = { Hermes::UI::MarginValueType::Absolute, 10.0f };
 		GreenPanel->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.9f };
 		RootWidget->AddChild(GreenPanel);
+
+		auto Font = Hermes::AssetLoader::Load<Hermes::UI::Font>("/Fonts/arial");
+		auto Label = Hermes::UI::LabelWidget::Create(RootWidget, "Hello, world! This is Hermes UI system!", Font);
+		RootWidget->AddChild(Label);
 
 		Hermes::GGameLoop->SetRootWidget(RootWidget);
 

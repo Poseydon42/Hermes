@@ -2,10 +2,12 @@
 
 #include <vector>
 
+#include "AssetSystem/Asset.h"
 #include "Core/Core.h"
 #include "Math/Rect2D.h"
 #include "Math/Vector.h"
 #include "Math/Vector2.h"
+#include "UIEngine/Font.h"
 
 namespace Hermes::UI
 {
@@ -39,17 +41,45 @@ namespace Hermes::UI
 		 */
 		void DrawRectangle(Rect2D Rect, Vec3 Color);
 
+		struct DrawableText
+		{
+			/*
+			 * Position and dimensions of the character on the screen
+			 */
+			Rect2Dui Rect;
+
+			/*
+			 * Text to draw
+			 */
+			String Text;
+
+			/*
+			 * Character font
+			 */
+			AssetHandle<Font> Font;
+		};
+
+		/*
+		 * Draws text in one line
+		 */
+		void DrawText(Rect2D Rect, String Text, AssetHandle<Font> Font);
+
 		/*
 		 * Sets the viewport where the game scene would be rendered.
 		 */
 		void SetSceneViewport(Rect2D NewViewport);
 
+
+
 		const std::vector<DrawableRectangle>& GetRectangles() const;
+		
+		const std::vector<DrawableText>& GetDrawableTexts() const;
 
 		Rect2Dui GetViewport() const;
 
 	private:
 		std::vector<DrawableRectangle> Rectangles;
+		std::vector<DrawableText> Texts;
 
 		Rect2Dui Viewport;
 	};

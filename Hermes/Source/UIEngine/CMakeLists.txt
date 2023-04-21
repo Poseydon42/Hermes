@@ -13,6 +13,8 @@ set(SOURCES
     Widgets/Containers/VerticalContainerWidget.h
     Widgets/Containers/ViewportContainerWidget.cpp
     Widgets/Containers/ViewportContainerWidget.h
+    Widgets/LabelWidget.cpp
+    Widgets/LabelWidget.h
     Widgets/PanelWidget.cpp
     Widgets/PanelWidget.h
     Widgets/Widget.cpp

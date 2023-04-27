@@ -7,6 +7,9 @@ set(HERMES_THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty")
 
 find_package(Vulkan REQUIRED)
 
+set(ENV{FREETYPE_DIR} ${HERMES_THIRD_PARTY_DIR}/freetype)
+include(FindFreetype)
+
 add_subdirectory(Source/ApplicationCore)
 add_subdirectory(Source/AssetSystem)
 add_subdirectory(Source/Core)

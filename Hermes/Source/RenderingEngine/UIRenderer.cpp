@@ -1,9 +1,12 @@
 #include "UIRenderer.h"
 
 #include "Core/Profiling.h"
+#include "RenderingEngine/DescriptorAllocator.h"
+#include "RenderingEngine/FontPack.h"
 #include "RenderingEngine/GPUInteractionUtilities.h"
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/SharedData.h"
+#include "UIEngine/TextLayout.h"
 #include "Vulkan/CommandBuffer.h"
 #include "Vulkan/Device.h"
 #include "Vulkan/Fence.h"
@@ -150,8 +153,6 @@ namespace Hermes
 			.LODBias = 0.0f
 		};
 		TextFontSampler = Device.CreateSampler(TextFontSamplerDesc);
-
-		TextMeshBuffer = Device.CreateBuffer(6 * sizeof(TextVertex), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 	}
 
 	Rect2Dui UIRenderer::PrepareToRender(const UI::Widget& RootWidget, Vec2ui RequiredDimensions)
@@ -319,7 +320,7 @@ namespace Hermes
 			CommandBuffer->BindDescriptorSet(*TextDescriptorSet, *TextPipeline, 0);
 			CommandBuffer->BindVertexBuffer(*TextMeshBuffer);
 
-			CommandBuffer->Draw(6, 1, 0, 0);
+			CommandBuffer->Draw(static_cast<uint32>(TextMeshBuffer->GetSize() / sizeof(TextVertex)), 1, 0, 0);
 		}
 
 		/*
@@ -375,31 +376,51 @@ namespace Hermes
 		const auto& Text = DrawingContext.GetDrawableTexts()[0];
 		HERMES_ASSERT(!Text.Text.empty());
 
-		auto Character = Text.Text[0];
+		std::vector<std::pair<uint32, Vec2>> GlyphPositions;
+		std::vector<uint32> GlyphIndices;
+		UI::TextLayout::Layout(Text.Text, *Text.Font, [&](uint32 GlyphIndex, Vec2 GlyphPosition)
+		{
+			GlyphIndices.push_back(GlyphIndex);
+			GlyphPositions.emplace_back(GlyphIndex, GlyphPosition);
+		});
 
-		auto MaybeGlyph = Text.Font->RenderGlyph(Character);
-		HERMES_ASSERT(MaybeGlyph.has_value());
-		auto Glyph = std::move(MaybeGlyph.value());
+		TextFontPack = std::make_unique<FontPack>(Text.Font);
+		TextFontPack->UpdatePack(GlyphIndices);
+		TextDescriptorSet->UpdateWithImageAndSampler(0, 0, TextFontPack->GetImage(), *TextFontSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		TextFontImage = Renderer::GetDevice().CreateImage(Glyph.Dimensions, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, TextFontImageFormat, 1);
-		TextFontImageView = TextFontImage->CreateDefaultImageView();
-		GPUInteractionUtilities::UploadDataToGPUImage(Glyph.Bitmap.data(), { 0, 0 }, Glyph.Dimensions, 1, 0, *TextFontImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		TextDescriptorSet->UpdateWithImageAndSampler(0, 0, *TextFontImageView, *TextFontSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		auto TextLocation = Vec2(Text.Rect.Min);
 
-		auto TopLeft     = Vec2(Vec2ui(Text.Rect.Min.X, Text.Rect.Min.Y)) / Vec2(CurrentDimensions) * 2.0f - 1.0f;
-		auto TopRight    = Vec2(Vec2ui(Text.Rect.Max.X, Text.Rect.Min.Y)) / Vec2(CurrentDimensions) * 2.0f - 1.0f;
-		auto BottomLeft  = Vec2(Vec2ui(Text.Rect.Min.X, Text.Rect.Max.Y)) / Vec2(CurrentDimensions) * 2.0f - 1.0f;
-		auto BottomRight = Vec2(Vec2ui(Text.Rect.Max.X, Text.Rect.Max.Y)) / Vec2(CurrentDimensions) * 2.0f - 1.0f;
+		std::vector<TextVertex> TextVertices;
+		for (auto [GlyphIndex, GlyphPosition] : GlyphPositions)
+		{
+			GlyphPosition += TextLocation;
 
-		std::vector<TextVertex> TextVertices(6);
-		TextVertices[0] = { TopLeft, { 0.0f, 0.0f } };
-		TextVertices[1] = { TopRight, { 1.0f, 0.0f } };
-		TextVertices[2] = { BottomLeft, { 0.0f, 1.0f } };
+			auto GlyphRectInPack = TextFontPack->GetGlyphCoordinates(GlyphIndex);
+			auto GlyphWidth = static_cast<float>(GlyphRectInPack.Width());
+			auto GlyphHeight = static_cast<float>(GlyphRectInPack.Height());
 
-		TextVertices[3] = { BottomLeft, { 0.0f, 1.0f } };
-		TextVertices[4] = { TopRight, { 1.0f, 0.0f } };
-		TextVertices[5] = { BottomRight, { 1.0f, 1.0f } };
+			auto GlyphUVMin = Vec2(GlyphRectInPack.Min) / Vec2(TextFontPack->GetImage().GetDimensions());
+			auto GlyphUVMax = Vec2(GlyphRectInPack.Max) / Vec2(TextFontPack->GetImage().GetDimensions());
 
+			auto GlyphUVTopLeft     = Vec2{ GlyphUVMin.X, GlyphUVMin.Y };
+			auto GlyphUVBottomLeft  = Vec2{ GlyphUVMin.X, GlyphUVMax.Y };
+			auto GlyphUVTopRight    = Vec2{ GlyphUVMax.X, GlyphUVMin.Y };
+			auto GlyphUVBottomRight = Vec2{ GlyphUVMax.X, GlyphUVMax.Y };
+
+			auto TopLeft     = ((GlyphPosition) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
+			auto TopRight    = ((GlyphPosition + Vec2(GlyphWidth, 0)) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
+			auto BottomLeft  = ((GlyphPosition + Vec2(0, GlyphHeight)) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
+			auto BottomRight = ((GlyphPosition + Vec2(GlyphWidth, GlyphHeight)) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
+
+			TextVertices.emplace_back(TopLeft, GlyphUVTopLeft);
+			TextVertices.emplace_back(TopRight, GlyphUVTopRight);
+			TextVertices.emplace_back(BottomLeft, GlyphUVBottomLeft);
+			TextVertices.emplace_back(BottomLeft, GlyphUVBottomLeft);
+			TextVertices.emplace_back(TopRight, GlyphUVTopRight);
+			TextVertices.emplace_back(BottomRight, GlyphUVBottomRight);
+		}
+
+		TextMeshBuffer = Renderer::GetDevice().CreateBuffer(TextVertices.size() * sizeof(TextVertex), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 		GPUInteractionUtilities::UploadDataToGPUBuffer(TextVertices.data(), TextVertices.size() * sizeof(TextVertex), 0, *TextMeshBuffer);
 
 		HasTextToDraw = true;

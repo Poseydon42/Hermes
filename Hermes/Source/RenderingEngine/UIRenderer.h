@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "RenderingEngine/FontPack.h"
 #include "RenderingEngine/SharedData.h"
 #include "UIEngine/Widgets/Widget.h"
 #include "Vulkan/Buffer.h"
@@ -36,8 +37,7 @@ namespace Hermes
 		std::unique_ptr<Vulkan::Pipeline> TextPipeline;
 		std::unique_ptr<Vulkan::DescriptorSet> TextDescriptorSet;
 		std::unique_ptr<Vulkan::Buffer> TextMeshBuffer;
-		std::unique_ptr<Vulkan::Image> TextFontImage;
-		std::unique_ptr<Vulkan::ImageView> TextFontImageView;
+		std::unique_ptr<FontPack> TextFontPack;
 		std::unique_ptr<Vulkan::Sampler> TextFontSampler;
 
 		static constexpr VkFormat DestinationImageFormat = VK_FORMAT_B8G8R8A8_SRGB;

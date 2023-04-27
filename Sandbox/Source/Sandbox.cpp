@@ -224,8 +224,8 @@ public:
 
 		auto RootWidget = Hermes::UI::ViewportContainerWidget::Create(nullptr);
 
-		auto RedPanel = Hermes::UI::PanelWidget::Create(RootWidget, { 80, 20 }, { 1.0f, 0.0f, 0.0f });
-		RedPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.03f };
+		auto RedPanel = Hermes::UI::PanelWidget::Create(RootWidget, { 80, 1 }, { 1.0f, 0.0f, 0.0f });
+		RedPanel->GetMargins().Top = { Hermes::UI::MarginValueType::Absolute, 20.0f };
 		RedPanel->GetMargins().Bottom = { Hermes::UI::MarginValueType::PercentOfParent, 0.92f };
 		RootWidget->AddChild(RedPanel);
 
@@ -237,6 +237,7 @@ public:
 
 		auto Font = Hermes::AssetLoader::Load<Hermes::UI::Font>("/Fonts/arial");
 		auto Label = Hermes::UI::LabelWidget::Create(RootWidget, "Hello, world! This is Hermes UI system!", Font);
+		Label->GetMargins().Top = { Hermes::UI::MarginValueType::Absolute, 20.0f };
 		RootWidget->AddChild(Label);
 
 		Hermes::GGameLoop->SetRootWidget(RootWidget);

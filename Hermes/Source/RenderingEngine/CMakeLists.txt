@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.24)
 set(SOURCES
     DescriptorAllocator.cpp
     DescriptorAllocator.h
+    FontPack.cpp
+    FontPack.h
     FrameGraph/Graph.cpp
     FrameGraph/Graph.h
     FrameGraph/Pass.h

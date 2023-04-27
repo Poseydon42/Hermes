@@ -7,6 +7,8 @@ set(SOURCES
     DrawingContext.h
     Font.cpp
     Font.h
+    TextLayout.cpp
+    TextLayout.h
     Widgets/Containers/ContainerWidget.cpp
     Widgets/Containers/ContainerWidget.h
     Widgets/Containers/VerticalContainerWidget.cpp

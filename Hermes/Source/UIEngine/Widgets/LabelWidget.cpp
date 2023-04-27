@@ -1,5 +1,7 @@
 #include "LabelWidget.h"
 
+#include "UIEngine/TextLayout.h"
+
 namespace Hermes::UI
 {
 	std::shared_ptr<LabelWidget> LabelWidget::Create(std::shared_ptr<Widget> InParent, String InText, AssetHandle<UI::Font> InFont)
@@ -9,9 +11,7 @@ namespace Hermes::UI
 
 	Vec2 LabelWidget::ComputeMinimumDimensions() const
 	{
-		if (Text.empty())
-			return {};
-		return Vec2(Font->GetGlyphDimensions(Text[0]));
+		return TextLayout::Measure(Text, *Font);
 	}
 
 	void LabelWidget::Draw(DrawingContext& Context, Rect2D AvailableRect) const

@@ -18,6 +18,8 @@ namespace Hermes::UI
 		FT_Face Face = nullptr;
 	};
 
+	static constexpr float GFreeTypeSubpixelScalingFactor = 1.0f / 64.0f;
+
 	HERMES_ADD_BINARY_ASSET_LOADER(Font, Font)
 
 	Font::~Font()
@@ -37,33 +39,56 @@ namespace Hermes::UI
 		return AssetHandle<Font>(new Font(std::move(Name), BinaryData));
 	}
 
-	Vec2ui Font::GetGlyphDimensions(uint32 CharacterCode) const
+	Vec2ui Font::GetGlyphDimensions(uint32 GlyphIndex) const
 	{
-		auto RenderedGlyph = RenderGlyph(CharacterCode);
+		auto RenderedGlyph = RenderGlyph(GlyphIndex);
 		if (!RenderedGlyph.has_value())
 			return {};
 		return RenderedGlyph.value().Dimensions;
 	}
 
-	std::optional<FontGlyph> Font::RenderGlyph(uint32 CharacterCode) const
+	float Font::GetMaxAscent() const
+	{
+		return FontData->Face->ascender * GFreeTypeSubpixelScalingFactor;
+	}
+
+	float Font::GetMaxDescent() const
+	{
+		return Math::Abs(FontData->Face->descender) * GFreeTypeSubpixelScalingFactor;
+	}
+
+	std::optional<uint32> Font::GetGlyphIndex(uint32 CharacterCode) const
+	{
+		auto Index = FT_Get_Char_Index(FontData->Face, CharacterCode);
+		if (!Index)
+			return std::nullopt;
+		return Index;
+	}
+
+	std::optional<GlyphMetrics> Font::GetGlyphMetrics(uint32 GlyphIndex) const
+	{
+		if (!LoadGlyph(GlyphIndex))
+			return std::nullopt;
+		
+		return GlyphMetrics{
+			.Bearing = Vec2(Vec2i(FontData->Face->glyph->metrics.horiBearingX, FontData->Face->glyph->metrics.horiBearingY)) * GFreeTypeSubpixelScalingFactor,
+			.Advance = FontData->Face->glyph->advance.x * GFreeTypeSubpixelScalingFactor
+		};
+	}
+
+	std::optional<RenderedGlyph> Font::RenderGlyph(uint32 GlyphIndex) const
 	{
 		HERMES_PROFILE_FUNC();
 
-		auto GlyphIndex = FT_Get_Char_Index(FontData->Face, CharacterCode);
-		if (!GlyphIndex)
-			return std::nullopt;
-
-		auto Error = FT_Load_Glyph(FontData->Face, GlyphIndex, FT_LOAD_DEFAULT);
-		if (Error)
+		if (!LoadGlyph(GlyphIndex))
 		{
-			HERMES_LOG_ERROR("Could not load glyph 0x%ux from font %s; FT_Load_Glyph returned error code %i", CharacterCode, GetName().c_str(), Error);
-			return std::nullopt;
+			HERMES_LOG_ERROR("Could not load glyph 0x%ux from font %s", GlyphIndex, GetName().c_str());
 		}
 
-		Error = FT_Render_Glyph(FontData->Face->glyph, FT_RENDER_MODE_NORMAL);
+		auto Error = FT_Render_Glyph(FontData->Face->glyph, FT_RENDER_MODE_NORMAL);
 		if (Error)
 		{
-			HERMES_LOG_ERROR("Could not render glyph 0x%ux from font %s; FT_Load_Glyph returned error code %i", CharacterCode, GetName().c_str(), Error);
+			HERMES_LOG_ERROR("Could not render glyph 0x%ux from font %s; FT_Render_Glyph returned error code %i", GlyphIndex, GetName().c_str(), Error);
 			return std::nullopt;
 		}
 
@@ -72,14 +97,9 @@ namespace Hermes::UI
 		size_t TotalBytes = BytesPerPixel * Dimensions.X * Dimensions.Y;
 
 		auto Bitmap = std::vector(FontData->Face->glyph->bitmap.buffer, FontData->Face->glyph->bitmap.buffer + TotalBytes);
-
-		// NOTE: FreeType gives some dimensions in 1/64 of a pixel
-		static constexpr float PixelScalingFactor = 1.0f / 64.0f;
-
-		return FontGlyph{
+		
+		return RenderedGlyph{
 			.Dimensions = Dimensions,
-			.Bearing = Vec2(Vec2ui(FontData->Face->glyph->metrics.horiBearingX, FontData->Face->glyph->metrics.horiBearingY)) * PixelScalingFactor,
-			.Advance = static_cast<float>(FontData->Face->glyph->metrics.horiAdvance) * PixelScalingFactor,
 			.Bitmap = std::move(Bitmap)
 		};
 	}
@@ -101,5 +121,19 @@ namespace Hermes::UI
 		}
 
 		GNumberOfAliveFonts++;
+	}
+
+	bool Font::LoadGlyph(uint32 GlyphIndex) const
+	{
+		auto Error = FT_Load_Glyph(FontData->Face, GlyphIndex, FT_LOAD_DEFAULT);
+		if (Error)
+			return false;
+
+		return true;
+	}
+
+	void* Font::GetNativeFaceHandle() const
+	{
+		return FontData->Face;
 	}
 }

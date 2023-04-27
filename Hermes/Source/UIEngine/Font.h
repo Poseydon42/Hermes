@@ -10,22 +10,25 @@
 
 namespace Hermes::UI
 {
-	struct FontGlyph
+	struct GlyphMetrics
+	{
+		/*
+		 * Distance from the origin to top left corner of the glyph's bounding box
+		 */
+		Vec2 Bearing;
+
+		/*
+		 * The amount by which the cursor should be moved after rendering this glyph
+		 */
+		float Advance = 0.0f;
+	};
+
+	struct RenderedGlyph
 	{
 		/*
 		 * Dimensions of the glyph bitmap
 		 */
 		Vec2ui Dimensions;
-
-		/*
-		 * Distance from the cursor position to the top left corner of the bitmap
-		 */
-		Vec2 Bearing;
-
-		/*
-		 * Horizontal distance from the cursor position to the next cursor position
-		 */
-		float Advance;
 
 		/*
 		 * Glyph bitmap that contains a single channel that should be treated as the alpha channel
@@ -42,14 +45,28 @@ namespace Hermes::UI
 
 		static AssetHandle<Asset> Load(String Name, std::span<const uint8> BinaryData);
 
-		Vec2ui GetGlyphDimensions(uint32 CharacterCode) const;
+		Vec2ui GetGlyphDimensions(uint32 GlyphIndex) const;
 
-		std::optional<FontGlyph> RenderGlyph(uint32 CharacterCode) const;
+		float GetMaxAscent() const;
+
+		float GetMaxDescent() const;
+
+		std::optional<uint32> GetGlyphIndex(uint32 CharacterCode) const;
+
+		std::optional<GlyphMetrics> GetGlyphMetrics(uint32 GlyphIndex) const;
+
+		std::optional<RenderedGlyph> RenderGlyph(uint32 GlyphIndex) const;
 
 	private:
 		Font(String InName, std::span<const uint8> BinaryData);
 
 		struct FontData;
 		FontData* FontData;
+
+		bool LoadGlyph(uint32 GlyphIndex) const;
+
+		void* GetNativeFaceHandle() const;
+
+		friend class TextLayout;
 	};
 }

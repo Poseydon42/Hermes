@@ -370,54 +370,66 @@ namespace Hermes
 		HERMES_PROFILE_FUNC();
 
 		if (DrawingContext.GetDrawableTexts().empty())
-			return;
-
-		// FIXME: this is so, soo bad
-		const auto& Text = DrawingContext.GetDrawableTexts()[0];
-		HERMES_ASSERT(!Text.Text.empty());
-
-		std::vector<std::pair<uint32, Vec2>> GlyphPositions;
-		std::vector<uint32> GlyphIndices;
-		UI::TextLayout::Layout(Text.Text, Text.FontSize, *Text.Font, [&](uint32 GlyphIndex, Vec2 GlyphPosition)
 		{
-			GlyphIndices.push_back(GlyphIndex);
-			GlyphPositions.emplace_back(GlyphIndex, GlyphPosition);
-		});
+			HasTextToDraw = false;
+			return;
+		}
 
-		TextFontPack = std::make_unique<FontPack>(Text.Font);
-		TextFontPack->UpdatePack(GlyphIndices, Text.FontSize);
-		TextDescriptorSet->UpdateWithImageAndSampler(0, 0, TextFontPack->GetImage(), *TextFontSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-		auto TextLocation = Vec2(Text.Rect.Min);
+		for (const auto& Text : DrawingContext.GetDrawableTexts())
+		{
+			// FIXME: make this UTF-8 aware
+			for (auto Char : Text.Text)
+			{
+				auto GlyphIndex = Text.Font->GetGlyphIndex(Char);
+				HERMES_ASSERT(GlyphIndex.has_value());
+				FontPack.RequestGlyph(*Text.Font, GlyphIndex.value(), Text.FontSize);
+			}
+		}
+		FontPack.Repack();
 
 		std::vector<TextVertex> TextVertices;
-		for (auto [GlyphIndex, GlyphPosition] : GlyphPositions)
+		for (const auto& Text : DrawingContext.GetDrawableTexts())
 		{
-			GlyphPosition += TextLocation;
+			HERMES_ASSERT(!Text.Text.empty());
 
-			auto GlyphRectInPack = TextFontPack->GetGlyphCoordinates(GlyphIndex, Text.FontSize);
-			auto GlyphWidth = static_cast<float>(GlyphRectInPack.Width());
-			auto GlyphHeight = static_cast<float>(GlyphRectInPack.Height());
+			std::vector<std::pair<uint32, Vec2>> GlyphPositions;
+			UI::TextLayout::Layout(Text.Text, Text.FontSize, *Text.Font, [&](uint32 GlyphIndex, Vec2 GlyphPosition)
+			{
+				GlyphPositions.emplace_back(GlyphIndex, GlyphPosition);
+			});
+			
+			FontPack.Repack();
+			TextDescriptorSet->UpdateWithImageAndSampler(0, 0, FontPack.GetImage(), *TextFontSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-			auto GlyphUVMin = Vec2(GlyphRectInPack.Min) / Vec2(TextFontPack->GetImage().GetDimensions());
-			auto GlyphUVMax = Vec2(GlyphRectInPack.Max) / Vec2(TextFontPack->GetImage().GetDimensions());
+			auto TextLocation = Vec2(Text.Rect.Min);
+			for (auto [GlyphIndex, GlyphPosition] : GlyphPositions)
+			{
+				GlyphPosition += TextLocation;
 
-			auto GlyphUVTopLeft     = Vec2{ GlyphUVMin.X, GlyphUVMin.Y };
-			auto GlyphUVBottomLeft  = Vec2{ GlyphUVMin.X, GlyphUVMax.Y };
-			auto GlyphUVTopRight    = Vec2{ GlyphUVMax.X, GlyphUVMin.Y };
-			auto GlyphUVBottomRight = Vec2{ GlyphUVMax.X, GlyphUVMax.Y };
+				auto GlyphRectInPack = FontPack.GetGlyphCoordinates(*Text.Font, GlyphIndex, Text.FontSize);
+				auto GlyphWidth = static_cast<float>(GlyphRectInPack.Width());
+				auto GlyphHeight = static_cast<float>(GlyphRectInPack.Height());
 
-			auto TopLeft     = ((GlyphPosition) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
-			auto TopRight    = ((GlyphPosition + Vec2(GlyphWidth, 0)) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
-			auto BottomLeft  = ((GlyphPosition + Vec2(0, GlyphHeight)) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
-			auto BottomRight = ((GlyphPosition + Vec2(GlyphWidth, GlyphHeight)) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
+				auto GlyphUVMin = Vec2(GlyphRectInPack.Min) / Vec2(FontPack.GetImage().GetDimensions());
+				auto GlyphUVMax = Vec2(GlyphRectInPack.Max) / Vec2(FontPack.GetImage().GetDimensions());
 
-			TextVertices.emplace_back(TopLeft, GlyphUVTopLeft);
-			TextVertices.emplace_back(TopRight, GlyphUVTopRight);
-			TextVertices.emplace_back(BottomLeft, GlyphUVBottomLeft);
-			TextVertices.emplace_back(BottomLeft, GlyphUVBottomLeft);
-			TextVertices.emplace_back(TopRight, GlyphUVTopRight);
-			TextVertices.emplace_back(BottomRight, GlyphUVBottomRight);
+				auto GlyphUVTopLeft = Vec2{ GlyphUVMin.X, GlyphUVMin.Y };
+				auto GlyphUVBottomLeft = Vec2{ GlyphUVMin.X, GlyphUVMax.Y };
+				auto GlyphUVTopRight = Vec2{ GlyphUVMax.X, GlyphUVMin.Y };
+				auto GlyphUVBottomRight = Vec2{ GlyphUVMax.X, GlyphUVMax.Y };
+
+				auto TopLeft = ((GlyphPosition) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
+				auto TopRight = ((GlyphPosition + Vec2(GlyphWidth, 0)) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
+				auto BottomLeft = ((GlyphPosition + Vec2(0, GlyphHeight)) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
+				auto BottomRight = ((GlyphPosition + Vec2(GlyphWidth, GlyphHeight)) / Vec2(CurrentDimensions)) * 2.0f - 1.0f;
+
+				TextVertices.emplace_back(TopLeft, GlyphUVTopLeft);
+				TextVertices.emplace_back(TopRight, GlyphUVTopRight);
+				TextVertices.emplace_back(BottomLeft, GlyphUVBottomLeft);
+				TextVertices.emplace_back(BottomLeft, GlyphUVBottomLeft);
+				TextVertices.emplace_back(TopRight, GlyphUVTopRight);
+				TextVertices.emplace_back(BottomRight, GlyphUVBottomRight);
+			}
 		}
 
 		TextMeshBuffer = Renderer::GetDevice().CreateBuffer(TextVertices.size() * sizeof(TextVertex), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);

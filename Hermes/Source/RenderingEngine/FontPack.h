@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 
 #include "Core/Core.h"
 #include "Math/Rect2D.h"
@@ -12,24 +13,34 @@ namespace Hermes
 	class HERMES_API FontPack
 	{
 	public:
-		explicit FontPack(AssetHandle<UI::Font> InFont);
+		void RequestGlyph(const UI::Font& Font, uint32 GlyphIndex, uint32 FontSize);
 
-		void UpdatePack(std::span<const uint32> RequiredGlyphs, uint32 FontSize);
+		void Repack();
 
-		Rect2Dui GetGlyphCoordinates(uint32 GlyphIndex, uint32 FontSize) const;
+		Rect2Dui GetGlyphCoordinates(const UI::Font& Font, uint32 GlyphIndex, uint32 FontSize) const;
 
 		const Vulkan::ImageView& GetImage() const;
 
 	private:
-		AssetHandle<UI::Font> Font;
-
 		static constexpr VkFormat FontPackImageFormat = VK_FORMAT_R8_UNORM;
 		std::unique_ptr<Vulkan::Image> FontPackImage;
 		std::unique_ptr<Vulkan::ImageView> FontPackImageView;
 
-		static uint64 HashGlyph(uint32 GlyphIndex, uint32 FontSize);
-		static uint32 ExtractGlyphIndexFromHash(uint64 Hash);
+		struct GlyphDescription
+		{
+			uint32 FontID;
+			uint32 FontSize;
+			uint32 GlyphIndex;
 
-		std::unordered_map<uint64, Rect2Dui> GlyphCoordinates;
+			bool operator==(const GlyphDescription& Other) const;
+		};
+		struct GlyphDescriptionHasher
+		{
+			size_t operator()(const GlyphDescription& Value) const;
+		};
+		std::unordered_map<GlyphDescription, UI::RenderedGlyph, GlyphDescriptionHasher> GlyphsPendingPacking;
+		bool NeedsRepacking = false;
+
+		std::unordered_map<GlyphDescription, Rect2Dui, GlyphDescriptionHasher> GlyphCoordinates;
 	};
 }

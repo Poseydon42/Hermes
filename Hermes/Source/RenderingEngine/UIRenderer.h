@@ -37,7 +37,7 @@ namespace Hermes
 		std::unique_ptr<Vulkan::Pipeline> TextPipeline;
 		std::unique_ptr<Vulkan::DescriptorSet> TextDescriptorSet;
 		std::unique_ptr<Vulkan::Buffer> TextMeshBuffer;
-		std::unique_ptr<FontPack> TextFontPack;
+		FontPack FontPack;
 		std::unique_ptr<Vulkan::Sampler> TextFontSampler;
 
 		static constexpr VkFormat DestinationImageFormat = VK_FORMAT_B8G8R8A8_SRGB;

@@ -14,6 +14,7 @@
 #include "UIEngine/Font.h"
 #include "UIEngine/Widgets/LabelWidget.h"
 #include "UIEngine/Widgets/PanelWidget.h"
+#include "UIEngine/Widgets/Containers/VerticalContainerWidget.h"
 #include "UIEngine/Widgets/Containers/ViewportContainerWidget.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 #include "World/Components/DirectionalLightComponent.h"
@@ -235,10 +236,16 @@ public:
 		GreenPanel->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.9f };
 		RootWidget->AddChild(GreenPanel);
 
+		auto VerticalContainer = Hermes::UI::VerticalContainerWidget::Create(RootWidget);
+		VerticalContainer->GetMargins().Top = { Hermes::UI::MarginValueType::Absolute, 20.0f };
+		RootWidget->AddChild(VerticalContainer);
+
 		auto Font = Hermes::AssetLoader::Load<Hermes::UI::Font>("/Fonts/arial");
-		auto Label = Hermes::UI::LabelWidget::Create(RootWidget, "Hello, world! This is Hermes UI system!", 14, Font);
-		Label->GetMargins().Top = { Hermes::UI::MarginValueType::Absolute, 20.0f };
-		RootWidget->AddChild(Label);
+		auto Label = Hermes::UI::LabelWidget::Create(VerticalContainer, "Hello, world! This is Hermes UI system!", 14, Font);
+		VerticalContainer->AddChild(Label);
+
+		auto Label1 = Hermes::UI::LabelWidget::Create(VerticalContainer, "This is a second line with a bigger font size!", 28, Font);
+		VerticalContainer->AddChild(Label1);
 
 		Hermes::GGameLoop->SetRootWidget(RootWidget);
 

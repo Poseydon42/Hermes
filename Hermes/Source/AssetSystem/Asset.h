@@ -61,11 +61,17 @@ namespace Hermes
 		AssetHandle<const Asset> GetSelfHandle() const;
 		AssetHandle<Asset> GetSelfHandle();
 
+		uint32 GetUniqueID() const;
+
 		virtual bool IsValid() const;
 
 	private:
 		String Name;
 		AssetType Type;
+
+		uint32 UniqueID;
+
+		static uint32 SNextID;
 	};
 }
 

@@ -86,6 +86,8 @@ namespace Hermes::Vulkan
 		void BlitImage(const Image& Source, VkImageLayout SourceLayout, const Image& Destination,
 		               VkImageLayout DestinationLayout, std::span<VkImageBlit> Regions, VkFilter Filter);
 
+		void ClearColorImage(const Image& Image, VkImageLayout CurrentLayout, VkClearColorValue Color, std::span<const VkImageSubresourceRange> Ranges);
+
 		VkCommandBuffer GetBuffer() const;
 
 	private:

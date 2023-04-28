@@ -220,6 +220,11 @@ namespace Hermes::Vulkan
 		               static_cast<uint32>(Regions.size()), Regions.data(), Filter);
 	}
 
+	void CommandBuffer::ClearColorImage(const Image& Image, VkImageLayout CurrentLayout, VkClearColorValue Color, std::span<const VkImageSubresourceRange> Ranges)
+	{
+		vkCmdClearColorImage(Handle, Image.GetImage(), CurrentLayout, &Color, static_cast<uint32>(Ranges.size()), Ranges.data());
+	}
+
 	VkCommandBuffer CommandBuffer::GetBuffer() const
 	{
 		return Handle;

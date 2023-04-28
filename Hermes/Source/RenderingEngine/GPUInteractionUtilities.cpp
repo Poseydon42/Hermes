@@ -251,6 +251,54 @@ namespace Hermes
 		FinishFence->Wait(UINT64_MAX);
 	}
 
+	void GPUInteractionUtilities::ClearImage(const Vulkan::Image& Image, Vec4 Color, std::span<const VkImageSubresourceRange> Ranges, VkImageLayout CurrentLayout, VkImageLayout LayoutToTransitionTo)
+	{
+		const auto& Queue = Renderer::GetDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
+		auto CommandBuffer = Queue.CreateCommandBuffer();
+
+		CommandBuffer->BeginRecording();
+
+		VkImageMemoryBarrier BeforeClearBarrier = {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			.pNext = nullptr,
+			.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT,
+			.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+			.oldLayout = CurrentLayout,
+			.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.image = Image.GetImage(),
+			.subresourceRange = Image.GetFullSubresourceRange()
+		};
+		CommandBuffer->InsertImageMemoryBarrier(BeforeClearBarrier, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+		VkClearColorValue ClearColor;
+		ClearColor.float32[0] = Color.X;
+		ClearColor.float32[1] = Color.Y;
+		ClearColor.float32[2] = Color.Z;
+		ClearColor.float32[3] =	Color.W;
+		CommandBuffer->ClearColorImage(Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, ClearColor, Ranges);
+
+		VkImageMemoryBarrier AfterClearBarrier = {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			.pNext = nullptr,
+			.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+			.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			.newLayout = LayoutToTransitionTo,
+			.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.image = Image.GetImage(),
+			.subresourceRange = Image.GetFullSubresourceRange()
+		};
+		CommandBuffer->InsertImageMemoryBarrier(AfterClearBarrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+
+		CommandBuffer->EndRecording();
+		auto Fence = Renderer::GetDevice().CreateFence();
+		Queue.SubmitCommandBuffer(*CommandBuffer, Fence.get());
+		Fence->Wait(UINT64_MAX);
+	}
+
 	Vulkan::Buffer& GPUInteractionUtilities::EnsureStagingBuffer()
 	{
 		if (StagingBuffer)

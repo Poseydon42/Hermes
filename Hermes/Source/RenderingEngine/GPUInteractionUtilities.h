@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <span>
 
 #include "Core/Core.h"
 #include "Math/Math.h"
@@ -37,6 +38,8 @@ namespace Hermes
 		                            VkImageLayout CurrentLayout,
 		                            VkImageLayout LayoutToTransitionTo,
 		                            std::optional<Vulkan::CubemapSide> Side = {});
+
+		static void ClearImage(const Vulkan::Image& Image, Vec4 Color, std::span<const VkImageSubresourceRange> Ranges, VkImageLayout CurrentLayout, VkImageLayout LayoutToTransitionTo);
 
 	private:
 		static Vulkan::Buffer& EnsureStagingBuffer();

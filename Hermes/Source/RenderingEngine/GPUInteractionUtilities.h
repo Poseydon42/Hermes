@@ -14,9 +14,12 @@ namespace Hermes
 	class HERMES_API GPUInteractionUtilities
 	{
 	public:
-		static void UploadDataToGPUBuffer(
-			const void* Data, size_t DataSize,
-			size_t TargetOffset, const Vulkan::Buffer& Target);
+		static void ChangeImageLayout(const Vulkan::Image& Image, 
+			                          VkImageLayout CurrentLayout, VkImageLayout DestinationLayout, 
+			                          VkAccessFlags SourceAccess, VkAccessFlags DestinationAccess,
+			                          VkPipelineStageFlags SourceStage, VkPipelineStageFlagBits DestinationStage);
+
+		static void UploadDataToGPUBuffer(const void* Data, size_t DataSize, size_t TargetOffset, const Vulkan::Buffer& Target);
 
 		/**
 		 * Uploads image data stored in @param Data to @param Destination via staging buffer

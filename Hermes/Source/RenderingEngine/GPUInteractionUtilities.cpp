@@ -15,6 +15,36 @@ namespace Hermes
 {
 	std::unique_ptr<Vulkan::Buffer> GPUInteractionUtilities::StagingBuffer;
 
+	void GPUInteractionUtilities::ChangeImageLayout(const Vulkan::Image& Image,
+		                                            VkImageLayout CurrentLayout, VkImageLayout DestinationLayout,
+		                                            VkAccessFlags SourceAccess, VkAccessFlags DestinationAccess,
+		                                            VkPipelineStageFlags SourceStage, VkPipelineStageFlagBits DestinationStage)
+	{
+		const auto& Queue = Renderer::GetDevice().GetQueue(VK_QUEUE_GRAPHICS_BIT);
+		auto CommandBuffer = Queue.CreateCommandBuffer();
+
+		CommandBuffer->BeginRecording();
+
+		VkImageMemoryBarrier Barrier = {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			.pNext = nullptr,
+			.srcAccessMask = SourceAccess,
+			.dstAccessMask = DestinationAccess,
+			.oldLayout = CurrentLayout,
+			.newLayout = DestinationLayout,
+			.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.image = Image.GetImage(),
+			.subresourceRange = Image.GetFullSubresourceRange()
+		};
+		CommandBuffer->InsertImageMemoryBarrier(Barrier, SourceStage, DestinationStage);
+
+		CommandBuffer->EndRecording();
+		auto Fence = Renderer::GetDevice().CreateFence();
+		Queue.SubmitCommandBuffer(*CommandBuffer, Fence.get());
+		Fence->Wait(UINT64_MAX);
+	}
+
 	// TODO : do we need to perform ownership transfer between render and transfer queue and vice-versa?
 	void GPUInteractionUtilities::UploadDataToGPUBuffer(const void* Data, size_t DataSize, size_t TargetOffset, const Vulkan::Buffer& Target)
 	{

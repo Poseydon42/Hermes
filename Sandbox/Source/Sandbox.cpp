@@ -236,7 +236,7 @@ public:
 		RootWidget->AddChild(GreenPanel);
 
 		auto Font = Hermes::AssetLoader::Load<Hermes::UI::Font>("/Fonts/arial");
-		auto Label = Hermes::UI::LabelWidget::Create(RootWidget, "Hello, world! This is Hermes UI system!", Font);
+		auto Label = Hermes::UI::LabelWidget::Create(RootWidget, "Hello, world! This is Hermes UI system!", 14, Font);
 		Label->GetMargins().Top = { Hermes::UI::MarginValueType::Absolute, 20.0f };
 		RootWidget->AddChild(Label);
 

@@ -18,7 +18,7 @@ namespace Hermes::UI
 		FT_Face Face = nullptr;
 	};
 
-	static constexpr float GFreeTypeSubpixelScalingFactor = 1.0f / 64.0f;
+	static constexpr uint32 GFreeTypeSubpixelScalingFactor = 64;
 
 	HERMES_ADD_BINARY_ASSET_LOADER(Font, Font)
 
@@ -39,22 +39,16 @@ namespace Hermes::UI
 		return AssetHandle<Font>(new Font(std::move(Name), BinaryData));
 	}
 
-	Vec2ui Font::GetGlyphDimensions(uint32 GlyphIndex) const
+	float Font::GetMaxAscent(uint32 Size) const
 	{
-		auto RenderedGlyph = RenderGlyph(GlyphIndex);
-		if (!RenderedGlyph.has_value())
-			return {};
-		return RenderedGlyph.value().Dimensions;
+		SetSize(Size);
+		return static_cast<float>(FontData->Face->ascender) / GFreeTypeSubpixelScalingFactor;
 	}
 
-	float Font::GetMaxAscent() const
+	float Font::GetMaxDescent(uint32 Size) const
 	{
-		return FontData->Face->ascender * GFreeTypeSubpixelScalingFactor;
-	}
-
-	float Font::GetMaxDescent() const
-	{
-		return Math::Abs(FontData->Face->descender) * GFreeTypeSubpixelScalingFactor;
+		SetSize(Size);
+		return static_cast<float>(Math::Abs(FontData->Face->descender)) / GFreeTypeSubpixelScalingFactor;
 	}
 
 	std::optional<uint32> Font::GetGlyphIndex(uint32 CharacterCode) const
@@ -65,21 +59,23 @@ namespace Hermes::UI
 		return Index;
 	}
 
-	std::optional<GlyphMetrics> Font::GetGlyphMetrics(uint32 GlyphIndex) const
+	std::optional<GlyphMetrics> Font::GetGlyphMetrics(uint32 GlyphIndex, uint32 Size) const
 	{
+		SetSize(Size);
 		if (!LoadGlyph(GlyphIndex))
 			return std::nullopt;
 		
 		return GlyphMetrics{
-			.Bearing = Vec2(Vec2i(FontData->Face->glyph->metrics.horiBearingX, FontData->Face->glyph->metrics.horiBearingY)) * GFreeTypeSubpixelScalingFactor,
-			.Advance = FontData->Face->glyph->advance.x * GFreeTypeSubpixelScalingFactor
+			.Bearing = Vec2(Vec2i(FontData->Face->glyph->metrics.horiBearingX, FontData->Face->glyph->metrics.horiBearingY)) / GFreeTypeSubpixelScalingFactor,
+			.Advance = FontData->Face->glyph->advance.x / static_cast<float>(GFreeTypeSubpixelScalingFactor)
 		};
 	}
 
-	std::optional<RenderedGlyph> Font::RenderGlyph(uint32 GlyphIndex) const
+	std::optional<RenderedGlyph> Font::RenderGlyph(uint32 GlyphIndex, uint32 Size) const
 	{
 		HERMES_PROFILE_FUNC();
 
+		SetSize(Size);
 		if (!LoadGlyph(GlyphIndex))
 		{
 			HERMES_LOG_ERROR("Could not load glyph 0x%ux from font %s", GlyphIndex, GetName().c_str());
@@ -121,6 +117,15 @@ namespace Hermes::UI
 		}
 
 		GNumberOfAliveFonts++;
+	}
+
+	void Font::SetSize(uint32 Size) const
+	{
+		// FIXME: this is just the value that Windows uses by default, we should actually query the true DPI and use it here
+		static constexpr uint32 ScreenDPI = 96;
+
+		auto ScaledSize = static_cast<uint32>(Size * GFreeTypeSubpixelScalingFactor);
+		FT_Set_Char_Size(FontData->Face, 0, ScaledSize, ScreenDPI, ScreenDPI);
 	}
 
 	bool Font::LoadGlyph(uint32 GlyphIndex) const

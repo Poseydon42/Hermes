@@ -1,7 +1,6 @@
 #include "DrawingContext.h"
 
 #include "RenderingEngine/Renderer.h"
-#include "UIEngine/Widgets/Widget.h"
 
 namespace Hermes::UI
 {
@@ -11,9 +10,9 @@ namespace Hermes::UI
 		Rectangles.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), Color);
 	}
 
-	void DrawingContext::DrawText(Rect2D Rect, String Text, AssetHandle<Font> Font)
+	void DrawingContext::DrawText(Rect2D Rect, String Text, uint32 TextSize, AssetHandle<Font> Font)
 	{
-		Texts.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), std::move(Text), std::move(Font));
+		Texts.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), std::move(Text), TextSize, std::move(Font));
 	}
 
 	void DrawingContext::SetSceneViewport(Rect2D NewViewport)

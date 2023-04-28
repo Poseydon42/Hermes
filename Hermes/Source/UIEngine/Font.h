@@ -45,23 +45,23 @@ namespace Hermes::UI
 
 		static AssetHandle<Asset> Load(String Name, std::span<const uint8> BinaryData);
 
-		Vec2ui GetGlyphDimensions(uint32 GlyphIndex) const;
+		float GetMaxAscent(uint32 Size) const;
 
-		float GetMaxAscent() const;
-
-		float GetMaxDescent() const;
+		float GetMaxDescent(uint32 Size) const;
 
 		std::optional<uint32> GetGlyphIndex(uint32 CharacterCode) const;
 
-		std::optional<GlyphMetrics> GetGlyphMetrics(uint32 GlyphIndex) const;
+		std::optional<GlyphMetrics> GetGlyphMetrics(uint32 GlyphIndex, uint32 Size) const;
 
-		std::optional<RenderedGlyph> RenderGlyph(uint32 GlyphIndex) const;
+		std::optional<RenderedGlyph> RenderGlyph(uint32 GlyphIndex, uint32 Size) const;
 
 	private:
 		Font(String InName, std::span<const uint8> BinaryData);
 
 		struct FontData;
 		FontData* FontData;
+
+		void SetSize(uint32 Size) const;
 
 		bool LoadGlyph(uint32 GlyphIndex) const;
 

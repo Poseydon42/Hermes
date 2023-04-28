@@ -3,11 +3,10 @@
 #include <freetype/freetype.h>
 
 #include "Core/Profiling.h"
-#include "Logging/Logger.h"
 
 namespace Hermes::UI
 {
-	void TextLayout::Layout(StringView Text, const Font& Font, const TextDrawingCallback& Callback)
+	void TextLayout::Layout(StringView Text, uint32 FontSize, const Font& Font, const TextDrawingCallback& Callback)
 	{
 		HERMES_PROFILE_FUNC();
 
@@ -20,15 +19,12 @@ namespace Hermes::UI
 			HERMES_ASSERT(MaybeGlyphIndex.has_value());
 			auto GlyphIndex = MaybeGlyphIndex.value();
 
-			auto MaybeMetrics = Font.GetGlyphMetrics(GlyphIndex);
+			auto MaybeMetrics = Font.GetGlyphMetrics(GlyphIndex, FontSize);
 			HERMES_ASSERT(MaybeMetrics.has_value());
 			auto Metrics = MaybeMetrics.value();
 
-			auto RenderedGlyph = Font.RenderGlyph(GlyphIndex);
-			HERMES_ASSERT(RenderedGlyph.has_value());
-
 			float HorizontalPosition = Cursor + Metrics.Bearing.X;
-			float VerticalPosition = Baseline + Font.GetMaxAscent() - Metrics.Bearing.Y;
+			float VerticalPosition = Baseline + (Font.GetMaxAscent(FontSize) - Metrics.Bearing.Y);
 
 			Callback(GlyphIndex, Vec2(HorizontalPosition, VerticalPosition));
 
@@ -36,18 +32,19 @@ namespace Hermes::UI
 		}
 	}
 
-	Vec2 TextLayout::Measure(StringView Text, const Font& Font)
+	Vec2 TextLayout::Measure(StringView Text, uint32 FontSize, const Font& Font)
 	{
 		HERMES_PROFILE_FUNC();
 
 		// FIXME: optimize!
 		float Width = 0.0f;
-		Layout(Text, Font, [&](uint32 GlyphIndex, Vec2 GlyphLocation)
+		Layout(Text, FontSize, Font, [&](uint32 GlyphIndex, Vec2 GlyphLocation)
 		{
-			auto GlyphDimensions = Font.GetGlyphDimensions(GlyphIndex);
-			Width = GlyphLocation.X + GlyphDimensions.X;
+			auto MaybeGlyphMetrics = Font.GetGlyphMetrics(GlyphIndex, FontSize);
+			HERMES_ASSERT(MaybeGlyphMetrics.has_value());
+			Width = GlyphLocation.X + MaybeGlyphMetrics.value().Advance;
 		});
-		float Height = Font.GetMaxAscent() + Font.GetMaxDescent();
+		float Height = Font.GetMaxAscent(FontSize) + Font.GetMaxDescent(FontSize);
 
 		return { Width, Height };
 	}

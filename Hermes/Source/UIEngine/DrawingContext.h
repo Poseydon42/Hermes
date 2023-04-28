@@ -6,7 +6,6 @@
 #include "Core/Core.h"
 #include "Math/Rect2D.h"
 #include "Math/Vector.h"
-#include "Math/Vector2.h"
 #include "UIEngine/Font.h"
 
 namespace Hermes::UI
@@ -54,6 +53,11 @@ namespace Hermes::UI
 			String Text;
 
 			/*
+			 * Size of the font, in points
+			 */
+			uint32 FontSize = 11;
+
+			/*
 			 * Character font
 			 */
 			AssetHandle<Font> Font;
@@ -62,7 +66,7 @@ namespace Hermes::UI
 		/*
 		 * Draws text in one line
 		 */
-		void DrawText(Rect2D Rect, String Text, AssetHandle<Font> Font);
+		void DrawText(Rect2D Rect, String Text, uint32 TextSize, AssetHandle<Font> Font);
 
 		/*
 		 * Sets the viewport where the game scene would be rendered.

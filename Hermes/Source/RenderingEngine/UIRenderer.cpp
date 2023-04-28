@@ -378,14 +378,14 @@ namespace Hermes
 
 		std::vector<std::pair<uint32, Vec2>> GlyphPositions;
 		std::vector<uint32> GlyphIndices;
-		UI::TextLayout::Layout(Text.Text, *Text.Font, [&](uint32 GlyphIndex, Vec2 GlyphPosition)
+		UI::TextLayout::Layout(Text.Text, Text.FontSize, *Text.Font, [&](uint32 GlyphIndex, Vec2 GlyphPosition)
 		{
 			GlyphIndices.push_back(GlyphIndex);
 			GlyphPositions.emplace_back(GlyphIndex, GlyphPosition);
 		});
 
 		TextFontPack = std::make_unique<FontPack>(Text.Font);
-		TextFontPack->UpdatePack(GlyphIndices);
+		TextFontPack->UpdatePack(GlyphIndices, Text.FontSize);
 		TextDescriptorSet->UpdateWithImageAndSampler(0, 0, TextFontPack->GetImage(), *TextFontSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		auto TextLocation = Vec2(Text.Rect.Min);
@@ -395,7 +395,7 @@ namespace Hermes
 		{
 			GlyphPosition += TextLocation;
 
-			auto GlyphRectInPack = TextFontPack->GetGlyphCoordinates(GlyphIndex);
+			auto GlyphRectInPack = TextFontPack->GetGlyphCoordinates(GlyphIndex, Text.FontSize);
 			auto GlyphWidth = static_cast<float>(GlyphRectInPack.Width());
 			auto GlyphHeight = static_cast<float>(GlyphRectInPack.Height());
 

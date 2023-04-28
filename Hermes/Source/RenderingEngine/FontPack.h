@@ -14,9 +14,9 @@ namespace Hermes
 	public:
 		explicit FontPack(AssetHandle<UI::Font> InFont);
 
-		void UpdatePack(std::span<const uint32> RequiredGlyphs);
+		void UpdatePack(std::span<const uint32> RequiredGlyphs, uint32 FontSize);
 
-		Rect2Dui GetGlyphCoordinates(uint32 GlyphIndex) const;
+		Rect2Dui GetGlyphCoordinates(uint32 GlyphIndex, uint32 FontSize) const;
 
 		const Vulkan::ImageView& GetImage() const;
 
@@ -27,6 +27,9 @@ namespace Hermes
 		std::unique_ptr<Vulkan::Image> FontPackImage;
 		std::unique_ptr<Vulkan::ImageView> FontPackImageView;
 
-		std::unordered_map<uint32, Rect2Dui> GlyphCoordinates;
+		static uint64 HashGlyph(uint32 GlyphIndex, uint32 FontSize);
+		static uint32 ExtractGlyphIndexFromHash(uint64 Hash);
+
+		std::unordered_map<uint64, Rect2Dui> GlyphCoordinates;
 	};
 }

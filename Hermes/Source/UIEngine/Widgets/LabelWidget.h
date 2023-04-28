@@ -9,7 +9,7 @@ namespace Hermes::UI
 	class HERMES_API LabelWidget : public Widget
 	{
 	public:
-		static std::shared_ptr<LabelWidget> Create(std::shared_ptr<Widget> InParent, String InText, AssetHandle<Font> InFont);
+		static std::shared_ptr<LabelWidget> Create(std::shared_ptr<Widget> InParent, String InText, uint32 InFontSize, AssetHandle<Font> InFont);
 
 		virtual Vec2 ComputeMinimumDimensions() const override;
 
@@ -17,8 +17,9 @@ namespace Hermes::UI
 
 	private:
 		String Text;
+		uint32 FontSize;
 		AssetHandle<Font> Font;
 
-		LabelWidget(std::shared_ptr<Widget> InParent, String InText, AssetHandle<class Font> InFont);
+		LabelWidget(std::shared_ptr<Widget> InParent, String InText, uint32 InFontSize, AssetHandle<class Font> InFont);
 	};
 }

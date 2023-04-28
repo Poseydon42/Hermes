@@ -22,12 +22,12 @@ namespace Hermes::UI
 		 * Performs the layout of the provided text using the provided font. Calls callback for every glyph
 		 * that needs to be drawn to the screen.
 		 */
-		static void Layout(StringView Text, const Font& Font, const TextDrawingCallback& Callback);
+		static void Layout(StringView Text, uint32 FontSize, const Font& Font, const TextDrawingCallback& Callback);
 
 		/*
 		 * Returns the number of pixels in X and Y direction required to draw the provided line of text
 		 * with the provided font.
 		 */
-		static Vec2 Measure(StringView Text, const Font& Font);
+		static Vec2 Measure(StringView Text, uint32 FontSize, const Font& Font);
 	};
 }

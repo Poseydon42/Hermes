@@ -244,7 +244,7 @@ public:
 		auto Label = Hermes::UI::LabelWidget::Create(VerticalContainer, "Hello, world! This is Hermes UI system!", 14, Font);
 		VerticalContainer->AddChild(Label);
 
-		auto Label1 = Hermes::UI::LabelWidget::Create(VerticalContainer, "This is a second line with a bigger font size!", 28, Font);
+		auto Label1 = Hermes::UI::LabelWidget::Create(VerticalContainer, "\xD0\x90\x20\xD1\x86\xD0\xB5\x20\xD1\x82\xD0\xB5\xD0\xBA\xD1\x81\xD1\x82\x20\xD0\xBA\xD0\xB8\xD1\x80\xD0\xB8\xD0\xBB\xD0\xB8\xD1\x86\xD0\xB5\xD1\x8E\x21", 28, Font);
 		VerticalContainer->AddChild(Label1);
 
 		Hermes::GGameLoop->SetRootWidget(RootWidget);

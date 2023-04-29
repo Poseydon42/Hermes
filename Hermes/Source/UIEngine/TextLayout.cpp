@@ -2,6 +2,7 @@
 
 #include <freetype/freetype.h>
 
+#include "Core/Misc/UTF8StringView.h"
 #include "Core/Profiling.h"
 
 namespace Hermes::UI
@@ -10,10 +11,9 @@ namespace Hermes::UI
 	{
 		HERMES_PROFILE_FUNC();
 
-		// FIXME: unicode support
 		float Cursor = 0.0f;
 		float Baseline = 0.0f;
-		for (auto Char : Text)
+		for (auto Char : UTF8StringView(Text))
 		{
 			auto MaybeGlyphIndex = Font.GetGlyphIndex(Char);
 			HERMES_ASSERT(MaybeGlyphIndex.has_value());

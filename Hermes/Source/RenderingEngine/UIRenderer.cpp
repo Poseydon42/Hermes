@@ -1,5 +1,6 @@
 #include "UIRenderer.h"
 
+#include "Core/Misc/UTF8StringView.h"
 #include "Core/Profiling.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/FontPack.h"
@@ -377,8 +378,7 @@ namespace Hermes
 
 		for (const auto& Text : DrawingContext.GetDrawableTexts())
 		{
-			// FIXME: make this UTF-8 aware
-			for (auto Char : Text.Text)
+			for (auto Char : UTF8StringView(Text.Text))
 			{
 				auto GlyphIndex = Text.Font->GetGlyphIndex(Char);
 				HERMES_ASSERT(GlyphIndex.has_value());

@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <span>
+#include <unordered_map>
 #include <vector>
 
 #include "AssetSystem/Asset.h"
@@ -61,9 +62,27 @@ namespace Hermes::UI
 		struct FontData;
 		FontData* FontData;
 
+		struct CachedGlyph
+		{
+			GlyphMetrics Metrics;
+			RenderedGlyph Glyph;
+		};
+		struct GlyphDescription
+		{
+			uint32 FontSize;
+			uint32 GlyphIndex;
+
+			bool operator==(const GlyphDescription& Other) const;
+		};
+		struct GlyphDescriptionHasher
+		{
+			size_t operator()(const GlyphDescription& Value) const;
+		};
+		mutable std::unordered_map<GlyphDescription, CachedGlyph, GlyphDescriptionHasher> CachedGlyphs;
+
 		void SetSize(uint32 Size) const;
 
-		bool LoadGlyph(uint32 GlyphIndex) const;
+		bool LoadGlyph(uint32 GlyphIndex, uint32 FontSize) const;
 
 		void* GetNativeFaceHandle() const;
 

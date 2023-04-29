@@ -61,43 +61,24 @@ namespace Hermes::UI
 
 	std::optional<GlyphMetrics> Font::GetGlyphMetrics(uint32 GlyphIndex, uint32 Size) const
 	{
-		SetSize(Size);
-		if (!LoadGlyph(GlyphIndex))
-			return std::nullopt;
-		
-		return GlyphMetrics{
-			.Bearing = Vec2(Vec2i(FontData->Face->glyph->metrics.horiBearingX, FontData->Face->glyph->metrics.horiBearingY)) / GFreeTypeSubpixelScalingFactor,
-			.Advance = FontData->Face->glyph->advance.x / static_cast<float>(GFreeTypeSubpixelScalingFactor)
-		};
+		GlyphDescription Description = { Size, GlyphIndex };
+		if (!CachedGlyphs.contains(Description))
+		{
+			if (!LoadGlyph(GlyphIndex, Size))
+				return std::nullopt;
+		}
+		return CachedGlyphs.at(Description).Metrics;
 	}
 
 	std::optional<RenderedGlyph> Font::RenderGlyph(uint32 GlyphIndex, uint32 Size) const
 	{
-		HERMES_PROFILE_FUNC();
-
-		SetSize(Size);
-		if (!LoadGlyph(GlyphIndex))
+		GlyphDescription Description = { Size, GlyphIndex };
+		if (!CachedGlyphs.contains(Description))
 		{
-			HERMES_LOG_ERROR("Could not load glyph 0x%ux from font %s", GlyphIndex, GetName().c_str());
+			if (!LoadGlyph(GlyphIndex, Size))
+				return std::nullopt;
 		}
-
-		auto Error = FT_Render_Glyph(FontData->Face->glyph, FT_RENDER_MODE_NORMAL);
-		if (Error)
-		{
-			HERMES_LOG_ERROR("Could not render glyph 0x%ux from font %s; FT_Render_Glyph returned error code %i", GlyphIndex, GetName().c_str(), Error);
-			return std::nullopt;
-		}
-
-		static constexpr size_t BytesPerPixel = 1;
-		auto Dimensions = Vec2ui(FontData->Face->glyph->bitmap.width, FontData->Face->glyph->bitmap.rows);
-		size_t TotalBytes = BytesPerPixel * Dimensions.X * Dimensions.Y;
-
-		auto Bitmap = std::vector(FontData->Face->glyph->bitmap.buffer, FontData->Face->glyph->bitmap.buffer + TotalBytes);
-		
-		return RenderedGlyph{
-			.Dimensions = Dimensions,
-			.Bitmap = std::move(Bitmap)
-		};
+		return CachedGlyphs.at(Description).Glyph;
 	}
 
 	Font::Font(String InName, std::span<const uint8> BinaryData)
@@ -119,20 +100,65 @@ namespace Hermes::UI
 		GNumberOfAliveFonts++;
 	}
 
+	bool Font::GlyphDescription::operator==(const GlyphDescription& Other) const
+	{
+		return FontSize == Other.FontSize && GlyphIndex == Other.GlyphIndex;
+	}
+
+	size_t Font::GlyphDescriptionHasher::operator()(const GlyphDescription& Value) const
+	{
+		return static_cast<size_t>(Value.FontSize) << 32 | Value.GlyphIndex;
+	}
+
 	void Font::SetSize(uint32 Size) const
 	{
 		// FIXME: this is just the value that Windows uses by default, we should actually query the true DPI and use it here
 		static constexpr uint32 ScreenDPI = 96;
 
-		auto ScaledSize = static_cast<uint32>(Size * GFreeTypeSubpixelScalingFactor);
+		auto ScaledSize = Size * GFreeTypeSubpixelScalingFactor;
 		FT_Set_Char_Size(FontData->Face, 0, ScaledSize, ScreenDPI, ScreenDPI);
 	}
 
-	bool Font::LoadGlyph(uint32 GlyphIndex) const
+	bool Font::LoadGlyph(uint32 GlyphIndex, uint32 FontSize) const
 	{
+		HERMES_PROFILE_FUNC();
+
+		SetSize(FontSize);
+
 		auto Error = FT_Load_Glyph(FontData->Face, GlyphIndex, FT_LOAD_DEFAULT);
 		if (Error)
+		{
+			HERMES_LOG_ERROR("Could not load glyph 0x%ux from font %s; FT_Load_Glyph returned error code %i", GlyphIndex, GetName().c_str(), Error);
 			return false;
+		}
+
+		Error = FT_Render_Glyph(FontData->Face->glyph, FT_RENDER_MODE_NORMAL);
+		if (Error)
+		{
+			HERMES_LOG_ERROR("Could not render glyph 0x%ux from font %s; FT_Render_Glyph returned error code %i", GlyphIndex, GetName().c_str(), Error);
+			return false;
+		}
+
+		static constexpr size_t BytesPerPixel = 1;
+		auto Dimensions = Vec2ui(FontData->Face->glyph->bitmap.width, FontData->Face->glyph->bitmap.rows);
+		size_t TotalBytes = BytesPerPixel * Dimensions.X * Dimensions.Y;
+		auto Bitmap = std::vector(FontData->Face->glyph->bitmap.buffer, FontData->Face->glyph->bitmap.buffer + TotalBytes);
+
+		RenderedGlyph RenderedGlyph = {
+			.Dimensions = Dimensions,
+			.Bitmap = std::move(Bitmap)
+		};
+		GlyphMetrics Metrics = {
+			.Bearing = Vec2(Vec2i(FontData->Face->glyph->metrics.horiBearingX, FontData->Face->glyph->metrics.horiBearingY)) / GFreeTypeSubpixelScalingFactor,
+			.Advance = FontData->Face->glyph->advance.x / static_cast<float>(GFreeTypeSubpixelScalingFactor)
+		};
+
+		CachedGlyph Glyph = {
+			.Metrics = Metrics,
+			.Glyph = std::move(RenderedGlyph)
+		};
+		GlyphDescription Description = { FontSize, GlyphIndex };
+		CachedGlyphs[Description] = std::move(Glyph);
 
 		return true;
 	}

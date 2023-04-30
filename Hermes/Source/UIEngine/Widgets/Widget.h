@@ -60,6 +60,9 @@ namespace Hermes::UI
 		 */
 		void SetParent(std::shared_ptr<Widget> NewParent);
 
+		const Widget* GetParent() const;
+		Widget* GetParent();
+
 		/*
 		 * Computes the minimum dimensions needed to properly draw this widget
 		 * and its children.
@@ -75,7 +78,7 @@ namespace Hermes::UI
 		virtual void Draw(DrawingContext& Context, Rect2D AvailableRect) const = 0;
 
 	protected:
-		explicit Widget(std::shared_ptr<Widget> InParent);
+		Widget() = default;
 
 		std::shared_ptr<Widget> Parent = nullptr;
 		MarginBox Margins = {};

@@ -40,9 +40,4 @@ namespace Hermes::UI
 	{
 		return Children.size();
 	}
-
-	ContainerWidget::ContainerWidget(std::shared_ptr<Widget> InParent)
-		: Widget(std::move(InParent))
-	{
-	}
 }

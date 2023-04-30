@@ -223,28 +223,28 @@ public:
 
 		World.AddSystem(std::make_unique<CameraSystem>());
 
-		auto RootWidget = Hermes::UI::ViewportContainerWidget::Create(nullptr);
+		auto RootWidget = Hermes::UI::ViewportContainerWidget::Create();
 
-		auto RedPanel = Hermes::UI::PanelWidget::Create(RootWidget, { 80, 1 }, { 1.0f, 0.0f, 0.0f });
+		auto RedPanel = Hermes::UI::PanelWidget::Create({ 80, 1 }, { 1.0f, 0.0f, 0.0f });
 		RedPanel->GetMargins().Top = { Hermes::UI::MarginValueType::Absolute, 20.0f };
 		RedPanel->GetMargins().Bottom = { Hermes::UI::MarginValueType::PercentOfParent, 0.92f };
 		RootWidget->AddChild(RedPanel);
 
-		auto GreenPanel = Hermes::UI::PanelWidget::Create(RootWidget, { 30, 80 }, { 0.0f, 1.0f, 0.0f });
+		auto GreenPanel = Hermes::UI::PanelWidget::Create({ 30, 80 }, { 0.0f, 1.0f, 0.0f });
 		GreenPanel->GetMargins().Top = { Hermes::UI::MarginValueType::PercentOfParent, 0.7f };
 		GreenPanel->GetMargins().Left = { Hermes::UI::MarginValueType::Absolute, 10.0f };
 		GreenPanel->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.9f };
 		RootWidget->AddChild(GreenPanel);
 
-		auto VerticalContainer = Hermes::UI::VerticalContainerWidget::Create(RootWidget);
+		auto VerticalContainer = Hermes::UI::VerticalContainerWidget::Create();
 		VerticalContainer->GetMargins().Top = { Hermes::UI::MarginValueType::Absolute, 20.0f };
 		RootWidget->AddChild(VerticalContainer);
 
 		auto Font = Hermes::AssetLoader::Load<Hermes::UI::Font>("/Fonts/arial");
-		auto Label = Hermes::UI::LabelWidget::Create(VerticalContainer, "Hello, world! This is Hermes UI system!", 14, Font);
+		auto Label = Hermes::UI::LabelWidget::Create("Hello, world! This is Hermes UI system!", 14, Font);
 		VerticalContainer->AddChild(Label);
 
-		auto Label1 = Hermes::UI::LabelWidget::Create(VerticalContainer, "\xD0\x90\x20\xD1\x86\xD0\xB5\x20\xD1\x82\xD0\xB5\xD0\xBA\xD1\x81\xD1\x82\x20\xD0\xBA\xD0\xB8\xD1\x80\xD0\xB8\xD0\xBB\xD0\xB8\xD1\x86\xD0\xB5\xD1\x8E\x21", 28, Font);
+		auto Label1 = Hermes::UI::LabelWidget::Create("\xD0\x90\x20\xD1\x86\xD0\xB5\x20\xD1\x82\xD0\xB5\xD0\xBA\xD1\x81\xD1\x82\x20\xD0\xBA\xD0\xB8\xD1\x80\xD0\xB8\xD0\xBB\xD0\xB8\xD1\x86\xD0\xB5\xD1\x8E\x21", 28, Font);
 		VerticalContainer->AddChild(Label1);
 
 		Hermes::GGameLoop->SetRootWidget(RootWidget);

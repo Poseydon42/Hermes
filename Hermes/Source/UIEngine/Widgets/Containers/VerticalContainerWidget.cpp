@@ -4,9 +4,9 @@
 
 namespace Hermes::UI
 {
-	std::shared_ptr<VerticalContainerWidget> VerticalContainerWidget::Create(std::shared_ptr<Widget> InParent)
+	std::shared_ptr<VerticalContainerWidget> VerticalContainerWidget::Create()
 	{
-		return std::shared_ptr<VerticalContainerWidget>(new VerticalContainerWidget(std::move(InParent)));
+		return std::shared_ptr<VerticalContainerWidget>(new VerticalContainerWidget());
 	}
 
 	void VerticalContainerWidget::Draw(DrawingContext& Context, Rect2D AvailableRect) const
@@ -60,11 +60,6 @@ namespace Hermes::UI
 
 			NextWidgetY += AbsoluteTopMargin + ChildRect.Height() + AbsoluteBottomMargin;
 		});
-	}
-
-	VerticalContainerWidget::VerticalContainerWidget(std::shared_ptr<Widget> InParent)
-		: ContainerWidget(std::move(InParent))
-	{
 	}
 
 	Vec2 VerticalContainerWidget::ComputeMinimumDimensions() const

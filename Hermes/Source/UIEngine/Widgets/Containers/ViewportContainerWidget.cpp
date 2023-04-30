@@ -2,14 +2,9 @@
 
 namespace Hermes::UI
 {
-	std::shared_ptr<ViewportContainerWidget> ViewportContainerWidget::Create(std::shared_ptr<Widget> InParentWidget)
+	std::shared_ptr<ViewportContainerWidget> ViewportContainerWidget::Create()
 	{
-		return std::shared_ptr<ViewportContainerWidget>(new ViewportContainerWidget(std::move(InParentWidget)));
-	}
-
-	ViewportContainerWidget::ViewportContainerWidget(std::shared_ptr<Widget> InParentWidget)
-		: ContainerWidget(std::move(InParentWidget))
-	{
+		return std::shared_ptr<ViewportContainerWidget>(new ViewportContainerWidget());
 	}
 
 	Vec2 ViewportContainerWidget::ComputeMinimumDimensions() const

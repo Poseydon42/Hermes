@@ -34,9 +34,9 @@ namespace Hermes::UI
 		void ForEachChild(FuncType Func) const;
 
 	protected:
-		std::vector<std::shared_ptr<Widget>> Children;
+		ContainerWidget() = default;
 
-		explicit ContainerWidget(std::shared_ptr<Widget> InParent);
+		std::vector<std::shared_ptr<Widget>> Children;
 	};
 
 	template<typename FuncType>

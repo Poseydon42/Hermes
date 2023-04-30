@@ -42,8 +42,13 @@ namespace Hermes::UI
 		Parent = std::move(NewParent);
 	}
 
-	Widget::Widget(std::shared_ptr<Widget> InParent)
-		: Parent(std::move(InParent))
+	const Widget* Widget::GetParent() const
 	{
+		return Parent.get();
+	}
+
+	Widget* Widget::GetParent()
+	{
+		return Parent.get();
 	}
 }

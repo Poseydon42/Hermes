@@ -22,13 +22,13 @@ namespace Hermes::UI
 		VerticalContainerWidget(VerticalContainerWidget&&) = default;
 		VerticalContainerWidget& operator=(VerticalContainerWidget&&) = default;
 
-		static std::shared_ptr<VerticalContainerWidget> Create(std::shared_ptr<Widget> InParent);
+		static std::shared_ptr<VerticalContainerWidget> Create();
 
 		virtual Vec2 ComputeMinimumDimensions() const override;
 
 		virtual void Draw(DrawingContext& Context, Rect2D AvailableRect) const override;
 
 	protected:
-		explicit VerticalContainerWidget(std::shared_ptr<Widget> InParent);
+		VerticalContainerWidget() = default;
 	};
 }

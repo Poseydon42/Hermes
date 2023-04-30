@@ -4,9 +4,9 @@
 
 namespace Hermes::UI
 {
-	std::shared_ptr<LabelWidget> LabelWidget::Create(std::shared_ptr<Widget> InParent, String InText, uint32 InFontSize, AssetHandle<UI::Font> InFont)
+	std::shared_ptr<LabelWidget> LabelWidget::Create(String InText, uint32 InFontSize, AssetHandle<UI::Font> InFont)
 	{
-		return std::shared_ptr<LabelWidget>(new LabelWidget(std::move(InParent), std::move(InText), InFontSize, std::move(InFont)));
+		return std::shared_ptr<LabelWidget>(new LabelWidget(std::move(InText), InFontSize, std::move(InFont)));
 	}
 
 	Vec2 LabelWidget::ComputeMinimumDimensions() const
@@ -24,9 +24,8 @@ namespace Hermes::UI
 		Context.DrawText(DrawingRect, Text, FontSize, Font);
 	}
 
-	LabelWidget::LabelWidget(std::shared_ptr<Widget> InParent, String InText, uint32 InFontSize, AssetHandle<class Font> InFont)
-		: Widget(std::move(InParent))
-		, Text(std::move(InText))
+	LabelWidget::LabelWidget(String InText, uint32 InFontSize, AssetHandle<class Font> InFont)
+		: Text(std::move(InText))
 		, FontSize(InFontSize)
 		, Font(std::move(InFont))
 	{

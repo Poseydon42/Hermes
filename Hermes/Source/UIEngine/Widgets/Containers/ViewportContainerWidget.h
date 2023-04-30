@@ -20,10 +20,10 @@ namespace Hermes::UI
 	public:
 		virtual ~ViewportContainerWidget() override = default;
 
-		static std::shared_ptr<ViewportContainerWidget> Create(std::shared_ptr<Widget> InParentWidget);
+		static std::shared_ptr<ViewportContainerWidget> Create();
 
 	protected:
-		explicit ViewportContainerWidget(std::shared_ptr<Widget> InParentWidget);
+		ViewportContainerWidget() = default;
 		
 		virtual Vec2 ComputeMinimumDimensions() const override;
 

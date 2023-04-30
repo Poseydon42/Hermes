@@ -161,6 +161,17 @@ namespace Hermes
 		WindowEventQueue.Subscribe(WindowMouseEvent::GetStaticType(), [this](const IEvent& Event) { MouseEventHandler(Event); });
 	}
 
+	void InputEngine::Enable()
+	{
+		IsEnabled = true;
+	}
+
+	void InputEngine::Disable()
+	{
+		DeltaMousePosition = 0;
+		IsEnabled = false;
+	}
+
 	void InputEngine::ProcessDeferredEvents()
 	{
 		Queue.Run();
@@ -188,6 +199,9 @@ namespace Hermes
 
 	void InputEngine::KeyEventHandler(const IEvent& Event)
 	{
+		if (!IsEnabled)
+			return;
+
 		HERMES_ASSERT(Event.GetType() == WindowKeyboardEvent::GetStaticType());
 
 		const auto& WindowKeyEvent = static_cast<const WindowKeyboardEvent&>(Event);
@@ -207,6 +221,9 @@ namespace Hermes
 
 	void InputEngine::MouseEventHandler(const IEvent& Event)
 	{
+		if (!IsEnabled)
+			return;
+
 		HERMES_ASSERT(Event.GetType() == WindowMouseEvent::GetStaticType());
 
 		const auto& MouseEvent = static_cast<const WindowMouseEvent&>(Event);

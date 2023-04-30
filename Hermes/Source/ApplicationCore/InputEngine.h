@@ -48,6 +48,9 @@ namespace Hermes
 	public:
 		explicit InputEngine(IPlatformWindow& PlatformWindow);
 
+		void Enable();
+		void Disable();
+
 		void ProcessDeferredEvents();
 
 		EventQueue& GetEventQueue();
@@ -58,6 +61,8 @@ namespace Hermes
 		Vec2 GetDeltaMousePosition() const;
 	private:
 		EventQueue Queue;
+
+		bool IsEnabled = false;
 
 		bool KeyState[static_cast<int16>(KeyCode::Count_)] = {};
 		Vec2 DeltaMousePosition;

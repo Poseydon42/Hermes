@@ -43,7 +43,7 @@ namespace Hermes
 			return false;
 
 		InputEngine = std::make_unique<class InputEngine>(*ApplicationWindow);
-		ApplicationWindow->SetCursorVisibility(false);
+		SetInputMode(InputMode::Game);
 
 		ApplicationWindow->GetWindowQueue().Subscribe(WindowCloseEvent::GetStaticType(), [this](const IEvent&) { RequestedExit = true; });
 		ApplicationWindow->GetWindowQueue().Subscribe(WindowStateEvent::GetStaticType(), [this](const IEvent& Event)
@@ -54,10 +54,11 @@ namespace Hermes
 			else
 				Paused = true;
 		});
-
-		// DEBUG ONLY
-		InputEngine->GetEventQueue().Subscribe(KeyEvent::GetStaticType(), [this](const IEvent& Event) { KeyEventHandler(Event); });
-
+		ApplicationWindow->GetWindowQueue().Subscribe(WindowKeyboardEvent::GetStaticType(), [this](const IEvent& Event)
+		{
+			KeyEventHandler(static_cast<const WindowKeyboardEvent&>(Event));
+		});
+		
 		HERMES_ASSERT_LOG(Renderer::Init(), "Failed to initialize the renderer");
 
 		GameWorld = std::make_unique<World>();
@@ -141,6 +142,32 @@ namespace Hermes
 		return *GameWorld;
 	}
 
+	void GameLoop::SetInputMode(Hermes::InputMode NewMode)
+	{
+		switch (NewMode)
+		{
+		case InputMode::Game:
+			HERMES_LOG_INFO("Input type switched to Game");
+			ApplicationWindow->SetCursorVisibility(false);
+			InputEngine->Enable();
+			break;
+		case InputMode::UI:
+			HERMES_LOG_INFO("Input type switched to UI");
+			ApplicationWindow->SetCursorVisibility(true);
+			InputEngine->Disable();
+			break;
+		default:
+			HERMES_ASSERT(false);
+		}
+
+		InputMode = NewMode;
+	}
+
+	InputMode GameLoop::GetInputMode() const
+	{
+		return InputMode;
+	}
+
 	void GameLoop::SetCamera(std::shared_ptr<Hermes::Camera> NewCamera)
 	{
 		Camera = std::move(NewCamera);
@@ -149,13 +176,19 @@ namespace Hermes
 	/*
 	 * DEBUG ONLY
 	 */
-	void GameLoop::KeyEventHandler(const IEvent& RawEvent)
+	void GameLoop::KeyEventHandler(const WindowKeyboardEvent& Event)
 	{
-		const auto& Event = static_cast<const KeyEvent&>(RawEvent);
-		if (Event.IsPressEvent() && Event.GetKeyCode() == KeyCode::F)
+		if (Event.IsPressed() && Event.GetKeyCode() == KeyCode::F)
 		{
 			ApplicationWindow->ToggleFullscreen(!IsFullscreen);
 			IsFullscreen = !IsFullscreen;
+		}
+		if (Event.IsPressed() && Event.GetKeyCode() == KeyCode::C)
+		{
+			if (InputMode == InputMode::Game)
+				SetInputMode(InputMode::UI);
+			else if (InputMode == InputMode::UI)
+				SetInputMode(InputMode::Game);
 		}
 	}
 }

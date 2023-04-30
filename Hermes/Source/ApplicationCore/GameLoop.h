@@ -14,6 +14,12 @@ namespace Hermes
 {
 	class IPlatformWindow;
 
+	enum class InputMode
+	{
+		UI,
+		Game
+	};
+
 	class HERMES_API GameLoop
 	{
 		MAKE_NON_COPYABLE(GameLoop)
@@ -40,6 +46,8 @@ namespace Hermes
 
 		World& GetWorld();
 
+		void SetInputMode(InputMode NewMode);
+		InputMode GetInputMode() const;
 
 		/*
 		 * DEBUG ONLY
@@ -59,11 +67,13 @@ namespace Hermes
 		std::unique_ptr<World> GameWorld;
 		std::shared_ptr<UI::Widget> RootWidget;
 
+		InputMode InputMode = InputMode::Game;
+
 		/*
 		 * DEBUG ONLY
 		 */
 		std::shared_ptr<Camera> Camera;
-		void KeyEventHandler(const IEvent& Event);
+		void KeyEventHandler(const WindowKeyboardEvent& Event);
 		bool IsFullscreen = false;
 
 		float TotalTime = 0.0f;

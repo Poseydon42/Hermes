@@ -39,17 +39,18 @@ namespace Hermes
 		virtual void* GetNativeHandle() const override;
 
 		virtual void SetCursorVisibility(bool IsVisible) override;
+
+		virtual Vec2i GetCursorPosition() const override;
 	
 	private:
 		HWND WindowHandle;
-
-		String CurrentName;
-
 		std::unique_ptr<EventQueue> MessagePump;
 
+		String CurrentName;
 		WINDOWPLACEMENT PrevPlacement = {};
-
-		Vec2ui LastKnownSize;
+		Vec2ui LastKnownSize = {};
+		Vec2i LastCursorPosition = {};
+		bool CursorVisibility = false;
 
 		static bool ClassRegistered;
 

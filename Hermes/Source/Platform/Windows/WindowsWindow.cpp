@@ -56,6 +56,7 @@ namespace Hermes
 
 		if (WindowHandle)
 		{
+			ShowCursor(false);
 			UpdateVisibility(true);
 		}
 		else
@@ -152,18 +153,23 @@ namespace Hermes
 		{
 			if (GetCursorPos(&CursorPos) && ScreenToClient(WindowHandle, &CursorPos))
 			{
-				Vec2ui WindowCenter = { LastKnownSize.X / 2, LastKnownSize.Y / 2 };
-
 				Vec2i CurrentMousePosition = { CursorPos.x, CursorPos.y };
-				auto DeltaMousePosition = CurrentMousePosition - Vec2i(WindowCenter);
+				auto DeltaMousePosition = CurrentMousePosition - LastCursorPosition;
+				LastCursorPosition = CurrentMousePosition;
 
 				MessagePump->PushEvent(WindowMouseEvent(DeltaMousePosition));
 
-				POINT CenterCoords;
-				CenterCoords.x = static_cast<decltype(CenterCoords.x)>(WindowCenter.X);
-				CenterCoords.y = static_cast<decltype(CenterCoords.y)>(WindowCenter.Y);
-				ClientToScreen(WindowHandle, &CenterCoords);
-				SetCursorPos(CenterCoords.x, CenterCoords.y);
+				// NOTE: If cursor is not visible we should move it back to the centre of the screen
+				if (!CursorVisibility)
+				{
+					POINT WindowCenter;
+					WindowCenter.x = LastKnownSize.X / 2;
+					WindowCenter.y = LastKnownSize.Y / 2;
+					LastCursorPosition = { WindowCenter.x, WindowCenter.y };
+
+					ClientToScreen(WindowHandle, &WindowCenter);
+					SetCursorPos(WindowCenter.x, WindowCenter.y);
+				}
 			}
 			else
 			{
@@ -182,7 +188,20 @@ namespace Hermes
 
 	void WindowsWindow::SetCursorVisibility(bool IsVisible)
 	{
-		ShowCursor(IsVisible);
+		if (IsVisible != CursorVisibility)
+		{
+			CursorVisibility = IsVisible;
+			ShowCursor(IsVisible);
+		}
+	}
+
+	Vec2i WindowsWindow::GetCursorPosition() const
+	{
+		HERMES_ASSERT(CursorVisibility);
+		POINT CursorPosition;
+		GetCursorPos(&CursorPosition);
+		ScreenToClient(WindowHandle, &CursorPosition);
+		return { CursorPosition.x, CursorPosition.y };
 	}
 
 	bool WindowsWindow::IsInFocus() const

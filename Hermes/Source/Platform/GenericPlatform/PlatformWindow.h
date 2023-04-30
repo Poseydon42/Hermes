@@ -209,6 +209,15 @@ namespace Hermes
 		 */
 		virtual void SetCursorVisibility(bool IsVisible) = 0;
 
+		/*
+		 * Returns the current position of the cursor if it is visible, otherwise behaviour is undefined.
+		 * The cursor's coordinates are reported in the coordinate system with top left window corner begin
+		 * the origin and X and Y axes increasing to the right and downwards. The coordinates might have negative
+		 * value or value exceeding the dimensions of the window, which indicates that the cursor is outside of
+		 * the window's rectangle and should usually be ignored.
+		 */
+		virtual Vec2i GetCursorPosition() const = 0;
+
 		static std::unique_ptr<IPlatformWindow> CreatePlatformWindow(const String& Name, Vec2ui Size);
 	};
 }

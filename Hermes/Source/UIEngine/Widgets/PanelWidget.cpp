@@ -2,24 +2,24 @@
 
 namespace Hermes::UI
 {
-	std::shared_ptr<PanelWidget> PanelWidget::Create(Vec2 InMinimumDimensions, Vec3 InColor)
+	std::shared_ptr<PanelWidget> PanelWidget::Create(Vec2 InMinimumSize, Vec3 InColor)
 	{
-		return std::shared_ptr<PanelWidget>(new PanelWidget(InMinimumDimensions, InColor));
+		return std::shared_ptr<PanelWidget>(new PanelWidget(InMinimumSize, InColor));
 	}
 
-	void PanelWidget::Draw(DrawingContext& Context, Rect2D AvailableRect) const
+	void PanelWidget::Draw(DrawingContext& Context) const
 	{
-		Context.DrawRectangle(AvailableRect, Color);
+		Context.DrawRectangle(BoundingBox, Color);
 	}
 
-	PanelWidget::PanelWidget(Vec2 InMinimumDimensions, Vec3 InColor)
-		: MinimumDimensions(InMinimumDimensions)
+	PanelWidget::PanelWidget(Vec2 InMinimumSize, Vec3 InColor)
+		: MinimumSize(InMinimumSize)
 		, Color(InColor)
 	{
 	}
 
-	Vec2 PanelWidget::ComputeMinimumDimensions() const
+	Vec2 PanelWidget::ComputeMinimumSize() const
 	{
-		return MinimumDimensions;
+		return MinimumSize;
 	}
 }

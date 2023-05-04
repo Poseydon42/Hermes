@@ -9,68 +9,59 @@ namespace Hermes::UI
 		return std::shared_ptr<VerticalContainerWidget>(new VerticalContainerWidget());
 	}
 
-	void VerticalContainerWidget::Draw(DrawingContext& Context, Rect2D AvailableRect) const
+	void VerticalContainerWidget::Draw(DrawingContext& Context) const
 	{
-		float TotalRelativeVerticalMargin = 0.0f;
-		float TotalMinimumVerticalSize = 0.0f;
-		ForEachChild([&](const Widget& Child)
+		for (const auto& Child : Children)
 		{
-			TotalRelativeVerticalMargin += GetRelativeMarginValue(Child.GetMargins().Top, AvailableRect.Height());
-			TotalRelativeVerticalMargin += GetRelativeMarginValue(Child.GetMargins().Bottom, AvailableRect.Height());
-
-			auto ChildMinimumDimensions = Child.ComputeMinimumDimensions();
-			TotalMinimumVerticalSize += ChildMinimumDimensions.Y;
-		});
-		
-		float PixelsLeftForMargins = Math::Max(AvailableRect.Height() - TotalMinimumVerticalSize, 0.0f);
-		float TotalVerticalMarginInPixels = AvailableRect.Height() * TotalRelativeVerticalMargin;
-
-		float MarginScalingCoefficient = 1.0f;
-		// NOTE: If the children demand more margin (in pixels) than we can provide we need to scale down their vertical margins uniformly
-		if (TotalVerticalMarginInPixels > PixelsLeftForMargins)
-			MarginScalingCoefficient = PixelsLeftForMargins / TotalVerticalMarginInPixels;
-
-		float NextWidgetY = AvailableRect.Min.Y;
-		ForEachChild([&](const Widget& Child)
-		{
-			float AbsoluteTopMargin = GetAbsoluteMarginValue(Child.GetMargins().Top, AvailableRect.Height()) * MarginScalingCoefficient;
-			float AbsoluteBottomMargin = GetAbsoluteMarginValue(Child.GetMargins().Bottom, AvailableRect.Height()) * MarginScalingCoefficient;
-
-			auto AbsoluteLeftMargin = GetAbsoluteMarginValue(Child.GetMargins().Left, AvailableRect.Width());
-			auto AbsoluteRightMargin = GetAbsoluteMarginValue(Child.GetMargins().Right, AvailableRect.Width());
-
-			auto ChildMinDimensions = Child.ComputeMinimumDimensions();
-
-			// Again, if the horizontal margins + minimum horizontal size exceed the available width, minimum horizontal size is prioritized
-			if (AbsoluteLeftMargin + AbsoluteRightMargin + ChildMinDimensions.X > AvailableRect.Width())
-			{
-				float ScaleFactor = (AvailableRect.Width() - ChildMinDimensions.X) / (AbsoluteLeftMargin + AbsoluteRightMargin);
-				AbsoluteLeftMargin *= ScaleFactor;
-				AbsoluteRightMargin *= ScaleFactor;
-			}
-
-			auto ChildRect = Rect2D {
-				.Min = { AvailableRect.Left() + AbsoluteLeftMargin, NextWidgetY + AbsoluteTopMargin },
-				.Max = { AvailableRect.Right() - AbsoluteRightMargin, NextWidgetY + AbsoluteTopMargin + ChildMinDimensions.Y }
-			};
-			ChildRect.Bottom() = Math::Min(ChildRect.Bottom(), AvailableRect.Bottom());
-			HERMES_ASSERT(ChildRect.Right() <= AvailableRect.Right());
-
-			Child.Draw(Context, ChildRect);
-
-			NextWidgetY += AbsoluteTopMargin + ChildRect.Height() + AbsoluteBottomMargin;
-		});
+			Child->Draw(Context);
+		}
 	}
 
-	Vec2 VerticalContainerWidget::ComputeMinimumDimensions() const
+	Vec2 VerticalContainerWidget::ComputeMinimumSize() const
 	{
 		Vec2 Result = {};
-		ForEachChild([&](const Widget& Child)
+		for (const auto& Child : Children)
 		{
-			auto ChildMinimumDimensions = Child.ComputeMinimumDimensions();
-			Result.X = Math::Max(Result.X, ChildMinimumDimensions.X);
-			Result.Y += ChildMinimumDimensions.Y;
-		});
+			auto ChildSize = Child->ComputeMinimumSize();
+			Result.X = Math::Max(Result.X, ChildSize.X);
+			Result.Y += ChildSize.Y;
+		}
 		return Result;
+	}
+
+	void VerticalContainerWidget::Layout()
+	{
+		float NextChildTop = BoundingBox.Top();
+		for (const auto& Child : Children)
+		{
+			auto ChildSize = Child->ComputeMinimumSize();
+			Rect2D ChildBoundingBox = {};
+
+			ChildBoundingBox.Min.Y = NextChildTop;
+			ChildBoundingBox.Max.Y = NextChildTop + ChildSize.Y;
+			HERMES_ASSERT(ChildBoundingBox.Bottom() <= BoundingBox.Bottom());
+
+			float LeftMargin = GetAbsoluteMarginValue(Child->GetMargins().Left, BoundingBox.Width());
+			float RightMargin = GetAbsoluteMarginValue(Child->GetMargins().Right, BoundingBox.Width());
+
+			float MarginScalingFactor = 1.0f;
+			if (LeftMargin + ChildSize.X + RightMargin > BoundingBox.Width())
+			{
+				float TotalMargin = LeftMargin + RightMargin;
+				float AvailableMargin = BoundingBox.Width() - ChildSize.X;
+				MarginScalingFactor = AvailableMargin / TotalMargin;
+			}
+			LeftMargin *= MarginScalingFactor;
+			RightMargin *= MarginScalingFactor;
+
+			ChildBoundingBox.Min.X = BoundingBox.Min.X + LeftMargin;
+			ChildBoundingBox.Max.X = BoundingBox.Max.X - RightMargin;
+
+			NextChildTop += ChildBoundingBox.Height();
+
+			Child->SetBoundingBox(ChildBoundingBox);
+
+			Child->Layout();
+		}
 	}
 }

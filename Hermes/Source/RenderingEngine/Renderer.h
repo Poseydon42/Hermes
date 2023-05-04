@@ -17,7 +17,7 @@ namespace Hermes
 	public:
 		static bool Init();
 
-		static void RunFrame(const Scene& Scene, const UI::Widget& RootWidget);
+		static void RunFrame(const Scene& Scene, UI::Widget& RootWidget);
 
 		static void Shutdown();
 

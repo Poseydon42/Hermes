@@ -51,4 +51,31 @@ namespace Hermes::UI
 	{
 		return Parent.get();
 	}
+
+	Vec2 Widget::ComputeMinimumSize() const
+	{
+		return {};
+	}
+
+	void Widget::Layout()
+	{
+	}
+
+	void Widget::Draw(DrawingContext&) const
+	{
+	}
+
+	void Widget::ForEachChild(const ForEachChildCallbackType&)
+	{
+	}
+
+	Rect2D Widget::GetBoundingBox() const
+	{
+		return BoundingBox;
+	}
+
+	void Widget::SetBoundingBox(Rect2D NewBoundingBox)
+	{
+		BoundingBox = NewBoundingBox;
+	}
 }

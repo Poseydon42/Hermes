@@ -156,7 +156,7 @@ namespace Hermes
 		TextFontSampler = Device.CreateSampler(TextFontSamplerDesc);
 	}
 
-	Rect2Dui UIRenderer::PrepareToRender(const UI::Widget& RootWidget, Vec2ui RequiredDimensions)
+	Rect2Dui UIRenderer::PrepareToRender(UI::Widget& RootWidget, Vec2ui RequiredDimensions)
 	{
 		HERMES_PROFILE_FUNC();
 
@@ -167,14 +167,26 @@ namespace Hermes
 			RecreateDestinationImage();
 		}
 
-		UI::DrawingContext DrawingContext = {};
-		Rect2D AvailableRect = { { 0, 0 }, Vec2(CurrentDimensions) };
-		RootWidget.Draw(DrawingContext, AvailableRect);
+		{
+			HERMES_PROFILE_SCOPE("UI layout");
 
-		SceneViewport = DrawingContext.GetViewport();
+			Rect2D RootWidgetBoundingBox = { { 0, 0 }, Vec2(CurrentDimensions) };
+			RootWidget.SetBoundingBox(RootWidgetBoundingBox);
 
-		PrepareToRenderRectangles(DrawingContext);
-		PrepareToRenderText(DrawingContext);
+			RootWidget.Layout();
+		}
+
+		{
+			HERMES_PROFILE_SCOPE("UI draw");
+
+			UI::DrawingContext DrawingContext = {};
+			RootWidget.Draw(DrawingContext);
+
+			SceneViewport = DrawingContext.GetViewport();
+
+			PrepareToRenderRectangles(DrawingContext);
+			PrepareToRenderText(DrawingContext);
+		}
 
 		return SceneViewport;
 	}

@@ -25,8 +25,10 @@ namespace Hermes::UI
 	protected:
 		ViewportContainerWidget() = default;
 		
-		virtual Vec2 ComputeMinimumDimensions() const override;
+		virtual Vec2 ComputeMinimumSize() const override;
 
-		virtual void Draw(DrawingContext& Context, Rect2D AvailableRect) const override;
+		virtual void Layout() override;
+
+		virtual void Draw(DrawingContext& Context) const override;
 	};
 }

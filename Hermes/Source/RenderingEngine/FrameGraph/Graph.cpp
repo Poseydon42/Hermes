@@ -283,6 +283,7 @@ namespace Hermes
 		if (ViewportDimensions != CurrentViewportDimensions)
 		{
 			CurrentViewportDimensions = ViewportDimensions;
+			HERMES_LOG_INFO("Frame graph viewport resized to %u x %u", ViewportDimensions.X, ViewportDimensions.Y);
 
 			RecreateResources();
 		}

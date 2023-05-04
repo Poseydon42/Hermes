@@ -123,7 +123,7 @@ namespace Hermes
 		return true;
 	}
 
-	void Renderer::RunFrame(const Scene& Scene, const UI::Widget& RootWidget)
+	void Renderer::RunFrame(const Scene& Scene, UI::Widget& RootWidget)
 	{
 		HERMES_PROFILE_FUNC();
 

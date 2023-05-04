@@ -9,19 +9,14 @@ namespace Hermes::UI
 		return std::shared_ptr<LabelWidget>(new LabelWidget(std::move(InText), InFontSize, std::move(InFont)));
 	}
 
-	Vec2 LabelWidget::ComputeMinimumDimensions() const
+	Vec2 LabelWidget::ComputeMinimumSize() const
 	{
 		return TextLayout::Measure(Text, FontSize, *Font);
 	}
 
-	void LabelWidget::Draw(DrawingContext& Context, Rect2D AvailableRect) const
+	void LabelWidget::Draw(DrawingContext& Context) const
 	{
-		auto RequiredDimensions = ComputeMinimumDimensions();
-		HERMES_ASSERT(AvailableRect.Width() >= RequiredDimensions.X && AvailableRect.Height() >= RequiredDimensions.Y);
-
-		Rect2D DrawingRect = { AvailableRect.Min, AvailableRect.Min + RequiredDimensions };
-
-		Context.DrawText(DrawingRect, Text, FontSize, Font);
+		Context.DrawText(BoundingBox, Text, FontSize, Font);
 	}
 
 	LabelWidget::LabelWidget(String InText, uint32 InFontSize, AssetHandle<class Font> InFont)

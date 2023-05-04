@@ -22,7 +22,7 @@ namespace Hermes
 		 *
 		 * @return Viewport rectangle where the scene will be rendered to
 		 */
-		Rect2Dui PrepareToRender(const UI::Widget& RootWidget, Vec2ui RequiredDimensions);
+		Rect2Dui PrepareToRender(UI::Widget& RootWidget, Vec2ui RequiredDimensions);
 
 		std::pair<const Vulkan::Image*, VkImageLayout> Render(const Vulkan::Image& RenderedScene, VkImageLayout RenderedSceneLayout);
 

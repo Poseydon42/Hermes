@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "Core/Core.h"
 #include "Math/Rect2D.h"
 #include "Math/Vector2.h"
@@ -38,10 +40,10 @@ namespace Hermes::UI
 	 * Base class for any UI element that can be drawn and interacted with.
 	 *
 	 * Stores a pointer to its parent, however does not itself hold any children. Stores the margin
-	 * box associated with this widget, which is used by its parent to compute its position and dimensions
+	 * box associated with this widget, which is used by its parent to compute its position and size
 	 * on the screen. The widget is not responsible for its own layout, it is provided by its parent, the
 	 * widget only has to lay out its children in accordance with its layout policy as well as the child's
-	 * dimensions and margins.
+	 * size and margins.
 	 */
 	class HERMES_API Widget : public std::enable_shared_from_this<Widget>
 	{
@@ -55,7 +57,10 @@ namespace Hermes::UI
 		MarginBox& GetMargins();
 		void SetMargins(MarginBox NewMargins);
 
-		/*
+		Rect2D GetBoundingBox() const;
+		void SetBoundingBox(Rect2D NewBoundingBox);
+
+		/**
 		 * Sets the new parent for this widget
 		 */
 		void SetParent(std::shared_ptr<Widget> NewParent);
@@ -63,24 +68,38 @@ namespace Hermes::UI
 		const Widget* GetParent() const;
 		Widget* GetParent();
 
-		/*
-		 * Computes the minimum dimensions needed to properly draw this widget
-		 * and its children.
+		/**
+		 * Computes the minimum size needed to properly draw this widget and its children.
 		 */
-		virtual Vec2 ComputeMinimumDimensions() const = 0;
+		virtual Vec2 ComputeMinimumSize() const;
 
 		/**
-		 * Draws this widget and its children within the space that was allocated by its parent.
+		 * Lays out its children within its bounding box.
+		 */
+		virtual void Layout();
+
+		/**
+		 * Draws this widget and its children within its bounding box.
 		 *
 		 * @param Context Drawing context used to record drawing primitives
-		 * @param AvailableRect Rectangle that the widget can draw in
 		 */
-		virtual void Draw(DrawingContext& Context, Rect2D AvailableRect) const = 0;
+		virtual void Draw(DrawingContext& Context) const;
+
+		using ForEachChildCallbackType = std::function<void(const Widget&)>;
+
+		/**
+		 * Calls the provided callback function for each child of current widget, including both
+		 * children of container widget as well as parts of composite widgets (e.g. the label of
+		 * a button).
+		 */
+		virtual void ForEachChild(const ForEachChildCallbackType& Callback);
 
 	protected:
 		Widget() = default;
 
 		std::shared_ptr<Widget> Parent = nullptr;
 		MarginBox Margins = {};
+
+		Rect2D BoundingBox;
 	};
 }

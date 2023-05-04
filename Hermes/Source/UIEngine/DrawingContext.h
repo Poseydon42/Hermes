@@ -22,7 +22,7 @@ namespace Hermes::UI
 		struct DrawableRectangle
 		{
 			/*
-			 * Position and dimensions of the rectangle
+			 * Position and size of the rectangle
 			 */
 			Rect2Dui Rect;
 
@@ -43,7 +43,7 @@ namespace Hermes::UI
 		struct DrawableText
 		{
 			/*
-			 * Position and dimensions of the character on the screen
+			 * Position and size of the character on the screen
 			 */
 			Rect2Dui Rect;
 

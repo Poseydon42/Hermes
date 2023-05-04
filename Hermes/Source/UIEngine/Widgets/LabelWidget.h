@@ -6,14 +6,13 @@
 
 namespace Hermes::UI
 {
+	/**
+	 * A line of text without wrapping. Supports UTF-8 strings.
+	 */
 	class HERMES_API LabelWidget : public Widget
 	{
 	public:
 		static std::shared_ptr<LabelWidget> Create(String InText, uint32 InFontSize, AssetHandle<Font> InFont);
-
-		virtual Vec2 ComputeMinimumDimensions() const override;
-
-		virtual void Draw(DrawingContext& Context, Rect2D AvailableRect) const override;
 
 	private:
 		String Text;
@@ -21,5 +20,9 @@ namespace Hermes::UI
 		AssetHandle<Font> Font;
 
 		LabelWidget(String InText, uint32 InFontSize, AssetHandle<class Font> InFont);
+
+		virtual Vec2 ComputeMinimumSize() const override;
+
+		virtual void Draw(DrawingContext& Context) const override;
 	};
 }

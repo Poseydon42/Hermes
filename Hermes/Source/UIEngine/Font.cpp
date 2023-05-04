@@ -42,13 +42,13 @@ namespace Hermes::UI
 	float Font::GetMaxAscent(uint32 Size) const
 	{
 		SetSize(Size);
-		return static_cast<float>(FontData->Face->ascender) / GFreeTypeSubpixelScalingFactor;
+		return static_cast<float>(FontData->Face->size->metrics.ascender) / GFreeTypeSubpixelScalingFactor;
 	}
 
 	float Font::GetMaxDescent(uint32 Size) const
 	{
 		SetSize(Size);
-		return static_cast<float>(Math::Abs(FontData->Face->descender)) / GFreeTypeSubpixelScalingFactor;
+		return static_cast<float>(Math::Abs(FontData->Face->size->metrics.descender)) / GFreeTypeSubpixelScalingFactor;
 	}
 
 	std::optional<uint32> Font::GetGlyphIndex(uint32 CharacterCode) const

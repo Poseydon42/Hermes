@@ -226,19 +226,20 @@ public:
 		auto RootWidget = Hermes::UI::ViewportContainer::Create();
 
 		auto VerticalContainer = Hermes::UI::VerticalContainer::Create();
-		VerticalContainer->GetMargins().Bottom = { Hermes::UI::MarginValueType::PercentOfParent, 1.0f }; // To make it occupy only the top part of the viewport
 		RootWidget->AddChild(VerticalContainer);
 
 		auto Font = Hermes::AssetLoader::Load<Hermes::UI::Font>("/Fonts/arial");
 		auto Label = Hermes::UI::Label::Create("Hello, world! This is Hermes UI system!", 14, Font);
+		Label->VerticalScalingPolicy.Type = Hermes::UI::ScalingType::Extend;
 		VerticalContainer->AddChild(Label);
 
 		auto ButtonLabel = Hermes::UI::Label::Create("This is a button", 28, Font);
 		auto Button = Hermes::UI::Button::Create(Hermes::Vec3(0.678f, 0.847f, 0.902f));
 		Button->SetLabel(ButtonLabel);
 		Button->SetOnPressCallback([] { HERMES_LOG_INFO("Button pressed!"); });
-		Button->GetMargins().Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
-		Button->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
+		Button->VerticalScalingPolicy.Type = Hermes::UI::ScalingType::Extend;
+		Button->Margins.Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
+		Button->Margins.Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
 		VerticalContainer->AddChild(Button);
 
 		Hermes::GGameLoop->SetRootWidget(RootWidget);

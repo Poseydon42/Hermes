@@ -33,6 +33,18 @@ namespace Hermes::UI
 		MarginValue Bottom;
 	};
 
+	enum class ScalingType
+	{
+		None,
+		Extend,
+	};
+
+	struct ScalingPolicy
+	{
+		ScalingType Type = ScalingType::None;
+		float ScalingWeight = 1.0f;
+	};
+
 	HERMES_API float GetAbsoluteMarginValue(MarginValue Value, float ParentSize);
 
 	HERMES_API float GetRelativeMarginValue(MarginValue Value, float ParentSize);
@@ -56,6 +68,8 @@ namespace Hermes::UI
 
 		MarginBox Margins;
 
+		ScalingPolicy VerticalScalingPolicy;
+		ScalingPolicy HorizontalScalingPolicy;
 
 		Rect2D GetBoundingBox() const;
 		void SetBoundingBox(Rect2D NewBoundingBox);

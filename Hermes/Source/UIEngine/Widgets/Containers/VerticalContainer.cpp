@@ -31,14 +31,36 @@ namespace Hermes::UI
 
 	void VerticalContainer::Layout()
 	{
+		/*
+		 * Step 1: calculate how much space is required to fit every widget's minimum vertical size
+		 * and the total scaling weight of the children that want to be extended.
+		 */
+		float MinVerticalSize = 0.0f;
+		float TotalScalingWeight = 0.000000001f; // NOTE: set it to a small value to avoid division by zero
+		for (const auto& Child : Children)
+		{
+			MinVerticalSize += Child->ComputeMinimumSize().Y;
+			if (Child->VerticalScalingPolicy.Type == ScalingType::Extend)
+				TotalScalingWeight += Child->VerticalScalingPolicy.ScalingWeight;
+		}
+		float SizeLeftForExtension = BoundingBox.Height() - MinVerticalSize;
+		float PixelsPerUnitWeight = SizeLeftForExtension / TotalScalingWeight;
+
+		/*
+		 * Step 2: calculate the bounding boxes of the children and call their Layout() function.
+		 */
 		float NextChildTop = BoundingBox.Top();
 		for (const auto& Child : Children)
 		{
 			auto ChildSize = Child->ComputeMinimumSize();
 			Rect2D ChildBoundingBox = {};
 
+			float ChildHeight = ChildSize.Y;
+			if (Child->VerticalScalingPolicy.Type == ScalingType::Extend)
+				ChildHeight += Child->VerticalScalingPolicy.ScalingWeight * PixelsPerUnitWeight;
+
 			ChildBoundingBox.Min.Y = NextChildTop;
-			ChildBoundingBox.Max.Y = NextChildTop + ChildSize.Y;
+			ChildBoundingBox.Max.Y = NextChildTop + ChildHeight;
 			HERMES_ASSERT(ChildBoundingBox.Bottom() <= BoundingBox.Bottom());
 
 			float LeftMargin = GetAbsoluteMarginValue(Child->Margins.Left, BoundingBox.Width());

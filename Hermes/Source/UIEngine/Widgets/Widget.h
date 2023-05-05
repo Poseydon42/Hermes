@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "Core/Core.h"
+#include "Core/Misc/KeyCode.h"
 #include "Math/Rect2D.h"
 #include "Math/Vector2.h"
 #include "UIEngine/DrawingContext.h"
@@ -84,6 +85,20 @@ namespace Hermes::UI
 		 * @param Context Drawing context used to record drawing primitives
 		 */
 		virtual void Draw(DrawingContext& Context) const;
+
+		/**
+		 * Gets called when a mouse button is pressed while the cursor is over the widget.
+		 *
+		 * @return True if the event was processed in the current widget, false if it has to be passed up the widget hierarchy
+		 */
+		virtual bool OnMouseDown(MouseButton Button);
+
+		/**
+		 * Gets called when a mouse button is released while the cursor is over the widget.
+		 *
+		 * @return True if the event was processed in the current widget, false if it has to be passed up the widget hierarchy
+		 */
+		virtual bool OnMouseUp(MouseButton Button);
 
 		using ForEachChildConstCallbackType = std::function<void(const Widget&)>;
 		using ForEachChildCallbackType = std::function<void(Widget&)>;

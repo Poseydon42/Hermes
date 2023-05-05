@@ -7,6 +7,8 @@ set(SOURCES
     DrawingContext.h
     Font.cpp
     Font.h
+    InputController.cpp
+    InputController.h
     TextLayout.cpp
     TextLayout.h
     Widgets/Containers/ContainerWidget.cpp

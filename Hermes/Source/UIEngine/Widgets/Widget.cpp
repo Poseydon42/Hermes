@@ -65,6 +65,16 @@ namespace Hermes::UI
 	{
 	}
 
+	bool Widget::OnMouseDown(MouseButton)
+	{
+		return false;
+	}
+
+	bool Widget::OnMouseUp(MouseButton)
+	{
+		return false;
+	}
+
 	void Widget::ForEachChild(const ForEachChildConstCallbackType&) const
 	{
 	}

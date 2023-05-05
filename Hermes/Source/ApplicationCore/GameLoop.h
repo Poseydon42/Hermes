@@ -7,6 +7,7 @@
 #include "ApplicationCore/InputEngine.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
+#include "UIEngine/InputController.h"
 #include "UIEngine/Widgets/Widget.h"
 #include "World/World.h"
 
@@ -62,12 +63,14 @@ namespace Hermes
 
 		std::unique_ptr<IApplication> Application;
 		std::shared_ptr<IPlatformWindow> ApplicationWindow;
+
 		std::unique_ptr<InputEngine> InputEngine;
+		std::unique_ptr<UI::InputController> UIInputController;
+		InputMode InputMode = InputMode::Game;
 
 		std::unique_ptr<World> GameWorld;
 		std::shared_ptr<UI::Widget> RootWidget;
 
-		InputMode InputMode = InputMode::Game;
 
 		/*
 		 * DEBUG ONLY

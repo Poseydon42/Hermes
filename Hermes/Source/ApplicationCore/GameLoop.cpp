@@ -125,6 +125,7 @@ namespace Hermes
 	void GameLoop::SetRootWidget(std::shared_ptr<UI::Widget> NewRootWidget)
 	{
 		RootWidget = std::move(NewRootWidget);
+		UIInputController = std::make_unique<UI::InputController>(ApplicationWindow->GetWindowQueue(), RootWidget);
 	}
 
 	std::shared_ptr<const IPlatformWindow> GameLoop::GetWindow() const

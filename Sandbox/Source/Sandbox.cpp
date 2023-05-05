@@ -12,6 +12,7 @@
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "UIEngine/Font.h"
+#include "UIEngine/Widgets/Button.h"
 #include "UIEngine/Widgets/Label.h"
 #include "UIEngine/Widgets/Containers/VerticalContainer.h"
 #include "UIEngine/Widgets/Containers/ViewportContainer.h"
@@ -232,10 +233,13 @@ public:
 		auto Label = Hermes::UI::Label::Create("Hello, world! This is Hermes UI system!", 14, Font);
 		VerticalContainer->AddChild(Label);
 
-		auto Label1 = Hermes::UI::Label::Create("This label will be in the middle", 28, Font);
-		Label1->GetMargins().Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
-		Label1->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
-		VerticalContainer->AddChild(Label1);
+		auto ButtonLabel = Hermes::UI::Label::Create("This is a button", 28, Font);
+		auto Button = Hermes::UI::Button::Create(Hermes::Vec3(0.678f, 0.847f, 0.902f));
+		Button->SetLabel(ButtonLabel);
+		Button->SetOnPressCallback([] { HERMES_LOG_INFO("Button pressed!"); });
+		Button->GetMargins().Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
+		Button->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
+		VerticalContainer->AddChild(Button);
 
 		Hermes::GGameLoop->SetRootWidget(RootWidget);
 

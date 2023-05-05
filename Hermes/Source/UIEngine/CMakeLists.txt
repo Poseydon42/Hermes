@@ -11,6 +11,8 @@ set(SOURCES
     InputController.h
     TextLayout.cpp
     TextLayout.h
+    Widgets/Button.cpp
+    Widgets/Button.h
     Widgets/Containers/Container.cpp
     Widgets/Containers/Container.h
     Widgets/Containers/VerticalContainer.cpp

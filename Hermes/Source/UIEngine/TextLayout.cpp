@@ -40,9 +40,9 @@ namespace Hermes::UI
 		float Width = 0.0f;
 		Layout(Text, FontSize, Font, [&](uint32 GlyphIndex, Vec2 GlyphLocation)
 		{
-			auto MaybeGlyphMetrics = Font.GetGlyphMetrics(GlyphIndex, FontSize);
-			HERMES_ASSERT(MaybeGlyphMetrics.has_value());
-			Width = GlyphLocation.X + MaybeGlyphMetrics.value().Advance;
+			auto MaybeGlyph = Font.RenderGlyph(GlyphIndex, FontSize);
+			HERMES_ASSERT(MaybeGlyph.has_value());
+			Width = GlyphLocation.X + MaybeGlyph.value().Dimensions.X;
 		});
 		float Height = Font.GetMaxAscent(FontSize) + Font.GetMaxDescent(FontSize);
 

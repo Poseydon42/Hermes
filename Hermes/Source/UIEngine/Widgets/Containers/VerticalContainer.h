@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
-#include "UIEngine/Widgets/Containers/ContainerWidget.h"
+#include "UIEngine/Widgets/Containers/Container.h"
 
 namespace Hermes::UI
 {
@@ -13,18 +13,18 @@ namespace Hermes::UI
 	 *
 	 * FIXME: allow children to take as much vertical space as possible.
 	 */
-	class HERMES_API VerticalContainerWidget : public ContainerWidget
+	class HERMES_API VerticalContainer : public Container
 	{
 	public:
-		virtual ~VerticalContainerWidget() override = default;
+		virtual ~VerticalContainer() override = default;
 
-		VerticalContainerWidget(VerticalContainerWidget&&) = default;
-		VerticalContainerWidget& operator=(VerticalContainerWidget&&) = default;
+		VerticalContainer(VerticalContainer&&) = default;
+		VerticalContainer& operator=(VerticalContainer&&) = default;
 
-		static std::shared_ptr<VerticalContainerWidget> Create();
+		static std::shared_ptr<VerticalContainer> Create();
 
 	protected:
-		VerticalContainerWidget() = default;
+		VerticalContainer() = default;
 
 		virtual Vec2 ComputeMinimumSize() const override;
 

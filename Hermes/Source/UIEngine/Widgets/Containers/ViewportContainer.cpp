@@ -1,13 +1,13 @@
-#include "ViewportContainerWidget.h"
+#include "ViewportContainer.h"
 
 namespace Hermes::UI
 {
-	std::shared_ptr<ViewportContainerWidget> ViewportContainerWidget::Create()
+	std::shared_ptr<ViewportContainer> ViewportContainer::Create()
 	{
-		return std::shared_ptr<ViewportContainerWidget>(new ViewportContainerWidget());
+		return std::shared_ptr<ViewportContainer>(new ViewportContainer());
 	}
 
-	Vec2 ViewportContainerWidget::ComputeMinimumSize() const
+	Vec2 ViewportContainer::ComputeMinimumSize() const
 	{
 		Vec2 MinSize = {};
 		for (const auto& Child : Children)
@@ -19,7 +19,7 @@ namespace Hermes::UI
 		return MinSize;
 	}
 
-	void ViewportContainerWidget::Layout()
+	void ViewportContainer::Layout()
 	{
 		for (const auto& Child : Children)
 		{
@@ -59,7 +59,7 @@ namespace Hermes::UI
 		}
 	}
 
-	void ViewportContainerWidget::Draw(DrawingContext& Context) const
+	void ViewportContainer::Draw(DrawingContext& Context) const
 	{
 		Context.SetSceneViewport(BoundingBox);
 		for (const auto& Child : Children)

@@ -1,15 +1,15 @@
-#include "ContainerWidget.h"
+#include "Container.h"
 
 namespace Hermes::UI
 {
-	void ContainerWidget::AddChild(std::shared_ptr<Widget> Child)
+	void Container::AddChild(std::shared_ptr<Widget> Child)
 	{
 		HERMES_ASSERT(Child);
 		Child->SetParent(shared_from_this());
 		Children.emplace_back(std::move(Child));
 	}
 
-	bool ContainerWidget::RemoveChild(const Widget* Child)
+	bool Container::RemoveChild(const Widget* Child)
 	{
 		HERMES_ASSERT(Child);
 
@@ -25,29 +25,29 @@ namespace Hermes::UI
 		return false;
 	}
 
-	const Widget& ContainerWidget::GetChild(size_t Index) const
+	const Widget& Container::GetChild(size_t Index) const
 	{
-		return const_cast<ContainerWidget*>(this)->GetChild(Index);
+		return const_cast<Container*>(this)->GetChild(Index);
 	}
 
-	Widget& ContainerWidget::GetChild(size_t Index)
+	Widget& Container::GetChild(size_t Index)
 	{
 		HERMES_ASSERT(Index < Children.size());
 		return *Children[Index];
 	}
 
-	size_t ContainerWidget::GetChildrenCount() const
+	size_t Container::GetChildrenCount() const
 	{
 		return Children.size();
 	}
 
-	void ContainerWidget::ForEachChild(const ForEachChildConstCallbackType& Callback) const
+	void Container::ForEachChild(const ForEachChildConstCallbackType& Callback) const
 	{
 		for (auto& Child : Children)
 			Callback(*Child);
 	}
 
-	void ContainerWidget::ForEachChild(const ForEachChildCallbackType& Callback)
+	void Container::ForEachChild(const ForEachChildCallbackType& Callback)
 	{
 		for (auto& Child : Children)
 			Callback(*Child);

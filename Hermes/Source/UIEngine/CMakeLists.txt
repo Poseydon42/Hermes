@@ -11,16 +11,16 @@ set(SOURCES
     InputController.h
     TextLayout.cpp
     TextLayout.h
-    Widgets/Containers/ContainerWidget.cpp
-    Widgets/Containers/ContainerWidget.h
-    Widgets/Containers/VerticalContainerWidget.cpp
-    Widgets/Containers/VerticalContainerWidget.h
-    Widgets/Containers/ViewportContainerWidget.cpp
-    Widgets/Containers/ViewportContainerWidget.h
-    Widgets/LabelWidget.cpp
-    Widgets/LabelWidget.h
-    Widgets/PanelWidget.cpp
-    Widgets/PanelWidget.h
+    Widgets/Containers/Container.cpp
+    Widgets/Containers/Container.h
+    Widgets/Containers/VerticalContainer.cpp
+    Widgets/Containers/VerticalContainer.h
+    Widgets/Containers/ViewportContainer.cpp
+    Widgets/Containers/ViewportContainer.h
+    Widgets/Label.cpp
+    Widgets/Label.h
+    Widgets/Panel.cpp
+    Widgets/Panel.h
     Widgets/Widget.cpp
     Widgets/Widget.h
 )

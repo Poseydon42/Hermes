@@ -12,10 +12,9 @@
 #include "RenderingEngine/Renderer.h"
 #include "RenderingEngine/Scene/Camera.h"
 #include "UIEngine/Font.h"
-#include "UIEngine/Widgets/LabelWidget.h"
-#include "UIEngine/Widgets/PanelWidget.h"
-#include "UIEngine/Widgets/Containers/VerticalContainerWidget.h"
-#include "UIEngine/Widgets/Containers/ViewportContainerWidget.h"
+#include "UIEngine/Widgets/Label.h"
+#include "UIEngine/Widgets/Containers/VerticalContainer.h"
+#include "UIEngine/Widgets/Containers/ViewportContainer.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 #include "World/Components/DirectionalLightComponent.h"
 #include "World/Components/MeshComponent.h"
@@ -223,17 +222,17 @@ public:
 
 		World.AddSystem(std::make_unique<CameraSystem>());
 
-		auto RootWidget = Hermes::UI::ViewportContainerWidget::Create();
+		auto RootWidget = Hermes::UI::ViewportContainer::Create();
 
-		auto VerticalContainer = Hermes::UI::VerticalContainerWidget::Create();
+		auto VerticalContainer = Hermes::UI::VerticalContainer::Create();
 		VerticalContainer->GetMargins().Bottom = { Hermes::UI::MarginValueType::PercentOfParent, 1.0f }; // To make it occupy only the top part of the viewport
 		RootWidget->AddChild(VerticalContainer);
 
 		auto Font = Hermes::AssetLoader::Load<Hermes::UI::Font>("/Fonts/arial");
-		auto Label = Hermes::UI::LabelWidget::Create("Hello, world! This is Hermes UI system!", 14, Font);
+		auto Label = Hermes::UI::Label::Create("Hello, world! This is Hermes UI system!", 14, Font);
 		VerticalContainer->AddChild(Label);
 
-		auto Label1 = Hermes::UI::LabelWidget::Create("This label will be in the middle", 28, Font);
+		auto Label1 = Hermes::UI::Label::Create("This label will be in the middle", 28, Font);
 		Label1->GetMargins().Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
 		Label1->GetMargins().Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
 		VerticalContainer->AddChild(Label1);

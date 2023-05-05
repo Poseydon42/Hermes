@@ -1,15 +1,15 @@
-#include "VerticalContainerWidget.h"
+#include "VerticalContainer.h"
 
 #include "Logging/Logger.h"
 
 namespace Hermes::UI
 {
-	std::shared_ptr<VerticalContainerWidget> VerticalContainerWidget::Create()
+	std::shared_ptr<VerticalContainer> VerticalContainer::Create()
 	{
-		return std::shared_ptr<VerticalContainerWidget>(new VerticalContainerWidget());
+		return std::shared_ptr<VerticalContainer>(new VerticalContainer());
 	}
 
-	void VerticalContainerWidget::Draw(DrawingContext& Context) const
+	void VerticalContainer::Draw(DrawingContext& Context) const
 	{
 		for (const auto& Child : Children)
 		{
@@ -17,7 +17,7 @@ namespace Hermes::UI
 		}
 	}
 
-	Vec2 VerticalContainerWidget::ComputeMinimumSize() const
+	Vec2 VerticalContainer::ComputeMinimumSize() const
 	{
 		Vec2 Result = {};
 		for (const auto& Child : Children)
@@ -29,7 +29,7 @@ namespace Hermes::UI
 		return Result;
 	}
 
-	void VerticalContainerWidget::Layout()
+	void VerticalContainer::Layout()
 	{
 		float NextChildTop = BoundingBox.Top();
 		for (const auto& Child : Children)

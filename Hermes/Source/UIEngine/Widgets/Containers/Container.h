@@ -11,13 +11,13 @@ namespace Hermes::UI
 	/*
 	 * Abstract class for widget that can contain any other types of widgets.
 	 */
-	class HERMES_API ContainerWidget : public Widget
+	class HERMES_API Container : public Widget
 	{
 	public:
-		virtual ~ContainerWidget() override = default;
+		virtual ~Container() override = default;
 
-		ContainerWidget(ContainerWidget&&) = default;
-		ContainerWidget& operator=(ContainerWidget&&) = default;
+		Container(Container&&) = default;
+		Container& operator=(Container&&) = default;
 
 		void AddChild(std::shared_ptr<Widget> Child);
 
@@ -32,7 +32,7 @@ namespace Hermes::UI
 		virtual void ForEachChild(const ForEachChildCallbackType& Callback) override;
 
 	protected:
-		ContainerWidget() = default;
+		Container() = default;
 
 		std::vector<std::shared_ptr<Widget>> Children;
 	};

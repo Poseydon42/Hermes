@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
-#include "UIEngine/Widgets/Containers/ContainerWidget.h"
+#include "UIEngine/Widgets/Containers/Container.h"
 
 namespace Hermes::UI
 {
@@ -15,15 +15,15 @@ namespace Hermes::UI
 	 *	- somehow pass the information about camera to the viewport
 	 *	- allow multiple different scenes to be rendered
 	 */
-	class HERMES_API ViewportContainerWidget : public ContainerWidget
+	class HERMES_API ViewportContainer : public Container
 	{
 	public:
-		virtual ~ViewportContainerWidget() override = default;
+		virtual ~ViewportContainer() override = default;
 
-		static std::shared_ptr<ViewportContainerWidget> Create();
+		static std::shared_ptr<ViewportContainer> Create();
 
 	protected:
-		ViewportContainerWidget() = default;
+		ViewportContainer() = default;
 		
 		virtual Vec2 ComputeMinimumSize() const override;
 

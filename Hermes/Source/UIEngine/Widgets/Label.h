@@ -9,17 +9,17 @@ namespace Hermes::UI
 	/**
 	 * A line of text without wrapping. Supports UTF-8 strings.
 	 */
-	class HERMES_API LabelWidget : public Widget
+	class HERMES_API Label : public Widget
 	{
 	public:
-		static std::shared_ptr<LabelWidget> Create(String InText, uint32 InFontSize, AssetHandle<Font> InFont);
+		static std::shared_ptr<Label> Create(String InText, uint32 InFontSize, AssetHandle<Font> InFont);
 
 	private:
 		String Text;
 		uint32 FontSize;
 		AssetHandle<Font> Font;
 
-		LabelWidget(String InText, uint32 InFontSize, AssetHandle<class Font> InFont);
+		Label(String InText, uint32 InFontSize, AssetHandle<class Font> InFont);
 
 		virtual Vec2 ComputeMinimumSize() const override;
 

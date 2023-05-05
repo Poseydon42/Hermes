@@ -9,18 +9,18 @@ namespace Hermes::UI
 	/*
 	 * A simple panel that fills all the space allocated to it with a single color.
 	 */
-	class HERMES_API PanelWidget : public Widget
+	class HERMES_API Panel : public Widget
 	{
 	public:
-		virtual ~PanelWidget() override = default;
+		virtual ~Panel() override = default;
 
-		PanelWidget(PanelWidget&&) = default;
-		PanelWidget& operator=(PanelWidget&&) = default;
+		Panel(Panel&&) = default;
+		Panel& operator=(Panel&&) = default;
 
-		static std::shared_ptr<PanelWidget> Create(Vec2 InMinimumSize, Vec3 InColor);
+		static std::shared_ptr<Panel> Create(Vec2 InMinimumSize, Vec3 InColor);
 
 	protected:
-		PanelWidget(Vec2 InMinimumSize, Vec3 InColor);
+		Panel(Vec2 InMinimumSize, Vec3 InColor);
 
 		Vec2 MinimumSize;
 		Vec3 Color;

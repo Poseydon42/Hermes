@@ -108,17 +108,17 @@ namespace Hermes
 			return std::format("WindowMouseButtonEvent (ButtonEventType: {}, Button: {}, CursorCoordinates: ({}, {}))", ButtonEventTypeString, MouseButtonToString(Button), CursorCoordinates.X, CursorCoordinates.Y);
 		}
 
-		WindowMouseButtonEventType GetButtonEventType()
+		WindowMouseButtonEventType GetButtonEventType() const
 		{
 			return ButtonEventType;
 		}
 
-		MouseButton GetButton()
+		MouseButton GetButton() const
 		{
 			return Button;
 		}
 
-		Vec2i GetCursorCoordinates()
+		Vec2i GetCursorCoordinates() const
 		{
 			return CursorCoordinates;
 		}

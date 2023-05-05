@@ -158,7 +158,7 @@ namespace Hermes
 	{
 		auto& WindowEventQueue = PlatformWindow.GetWindowQueue();
 		WindowEventQueue.Subscribe(WindowKeyboardEvent::GetStaticType(), [this](const IEvent& Event) { KeyEventHandler(Event); });
-		WindowEventQueue.Subscribe(WindowMouseEvent::GetStaticType(), [this](const IEvent& Event) { MouseEventHandler(Event); });
+		WindowEventQueue.Subscribe(WindowMouseMoveEvent::GetStaticType(), [this](const IEvent& Event) { MouseEventHandler(Event); });
 	}
 
 	void InputEngine::Enable()
@@ -224,9 +224,9 @@ namespace Hermes
 		if (!IsEnabled)
 			return;
 
-		HERMES_ASSERT(Event.GetType() == WindowMouseEvent::GetStaticType());
+		HERMES_ASSERT(Event.GetType() == WindowMouseMoveEvent::GetStaticType());
 
-		const auto& MouseEvent = static_cast<const WindowMouseEvent&>(Event);
+		const auto& MouseEvent = static_cast<const WindowMouseMoveEvent&>(Event);
 
 		auto AbsoluteMouseDelta = Vec2(MouseEvent.GetMouseDelta());
 

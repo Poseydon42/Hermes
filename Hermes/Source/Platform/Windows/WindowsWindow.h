@@ -62,6 +62,8 @@ namespace Hermes
 
 		bool IsInFocus() const;
 
+		static Vec2i GetCursorCoordinatesFromLParam(LPARAM Param);
+
 		LRESULT MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam);
 		
 		static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam);

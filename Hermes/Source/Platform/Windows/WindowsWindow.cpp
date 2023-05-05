@@ -157,7 +157,7 @@ namespace Hermes
 				auto DeltaMousePosition = CurrentMousePosition - LastCursorPosition;
 				LastCursorPosition = CurrentMousePosition;
 
-				MessagePump->PushEvent(WindowMouseEvent(DeltaMousePosition));
+				MessagePump->PushEvent(WindowMouseMoveEvent(DeltaMousePosition));
 
 				// NOTE: If cursor is not visible we should move it back to the centre of the screen
 				if (!CursorVisibility)
@@ -209,6 +209,13 @@ namespace Hermes
 		return (GetFocus() == WindowHandle);
 	}
 
+	Vec2i WindowsWindow::GetCursorCoordinatesFromLParam(LPARAM Param)
+	{
+		auto X = static_cast<int32>(Param & 0xFFFF);
+		auto Y = static_cast<int32>(Param >> 16);
+		return { X, Y };
+	}
+
 	LRESULT WindowsWindow::MessageHandler(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 	{
 		switch (Message)
@@ -246,11 +253,6 @@ namespace Hermes
 			{
 				static std::unordered_map<uint32, KeyCode> VKCodeToKeyCodeMap =
 				{
-					{ VK_LBUTTON , KeyCode::LeftMouseButton },
-					{ VK_RBUTTON, KeyCode::RightMouseButton },
-					{ VK_MBUTTON, KeyCode::MiddleMouseButton },
-					{ VK_XBUTTON1, KeyCode::FourthMouseButton },
-					{ VK_XBUTTON2, KeyCode::FifthMouseButton },
 					{ VK_SPACE, KeyCode::Space },
 					{ VK_BACK, KeyCode::Backspace },
 					{ VK_TAB, KeyCode::Tab },
@@ -367,6 +369,18 @@ namespace Hermes
 				MessagePump->PushEvent(WindowKeyboardEvent(Iterator->second, IsPressEvent));
 				break;
 			}
+			case WM_LBUTTONDOWN:
+				MessagePump->PushEvent(WindowMouseButtonEvent(WindowMouseButtonEventType::Pressed, MouseButton::Left, GetCursorCoordinatesFromLParam(LParam)));
+				break;
+			case WM_LBUTTONUP:
+				MessagePump->PushEvent(WindowMouseButtonEvent(WindowMouseButtonEventType::Released, MouseButton::Left, GetCursorCoordinatesFromLParam(LParam)));
+				break;
+			case WM_RBUTTONDOWN:
+				MessagePump->PushEvent(WindowMouseButtonEvent(WindowMouseButtonEventType::Pressed, MouseButton::Right, GetCursorCoordinatesFromLParam(LParam)));
+				break;
+			case WM_RBUTTONUP:
+				MessagePump->PushEvent(WindowMouseButtonEvent(WindowMouseButtonEventType::Released, MouseButton::Right, GetCursorCoordinatesFromLParam(LParam)));
+				break;
 		default:;
 		}
 

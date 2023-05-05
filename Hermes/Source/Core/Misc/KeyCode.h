@@ -4,13 +4,30 @@
 
 namespace Hermes
 {
+	enum class MouseButton
+	{
+		Left,
+		Middle,
+		Right
+	};
+
+	inline StringView MouseButtonToString(MouseButton Button)
+	{
+		switch (Button)
+		{
+		case MouseButton::Left:
+			return "Left";
+		case MouseButton::Middle:
+			return "Middle";
+		case MouseButton::Right:
+			return "Right";
+		default:
+			HERMES_ASSERT(false);
+		}
+	}
+
 	enum class KeyCode : int16
 	{
-		LeftMouseButton,
-		RightMouseButton,
-		MiddleMouseButton,
-		FourthMouseButton,
-		FifthMouseButton,
 		Space,
 		Backspace,
 		Tab,
@@ -120,16 +137,6 @@ namespace Hermes
 	{
 		switch (Code)
 		{
-		case KeyCode::LeftMouseButton:
-			return "LeftMouseButton";
-		case KeyCode::RightMouseButton:
-			return "RightMouseButton";
-		case KeyCode::MiddleMouseButton:
-			return "MiddleMouseButton";
-		case KeyCode::FourthMouseButton:
-			return "FourthMouseButton";
-		case KeyCode::FifthMouseButton:
-			return "FifthMouseButton";
 		case KeyCode::Space:
 			return "Space";
 		case KeyCode::Backspace:

@@ -49,19 +49,19 @@ namespace Hermes
 		bool IsPressEvent;
 	};
 
-	class WindowMouseEvent : public IEvent
+	class HERMES_API WindowMouseMoveEvent : public IEvent
 	{
-		EVENT_BODY(WindowMouseEvent);
+		EVENT_BODY(WindowMouseMoveEvent);
 
 	public:
-		explicit WindowMouseEvent(Vec2i InMouseDelta)
+		explicit WindowMouseMoveEvent(Vec2i InMouseDelta)
 			: MouseDelta(InMouseDelta)
 		{
 		}
 
 		virtual String ToString() const override
 		{
-			return std::format("WindowMouseEvent (MouseDelta: ({}, {}))", MouseDelta.X, MouseDelta.Y);
+			return std::format("WindowMouseMoveEvent (MouseDelta: ({}, {}))", MouseDelta.X, MouseDelta.Y);
 		}
 
 		Vec2i GetMouseDelta() const
@@ -71,6 +71,62 @@ namespace Hermes
 
 	private:
 		Vec2i MouseDelta;
+	};
+
+	enum class WindowMouseButtonEventType
+	{
+		Pressed,
+		Released
+	};
+
+	class HERMES_API WindowMouseButtonEvent : public IEvent
+	{
+		EVENT_BODY(WindowMouseButtonEvent)
+
+	public:
+		WindowMouseButtonEvent(WindowMouseButtonEventType InButtonEventType, MouseButton InButton, Vec2i InCursorCoordinates)
+			: ButtonEventType(InButtonEventType)
+			, Button(InButton)
+			, CursorCoordinates(InCursorCoordinates)
+		{
+		}
+
+		virtual String ToString() const override
+		{
+			StringView ButtonEventTypeString;
+			switch (ButtonEventType)
+			{
+			case WindowMouseButtonEventType::Pressed:
+				ButtonEventTypeString = "Pressed";
+				break;
+			case WindowMouseButtonEventType::Released:
+				ButtonEventTypeString = "Released";
+				break;
+			default:
+				HERMES_ASSERT(false);
+			}
+			return std::format("WindowMouseButtonEvent (ButtonEventType: {}, Button: {}, CursorCoordinates: ({}, {}))", ButtonEventTypeString, MouseButtonToString(Button), CursorCoordinates.X, CursorCoordinates.Y);
+		}
+
+		WindowMouseButtonEventType GetButtonEventType()
+		{
+			return ButtonEventType;
+		}
+
+		MouseButton GetButton()
+		{
+			return Button;
+		}
+
+		Vec2i GetCursorCoordinates()
+		{
+			return CursorCoordinates;
+		}
+
+	private:
+		WindowMouseButtonEventType ButtonEventType;
+		MouseButton Button;
+		Vec2i CursorCoordinates;
 	};
 
 	class HERMES_API WindowStateEvent : public IEvent

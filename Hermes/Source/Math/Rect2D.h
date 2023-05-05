@@ -37,6 +37,9 @@ namespace Hermes
 
 		Rectangle2D Intersect(const Rectangle2D& Other) const;
 
+		template<typename VectorComponentType>
+		bool Contains(Vector2<VectorComponentType> Point) const;
+
 		bool operator==(const Rectangle2D& Other) const;
 		bool operator!=(const Rectangle2D& Other) const;
 	};
@@ -125,6 +128,13 @@ namespace Hermes
 			Result = { {}, {} };
 
 		return Result;
+	}
+
+	template<typename ComponentType>
+	template<typename VectorComponentType>
+	bool Rectangle2D<ComponentType>::Contains(Vector2<VectorComponentType> Point) const
+	{
+		return Min.X <= Point.X && Max.X > Point.X && Min.Y <= Point.Y && Max.Y > Point.Y;
 	}
 
 	template<typename ComponentType>

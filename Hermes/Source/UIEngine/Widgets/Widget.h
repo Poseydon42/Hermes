@@ -54,9 +54,8 @@ namespace Hermes::UI
 		Widget(Widget&&) = default;
 		Widget& operator=(Widget&&) = default;
 
-		const MarginBox& GetMargins() const;
-		MarginBox& GetMargins();
-		void SetMargins(MarginBox NewMargins);
+		MarginBox Margins;
+
 
 		Rect2D GetBoundingBox() const;
 		void SetBoundingBox(Rect2D NewBoundingBox);
@@ -115,7 +114,6 @@ namespace Hermes::UI
 		Widget() = default;
 
 		std::shared_ptr<Widget> Parent = nullptr;
-		MarginBox Margins = {};
 
 		Rect2D BoundingBox;
 	};

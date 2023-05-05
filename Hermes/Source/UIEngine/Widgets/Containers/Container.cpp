@@ -6,7 +6,7 @@ namespace Hermes::UI
 	{
 		HERMES_ASSERT(Child);
 		Child->SetParent(shared_from_this());
-		Children.emplace_back(std::move(Child));
+		Children.push_back(std::move(Child));
 	}
 
 	bool Container::RemoveChild(const Widget* Child)

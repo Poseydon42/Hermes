@@ -41,8 +41,8 @@ namespace Hermes::UI
 			ChildBoundingBox.Max.Y = NextChildTop + ChildSize.Y;
 			HERMES_ASSERT(ChildBoundingBox.Bottom() <= BoundingBox.Bottom());
 
-			float LeftMargin = GetAbsoluteMarginValue(Child->GetMargins().Left, BoundingBox.Width());
-			float RightMargin = GetAbsoluteMarginValue(Child->GetMargins().Right, BoundingBox.Width());
+			float LeftMargin = GetAbsoluteMarginValue(Child->Margins.Left, BoundingBox.Width());
+			float RightMargin = GetAbsoluteMarginValue(Child->Margins.Right, BoundingBox.Width());
 
 			float MarginScalingFactor = 1.0f;
 			if (LeftMargin + ChildSize.X + RightMargin > BoundingBox.Width())

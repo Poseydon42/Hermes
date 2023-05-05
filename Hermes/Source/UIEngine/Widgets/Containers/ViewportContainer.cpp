@@ -23,10 +23,10 @@ namespace Hermes::UI
 	{
 		for (const auto& Child : Children)
 		{
-			auto AbsoluteMarginLeft   = GetAbsoluteMarginValue(Child->GetMargins().Left,   BoundingBox.Width());
-			auto AbsoluteMarginRight  = GetAbsoluteMarginValue(Child->GetMargins().Right,  BoundingBox.Width());
-			auto AbsoluteMarginTop    = GetAbsoluteMarginValue(Child->GetMargins().Top,    BoundingBox.Height());
-			auto AbsoluteMarginBottom = GetAbsoluteMarginValue(Child->GetMargins().Bottom, BoundingBox.Height());
+			auto AbsoluteMarginLeft   = GetAbsoluteMarginValue(Child->Margins.Left,   BoundingBox.Width());
+			auto AbsoluteMarginRight  = GetAbsoluteMarginValue(Child->Margins.Right,  BoundingBox.Width());
+			auto AbsoluteMarginTop    = GetAbsoluteMarginValue(Child->Margins.Top,    BoundingBox.Height());
+			auto AbsoluteMarginBottom = GetAbsoluteMarginValue(Child->Margins.Bottom, BoundingBox.Height());
 
 			auto ChildMinSize = Child->ComputeMinimumSize();
 

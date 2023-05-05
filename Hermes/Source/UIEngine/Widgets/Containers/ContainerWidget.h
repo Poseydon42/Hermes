@@ -28,6 +28,7 @@ namespace Hermes::UI
 
 		size_t GetChildrenCount() const;
 
+		virtual void ForEachChild(const ForEachChildConstCallbackType& Callback) const override;
 		virtual void ForEachChild(const ForEachChildCallbackType& Callback) override;
 
 	protected:

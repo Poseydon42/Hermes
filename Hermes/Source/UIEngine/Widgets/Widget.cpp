@@ -65,6 +65,10 @@ namespace Hermes::UI
 	{
 	}
 
+	void Widget::ForEachChild(const ForEachChildConstCallbackType&) const
+	{
+	}
+
 	void Widget::ForEachChild(const ForEachChildCallbackType&)
 	{
 	}

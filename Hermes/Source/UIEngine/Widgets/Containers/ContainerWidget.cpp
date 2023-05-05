@@ -41,6 +41,12 @@ namespace Hermes::UI
 		return Children.size();
 	}
 
+	void ContainerWidget::ForEachChild(const ForEachChildConstCallbackType& Callback) const
+	{
+		for (auto& Child : Children)
+			Callback(*Child);
+	}
+
 	void ContainerWidget::ForEachChild(const ForEachChildCallbackType& Callback)
 	{
 		for (auto& Child : Children)

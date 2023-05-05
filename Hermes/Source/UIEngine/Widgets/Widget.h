@@ -85,13 +85,15 @@ namespace Hermes::UI
 		 */
 		virtual void Draw(DrawingContext& Context) const;
 
-		using ForEachChildCallbackType = std::function<void(const Widget&)>;
+		using ForEachChildConstCallbackType = std::function<void(const Widget&)>;
+		using ForEachChildCallbackType = std::function<void(Widget&)>;
 
 		/**
 		 * Calls the provided callback function for each child of current widget, including both
 		 * children of container widget as well as parts of composite widgets (e.g. the label of
 		 * a button).
 		 */
+		virtual void ForEachChild(const ForEachChildConstCallbackType& Callback) const;
 		virtual void ForEachChild(const ForEachChildCallbackType& Callback);
 
 	protected:

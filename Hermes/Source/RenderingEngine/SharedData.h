@@ -92,15 +92,8 @@ namespace Hermes
 		uint32 DirectionalLightCount;
 	};
 
-	struct UIShaderPushConstants
-	{
-		uint32 RectangleCount;
-	};
-
 	struct ALIGNAS_16 RectanglePrimitive
 	{
-		Vec2 Min;
-		Vec2 Max;
 		Vec4 Color;
 	};
 

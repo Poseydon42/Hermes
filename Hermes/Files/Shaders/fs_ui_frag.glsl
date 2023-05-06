@@ -4,11 +4,7 @@
 #include "SharedData.h"
 
 layout(location = 0) in vec2 i_FragmentPosition;
-
-layout(push_constant) uniform PushConstants
-{
-    UIShaderPushConstants Constants;
-} u_PushConstants;
+layout(location = 1) flat in uint i_RectangleIndex;
 
 layout(set = 0, binding = 0) buffer RectanglePrimitives
 {
@@ -19,16 +15,7 @@ layout(location = 0) out vec4 o_Color;
 
 void main()
 {
-    o_Color = vec4(0.0, 0.0, 0.0, 0.0);
+    RectanglePrimitive Rectangle = u_RectanglePrimitives.Array[i_RectangleIndex];
 
-    for (uint RectangleIndex = 0; RectangleIndex < u_PushConstants.Constants.RectangleCount; RectangleIndex++)
-    {
-        RectanglePrimitive Rectangle = u_RectanglePrimitives.Array[RectangleIndex];
-
-        if (i_FragmentPosition.x >= Rectangle.Min.x && i_FragmentPosition.x < Rectangle.Max.x &&
-            i_FragmentPosition.y >= Rectangle.Min.y && i_FragmentPosition.y < Rectangle.Max.y)
-        {
-            o_Color = Rectangle.Color;
-        }
-    }
+    o_Color = Rectangle.Color;
 }

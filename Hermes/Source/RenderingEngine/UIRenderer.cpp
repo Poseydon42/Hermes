@@ -40,15 +40,26 @@ namespace Hermes
 		auto RectangleDescriptorSetLayout = Device.CreateDescriptorSetLayout({ RectangleListBinding });
 		RectangleDescriptorSet = Renderer::GetDescriptorAllocator().Allocate(*RectangleDescriptorSetLayout);
 
+		VkVertexInputBindingDescription RectangleMeshBufferVertexInputBinding = {
+			.binding = 0,
+			.stride = sizeof(Vec2),
+			.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+		};
+		VkVertexInputAttributeDescription RectangleMeshBufferVertexPositionInputAttribute = {
+			.location = 0,
+			.binding = 0,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = 0
+		};
+
 		Vulkan::PipelineDescription RectanglePipelineDesc = {
-			.PushConstants = { VkPushConstantRange {.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, .offset = 0, .size = sizeof(UIShaderPushConstants)}},
 			.DescriptorSetLayouts = { RectangleDescriptorSetLayout.get() },
 			.ShaderStages = {
 				&ShaderCache.GetShader("/Shaders/Bin/fs_ui_vert.glsl.spv", VK_SHADER_STAGE_VERTEX_BIT),
 				&ShaderCache.GetShader("/Shaders/Bin/fs_ui_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
 			},
-			.VertexInputBindings = {},
-			.VertexInputAttributes = {},
+			.VertexInputBindings = { RectangleMeshBufferVertexInputBinding },
+			.VertexInputAttributes = { RectangleMeshBufferVertexPositionInputAttribute },
 			.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.PolygonMode = VK_POLYGON_MODE_FILL,
 			.CullMode = VK_CULL_MODE_NONE,
@@ -71,10 +82,7 @@ namespace Hermes
 			.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR }
 		};
 		RectanglePipeline = Device.CreatePipeline(RectanglePipelineDesc, { &DestinationImageFormat, 1 }, std::nullopt);
-
-		RectangleListBuffer = Device.CreateBuffer(sizeof(RectanglePrimitive) * MaxRectangleCount, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, true);
-		RectangleDescriptorSet->UpdateWithBuffer(0, 0, *RectangleListBuffer, 0, static_cast<uint32>(RectangleListBuffer->GetSize()));
-
+		
 
 		/*
 		 * Text pipeline initialization
@@ -293,13 +301,6 @@ namespace Hermes
 			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
 			.clearValue = {}
 		};
-		CommandBuffer->BeginRendering(RenderingArea, { &Attachment, 1 }, std::nullopt, std::nullopt);
-
-
-		/*
-		 * Rendering rectangles
-		 */
-		CommandBuffer->BindPipeline(*RectanglePipeline);
 		VkViewport Viewport = {
 			.x = 0.0f,
 			.y = 0.0f,
@@ -308,17 +309,27 @@ namespace Hermes
 			.minDepth = 0.0f,
 			.maxDepth = 0.0f
 		};
-		CommandBuffer->SetViewport(Viewport);
 		VkRect2D Scissor = {
 			.offset = { 0, 0 },
 			.extent = { CurrentDimensions.X, CurrentDimensions.Y }
 		};
-		CommandBuffer->SetScissor(Scissor);
+		CommandBuffer->BeginRendering(RenderingArea, { &Attachment, 1 }, std::nullopt, std::nullopt);
 
-		CommandBuffer->BindDescriptorSet(*RectangleDescriptorSet, *RectanglePipeline, 0);
-		CommandBuffer->UploadPushConstants(*RectanglePipeline, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, &RectanglePushConstants, sizeof(RectanglePushConstants), 0);
 
-		CommandBuffer->Draw(6, 1, 0, 0);
+		/*
+		 * Rendering rectangles
+		 */
+		if (HasRectanglesToDraw)
+		{
+			CommandBuffer->BindPipeline(*RectanglePipeline);
+			CommandBuffer->SetViewport(Viewport);
+			CommandBuffer->SetScissor(Scissor);
+
+			CommandBuffer->BindDescriptorSet(*RectangleDescriptorSet, *RectanglePipeline, 0);
+			CommandBuffer->BindVertexBuffer(*RectangleMeshBuffer);
+
+			CommandBuffer->Draw(static_cast<uint32>(RectangleMeshBuffer->GetSize() / sizeof(Vec2)), 1, 0, 0);
+		}
 
 
 		/*
@@ -363,19 +374,43 @@ namespace Hermes
 	{
 		HERMES_PROFILE_FUNC();
 
-		HERMES_ASSERT(DrawingContext.GetRectangles().size() < MaxRectangleCount);
-		auto* NextRectangle = static_cast<RectanglePrimitive*>(RectangleListBuffer->Map());
-		for (const auto& SourceRectangle : DrawingContext.GetRectangles())
+		auto RectangleCount = DrawingContext.GetRectangles().size();
+		auto VertexCount = RectangleCount * 6;
+		std::vector<Vec2> RectangleVertices(VertexCount);
+
+		std::vector<RectanglePrimitive> RectanglePrimitives(RectangleCount);
+
+		size_t RectangleIndex = 0;
+		for (const auto& Rectangle : DrawingContext.GetRectangles())
 		{
-			NextRectangle->Min = Vec2(SourceRectangle.Rect.Min) / Vec2(CurrentDimensions);
-			NextRectangle->Max = Vec2(SourceRectangle.Rect.Max) / Vec2(CurrentDimensions);
-			NextRectangle->Color = Vec4(SourceRectangle.Color, 1.0f);
-			NextRectangle++;
+			auto TopLeft = Vec2(Rectangle.Rect.Min) / Vec2(CurrentDimensions);
+			auto BottomRight = Vec2(Rectangle.Rect.Max) / Vec2(CurrentDimensions);
+
+			TopLeft = TopLeft * 2.0f - 1.0f;
+			BottomRight = BottomRight * 2.0f - 1.0;
+
+			auto TopRight = Vec2(BottomRight.X, TopLeft.Y);
+			auto BottomLeft = Vec2(TopLeft.X, BottomRight.Y);
+
+			RectangleVertices[RectangleIndex * 6 + 0] = BottomLeft;
+			RectangleVertices[RectangleIndex * 6 + 1] = TopLeft;
+			RectangleVertices[RectangleIndex * 6 + 2] = TopRight;
+			RectangleVertices[RectangleIndex * 6 + 3] = TopRight;
+			RectangleVertices[RectangleIndex * 6 + 4] = BottomRight;
+			RectangleVertices[RectangleIndex * 6 + 5] = BottomLeft;
+
+			RectanglePrimitives[RectangleIndex].Color = Vec4(Rectangle.Color, 1.0f);
+
+			RectangleIndex++;
 		}
-		RectangleListBuffer->Unmap();
-		RectanglePushConstants = {
-			.RectangleCount = static_cast<uint32>(DrawingContext.GetRectangles().size())
-		};
+
+		// TODO: only recreate the buffer if it has to be resized
+		RectangleMeshBuffer = Renderer::GetDevice().CreateBuffer(RectangleVertices.size() * sizeof(RectangleVertices[0]), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+		GPUInteractionUtilities::UploadDataToGPUBuffer(RectangleVertices.data(), RectangleMeshBuffer->GetSize(), 0, *RectangleMeshBuffer);
+
+		RectanglePrimitiveBuffer = Renderer::GetDevice().CreateBuffer(RectanglePrimitives.size() * sizeof(RectanglePrimitives[0]), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+		GPUInteractionUtilities::UploadDataToGPUBuffer(RectanglePrimitives.data(), RectanglePrimitiveBuffer->GetSize(), 0, *RectanglePrimitiveBuffer);
+		RectangleDescriptorSet->UpdateWithBuffer(0, 0, *RectanglePrimitiveBuffer, 0, static_cast<uint32>(RectanglePrimitiveBuffer->GetSize()));
 	}
 
 	void UIRenderer::PrepareToRenderText(const UI::DrawingContext& DrawingContext)

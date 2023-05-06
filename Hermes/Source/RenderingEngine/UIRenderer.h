@@ -2,7 +2,6 @@
 
 #include "Core/Core.h"
 #include "RenderingEngine/FontPack.h"
-#include "RenderingEngine/SharedData.h"
 #include "UIEngine/Widgets/Widget.h"
 #include "Vulkan/Buffer.h"
 #include "Vulkan/Descriptor.h"
@@ -29,8 +28,9 @@ namespace Hermes
 	private:
 		std::unique_ptr<Vulkan::Pipeline> RectanglePipeline;
 		std::unique_ptr<Vulkan::DescriptorSet> RectangleDescriptorSet;
-		static constexpr size_t MaxRectangleCount = 1024;
-		std::unique_ptr<Vulkan::Buffer> RectangleListBuffer;
+		bool HasRectanglesToDraw = true;
+		std::unique_ptr<Vulkan::Buffer> RectangleMeshBuffer;
+		std::unique_ptr<Vulkan::Buffer> RectanglePrimitiveBuffer;
 
 		static constexpr VkFormat TextFontImageFormat = VK_FORMAT_R8_UNORM;
 		bool HasTextToDraw = false;
@@ -46,7 +46,6 @@ namespace Hermes
 
 		Vec2ui CurrentDimensions = {};
 		Rect2Dui SceneViewport = {};
-		UIShaderPushConstants RectanglePushConstants = {};
 
 		void RecreateDestinationImage();
 

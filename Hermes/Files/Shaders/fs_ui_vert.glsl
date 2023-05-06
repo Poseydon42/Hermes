@@ -4,17 +4,15 @@
 #include "SharedData.h"
 #include "fs_quad.glsl"
 
-layout(location = 0) out vec2 o_FragmentLocation;
+layout(location = 0) in vec2 i_VertexPosition;
 
-layout(push_constant) uniform PushConstants
-{
-    UIShaderPushConstants Constants;
-} u_PushConstants;
+layout(location = 0) out vec2 o_FragmentLocation;
+layout(location = 1) flat out uint o_RectangleIndex;
 
 void main()
 {
-    vec2 VertexLocation = FullScreenQuadVertices[gl_VertexIndex];
+    o_FragmentLocation = i_VertexPosition * 0.5 + 0.5; // Transforming into [0;1] space
+    o_RectangleIndex = gl_VertexIndex / 6;
 
-    o_FragmentLocation = VertexLocation * 0.5 + 0.5; // Transforming into [0;1] space
-    gl_Position =  vec4(VertexLocation, 0.0, 1.0);
+    gl_Position =  vec4(i_VertexPosition, 0.0, 1.0);
 }

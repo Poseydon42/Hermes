@@ -13,5 +13,3 @@ set(SOURCES
 )
 
 add_hermes_sublib(Hermes_VirtualFileSystem "${SOURCES}")
-target_link_libraries(Hermes_VirtualFileSystem PUBLIC Hermes_Core)
-target_link_libraries(Hermes_VirtualFileSystem PRIVATE Hermes_Logging Hermes_Platform)

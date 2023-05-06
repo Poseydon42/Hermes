@@ -10,3 +10,4 @@ set(SOURCES
 )
 
 add_test_executable(Test_VirtualFilesystem "${SOURCES}" Hermes_VirtualFileSystem)
+target_link_libraries(Test_VirtualFilesystem PRIVATE Hermes_Logging Hermes_Platform)

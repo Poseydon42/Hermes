@@ -25,4 +25,3 @@ set(SOURCES
 include(HermesSublib)
 
 add_hermes_sublib(Hermes_Math "${SOURCES}")
-target_link_libraries(Hermes_Math PUBLIC Hermes_Core)

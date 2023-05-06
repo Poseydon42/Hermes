@@ -39,6 +39,3 @@ set(SOURCES
 include(HermesSublib)
 
 add_hermes_sublib(Hermes_Vulkan "${SOURCES}")
-
-target_include_directories(Hermes_Vulkan PUBLIC "${HERMES_THIRD_PARTY_DIR}/VulkanMemoryAllocator/include")
-target_link_libraries(Hermes_Vulkan PUBLIC Vulkan::Vulkan)

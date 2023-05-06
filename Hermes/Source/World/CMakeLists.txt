@@ -21,4 +21,3 @@ set(SOURCES
 )
 
 add_hermes_sublib(Hermes_World "${SOURCES}")
-target_link_libraries(Hermes_World PUBLIC Hermes_Core Hermes_RenderingEngine)

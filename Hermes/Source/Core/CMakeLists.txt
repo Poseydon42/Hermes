@@ -21,5 +21,3 @@ set(SOURCES
 )
 
 add_hermes_sublib(Hermes_Core "${SOURCES}")
-target_link_libraries(Hermes_Core PUBLIC $<$<CONFIG:Release>:Tracy::TracyClient>)
-target_compile_definitions(Hermes_Core PUBLIC $<$<CONFIG:Release>:HERMES_ENABLE_PROFILING>)

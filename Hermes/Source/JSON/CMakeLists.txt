@@ -12,5 +12,3 @@ set(SOURCES
 )
 
 add_hermes_sublib(Hermes_JSON "${SOURCES}")
-target_link_libraries(Hermes_JSON PUBLIC Hermes_Core)
-target_link_libraries(Hermes_JSON PRIVATE Hermes_Logging Hermes_Math)

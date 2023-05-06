@@ -11,3 +11,4 @@ set(SOURCES
 )
 
 add_test_executable(Test_JSON "${SOURCES}" Hermes_JSON)
+target_link_libraries(Test_JSON PRIVATE Hermes_Math)

@@ -21,4 +21,3 @@ set(SOURCES
 include(HermesSublib)
 
 add_hermes_sublib(Hermes_Platform "${SOURCES}")
-target_link_libraries(Hermes_Platform PUBLIC Hermes_Core)

@@ -13,6 +13,7 @@
 #include "RenderingEngine/Scene/Camera.h"
 #include "UIEngine/Font.h"
 #include "UIEngine/Widgets/Button.h"
+#include "UIEngine/Widgets/Image.h"
 #include "UIEngine/Widgets/Label.h"
 #include "UIEngine/Widgets/Containers/VerticalContainer.h"
 #include "UIEngine/Widgets/Containers/ViewportContainer.h"
@@ -230,17 +231,23 @@ public:
 
 		auto Font = Hermes::AssetLoader::Load<Hermes::UI::Font>("/Fonts/arial");
 		auto Label = Hermes::UI::Label::Create("Hello, world! This is Hermes UI system!", 14, Font);
-		Label->VerticalScalingPolicy.Type = Hermes::UI::ScalingType::Extend;
 		VerticalContainer->AddChild(Label);
 
 		auto ButtonLabel = Hermes::UI::Label::Create("This is a button", 28, Font);
 		auto Button = Hermes::UI::Button::Create(Hermes::Vec4(0.678f, 0.847f, 0.902f, 1.0f));
 		Button->SetLabel(ButtonLabel);
 		Button->SetOnPressCallback([] { HERMES_LOG_INFO("Button pressed!"); });
-		Button->VerticalScalingPolicy.Type = Hermes::UI::ScalingType::Extend;
 		Button->Margins.Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
 		Button->Margins.Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
 		VerticalContainer->AddChild(Button);
+
+		auto PlayButtonImage = Hermes::UI::Image::Create(Hermes::AssetLoader::Load<Hermes::Texture2D>("/Images/play_button"));
+		auto PlayButton = Hermes::UI::Button::Create(Hermes::Vec4(0.0f));
+		PlayButton->SetLabel(PlayButtonImage);
+		PlayButton->SetOnPressCallback([] { HERMES_LOG_INFO("Play button pressed!"); });
+		PlayButton->Margins.Left = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
+		PlayButton->Margins.Right = { Hermes::UI::MarginValueType::PercentOfParent, 0.5f };
+		VerticalContainer->AddChild(PlayButton);
 
 		Hermes::GGameLoop->SetRootWidget(RootWidget);
 

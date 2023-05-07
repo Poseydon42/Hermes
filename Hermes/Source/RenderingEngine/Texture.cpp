@@ -168,6 +168,11 @@ namespace Hermes
 		return AssetHandle<Texture2D>(new Texture2D(std::move(Name), Dimensions, Format, BytesPerChannel, Data, MipmapMode));
 	}
 
+	AssetHandle<Texture2D> Texture2D::Create(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, Vec4 Color)
+	{
+		return AssetHandle<Texture2D>(new Texture2D(std::move(Name), Dimensions, Format, BytesPerChannel, Color));
+	}
+
 	AssetHandle<Asset> Texture2D::Load(String Name, std::span<const uint8> BinaryData)
 	{
 		const uint8* DataPtr = BinaryData.data();
@@ -308,6 +313,16 @@ namespace Hermes
 		{
 			GPUInteractionUtilities::GenerateMipMaps(*Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
+	}
+
+	Texture2D::Texture2D(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, Vec4 Color)
+		: Asset(std::move(Name), AssetType::Texture2D)
+	{
+		auto VulkanFormat = ChooseFormatFromImageType(Format, BytesPerChannel);
+		Image = Renderer::GetDevice().CreateImage(Dimensions, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VulkanFormat, 1);
+
+		auto Range = Image->GetFullSubresourceRange();
+		GPUInteractionUtilities::ClearImage(*Image, Color, { &Range, 1 }, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	Vulkan::ImageView& Texture2D::CreateView(ColorSpace ColorSpace) const

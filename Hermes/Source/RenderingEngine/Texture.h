@@ -5,6 +5,7 @@
 
 #include "AssetSystem/AssetHeaders.h"
 #include "Core/Core.h"
+#include "Math/Vector4.h"
 #include "Vulkan/Image.h"
 #include "Vulkan/VulkanCore.h"
 
@@ -34,6 +35,8 @@ namespace Hermes
 	public:
 		static AssetHandle<Texture2D> Create(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode);
 
+		static AssetHandle<Texture2D> Create(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, Vec4 Color);
+
 		static AssetHandle<Asset> Load(String Name, std::span<const uint8> BinaryData);
 
 		const Vulkan::Image& GetRawImage() const;
@@ -48,6 +51,8 @@ namespace Hermes
 
 	private:
 		Texture2D(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, const void* Data, MipmapGenerationMode MipmapMode);
+
+		Texture2D(String Name, Vec2ui Dimensions, ImageFormat Format, size_t BytesPerChannel, Vec4 Color);
 
 		Vulkan::ImageView& CreateView(ColorSpace ColorSpace) const;
 		

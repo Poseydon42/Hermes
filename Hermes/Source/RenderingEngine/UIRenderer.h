@@ -26,11 +26,17 @@ namespace Hermes
 		std::pair<const Vulkan::Image*, VkImageLayout> Render(const Vulkan::Image& RenderedScene, VkImageLayout RenderedSceneLayout);
 
 	private:
+		static constexpr uint32 RectanglePrimitivesDescriptorBinding = 0;
+		static constexpr uint32 RectangleTexturesDescriptorBinding = 1;
+
+		bool HasRectanglesToDraw = true;
 		std::unique_ptr<Vulkan::Pipeline> RectanglePipeline;
 		std::unique_ptr<Vulkan::DescriptorSet> RectangleDescriptorSet;
-		bool HasRectanglesToDraw = true;
+		std::unique_ptr<Vulkan::Sampler> RectangleTextureSampler;
 		std::unique_ptr<Vulkan::Buffer> RectangleMeshBuffer;
 		std::unique_ptr<Vulkan::Buffer> RectanglePrimitiveBuffer;
+		std::vector<AssetHandle<Texture2D>> RectangleTextures; // NOTE: this is to ensure that the textures won't be destroyed during rendering
+		AssetHandle<Texture2D> EmptyTexture; // NOTE: this is to bind to unused slots in the texture array descriptor to be fully compatible with the spec
 
 		static constexpr VkFormat TextFontImageFormat = VK_FORMAT_R8_UNORM;
 		bool HasTextToDraw = false;

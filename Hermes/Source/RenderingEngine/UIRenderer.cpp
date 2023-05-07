@@ -15,7 +15,7 @@
 
 namespace Hermes
 {
-	struct TextVertex
+	struct Vertex2D
 	{
 		Vec2 Position;
 		Vec2 TextureCoordinates;
@@ -27,29 +27,46 @@ namespace Hermes
 		auto& ShaderCache = Renderer::GetShaderCache();
 
 
-		/*
-		 * Rectangle pipeline initialization
+		/**
+		 * Rectangle descriptor set initialization
 		 */
 		VkDescriptorSetLayoutBinding RectangleListBinding = {
-			.binding = 0,
+			.binding = RectanglePrimitivesDescriptorBinding,
 			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 			.descriptorCount = 1,
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 			.pImmutableSamplers = nullptr
 		};
-		auto RectangleDescriptorSetLayout = Device.CreateDescriptorSetLayout({ RectangleListBinding });
+		VkDescriptorSetLayoutBinding RectangleTexturesBinding = {
+			.binding = RectangleTexturesDescriptorBinding,
+			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			.descriptorCount = GMaxRectangleTextureCount,
+			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+			.pImmutableSamplers = nullptr
+		};
+		auto RectangleDescriptorSetLayout = Device.CreateDescriptorSetLayout({ RectangleListBinding, RectangleTexturesBinding });
 		RectangleDescriptorSet = Renderer::GetDescriptorAllocator().Allocate(*RectangleDescriptorSetLayout);
 
+
+		/*
+		 * Rectangle pipeline initialization
+		 */
 		VkVertexInputBindingDescription RectangleMeshBufferVertexInputBinding = {
 			.binding = 0,
-			.stride = sizeof(Vec2),
+			.stride = sizeof(Vertex2D),
 			.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
 		};
 		VkVertexInputAttributeDescription RectangleMeshBufferVertexPositionInputAttribute = {
 			.location = 0,
 			.binding = 0,
 			.format = VK_FORMAT_R32G32_SFLOAT,
-			.offset = 0
+			.offset = offsetof(Vertex2D, Position)
+		};
+		VkVertexInputAttributeDescription RectangleMeshBufferTextureCoordinateInputAttribute = {
+			.location = 1,
+			.binding = 0,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(Vertex2D, TextureCoordinates)
 		};
 
 		Vulkan::PipelineDescription RectanglePipelineDesc = {
@@ -59,7 +76,7 @@ namespace Hermes
 				&ShaderCache.GetShader("/Shaders/Bin/fs_ui_frag.glsl.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
 			},
 			.VertexInputBindings = { RectangleMeshBufferVertexInputBinding },
-			.VertexInputAttributes = { RectangleMeshBufferVertexPositionInputAttribute },
+			.VertexInputAttributes = { RectangleMeshBufferVertexPositionInputAttribute, RectangleMeshBufferTextureCoordinateInputAttribute },
 			.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.PolygonMode = VK_POLYGON_MODE_FILL,
 			.CullMode = VK_CULL_MODE_NONE,
@@ -82,6 +99,29 @@ namespace Hermes
 			.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR }
 		};
 		RectanglePipeline = Device.CreatePipeline(RectanglePipelineDesc, { &DestinationImageFormat, 1 }, std::nullopt);
+
+
+		/*
+		 * Rectangle texture sampler initialization and filling the texture array descriptor
+		 */
+		Vulkan::SamplerDescription RectangleTextureSamplerDesc = {
+			.MagnificationFilter = VK_FILTER_LINEAR,
+			.MinificationFilter = VK_FILTER_LINEAR,
+			.MipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+			.AddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+			.CoordinateSystem = Vulkan::CoordinateSystem::Normalized,
+			.Anisotropy = false,
+			.AnisotropyLevel = 0.0f,
+			.MinLOD = 0.0f,
+			.MaxLOD = 0.0f,
+			.LODBias = 0.0f
+		};
+		RectangleTextureSampler = Device.CreateSampler(RectangleTextureSamplerDesc);
+		EmptyTexture = Texture2D::Create("UI_RENDERER_EMPTY_TEXTURE", { 1 }, ImageFormat::RGBA, 1, Vec4(0.0f));
+		for (uint32 DescriptorIndex = 0; DescriptorIndex < GMaxRectangleTextureCount; DescriptorIndex++)
+		{
+			RectangleDescriptorSet->UpdateWithImageAndSampler(RectangleTexturesDescriptorBinding, DescriptorIndex, EmptyTexture->GetView(ColorSpace::Linear), *RectangleTextureSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
 		
 
 		/*
@@ -99,20 +139,20 @@ namespace Hermes
 
 		VkVertexInputBindingDescription TextVertexInputBindingDescription = {
 			.binding = 0,
-			.stride = sizeof(TextVertex),
+			.stride = sizeof(Vertex2D),
 			.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
 		};
 		VkVertexInputAttributeDescription TextVertexPositionAttribute = {
 			.location = 0,
 			.binding = 0,
 			.format = VK_FORMAT_R32G32_SFLOAT,
-			.offset = offsetof(TextVertex, Position)
+			.offset = offsetof(Vertex2D, Position)
 		};
 		VkVertexInputAttributeDescription TextTextureCoordinateAttribute = {
 			.location = 1,
 			.binding = 0,
 			.format = VK_FORMAT_R32G32_SFLOAT,
-			.offset = offsetof(TextVertex, TextureCoordinates)
+			.offset = offsetof(Vertex2D, TextureCoordinates)
 		};
 		Vulkan::PipelineDescription TextPipelineDesc = {
 			.PushConstants = {},
@@ -344,7 +384,7 @@ namespace Hermes
 			CommandBuffer->BindDescriptorSet(*TextDescriptorSet, *TextPipeline, 0);
 			CommandBuffer->BindVertexBuffer(*TextMeshBuffer);
 
-			CommandBuffer->Draw(static_cast<uint32>(TextMeshBuffer->GetSize() / sizeof(TextVertex)), 1, 0, 0);
+			CommandBuffer->Draw(static_cast<uint32>(TextMeshBuffer->GetSize() / sizeof(Vertex2D)), 1, 0, 0);
 		}
 
 		/*
@@ -374,13 +414,16 @@ namespace Hermes
 	{
 		HERMES_PROFILE_FUNC();
 
-		auto RectangleCount = DrawingContext.GetRectangles().size();
-		auto VertexCount = RectangleCount * 6;
-		std::vector<Vec2> RectangleVertices(VertexCount);
+		RectangleTextures.clear();
 
+		auto RectangleCount = DrawingContext.GetRectangles().size();
+		HERMES_ASSERT(RectangleCount < GMaxRectangleTextureCount);
+		auto VertexCount = RectangleCount * 6;
+
+		std::vector<Vertex2D> RectangleVertices(VertexCount);
 		std::vector<RectanglePrimitive> RectanglePrimitives(RectangleCount);
 
-		size_t RectangleIndex = 0;
+		uint32 RectangleIndex = 0;
 		for (const auto& Rectangle : DrawingContext.GetRectangles())
 		{
 			auto TopLeft = Vec2(Rectangle.Rect.Min) / Vec2(CurrentDimensions);
@@ -392,14 +435,18 @@ namespace Hermes
 			auto TopRight = Vec2(BottomRight.X, TopLeft.Y);
 			auto BottomLeft = Vec2(TopLeft.X, BottomRight.Y);
 
-			RectangleVertices[RectangleIndex * 6 + 0] = BottomLeft;
-			RectangleVertices[RectangleIndex * 6 + 1] = TopLeft;
-			RectangleVertices[RectangleIndex * 6 + 2] = TopRight;
-			RectangleVertices[RectangleIndex * 6 + 3] = TopRight;
-			RectangleVertices[RectangleIndex * 6 + 4] = BottomRight;
-			RectangleVertices[RectangleIndex * 6 + 5] = BottomLeft;
-			RectanglePrimitives[RectangleIndex].Color = Rectangle.Color;
+			RectangleVertices[RectangleIndex * 6 + 0] = { BottomLeft, { 0.0f, 1.0f } };
+			RectangleVertices[RectangleIndex * 6 + 1] = { TopLeft, { 0.0f, 0.0f } };
+			RectangleVertices[RectangleIndex * 6 + 2] = { TopRight, { 1.0f, 0.0f } };
+			RectangleVertices[RectangleIndex * 6 + 3] = { TopRight, { 1.0f, 0.0f } };
+			RectangleVertices[RectangleIndex * 6 + 4] = { BottomRight, { 1.0f, 1.0f } };
+			RectangleVertices[RectangleIndex * 6 + 5] = { BottomLeft, { 0.0f, 1.0f } };
 
+			RectanglePrimitives[RectangleIndex].Color = Rectangle.Color;
+			RectanglePrimitives[RectangleIndex].TextureWeight = Rectangle.TextureWeight;
+
+			RectangleDescriptorSet->UpdateWithImageAndSampler(RectangleTexturesDescriptorBinding, RectangleIndex, Rectangle.Texture->GetView(ColorSpace::SRGB), *RectangleTextureSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			RectangleTextures.push_back(Rectangle.Texture);
 
 			RectangleIndex++;
 		}
@@ -410,7 +457,7 @@ namespace Hermes
 
 		RectanglePrimitiveBuffer = Renderer::GetDevice().CreateBuffer(RectanglePrimitives.size() * sizeof(RectanglePrimitives[0]), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 		GPUInteractionUtilities::UploadDataToGPUBuffer(RectanglePrimitives.data(), RectanglePrimitiveBuffer->GetSize(), 0, *RectanglePrimitiveBuffer);
-		RectangleDescriptorSet->UpdateWithBuffer(0, 0, *RectanglePrimitiveBuffer, 0, static_cast<uint32>(RectanglePrimitiveBuffer->GetSize()));
+		RectangleDescriptorSet->UpdateWithBuffer(RectanglePrimitivesDescriptorBinding, 0, *RectanglePrimitiveBuffer, 0, static_cast<uint32>(RectanglePrimitiveBuffer->GetSize()));
 	}
 
 	void UIRenderer::PrepareToRenderText(const UI::DrawingContext& DrawingContext)
@@ -434,7 +481,7 @@ namespace Hermes
 		}
 		FontPack.Repack();
 
-		std::vector<TextVertex> TextVertices;
+		std::vector<Vertex2D> TextVertices;
 		for (const auto& Text : DrawingContext.GetDrawableTexts())
 		{
 			HERMES_ASSERT(!Text.Text.empty());
@@ -479,8 +526,8 @@ namespace Hermes
 			}
 		}
 
-		TextMeshBuffer = Renderer::GetDevice().CreateBuffer(TextVertices.size() * sizeof(TextVertex), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-		GPUInteractionUtilities::UploadDataToGPUBuffer(TextVertices.data(), TextVertices.size() * sizeof(TextVertex), 0, *TextMeshBuffer);
+		TextMeshBuffer = Renderer::GetDevice().CreateBuffer(TextVertices.size() * sizeof(Vertex2D), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+		GPUInteractionUtilities::UploadDataToGPUBuffer(TextVertices.data(), TextVertices.size() * sizeof(Vertex2D), 0, *TextMeshBuffer);
 
 		HasTextToDraw = true;
 	}

@@ -92,9 +92,17 @@ namespace Hermes
 		uint32 DirectionalLightCount;
 	};
 
+#define MAX_RECTANGLE_TEXTURE_COUNT 64
+#ifndef _GLSL_
+	static constexpr uint32 GMaxRectangleTextureCount = MAX_RECTANGLE_TEXTURE_COUNT;
+#else
+#define GMaxRectangleTextureCount MAX_RECTANGLE_TEXTURE_COUNT
+#endif
+
 	struct ALIGNAS_16 RectanglePrimitive
 	{
 		Vec4 Color;
+		float TextureWeight;
 	};
 
 #ifndef _GLSL_

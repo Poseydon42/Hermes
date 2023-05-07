@@ -234,7 +234,7 @@ public:
 		VerticalContainer->AddChild(Label);
 
 		auto ButtonLabel = Hermes::UI::Label::Create("This is a button", 28, Font);
-		auto Button = Hermes::UI::Button::Create(Hermes::Vec3(0.678f, 0.847f, 0.902f));
+		auto Button = Hermes::UI::Button::Create(Hermes::Vec4(0.678f, 0.847f, 0.902f, 1.0f));
 		Button->SetLabel(ButtonLabel);
 		Button->SetOnPressCallback([] { HERMES_LOG_INFO("Button pressed!"); });
 		Button->VerticalScalingPolicy.Type = Hermes::UI::ScalingType::Extend;

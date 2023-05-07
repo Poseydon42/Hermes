@@ -2,7 +2,7 @@
 
 namespace Hermes::UI
 {
-	std::shared_ptr<Panel> Panel::Create(Vec2 InMinimumSize, Vec3 InColor)
+	std::shared_ptr<Panel> Panel::Create(Vec2 InMinimumSize, Vec4 InColor)
 	{
 		return std::shared_ptr<Panel>(new Panel(InMinimumSize, InColor));
 	}
@@ -12,7 +12,7 @@ namespace Hermes::UI
 		Context.DrawRectangle(BoundingBox, Color);
 	}
 
-	Panel::Panel(Vec2 InMinimumSize, Vec3 InColor)
+	Panel::Panel(Vec2 InMinimumSize, Vec4 InColor)
 		: MinimumSize(InMinimumSize)
 		, Color(InColor)
 	{

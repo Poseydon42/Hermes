@@ -398,8 +398,8 @@ namespace Hermes
 			RectangleVertices[RectangleIndex * 6 + 3] = TopRight;
 			RectangleVertices[RectangleIndex * 6 + 4] = BottomRight;
 			RectangleVertices[RectangleIndex * 6 + 5] = BottomLeft;
+			RectanglePrimitives[RectangleIndex].Color = Rectangle.Color;
 
-			RectanglePrimitives[RectangleIndex].Color = Vec4(Rectangle.Color, 1.0f);
 
 			RectangleIndex++;
 		}

@@ -17,13 +17,13 @@ namespace Hermes::UI
 		Panel(Panel&&) = default;
 		Panel& operator=(Panel&&) = default;
 
-		static std::shared_ptr<Panel> Create(Vec2 InMinimumSize, Vec3 InColor);
+		static std::shared_ptr<Panel> Create(Vec2 InMinimumSize, Vec4 InColor);
 
 	protected:
-		Panel(Vec2 InMinimumSize, Vec3 InColor);
+		Panel(Vec2 InMinimumSize, Vec4 InColor);
 
 		Vec2 MinimumSize;
-		Vec3 Color;
+		Vec4 Color;
 
 		virtual Vec2 ComputeMinimumSize() const override;
 

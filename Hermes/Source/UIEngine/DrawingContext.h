@@ -21,15 +21,15 @@ namespace Hermes::UI
 	public:
 		struct DrawableRectangle
 		{
-			/*
+			/**
 			 * Position and size of the rectangle
 			 */
 			Rect2Dui Rect;
 
-			/*
+			/**
 			 * Color that the rectangle should be filled with
 			 */
-			Vec3 Color = {};
+			Vec4 Color = {};
 		};
 
 		/**
@@ -38,7 +38,7 @@ namespace Hermes::UI
 		 * @param Rect Rectangle to draw
 		 * @param Color Color of the rectangle
 		 */
-		void DrawRectangle(Rect2D Rect, Vec3 Color);
+		void DrawRectangle(Rect2D Rect, Vec4 Color);
 
 		struct DrawableText
 		{

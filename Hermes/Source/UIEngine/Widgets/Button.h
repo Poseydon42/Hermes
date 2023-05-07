@@ -10,7 +10,7 @@ namespace Hermes::UI
 	public:
 		using CallbackFuncType = std::function<void()>;
 
-		static std::shared_ptr<Button> Create(Vec3 InBackgroundColor);
+		static std::shared_ptr<Button> Create(Vec4 InBackgroundColor);
 
 		void SetLabel(std::shared_ptr<Widget> NewLabel);
 
@@ -18,10 +18,10 @@ namespace Hermes::UI
 
 	protected:
 		std::shared_ptr<Widget> Label;
-		Vec3 BackgroundColor;
+		Vec4 BackgroundColor;
 		CallbackFuncType OnPressCallback;
 
-		explicit Button(Vec3 InBackgroundColor);
+		explicit Button(Vec4 InBackgroundColor);
 
 		virtual Vec2 ComputeMinimumSize() const override;
 

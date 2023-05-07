@@ -2,7 +2,7 @@
 
 namespace Hermes::UI
 {
-	std::shared_ptr<Button> Button::Create(Vec3 InBackgroundColor)
+	std::shared_ptr<Button> Button::Create(Vec4 InBackgroundColor)
 	{
 		return std::shared_ptr<Button>(new Button(InBackgroundColor));
 	}
@@ -18,7 +18,7 @@ namespace Hermes::UI
 		OnPressCallback = std::move(NewCallback);
 	}
 
-	Button::Button(Vec3 InBackgroundColor)
+	Button::Button(Vec4 InBackgroundColor)
 		: BackgroundColor(InBackgroundColor)
 	{
 	}

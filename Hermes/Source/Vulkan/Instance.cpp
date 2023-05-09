@@ -86,7 +86,7 @@ namespace Hermes::Vulkan
 		AppInfo.apiVersion = GVulkanVersion;
 		AppInfo.applicationVersion = VK_MAKE_VERSION(0, 1, 0);
 		AppInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
-		AppInfo.pApplicationName = HERMES_GAME_NAME;
+		AppInfo.pApplicationName = HERMES_APPLICATION_NAME;
 		AppInfo.pEngineName = "Hermes Engine";
 
 		bool ValidationLayersEnabled = false;

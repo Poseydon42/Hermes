@@ -8,7 +8,7 @@
 
 int WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 {
-	std::wstring GameModuleName = TEXT(HERMES_GAME_NAME);
+	std::wstring GameModuleName = TEXT(HERMES_APPLICATION_NAME);
 	GameModuleName += L".dll";
 	HMODULE GameModule = LoadLibrary(GameModuleName.c_str());
 	if (GameModule)

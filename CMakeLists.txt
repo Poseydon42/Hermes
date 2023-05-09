@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 option(HERMES_ENABLE_TESTING "Enable compiling and running tests for Hermes" ON)
-set(HERMES_GAME_NAME "Sandbox" CACHE STRING "Name of the game that Hermes will launch at startup")
+set(HERMES_APPLICATION_NAME "Sandbox" CACHE STRING "Name of the game that Hermes will launch at startup")
 
 if (NOT (${WIN32} EQUAL 1 AND ${MSVC} EQUAL 1))
     message(FATAL_ERROR "Only Windows builds using MSVC are supported at the moment")

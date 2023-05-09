@@ -54,5 +54,5 @@ set(SOURCES
 
 include(HermesSublib)
 
-add_hermes_sublib(Hermes_RenderingEngine "${SOURCES}")
+add_engine_sublib(Hermes_RenderingEngine "${SOURCES}")
 target_link_libraries(Hermes_RenderingEngine PRIVATE spirv-cross-cpp)

@@ -12,4 +12,4 @@ set(SOURCES
     VirtualFilesystem.h
 )
 
-add_hermes_sublib(Hermes_VirtualFileSystem "${SOURCES}")
+add_engine_sublib(Hermes_VirtualFileSystem "${SOURCES}")

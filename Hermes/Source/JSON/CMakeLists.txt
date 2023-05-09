@@ -11,4 +11,4 @@ set(SOURCES
     JSONValue.h
 )
 
-add_hermes_sublib(Hermes_JSON "${SOURCES}")
+add_engine_sublib(Hermes_JSON "${SOURCES}")

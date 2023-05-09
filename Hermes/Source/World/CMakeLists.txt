@@ -20,4 +20,4 @@ set(SOURCES
     World.h
 )
 
-add_hermes_sublib(Hermes_World "${SOURCES}")
+add_engine_sublib(Hermes_World "${SOURCES}")

@@ -10,4 +10,4 @@ set(SOURCES
     InputEngine.h
 )
 
-add_hermes_sublib(Hermes_ApplicationCore "${SOURCES}")
+add_engine_sublib(Hermes_ApplicationCore "${SOURCES}")

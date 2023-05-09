@@ -29,7 +29,7 @@ set(SOURCES
     Widgets/Widget.h
 )
 
-add_hermes_sublib(Hermes_UIEngine "${SOURCES}")
+add_engine_sublib(Hermes_UIEngine "${SOURCES}")
 
 target_include_directories(Hermes_UIEngine PRIVATE ${FREETYPE_INCLUDE_DIRS})
 target_link_libraries(Hermes_UIEngine PRIVATE ${FREETYPE_LIBRARIES})

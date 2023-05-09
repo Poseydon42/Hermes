@@ -38,4 +38,4 @@ set(SOURCES
 
 include(HermesSublib)
 
-add_hermes_sublib(Hermes_Vulkan "${SOURCES}")
+add_engine_sublib(Hermes_Vulkan "${SOURCES}")

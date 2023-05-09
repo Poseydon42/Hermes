@@ -20,4 +20,4 @@ set(SOURCES
     Profiling.h
 )
 
-add_hermes_sublib(Hermes_Core "${SOURCES}")
+add_engine_sublib(Hermes_Core "${SOURCES}")

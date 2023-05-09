@@ -20,4 +20,4 @@ set(SOURCES
 
 include(HermesSublib)
 
-add_hermes_sublib(Hermes_Platform "${SOURCES}")
+add_engine_sublib(Hermes_Platform "${SOURCES}")

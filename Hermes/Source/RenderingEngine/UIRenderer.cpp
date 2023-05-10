@@ -451,6 +451,10 @@ namespace Hermes
 			RectangleIndex++;
 		}
 
+		// No rectangles to draw so we don't need to update the buffers
+		if (RectanglePrimitives.empty())
+			return;
+
 		// TODO: only recreate the buffer if it has to be resized
 		RectangleMeshBuffer = Renderer::GetDevice().CreateBuffer(RectangleVertices.size() * sizeof(RectangleVertices[0]), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 		GPUInteractionUtilities::UploadDataToGPUBuffer(RectangleVertices.data(), RectangleMeshBuffer->GetSize(), 0, *RectangleMeshBuffer);
@@ -458,6 +462,8 @@ namespace Hermes
 		RectanglePrimitiveBuffer = Renderer::GetDevice().CreateBuffer(RectanglePrimitives.size() * sizeof(RectanglePrimitives[0]), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 		GPUInteractionUtilities::UploadDataToGPUBuffer(RectanglePrimitives.data(), RectanglePrimitiveBuffer->GetSize(), 0, *RectanglePrimitiveBuffer);
 		RectangleDescriptorSet->UpdateWithBuffer(RectanglePrimitivesDescriptorBinding, 0, *RectanglePrimitiveBuffer, 0, static_cast<uint32>(RectanglePrimitiveBuffer->GetSize()));
+
+		HasRectanglesToDraw = true;
 	}
 
 	void UIRenderer::PrepareToRenderText(const UI::DrawingContext& DrawingContext)

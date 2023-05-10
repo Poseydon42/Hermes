@@ -29,7 +29,7 @@ namespace Hermes
 		static constexpr uint32 RectanglePrimitivesDescriptorBinding = 0;
 		static constexpr uint32 RectangleTexturesDescriptorBinding = 1;
 
-		bool HasRectanglesToDraw = true;
+		bool HasRectanglesToDraw = false;
 		std::unique_ptr<Vulkan::Pipeline> RectanglePipeline;
 		std::unique_ptr<Vulkan::DescriptorSet> RectangleDescriptorSet;
 		std::unique_ptr<Vulkan::Sampler> RectangleTextureSampler;

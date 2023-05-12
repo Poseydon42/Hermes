@@ -50,10 +50,12 @@ namespace Hermes
 		void SetInputMode(InputMode NewMode);
 		InputMode GetInputMode() const;
 
-		/*
-		 * DEBUG ONLY
+		/**
+		 * If not null, replaces the current active camera in the scene with the provided camera.
+		 * If null, reverts back to using the scene camera. The state is preserved between frames,
+		 * so you don't need to call this function every frame.
 		 */
-		void SetCamera(std::shared_ptr<Camera> NewCamera);
+		void OverrideCamera(std::shared_ptr<Camera> NewCamera);
 
 	private:
 		bool RequestedExit = false;
@@ -68,6 +70,8 @@ namespace Hermes
 		std::unique_ptr<UI::InputController> UIInputController;
 		InputMode InputMode = InputMode::Game;
 
+		std::shared_ptr<Camera> OverridingCamera;
+
 		std::unique_ptr<World> GameWorld;
 		std::shared_ptr<UI::Widget> RootWidget;
 
@@ -75,7 +79,6 @@ namespace Hermes
 		/*
 		 * DEBUG ONLY
 		 */
-		std::shared_ptr<Camera> Camera;
 		void KeyEventHandler(const WindowKeyboardEvent& Event);
 		bool IsFullscreen = false;
 

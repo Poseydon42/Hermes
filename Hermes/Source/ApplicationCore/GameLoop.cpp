@@ -98,6 +98,8 @@ namespace Hermes
 				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
 
 				auto& Scene = GameWorld->GetScene();
+				if (OverridingCamera)
+					Scene.ChangeActiveCamera(OverridingCamera);
 
 				Renderer::RunFrame(Scene, *RootWidget);
 
@@ -169,9 +171,9 @@ namespace Hermes
 		return InputMode;
 	}
 
-	void GameLoop::SetCamera(std::shared_ptr<Hermes::Camera> NewCamera)
+	void GameLoop::OverrideCamera(std::shared_ptr<Camera> NewCamera)
 	{
-		Camera = std::move(NewCamera);
+		OverridingCamera = std::move(NewCamera);
 	}
 
 	/*

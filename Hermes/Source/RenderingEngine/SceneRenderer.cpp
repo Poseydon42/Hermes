@@ -89,7 +89,7 @@ namespace Hermes
 
 		UpdateSceneDataBuffer(Scene, ViewportDimensions);
 
-		auto GeometryList = Scene.BakeGeometryList();
+		auto GeometryList = Scene.BakeGeometryList(Vec2(ViewportDimensions));
 		FrameGraph->Execute(Scene, GeometryList, ViewportDimensions);
 
 		return FrameGraph->GetFinalImage();
@@ -100,12 +100,11 @@ namespace Hermes
 		HERMES_PROFILE_FUNC();
 
 		auto& Camera = Scene.GetActiveCamera();
-		Camera.UpdateViewportDimensions(Vec2(ViewportDimensions));
 
 		auto* SceneDataForCurrentFrame = static_cast<SceneData*>(SceneDataBuffer->Map());
 
 		auto ViewMatrix = Camera.GetViewMatrix();
-		auto ProjectionMatrix = Camera.GetProjectionMatrix();
+		auto ProjectionMatrix = Camera.GetProjectionMatrix(Vec2(ViewportDimensions));
 
 		SceneDataForCurrentFrame->ViewProjection = ProjectionMatrix * ViewMatrix;
 		SceneDataForCurrentFrame->View = ViewMatrix;

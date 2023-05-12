@@ -37,7 +37,7 @@ namespace Hermes
 
 		Camera& GetActiveCamera() const;
 
-		GeometryList BakeGeometryList() const;
+		GeometryList BakeGeometryList(Vec2 ViewportDimensions) const;
 
 		const TextureCube& GetReflectionEnvmap() const;
 		const TextureCube& GetIrradianceEnvmap() const;

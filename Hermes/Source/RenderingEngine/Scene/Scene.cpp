@@ -449,12 +449,12 @@ namespace Hermes
 		return *ActiveCamera;
 	}
 
-	GeometryList Scene::BakeGeometryList() const
+	GeometryList Scene::BakeGeometryList(Vec2 ViewportDimensions) const
 	{
 		HERMES_PROFILE_FUNC();
 		std::vector<DrawableMesh> CulledMeshes;
 
-		auto Frustum = GetActiveCamera().GetFrustum();
+		auto Frustum = GetActiveCamera().GetFrustum(ViewportDimensions);
 
 		std::function<void(const SceneNode&)> MeshTraversal = [&](const SceneNode& CurrentNode) -> void
 		{

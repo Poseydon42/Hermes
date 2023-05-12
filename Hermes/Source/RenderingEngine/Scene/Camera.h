@@ -27,12 +27,10 @@ namespace Hermes
 
 		virtual float GetFarZPlane() const = 0;
 
-		virtual void UpdateViewportDimensions(Vec2 NewDimensions) = 0;
-
 		virtual Mat4 GetViewMatrix() const = 0;
 
-		virtual Mat4 GetProjectionMatrix() const = 0;
+		virtual Mat4 GetProjectionMatrix(Vec2 ViewportDimensions) const = 0;
 
-		virtual Frustum GetFrustum() const = 0;
+		virtual Frustum GetFrustum(Vec2 ViewportDimensions) const = 0;
 	};
 }

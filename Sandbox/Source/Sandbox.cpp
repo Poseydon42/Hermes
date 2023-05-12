@@ -27,14 +27,13 @@
 class SimpleCamera : public Hermes::Camera
 {
 public:
-	SimpleCamera(Hermes::Vec3 InLocation, Hermes::Vec3 InDirection, Hermes::Vec3 InRightVector, float InVerticalFOV, float InNearPlane, float InFarPlane, Hermes::Vec2 InViewportDimensions)
+	SimpleCamera(Hermes::Vec3 InLocation, Hermes::Vec3 InDirection, Hermes::Vec3 InRightVector, float InVerticalFOV, float InNearPlane, float InFarPlane)
 		: Location(InLocation)
 		, Direction(InDirection)
 		, RightVector(InRightVector)
 		, VerticalFOV(InVerticalFOV)
 		, NearPlane(InNearPlane)
 		, FarPlane(InFarPlane)
-		, ViewportDimensions(InViewportDimensions)
 	{
 	}
 
@@ -63,23 +62,18 @@ public:
 		return FarPlane;
 	}
 
-	virtual void UpdateViewportDimensions(Hermes::Vec2 NewDimensions) override
-	{
-		ViewportDimensions = NewDimensions;
-	}
-
 	virtual Hermes::Mat4 GetViewMatrix() const override
 	{
 		auto UpVector = (Direction ^ RightVector).Normalize();
 		return Hermes::Mat4::LookAt(Location, Direction, UpVector);
 	}
 
-	virtual Hermes::Mat4 GetProjectionMatrix() const override
+	virtual Hermes::Mat4 GetProjectionMatrix(Hermes::Vec2 ViewportDimensions) const override
 	{
 		return Hermes::Mat4::Perspective(Hermes::Math::Radians(VerticalFOV), ViewportDimensions.X / ViewportDimensions.Y, NearPlane, FarPlane);
 	}
 
-	virtual Hermes::Frustum GetFrustum() const override
+	virtual Hermes::Frustum GetFrustum(Hermes::Vec2 ViewportDimensions) const override
 	{
 		Hermes::Frustum Result = {};
 
@@ -105,7 +99,6 @@ public:
 private:
 	Hermes::Vec3 Location, Direction, RightVector;
 	float VerticalFOV = 0.0f, NearPlane = 0.0f, FarPlane = 0.0f;
-	Hermes::Vec2 ViewportDimensions;
 };
 
 class CameraSystem : public Hermes::ISystem
@@ -165,7 +158,7 @@ public:
 
 			Transform->Transform.Translation += DeltaLocation;
 
-			Scene.ChangeActiveCamera(std::make_shared<SimpleCamera>(Transform->Transform.Translation, Direction, RightVector, 50.0f, 0.1f, 1000.0f, Hermes::Vec2{}));
+			Scene.ChangeActiveCamera(std::make_shared<SimpleCamera>(Transform->Transform.Translation, Direction, RightVector, 50.0f, 0.1f, 1000.0f));
 
 			break;
 		}

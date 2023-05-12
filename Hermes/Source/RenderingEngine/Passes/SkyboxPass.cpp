@@ -79,7 +79,7 @@ namespace Hermes
 		auto ViewMatrixWithoutTranslation = Mat3(FullViewMatrix);
 		auto ViewMatrix = Mat4(ViewMatrixWithoutTranslation);
 		ViewMatrix[3][3] = 1.0f;
-		auto ProjectionMatrix = Camera.GetProjectionMatrix();
+		auto ProjectionMatrix = Camera.GetProjectionMatrix(ViewportDimensions);
 
 		auto ViewProjectionMatrix = ProjectionMatrix * ViewMatrix;
 

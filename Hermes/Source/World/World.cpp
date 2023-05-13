@@ -9,17 +9,12 @@ namespace Hermes
 		Entities[InvalidEntity] = 0;
 	}
 
-	void World::Update(float DeltaTime)
+	void World::Update(Scene& Scene, float DeltaTime)
 	{
 		HERMES_PROFILE_FUNC();
 		Scene.Reset();
 		for (const auto& System : Systems)
 			System->Run(*this, Scene, DeltaTime);
-	}
-
-	const Scene& World::GetScene() const
-	{
-		return Scene;
 	}
 
 	EntityID World::CreateEntity()

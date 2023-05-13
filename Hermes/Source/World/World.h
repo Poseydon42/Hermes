@@ -1,9 +1,12 @@
 #pragma once
 
-#include <algorithm>
+#include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "Core/Core.h"
+#include "Core/Misc/DefaultConstructors.h"
+#include "Core/Misc/NonCopyableMovable.h"
 #include "RenderingEngine/Scene/Scene.h"
 #include "World/Component.h"
 #include "World/Entity.h"
@@ -20,12 +23,14 @@ namespace Hermes
 	 */
 	class HERMES_API World
 	{
+		MAKE_NON_COPYABLE(World)
+		ADD_DEFAULT_MOVE_CONSTRUCTOR(World)
+		ADD_DEFAULT_DESTRUCTOR(World)
+
 	public:
 		World();
 
-		void Update(float DeltaTime);
-
-		const Scene& GetScene() const;
+		void Update(Scene& Scene, float DeltaTime);
 
 		EntityID CreateEntity();
 
@@ -85,8 +90,6 @@ namespace Hermes
 		std::unordered_map<EntityID, ComponentBitmask> Entities;
 
 		std::vector<std::unique_ptr<ISystem>> Systems;
-
-		Scene Scene;
 	};
 
 	template<typename ComponentType>

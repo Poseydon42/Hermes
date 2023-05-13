@@ -2,11 +2,12 @@
 
 #include <memory>
 
-#include "Core/Core.h"
 #include "ApplicationCore/Application.h"
 #include "ApplicationCore/InputEngine.h"
+#include "Core/Core.h"
 #include "Core/Misc/NonCopyableMovable.h"
 #include "Platform/GenericPlatform/PlatformTime.h"
+#include "RenderingEngine/Scene/Scene.h"
 #include "UIEngine/InputController.h"
 #include "UIEngine/Widgets/Widget.h"
 #include "World/World.h"
@@ -73,6 +74,7 @@ namespace Hermes
 		std::shared_ptr<Camera> OverridingCamera;
 
 		std::unique_ptr<World> GameWorld;
+		std::unique_ptr<Scene> Scene;
 		std::shared_ptr<UI::Widget> RootWidget;
 
 

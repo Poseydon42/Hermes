@@ -71,6 +71,8 @@ namespace Hermes
 
 		PrevFrameEndTimestamp = PlatformTime::GetCurrentTimestamp();
 
+		Scene = std::make_unique<class Scene>();
+
 		// FIXME: this should be done automatically
 		GameWorld->AddSystem(std::make_unique<MeshRenderingSystem>());
 		GameWorld->AddSystem(std::make_unique<LightRenderingSystem>());
@@ -92,16 +94,15 @@ namespace Hermes
 				TotalTime += DeltaTime;
 				NumFrames++;
 
-				GameWorld->Update(DeltaTime);
+				GameWorld->Update(*Scene, DeltaTime);
 
 				Application->Run(DeltaTime);
 				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
 
-				auto& Scene = GameWorld->GetScene();
 				if (OverridingCamera)
-					Scene.ChangeActiveCamera(OverridingCamera);
+					Scene->ChangeActiveCamera(OverridingCamera);
 
-				Renderer::RunFrame(Scene, *RootWidget);
+				Renderer::RunFrame(*Scene, *RootWidget);
 
 				PrevFrameEndTimestamp = CurrentTimestamp;
 			}

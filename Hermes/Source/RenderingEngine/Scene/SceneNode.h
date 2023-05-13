@@ -30,6 +30,9 @@ namespace Hermes
 		SceneNode(const SceneNode&) = delete;
 		SceneNode& operator=(const SceneNode&) = delete;
 
+		SceneNode(SceneNode&&) = default;
+		SceneNode& operator=(SceneNode&&) = default;
+
 		SceneNode() = default;
 
 		explicit SceneNode(SceneNodeType InType, Transform InTransform = {});

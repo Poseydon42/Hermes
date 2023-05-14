@@ -21,10 +21,17 @@ namespace Hermes
 		IApplication(IApplication&&) = default;
 
 		IApplication& operator=(IApplication&&) = default;
+
+		/**
+		 * Called very early in the engine initialization process. At this point,
+		 * most systems are not ready to be used. You should use this function to
+		 * set application-specific logging, mount necessary filesystems etc.
+		 */
+		virtual bool EarlyInit() = 0;
 		
 		/**
-		 * Called right after CreateApplicationInstance()
-		 * Here you can initialize all required subsystems
+		 * Called when the engine and all its systems are initialized, you should
+		 * do the main initialization work in this function.
 		 */
 		virtual bool Init() = 0;
 

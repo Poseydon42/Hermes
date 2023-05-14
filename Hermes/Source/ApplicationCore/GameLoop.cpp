@@ -19,24 +19,32 @@ namespace Hermes
 	
 	GameLoop::GameLoop(IApplication* App)
 		: PrevFrameEndTimestamp{}
+		, Application(std::unique_ptr<IApplication>(App))
 	{
-		VirtualFilesystem::Mount("/", MountMode::ReadOnly, 0, std::make_unique<DirectoryFSDevice>("Hermes/Files"));
-		VirtualFilesystem::Mount("/", MountMode::ReadOnly, 1, std::make_unique<DirectoryFSDevice>(String(HERMES_APPLICATION_NAME) + "/Files"));
-
-		Logger::SetLogLevel(LogLevel::Debug);
-		Logger::SetLogFormat("[%Y-%M-%d %h:%m:%s:%u][%f:%#][%l] %v");
-		Logger::AttachLogDevice(new DebugLogDevice());
-		Logger::AttachLogDevice(new FileLogDevice("/log.log", LogLevel::Info));
-		
-		HERMES_LOG_INFO("Initializing game loop!");
-
-		Application = std::unique_ptr<IApplication>(App);
 	}
 
 	bool GameLoop::Init()
 	{
 		HERMES_PROFILE_THREAD("MainThread");
 		PlatformTime::Init();
+
+		VirtualFilesystem::Mount("/", MountMode::ReadOnly, 0, std::make_unique<DirectoryFSDevice>("Hermes/Files"));
+
+		// NOTE: we're not creating any file logging devices since the application might modify the virtual filesystem
+		// inside EarlyInit()
+		Logger::SetLogLevel(LogLevel::Debug);
+		Logger::SetLogFormat("[%Y-%M-%d %h:%m:%s:%u][%f:%#][%l] %v");
+		Logger::AttachLogDevice(new DebugLogDevice());
+
+		if (!Application->EarlyInit())
+		{
+			HERMES_LOG_ERROR("Early application initialization failed");
+			return false;
+		}
+
+		Logger::AttachLogDevice(new FileLogDevice("/log.log", LogLevel::Info));
+
+		HERMES_LOG_INFO("Initializing game loop!");
 
 		ApplicationWindow = IPlatformWindow::CreatePlatformWindow("Hermes Engine", { 1280, 720 });
 		if (!ApplicationWindow->IsValid())

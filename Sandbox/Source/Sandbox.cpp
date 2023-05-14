@@ -17,6 +17,7 @@
 #include "UIEngine/Widgets/Label.h"
 #include "UIEngine/Widgets/Containers/VerticalContainer.h"
 #include "UIEngine/Widgets/Containers/ViewportContainer.h"
+#include "VirtualFilesystem/DirectoryFSDevice.h"
 #include "VirtualFilesystem/VirtualFilesystem.h"
 #include "World/Components/DirectionalLightComponent.h"
 #include "World/Components/MeshComponent.h"
@@ -168,6 +169,12 @@ public:
 class SandboxApp : public Hermes::IApplication
 {
 public:
+
+	virtual bool EarlyInit() override
+	{
+		Hermes::VirtualFilesystem::Mount("/", Hermes::MountMode::ReadOnly, 1, std::make_unique<Hermes::DirectoryFSDevice>("Sandbox/Files"));
+		return true;
+	}
 
 	bool Init() override
 	{

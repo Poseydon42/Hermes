@@ -11,7 +11,14 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 option(HERMES_ENABLE_TESTING "Enable compiling and running tests for Hermes" ON)
-set(HERMES_APPLICATION_NAME "Sandbox" CACHE STRING "Name of the game that Hermes will launch at startup")
+
+set(HERMES_APPLICATION_TARGET Editor)
+set(HERMES_APPLICATION_NAME "${HERMES_APPLICATION_TARGET}")
+if(HERMES_APPLICATION_TARGET STREQUAL "Editor")
+    set(HERMES_WITH_EDITOR 1)
+else()
+    set(HERMES_WITH_EDITOR 0)
+endif()
 
 if (NOT (${WIN32} EQUAL 1 AND ${MSVC} EQUAL 1))
     message(FATAL_ERROR "Only Windows builds using MSVC are supported at the moment")
@@ -36,6 +43,7 @@ if(HERMES_ENABLE_TESTING)
 endif()
 
 add_subdirectory(Hermes)
+add_subdirectory(Editor)
 add_subdirectory(Sandbox)
 add_subdirectory(Tools/ImgToAsset)
 add_subdirectory(Tools/MeshToAsset)
@@ -45,7 +53,7 @@ if (MSVC)
     set_property(TARGET Hermes PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
-# Copy Sandbox.dll into the folder with Hermes.exe
-add_custom_target(CopyGameDLL ALL 
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Sandbox> $<TARGET_FILE_DIR:Hermes>
-    DEPENDS Sandbox)
+# Copy the application DLL into the folder with Hermes.exe
+add_custom_target(CopyApplicationDLL ALL 
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${HERMES_APPLICATION_TARGET}> $<TARGET_FILE_DIR:Hermes>
+    DEPENDS ${HERMES_APPLICATION_TARGET})

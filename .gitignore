@@ -10,3 +10,6 @@ Tools/Binaries/
 #Log files and SPIR-V files
 Sandbox/Files/*.log
 **.spv
+
+# Editor temp files
+Editor/Temp/

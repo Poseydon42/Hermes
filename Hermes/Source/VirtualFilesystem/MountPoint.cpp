@@ -3,6 +3,7 @@
 #include "Logging/Logger.h"
 #include "Platform/GenericPlatform/PlatformFile.h"
 #include "VirtualFilesystem/FSDevice.h"
+#include "VirtualFilesystem/VirtualFilesystem.h"
 
 namespace Hermes
 {
@@ -18,6 +19,8 @@ namespace Hermes
 
 	std::unique_ptr<IPlatformFile> MountPoint::Open(StringView Path, FileOpenMode OpenMode, FileAccessMode AccessMode)
 	{
+		if (AccessMode == FileAccessMode::ReadWrite && Mode == MountMode::ReadOnly)
+			return nullptr;
 		auto MaybeRelativePath = GetRelativePath(Path);
 		if (!MaybeRelativePath.has_value())
 			return nullptr;

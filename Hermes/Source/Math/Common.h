@@ -12,19 +12,19 @@ namespace Hermes
 		constexpr float HalfPi = Pi / 2.0f;
 
 		template<typename T>
-		T Min(T A, T B)
+		constexpr T Min(T A, T B)
 		{
 			return (A < B ? A : B);
 		}
 
 		template<typename T>
-		T Max(T A, T B)
+		constexpr T Max(T A, T B)
 		{
 			return (A > B ? A : B);
 		}
 
 		template<typename T>
-		T Abs(T Value)
+		constexpr T Abs(T Value)
 		{
 			return (Value >= 0 ? Value : -Value);
 		}
@@ -36,7 +36,7 @@ namespace Hermes
 		}
 
 		template<typename T>
-		T Clamp(T MinValue, T MaxValue, T Value)
+		constexpr T Clamp(T MinValue, T MaxValue, T Value)
 		{
 			return Max(MinValue, Min(MaxValue, Value));
 		}
@@ -90,13 +90,13 @@ namespace Hermes
 		}
 
 		template<typename T>
-		T Radians(T Degrees)
+		constexpr T Radians(T Degrees)
 		{
 			return static_cast<T>(Pi) / static_cast<T>(180) * Degrees;
 		}
 
 		template<typename T>
-		T Degrees(T Radians)
+		constexpr T Degrees(T Radians)
 		{
 			return static_cast<T>(180) / static_cast<T>(Pi) * Radians;
 		}
@@ -106,7 +106,7 @@ namespace Hermes
 		 * Returns static_cast<T>(-1) if the number is zero
 		 */
 		template<typename T>
-		uint32 FloorLog2(T Value)
+		constexpr uint32 FloorLog2(T Value)
 		{
 			uint32 BitNumber = sizeof(Value) * 8;
 			uint32 Index = BitNumber;

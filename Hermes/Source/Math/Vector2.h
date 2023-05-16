@@ -48,7 +48,7 @@ namespace Hermes
 		/**
 		 * Dot product
 		 */
-		constexpr float operator|(const Vector2& V) const;
+		constexpr float Dot(const Vector2& V) const;
 
 		/**
 		 * Negate(flip) the vector
@@ -229,7 +229,7 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	constexpr float Vector2<InternalType>::operator|(const Vector2& V) const
+	constexpr float Vector2<InternalType>::Dot(const Vector2& V) const
 	{
 		return X * V.X + Y * V.Y;
 	}

@@ -17,7 +17,7 @@ namespace Hermes
 
 	Plane::Plane(Vec3 InNormal, Vec3 PointOnPlane)
 		: Normal(InNormal.SafeNormalized())
-		, W(Normal | PointOnPlane)
+		, W(Normal.Dot(PointOnPlane))
 	{
 	}
 

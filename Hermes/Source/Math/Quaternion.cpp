@@ -54,7 +54,7 @@ namespace Hermes
 
 	Quaternion Quaternion::operator*(Quaternion Other) const
 	{
-		return { W * Other.W - (XYZ | Other.XYZ), Other.XYZ * W + XYZ * Other.W + (XYZ ^ Other.XYZ) };
+		return { W * Other.W - XYZ.Dot(Other.XYZ), Other.XYZ * W + XYZ * Other.W + XYZ.Cross(Other.XYZ) };
 	}
 
 	Quaternion Quaternion::Conjugate() const

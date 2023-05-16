@@ -55,12 +55,12 @@ namespace Hermes
 		/**
 		 * Cross product
 		 */
-		constexpr Vector3 operator^(const Vector3& V) const;
+		constexpr Vector3 Cross(const Vector3& V) const;
 
 		/**
 		 * Dot product
 		 */
-		constexpr InternalType operator|(const Vector3& V) const;
+		constexpr InternalType Dot(const Vector3& V) const;
 
 		/**
 		 * Negate(flip) the vector
@@ -256,7 +256,7 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	constexpr Vector3<InternalType> Vector3<InternalType>::operator^(const Vector3& V) const
+	constexpr Vector3<InternalType> Vector3<InternalType>::Cross(const Vector3& V) const
 	{
 		return Vector3(
 			Y * V.Z - Z * V.Y,
@@ -266,7 +266,7 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	constexpr InternalType Vector3<InternalType>::operator|(const Vector3& V) const
+	constexpr InternalType Vector3<InternalType>::Dot(const Vector3& V) const
 	{
 		return X * V.X + Y * V.Y + Z * V.Z;
 	}

@@ -38,7 +38,7 @@ namespace Hermes
 		// a point on a plane and the sphere location multiplied by the cosine of the angle between
 		// them, which is equal to the length of projection of this distance onto a perpendicular to
 		// the plane
-		float Result = Plane.Normal | (SphereWorldLocation - RandomPointOnPlane);
+		float Result = Plane.Normal.Dot(SphereWorldLocation - RandomPointOnPlane);
 
 		return Result;
 	}

@@ -65,7 +65,7 @@ public:
 
 	virtual Hermes::Mat4 GetViewMatrix() const override
 	{
-		auto UpVector = (Direction ^ RightVector).Normalized();
+		auto UpVector = Direction.Cross(RightVector).Normalized();
 		return Hermes::Mat4::LookAt(Location, Direction, UpVector);
 	}
 
@@ -78,20 +78,20 @@ public:
 	{
 		Hermes::Frustum Result = {};
 
-		auto UpVector = (Direction ^ RightVector).Normalized();
+		auto UpVector = Direction.Cross(RightVector).Normalized();
 		auto VectorToCenterOfFarPlane = Direction * FarPlane;
 		auto HalfVerticalSizeOfFarPlane = FarPlane * Hermes::Math::Tan(0.5f * Hermes::Math::Radians(VerticalFOV));
 		auto HalfHorizontalSizeOfFarPlane = HalfVerticalSizeOfFarPlane * ViewportDimensions.X / ViewportDimensions.Y;
 
 		Result.Near = Hermes::Plane(Direction, Location + Direction * NearPlane);
 		Result.Far = Hermes::Plane(-Direction, Location + VectorToCenterOfFarPlane);
-		Result.Right = Hermes::Plane((VectorToCenterOfFarPlane + RightVector * HalfHorizontalSizeOfFarPlane) ^ UpVector,
+		Result.Right = Hermes::Plane((VectorToCenterOfFarPlane + RightVector * HalfHorizontalSizeOfFarPlane).Cross(UpVector),
 		                             Location);
-		Result.Left = Hermes::Plane(UpVector ^ (VectorToCenterOfFarPlane - RightVector * HalfHorizontalSizeOfFarPlane),
+		Result.Left = Hermes::Plane(UpVector.Cross(VectorToCenterOfFarPlane - RightVector * HalfHorizontalSizeOfFarPlane),
 		                            Location);
-		Result.Top = Hermes::Plane(RightVector ^ (VectorToCenterOfFarPlane + UpVector * HalfVerticalSizeOfFarPlane),
+		Result.Top = Hermes::Plane(RightVector.Cross(VectorToCenterOfFarPlane + UpVector * HalfVerticalSizeOfFarPlane),
 		                           Location);
-		Result.Bottom = Hermes::Plane((VectorToCenterOfFarPlane - UpVector * HalfVerticalSizeOfFarPlane) ^ RightVector,
+		Result.Bottom = Hermes::Plane((VectorToCenterOfFarPlane - UpVector * HalfVerticalSizeOfFarPlane).Cross(RightVector),
 		                              Location);
 
 		return Result;
@@ -141,7 +141,7 @@ public:
 			Direction = Direction.Normalized();
 
 			Hermes::Vec3 GlobalUp = { 0.0f, 1.0f, 0.0f };
-			auto RightVector = (GlobalUp ^ Direction).Normalized();
+			auto RightVector = GlobalUp.Cross(Direction).Normalized();
 
 			Hermes::Vec2 CameraMovementInput = {};
 			if (InputEngine.IsKeyPressed(Hermes::KeyCode::W))

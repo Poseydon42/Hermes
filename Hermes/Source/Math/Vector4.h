@@ -58,7 +58,7 @@ namespace Hermes
 		/**
 		 * Dot product
 		 */
-		constexpr InternalType operator|(const Vector4& V) const;
+		constexpr InternalType Dot(const Vector4& V) const;
 
 		/**
 		 * Negate(flip) the vector
@@ -266,7 +266,7 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	constexpr InternalType Vector4<InternalType>::operator|(const Vector4& V) const
+	constexpr InternalType Vector4<InternalType>::Dot(const Vector4& V) const
 	{
 		return X * V.X + Y * V.Y + Z * V.Z + W * V.W;
 	}

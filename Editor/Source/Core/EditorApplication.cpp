@@ -58,17 +58,17 @@ namespace Hermes::Editor
 			auto FarPlane = 1000.0f;
 			auto VerticalFOV = Math::Pi / 4.0f;
 
-			auto UpVector = (Direction ^ RightVector).Normalized();
+			auto UpVector = Direction.Cross(RightVector).Normalized();
 			auto VectorToCenterOfFarPlane = Direction * FarPlane;
 			auto HalfVerticalSizeOfFarPlane = FarPlane * Math::Tan(0.5f * VerticalFOV);
 			auto HalfHorizontalSizeOfFarPlane = HalfVerticalSizeOfFarPlane * ViewportDimensions.X / ViewportDimensions.Y;
 
 			Result.Near = Plane(Direction, Location + Direction * NearPlane);
 			Result.Far = Plane(-Direction, Location + VectorToCenterOfFarPlane);
-			Result.Right = Plane((VectorToCenterOfFarPlane + RightVector * HalfHorizontalSizeOfFarPlane) ^ UpVector, Location);
-			Result.Left = Plane(UpVector ^ (VectorToCenterOfFarPlane - RightVector * HalfHorizontalSizeOfFarPlane), Location);
-			Result.Top = Plane(RightVector ^ (VectorToCenterOfFarPlane + UpVector * HalfVerticalSizeOfFarPlane), Location);
-			Result.Bottom = Plane((VectorToCenterOfFarPlane - UpVector * HalfVerticalSizeOfFarPlane) ^ RightVector, Location);
+			Result.Right = Plane((VectorToCenterOfFarPlane + RightVector * HalfHorizontalSizeOfFarPlane).Cross(UpVector), Location);
+			Result.Left = Plane(UpVector.Cross(VectorToCenterOfFarPlane - RightVector * HalfHorizontalSizeOfFarPlane), Location);
+			Result.Top = Plane(RightVector.Cross(VectorToCenterOfFarPlane + UpVector * HalfVerticalSizeOfFarPlane), Location);
+			Result.Bottom = Plane((VectorToCenterOfFarPlane - UpVector * HalfVerticalSizeOfFarPlane).Cross(RightVector), Location);
 
 			return Result;
 		}

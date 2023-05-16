@@ -65,7 +65,7 @@ public:
 
 	virtual Hermes::Mat4 GetViewMatrix() const override
 	{
-		auto UpVector = (Direction ^ RightVector).Normalize();
+		auto UpVector = (Direction ^ RightVector).Normalized();
 		return Hermes::Mat4::LookAt(Location, Direction, UpVector);
 	}
 
@@ -78,7 +78,7 @@ public:
 	{
 		Hermes::Frustum Result = {};
 
-		auto UpVector = (Direction ^ RightVector).Normalize();
+		auto UpVector = (Direction ^ RightVector).Normalized();
 		auto VectorToCenterOfFarPlane = Direction * FarPlane;
 		auto HalfVerticalSizeOfFarPlane = FarPlane * Hermes::Math::Tan(0.5f * Hermes::Math::Radians(VerticalFOV));
 		auto HalfHorizontalSizeOfFarPlane = HalfVerticalSizeOfFarPlane * ViewportDimensions.X / ViewportDimensions.Y;
@@ -138,10 +138,10 @@ public:
 			Direction.X = Hermes::Math::Sin(Yaw) * Hermes::Math::Cos(Pitch);
 			Direction.Y = Hermes::Math::Sin(Pitch);
 			Direction.Z = Hermes::Math::Cos(Yaw) * Hermes::Math::Cos(Pitch);
-			Direction.Normalize();
+			Direction = Direction.Normalized();
 
 			Hermes::Vec3 GlobalUp = { 0.0f, 1.0f, 0.0f };
-			auto RightVector = (GlobalUp ^ Direction).Normalize();
+			auto RightVector = (GlobalUp ^ Direction).Normalized();
 
 			Hermes::Vec2 CameraMovementInput = {};
 			if (InputEngine.IsKeyPressed(Hermes::KeyCode::W))
@@ -155,7 +155,7 @@ public:
 			CameraMovementInput *= DeltaTime;
 
 			auto DeltaLocation = Direction * CameraMovementInput.X + RightVector * CameraMovementInput.Y;
-			DeltaLocation = DeltaLocation.SafeNormalize() * MovementSpeed;
+			DeltaLocation = DeltaLocation.SafeNormalized() * MovementSpeed;
 
 			Transform->Transform.Translation += DeltaLocation;
 
@@ -213,8 +213,7 @@ public:
 
 		auto DirectionalLightEntity = World.CreateEntity();
 		auto& DirectionalLight = World.AddComponent<Hermes::DirectionalLightComponent>(DirectionalLightEntity);
-		DirectionalLight.Direction = { -1.0f, -1.0f, -1.0f };
-		DirectionalLight.Direction.Normalize();
+		DirectionalLight.Direction = Hermes::Vec3(- 1.0f, -1.0f, -1.0f).Normalized();
 		DirectionalLight.Color = { 1.0f, 1.0f, 1.0f };
 		DirectionalLight.Intensity = 10.0f;
 

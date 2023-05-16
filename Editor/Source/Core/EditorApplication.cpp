@@ -58,7 +58,7 @@ namespace Hermes::Editor
 			auto FarPlane = 1000.0f;
 			auto VerticalFOV = Math::Pi / 4.0f;
 
-			auto UpVector = (Direction ^ RightVector).Normalize();
+			auto UpVector = (Direction ^ RightVector).Normalized();
 			auto VectorToCenterOfFarPlane = Direction * FarPlane;
 			auto HalfVerticalSizeOfFarPlane = FarPlane * Math::Tan(0.5f * VerticalFOV);
 			auto HalfHorizontalSizeOfFarPlane = HalfVerticalSizeOfFarPlane * ViewportDimensions.X / ViewportDimensions.Y;

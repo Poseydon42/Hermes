@@ -54,7 +54,7 @@ namespace Hermes::Tools
 			Denominator = 1.0f;
 		}
 
-		Vec3 Result = (Numerator / Denominator).SafeNormalize();
+		Vec3 Result = (Numerator / Denominator).SafeNormalized();
 
 		return Result;
 	}

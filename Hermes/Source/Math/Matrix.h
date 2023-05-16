@@ -435,9 +435,9 @@ namespace Hermes
 	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::LookAt(Vector3<VectorType> Origin, Vector3<VectorType> Forward, Vector3<VectorType> Up)
 	{
 		auto Result = Matrix<4, 4, InternalType>::Identity();
-		auto XAxis = (Up ^ Forward).SafeNormalize();
-		auto YAxis = Up.SafeNormalize();
-		auto ZAxis = -Forward.SafeNormalize();
+		auto XAxis = (Up ^ Forward).SafeNormalized();
+		auto YAxis = Up.SafeNormalized();
+		auto ZAxis = -Forward.SafeNormalized();
 
 		Result[0][3] = -(Origin | XAxis);
 		Result[1][3] = -(Origin | YAxis);

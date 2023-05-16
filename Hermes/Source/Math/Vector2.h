@@ -60,15 +60,16 @@ namespace Hermes
 		constexpr InternalType LengthSq() const;
 
 		/**
-		 * Normalizes a vector and returns reference to itself
+		 * Returns vector with the same direction as this but magnitude of 1. Undefined behaviour if
+		 * current magnitude is zero.
 		 */
-		constexpr Vector2& Normalize();
+		constexpr Vector2 Normalized() const;
 
-		/*
+		/**
 		 * Normalizes a vector only if at least one of its components is greater than zero
-		 * with a tolerance of Epsilon and returns reference to itself
+		 * with a tolerance of Epsilon.
 		 */
-		constexpr Vector2& SafeNormalize(InternalType Epsilon = InternalType(FLT_EPSILON));
+		constexpr Vector2 SafeNormalized(InternalType Epsilon = InternalType(FLT_EPSILON)) const;
 
 		/*
 		 * Returns true if all components of vector are close to zero with a tolerance of Epsilon
@@ -252,17 +253,16 @@ namespace Hermes
 	}
 
 	template <typename InternalType>
-	constexpr Vector2<InternalType>& Vector2<InternalType>::Normalize()
+	constexpr Vector2<InternalType> Vector2<InternalType>::Normalized() const
 	{
-		*this /= Length();
-		return *this;
+		return *this / Length();
 	}
 
 	template <typename InternalType>
-	constexpr Vector2<InternalType>& Vector2<InternalType>::SafeNormalize(InternalType Epsilon)
+	constexpr Vector2<InternalType> Vector2<InternalType>::SafeNormalized(InternalType Epsilon) const
 	{
 		if (!IsCloseToZero(Epsilon))
-			return Normalize();
+			return Normalized();
 		return *this;
 	}
 

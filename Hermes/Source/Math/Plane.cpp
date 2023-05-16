@@ -3,21 +3,20 @@
 namespace Hermes
 {
 	Plane::Plane(Vec3 InNormal, float InW)
-		: Normal(InNormal.SafeNormalize())
+		: Normal(InNormal.SafeNormalized())
 		, W(InW)
 	{
-		Normal.SafeNormalize();
 	}
 
 	Plane::Plane(float InX, float InY, float InZ, float InW)
 		: Normal(InX, InY, InZ)
 		, W(InW)
 	{
-		Normal.SafeNormalize();
+		Normal = Normal.SafeNormalized();
 	}
 
 	Plane::Plane(Vec3 InNormal, Vec3 PointOnPlane)
-		: Normal(InNormal.SafeNormalize())
+		: Normal(InNormal.SafeNormalized())
 		, W(Normal | PointOnPlane)
 	{
 	}

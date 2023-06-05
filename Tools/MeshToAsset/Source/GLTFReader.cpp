@@ -209,29 +209,12 @@ namespace Hermes::Tools
 			return false;
 		}
 
-		auto RelativeFileName = JSONBuffer.Get("uri").AsString();
-		if (RelativeFileName.starts_with("data:"))
+		auto BufferFileName = JSONBuffer.Get("uri").AsString();
+		if (BufferFileName.starts_with("data:"))
 		{
 			std::cerr << std::format("Buffer {} has data stored in inline base64 form, which is not supported", CurrentBufferIndex) << std::endl;
 			return false;
 		}
-
-		auto IndexOfLastForwardSlash = InputFileName.find_last_of('/');
-		if (IndexOfLastForwardSlash == String::npos)
-			IndexOfLastForwardSlash = 0;
-
-		auto IndexOfLastBackwardSlash = InputFileName.find_last_of('\\');
-		if (IndexOfLastBackwardSlash == String::npos)
-			IndexOfLastBackwardSlash = 0;
-
-		auto IndexOfLastSlash = Math::Max(IndexOfLastForwardSlash, IndexOfLastBackwardSlash);
-		if (IndexOfLastSlash == String::npos)
-		{
-			IndexOfLastSlash = 0;
-		}
-		auto InputFilePathWithoutFileName = InputFileName.substr(0, IndexOfLastSlash);
-
-		auto BufferFileName = String(InputFilePathWithoutFileName) + '/' + String(RelativeFileName);
 
 		auto BufferFile = PlatformFilesystem::OpenFile(BufferFileName, IPlatformFile::FileAccessMode::Read, IPlatformFile::FileOpenMode::OpenExisting);
 		if (!BufferFile)

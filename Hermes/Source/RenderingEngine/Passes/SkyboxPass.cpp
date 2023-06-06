@@ -120,7 +120,7 @@ namespace Hermes
 		PipelineDescription.IsDepthWriteEnabled = false;
 
 		PipelineDescription.CullMode = VK_CULL_MODE_BACK_BIT;
-		PipelineDescription.FaceDirection = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		PipelineDescription.FaceDirection = VK_FRONT_FACE_CLOCKWISE;
 		PipelineDescription.PolygonMode = VK_POLYGON_MODE_FILL;
 
 		PipelineDescription.DynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };

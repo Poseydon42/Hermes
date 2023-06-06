@@ -165,7 +165,7 @@ namespace Hermes
 		PipelineDesc.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
 		PipelineDesc.CullMode = VK_CULL_MODE_BACK_BIT;
-		PipelineDesc.FaceDirection = VK_FRONT_FACE_CLOCKWISE;
+		PipelineDesc.FaceDirection = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		PipelineDesc.PolygonMode = VK_POLYGON_MODE_FILL;
 
 		PipelineDesc.DepthCompareOperator = VK_COMPARE_OP_GREATER_OR_EQUAL;

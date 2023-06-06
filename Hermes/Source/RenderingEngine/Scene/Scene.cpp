@@ -25,19 +25,19 @@ namespace Hermes
 		switch (Side)
 		{
 		case Vulkan::CubemapSide::PositiveX:
-			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+			return Mat4::LookAt(Vec3(0.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
 		case Vulkan::CubemapSide::NegativeX:
-			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { -1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+			return Mat4::LookAt(Vec3(0.0f), Vec3(-1.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
 		case Vulkan::CubemapSide::PositiveY:
-			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f });
+			return Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 1.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f));
 		case Vulkan::CubemapSide::NegativeY:
-			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { 0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f });
+			return Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, -1.0f, 0.0f), Vec3(0.0f, 0.0f, -1.0f));
 		case Vulkan::CubemapSide::PositiveZ:
-			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f });
+			return Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 0.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f));
 		case Vulkan::CubemapSide::NegativeZ:
-			return Mat4::LookAt(Vec3 { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f });
+			return Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 0.0f, 1.0f), Vec3(0.0f, 1.0f, 0.0f));
 		default:
-			HERMES_ASSERT(false)
+			HERMES_ASSERT(false);
 		}
 	}
 
@@ -117,7 +117,7 @@ namespace Hermes
 		PipelineDesc.Viewport.maxDepth = 1.0f;
 		PipelineDesc.Scissor.offset = { 0, 0 };
 		PipelineDesc.Scissor.extent = { Dimensions.X, Dimensions.Y };
-		PipelineDesc.FaceDirection = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		PipelineDesc.FaceDirection = VK_FRONT_FACE_CLOCKWISE;
 		PipelineDesc.CullMode = VK_CULL_MODE_BACK_BIT;
 		PipelineDesc.PolygonMode = VK_POLYGON_MODE_FILL;
 		PipelineDesc.IsDepthTestEnabled = false;
@@ -281,7 +281,7 @@ namespace Hermes
 		PipelineDesc.Viewport.x = 0;
 		PipelineDesc.Viewport.y = 0;
 		PipelineDesc.Scissor.offset = { 0, 0 };
-		PipelineDesc.FaceDirection = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		PipelineDesc.FaceDirection = VK_FRONT_FACE_CLOCKWISE;
 		PipelineDesc.CullMode = VK_CULL_MODE_BACK_BIT;
 		PipelineDesc.PolygonMode = VK_POLYGON_MODE_FILL;
 		PipelineDesc.IsDepthTestEnabled = false;

@@ -467,7 +467,7 @@ namespace Hermes
 		PipelineDescription.Scissor.offset = { 0, 0 };
 		PipelineDescription.Scissor.extent = { Image->GetDimensions().X, Image->GetDimensions().Y };
 		PipelineDescription.CullMode = VK_CULL_MODE_BACK_BIT;
-		PipelineDescription.FaceDirection = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		PipelineDescription.FaceDirection = VK_FRONT_FACE_CLOCKWISE;
 		PipelineDescription.PolygonMode = VK_POLYGON_MODE_FILL;
 		PipelineDescription.IsDepthTestEnabled = false;
 		PipelineDescription.IsDepthWriteEnabled = false;
@@ -526,16 +526,16 @@ namespace Hermes
 				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(-1.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
 				break;
 			case Vulkan::CubemapSide::PositiveY:
-				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 1.0f, 0.0f), Vec3(0.0f, 0.0f, -1.0f));
+				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 1.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f));
 				break;
 			case Vulkan::CubemapSide::NegativeY:
-				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, -1.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f));
+				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, -1.0f, 0.0f), Vec3(0.0f, 0.0f, -1.0f));
 				break;
 			case Vulkan::CubemapSide::PositiveZ:
-				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 0.0f, 1.0f), Vec3(0.0f, 1.0f, 0.0f));
+				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 0.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f));
 				break;
 			case Vulkan::CubemapSide::NegativeZ:
-				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 0.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f));
+				ViewMatrix = Mat4::LookAt(Vec3(0.0f), Vec3(0.0f, 0.0f, 1.0f), Vec3(0.0f, 1.0f, 0.0f));
 				break;
 			default:
 				HERMES_ASSERT(false);

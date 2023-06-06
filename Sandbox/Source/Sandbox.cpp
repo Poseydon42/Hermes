@@ -65,7 +65,7 @@ public:
 
 	virtual Hermes::Mat4 GetViewMatrix() const override
 	{
-		auto UpVector = Direction.Cross(RightVector).Normalized();
+		auto UpVector = RightVector.Cross(Direction).Normalized();
 		return Hermes::Mat4::LookAt(Location, Direction, UpVector);
 	}
 
@@ -78,20 +78,20 @@ public:
 	{
 		Hermes::Frustum Result = {};
 
-		auto UpVector = Direction.Cross(RightVector).Normalized();
+		auto UpVector = RightVector.Cross(Direction).Normalized();
 		auto VectorToCenterOfFarPlane = Direction * FarPlane;
 		auto HalfVerticalSizeOfFarPlane = FarPlane * Hermes::Math::Tan(0.5f * Hermes::Math::Radians(VerticalFOV));
 		auto HalfHorizontalSizeOfFarPlane = HalfVerticalSizeOfFarPlane * ViewportDimensions.X / ViewportDimensions.Y;
 
 		Result.Near = Hermes::Plane(Direction, Location + Direction * NearPlane);
 		Result.Far = Hermes::Plane(-Direction, Location + VectorToCenterOfFarPlane);
-		Result.Right = Hermes::Plane((VectorToCenterOfFarPlane + RightVector * HalfHorizontalSizeOfFarPlane).Cross(UpVector),
+		Result.Right = Hermes::Plane(UpVector.Cross(VectorToCenterOfFarPlane + RightVector * HalfHorizontalSizeOfFarPlane),
 		                             Location);
-		Result.Left = Hermes::Plane(UpVector.Cross(VectorToCenterOfFarPlane - RightVector * HalfHorizontalSizeOfFarPlane),
+		Result.Left = Hermes::Plane((VectorToCenterOfFarPlane - RightVector * HalfHorizontalSizeOfFarPlane).Cross(UpVector),
 		                            Location);
-		Result.Top = Hermes::Plane(RightVector.Cross(VectorToCenterOfFarPlane + UpVector * HalfVerticalSizeOfFarPlane),
+		Result.Top = Hermes::Plane((VectorToCenterOfFarPlane + UpVector * HalfVerticalSizeOfFarPlane).Cross(RightVector),
 		                           Location);
-		Result.Bottom = Hermes::Plane((VectorToCenterOfFarPlane - UpVector * HalfVerticalSizeOfFarPlane).Cross(RightVector),
+		Result.Bottom = Hermes::Plane(RightVector.Cross(VectorToCenterOfFarPlane - UpVector * HalfVerticalSizeOfFarPlane),
 		                              Location);
 
 		return Result;
@@ -105,7 +105,7 @@ private:
 class CameraSystem : public Hermes::ISystem
 {
 public:
-	static constexpr float MovementSpeed = 2.0f;
+	static constexpr float MovementSpeed = 40.0f;
 	static constexpr float RotationSpeed = 40.0f;
 
 	virtual void Run(Hermes::World& World, Hermes::Scene& Scene, float DeltaTime) const override
@@ -124,15 +124,10 @@ public:
 
 			MouseRotationInput *= DeltaTime;
 			float DeltaPitch = -1.0f * MouseRotationInput.Y * RotationSpeed;
-			float DeltaYaw = MouseRotationInput.X * RotationSpeed;
+			float DeltaYaw = -1.0f * MouseRotationInput.X * RotationSpeed;
 
 			Pitch = Hermes::Math::Clamp(Hermes::Math::Radians(-85.0f), Hermes::Math::Radians(85.0f), Pitch + DeltaPitch);
 			Yaw += DeltaYaw;
-			Yaw = fmod(Yaw, 2 * Hermes::Math::Pi);
-			if (Yaw > Hermes::Math::Pi)
-				Yaw = -(2 * Hermes::Math::Pi - Yaw);
-			if (Yaw < -Hermes::Math::Pi)
-				Yaw = 2 * Hermes::Math::Pi + Yaw;
 
 			Hermes::Vec3 Direction = {};
 			Direction.X = Hermes::Math::Sin(Yaw) * Hermes::Math::Cos(Pitch);
@@ -141,21 +136,19 @@ public:
 			Direction = Direction.Normalized();
 
 			Hermes::Vec3 GlobalUp = { 0.0f, 1.0f, 0.0f };
-			auto RightVector = GlobalUp.Cross(Direction).Normalized();
+			auto RightVector = Direction.Cross(GlobalUp).Normalized();
 
-			Hermes::Vec2 CameraMovementInput = {};
+			Hermes::Vec3 DeltaLocation = {};
 			if (InputEngine.IsKeyPressed(Hermes::KeyCode::W))
-				CameraMovementInput.X += 1.0f;
+				DeltaLocation += Direction;
 			if (InputEngine.IsKeyPressed(Hermes::KeyCode::S))
-				CameraMovementInput.X -= 1.0f;
+				DeltaLocation -= Direction;
 			if (InputEngine.IsKeyPressed(Hermes::KeyCode::D))
-				CameraMovementInput.Y += 1.0f;
+				DeltaLocation += RightVector;
 			if (InputEngine.IsKeyPressed(Hermes::KeyCode::A))
-				CameraMovementInput.Y -= 1.0f;
-			CameraMovementInput *= DeltaTime;
+				DeltaLocation -= RightVector;
 
-			auto DeltaLocation = Direction * CameraMovementInput.X + RightVector * CameraMovementInput.Y;
-			DeltaLocation = DeltaLocation.SafeNormalized() * MovementSpeed;
+			DeltaLocation = DeltaLocation.SafeNormalized() * MovementSpeed * DeltaTime;
 
 			Transform->Transform.Translation += DeltaLocation;
 
@@ -172,7 +165,7 @@ public:
 
 	virtual bool EarlyInit() override
 	{
-		Hermes::VirtualFilesystem::Mount("/", Hermes::MountMode::ReadOnly, 1, std::make_unique<Hermes::DirectoryFSDevice>("Sandbox/Files"));
+		Hermes::VirtualFilesystem::Mount("/", Hermes::MountMode::ReadWrite, 1, std::make_unique<Hermes::DirectoryFSDevice>("Sandbox/Files"));
 		return true;
 	}
 
@@ -180,8 +173,8 @@ public:
 	{
 		auto SphereAssetHandle = Hermes::AssetLoader::Load<Hermes::Mesh>("/sphere");
 
-		SolidColorMaterialInstanceHandle = Hermes::AssetLoader::Load<Hermes::MaterialInstance>("/mi_metal");
-		HERMES_ASSERT(SolidColorMaterialInstanceHandle);
+		auto MetalMaterial = Hermes::AssetLoader::Load<Hermes::MaterialInstance>("/mi_metal");
+		HERMES_ASSERT(MetalMaterial);
 
 		auto& World = Hermes::GGameLoop->GetWorld();
 
@@ -198,7 +191,7 @@ public:
 
 				auto& SphereMeshComponent = World.AddComponent<Hermes::MeshComponent>(SphereEntity);
 				SphereMeshComponent.Mesh = SphereAssetHandle;
-				SphereMeshComponent.MaterialInstance = SolidColorMaterialInstanceHandle;
+				SphereMeshComponent.MaterialInstance = MetalMaterial;
 
 				auto PointLightEntity = World.CreateEntity();
 				auto& LightTransform = World.AddComponent<Hermes::TransformComponent>(PointLightEntity);
@@ -213,12 +206,12 @@ public:
 
 		auto DirectionalLightEntity = World.CreateEntity();
 		auto& DirectionalLight = World.AddComponent<Hermes::DirectionalLightComponent>(DirectionalLightEntity);
-		DirectionalLight.Direction = Hermes::Vec3(- 1.0f, -1.0f, -1.0f).Normalized();
+		DirectionalLight.Direction = Hermes::Vec3(-1.0f, -1.0f, -1.0f).Normalized();
 		DirectionalLight.Color = { 1.0f, 1.0f, 1.0f };
 		DirectionalLight.Intensity = 10.0f;
 
 		auto CameraEntity = World.CreateEntity();
-		World.AddComponent<Hermes::TransformComponent>(CameraEntity);
+		World.AddComponent<Hermes::TransformComponent>(CameraEntity).Transform.Rotation.Z = Hermes::Math::Pi;
 		World.AddComponent<Hermes::TagComponent>(CameraEntity).Tag = "Camera";
 
 		World.AddSystem(std::make_unique<CameraSystem>());
@@ -261,9 +254,6 @@ public:
 	void Shutdown() override
 	{
 	}
-
-private:
-	Hermes::AssetHandle<Hermes::MaterialInstance> SolidColorMaterialInstanceHandle;
 };
 
 extern "C" APP_API Hermes::IApplication* CreateApplicationInstance()

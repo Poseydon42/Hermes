@@ -435,25 +435,27 @@ namespace Hermes
 	Matrix<4, 4, InternalType> Matrix<Rows, Columns, InternalType>::LookAt(Vector3<VectorType> Origin, Vector3<VectorType> Forward, Vector3<VectorType> Up)
 	{
 		auto Result = Matrix<4, 4, InternalType>::Identity();
-		auto XAxis = Up.Cross(Forward).SafeNormalized();
-		auto YAxis = Up.SafeNormalized();
-		auto ZAxis = -Forward.SafeNormalized();
 
-		Result[0][3] = -(Origin.Dot(XAxis));
-		Result[1][3] = -(Origin.Dot(YAxis));
-		Result[2][3] = -(Origin.Dot(ZAxis));
+		Forward = Forward.Normalized();
+		Up = Up.Normalized();
+		auto Right = Forward.Cross(Up);
+		Up = Right.Cross(Forward);
+
+		Result[0][3] = -Origin.Dot(Right);
+		Result[1][3] = -Origin.Dot(Up);
+		Result[2][3] =  Origin.Dot(Forward);
 		
-		Result[0][0] = XAxis.X;
-		Result[0][1] = XAxis.Y;
-		Result[0][2] = XAxis.Z;
+		Result[0][0] = Right.X;
+		Result[0][1] = Right.Y;
+		Result[0][2] = Right.Z;
 
-		Result[1][0] = YAxis.X;
-		Result[1][1] = YAxis.Y;
-		Result[1][2] = YAxis.Z;
+		Result[1][0] = Up.X;
+		Result[1][1] = Up.Y;
+		Result[1][2] = Up.Z;
 
-		Result[2][0] = ZAxis.X;
-		Result[2][1] = ZAxis.Y;
-		Result[2][2] = ZAxis.Z;
+		Result[2][0] = -Forward.X;
+		Result[2][1] = -Forward.Y;
+		Result[2][2] = -Forward.Z;
 
 		return Result;
 	}

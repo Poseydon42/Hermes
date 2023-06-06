@@ -51,7 +51,7 @@ namespace Hermes
 			return false;
 
 		InputEngine = std::make_unique<class InputEngine>(*ApplicationWindow);
-		SetInputMode(InputMode::Game);
+		SetInputMode(InputMode::UI);
 
 		ApplicationWindow->GetWindowQueue().Subscribe(WindowCloseEvent::GetStaticType(), [this](const IEvent&) { RequestedExit = true; });
 		ApplicationWindow->GetWindowQueue().Subscribe(WindowStateEvent::GetStaticType(), [this](const IEvent& Event)

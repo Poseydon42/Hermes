@@ -2,7 +2,8 @@
 
 #include "ApplicationCore/Application.h"
 #include "Core/Core.h"
-#include "RenderingEngine/Scene/Camera.h"
+#include "WorldEditor/WorldEditorCamera.h"
+#include "WorldEditor/WorldEditorViewport.h"
 
 namespace Hermes::Editor
 {
@@ -13,11 +14,12 @@ namespace Hermes::Editor
 
 		virtual bool Init() override;
 
-		virtual void Run(float Delta) override;
+		virtual void Run(float DeltaTime) override;
 
 		virtual void Shutdown() override;
 
 	private:
-		std::shared_ptr<Camera> Camera;
+		std::shared_ptr<WorldEditorCamera> Camera;
+		std::shared_ptr<WorldEditorViewport> Viewport;
 	};
 }

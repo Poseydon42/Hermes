@@ -5,9 +5,11 @@ project(Editor C CXX)
 set(HERMES_EDITOR_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 
 add_subdirectory(Source/Core)
+add_subdirectory(Source/WorldEditor)
 
 set(EDITOR_SUBLIB_LIST
     Editor_Core
+    Editor_WorldEditor
 )
 
 add_library(Editor SHARED Source/EditorExecutable.cpp)

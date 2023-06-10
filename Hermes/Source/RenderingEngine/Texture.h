@@ -28,7 +28,7 @@ namespace Hermes
 		Generate
 	};
 
-	class Texture2D : public Asset
+	class HERMES_API Texture2D : public Asset
 	{
 		HERMES_DECLARE_ASSET(Texture2D);
 

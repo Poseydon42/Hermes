@@ -9,7 +9,7 @@ namespace Hermes::UI
 		return std::shared_ptr<Label>(new Label(std::move(InText), InFontSize, std::move(InFont)));
 	}
 
-	Vec2 Label::ComputeMinimumSize() const
+	Vec2 Label::ComputePreferredSize() const
 	{
 		return TextLayout::Measure(Text, FontSize, *Font);
 	}

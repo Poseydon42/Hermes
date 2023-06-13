@@ -23,7 +23,7 @@ namespace Hermes::UI
 
 		explicit Button(Vec4 InBackgroundColor);
 
-		virtual Vec2 ComputeMinimumSize() const override;
+		virtual Vec2 ComputePreferredSize() const override;
 
 		virtual void Layout() override;
 		

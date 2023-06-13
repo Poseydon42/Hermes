@@ -22,7 +22,7 @@ namespace Hermes::UI
 	{
 	}
 
-	Vec2 Image::ComputeMinimumSize() const
+	Vec2 Image::ComputePreferredSize() const
 	{
 		return Vec2(Texture->GetDimensions());
 	}

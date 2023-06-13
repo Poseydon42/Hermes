@@ -19,7 +19,7 @@ namespace Hermes::UI
 
 		explicit Image(AssetHandle<Texture2D> InTexture);
 
-		virtual Vec2 ComputeMinimumSize() const override;
+		virtual Vec2 ComputePreferredSize() const override;
 
 		virtual void Draw(DrawingContext& Context) const override;
 	};

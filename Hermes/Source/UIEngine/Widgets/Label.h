@@ -21,7 +21,7 @@ namespace Hermes::UI
 
 		Label(String InText, uint32 InFontSize, AssetHandle<class Font> InFont);
 
-		virtual Vec2 ComputeMinimumSize() const override;
+		virtual Vec2 ComputePreferredSize() const override;
 
 		virtual void Draw(DrawingContext& Context) const override;
 	};

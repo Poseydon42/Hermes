@@ -17,12 +17,12 @@ namespace Hermes::UI
 		}
 	}
 
-	Vec2 VerticalContainer::ComputeMinimumSize() const
+	Vec2 VerticalContainer::ComputePreferredSize() const
 	{
 		Vec2 Result = {};
 		for (const auto& Child : Children)
 		{
-			auto ChildSize = Child->ComputeMinimumSize();
+			auto ChildSize = Child->ComputePreferredSize();
 			Result.X = Math::Max(Result.X, ChildSize.X);
 			Result.Y += ChildSize.Y;
 		}
@@ -32,18 +32,18 @@ namespace Hermes::UI
 	void VerticalContainer::Layout()
 	{
 		/*
-		 * Step 1: calculate how much space is required to fit every widget's minimum vertical size
+		 * Step 1: calculate how much space is required to fit every widget's preferred vertical size
 		 * and the total scaling weight of the children that want to be extended.
 		 */
-		float MinVerticalSize = 0.0f;
+		float PreferredVerticalSize = 0.0f;
 		float TotalScalingWeight = 0.000000001f; // NOTE: set it to a small value to avoid division by zero
 		for (const auto& Child : Children)
 		{
-			MinVerticalSize += Child->ComputeMinimumSize().Y;
+			PreferredVerticalSize += Child->ComputePreferredSize().Y;
 			if (Child->VerticalScalingPolicy.Type == ScalingType::Extend)
 				TotalScalingWeight += Child->VerticalScalingPolicy.ScalingWeight;
 		}
-		float SizeLeftForExtension = BoundingBox.Height() - MinVerticalSize;
+		float SizeLeftForExtension = BoundingBox.Height() - PreferredVerticalSize;
 		float PixelsPerUnitWeight = SizeLeftForExtension / TotalScalingWeight;
 
 		/*
@@ -52,7 +52,7 @@ namespace Hermes::UI
 		float NextChildTop = BoundingBox.Top();
 		for (const auto& Child : Children)
 		{
-			auto ChildSize = Child->ComputeMinimumSize();
+			auto ChildSize = Child->ComputePreferredSize();
 			Rect2D ChildBoundingBox = {};
 
 			float ChildHeight = ChildSize.Y;

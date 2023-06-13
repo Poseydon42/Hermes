@@ -83,9 +83,12 @@ namespace Hermes::UI
 		Widget* GetParent();
 
 		/**
-		 * Computes the minimum size needed to properly draw this widget and its children.
+		 * Computes the size that would be enough for this widget to display all of its information without
+		 * leaving any free space. The widget might get less space during layout, in which case it should
+		 * try to put as much information into its available space and truncate the rest or use scrolling
+		 * when applicable
 		 */
-		virtual Vec2 ComputeMinimumSize() const;
+		virtual Vec2 ComputePreferredSize() const;
 
 		/**
 		 * Lays out its children within its bounding box.

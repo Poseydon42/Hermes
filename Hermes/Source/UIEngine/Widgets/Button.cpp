@@ -23,11 +23,11 @@ namespace Hermes::UI
 	{
 	}
 
-	Vec2 Button::ComputeMinimumSize() const
+	Vec2 Button::ComputePreferredSize() const
 	{
 		if (!Label)
 			return {};
-		return Label->ComputeMinimumSize();
+		return Label->ComputePreferredSize();
 	}
 
 	void Button::Layout()

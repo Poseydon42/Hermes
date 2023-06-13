@@ -37,7 +37,7 @@ namespace Hermes::UI
 		return Parent.get();
 	}
 
-	Vec2 Widget::ComputeMinimumSize() const
+	Vec2 Widget::ComputePreferredSize() const
 	{
 		return {};
 	}

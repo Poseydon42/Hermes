@@ -7,16 +7,16 @@ namespace Hermes::UI
 		return std::shared_ptr<ViewportContainer>(new ViewportContainer());
 	}
 
-	Vec2 ViewportContainer::ComputeMinimumSize() const
+	Vec2 ViewportContainer::ComputePreferredSize() const
 	{
-		Vec2 MinSize = {};
+		Vec2 PreferredSize = {};
 		for (const auto& Child : Children)
 		{
-			auto ChildMinSize = Child->ComputeMinimumSize();
-			MinSize.X = Math::Max(MinSize.X, ChildMinSize.X);
-			MinSize.Y = Math::Max(MinSize.Y, ChildMinSize.Y);
+			auto ChildPreferredSize = Child->ComputePreferredSize();
+			PreferredSize.X = Math::Max(PreferredSize.X, ChildPreferredSize.X);
+			PreferredSize.Y = Math::Max(PreferredSize.Y, ChildPreferredSize.Y);
 		}
-		return MinSize;
+		return PreferredSize;
 	}
 
 	void ViewportContainer::Layout()
@@ -28,20 +28,20 @@ namespace Hermes::UI
 			auto AbsoluteMarginTop    = GetAbsoluteMarginValue(Child->Margins.Top,    BoundingBox.Height());
 			auto AbsoluteMarginBottom = GetAbsoluteMarginValue(Child->Margins.Bottom, BoundingBox.Height());
 
-			auto ChildMinSize = Child->ComputeMinimumSize();
+			auto ChildPreferredSize = Child->ComputePreferredSize();
 
-			float TotalUnscaledWidth = AbsoluteMarginLeft + ChildMinSize.X + AbsoluteMarginRight;
+			float TotalUnscaledWidth = AbsoluteMarginLeft + ChildPreferredSize.X + AbsoluteMarginRight;
 			if (TotalUnscaledWidth > BoundingBox.Width())
 			{
-				float ScalingFactor = (BoundingBox.Width() - ChildMinSize.X) / (TotalUnscaledWidth - ChildMinSize.X);
+				float ScalingFactor = (BoundingBox.Width() - ChildPreferredSize.X) / (TotalUnscaledWidth - ChildPreferredSize.X);
 				AbsoluteMarginLeft *= ScalingFactor;
 				AbsoluteMarginRight *= ScalingFactor;
 			}
 
-			float TotalUnscaledHeight = AbsoluteMarginTop + ChildMinSize.Y + AbsoluteMarginBottom;
+			float TotalUnscaledHeight = AbsoluteMarginTop + ChildPreferredSize.Y + AbsoluteMarginBottom;
 			if (TotalUnscaledHeight > BoundingBox.Height())
 			{
-				float ScalingFactor = (BoundingBox.Height() - ChildMinSize.Y) / (TotalUnscaledHeight - ChildMinSize.Y);
+				float ScalingFactor = (BoundingBox.Height() - ChildPreferredSize.Y) / (TotalUnscaledHeight - ChildPreferredSize.Y);
 				AbsoluteMarginTop *= ScalingFactor;
 				AbsoluteMarginBottom *= ScalingFactor;
 			}
@@ -50,8 +50,8 @@ namespace Hermes::UI
 				.Min = { BoundingBox.Left() + AbsoluteMarginLeft, BoundingBox.Top() + AbsoluteMarginTop },
 				.Max = { BoundingBox.Right() - AbsoluteMarginRight, BoundingBox.Bottom() - AbsoluteMarginBottom }
 			};
-			HERMES_ASSERT(ChildBoundingBox.Width() >= ChildMinSize.X);
-			HERMES_ASSERT(ChildBoundingBox.Height() >= ChildMinSize.Y);
+			HERMES_ASSERT(ChildBoundingBox.Width() >= ChildPreferredSize.X);
+			HERMES_ASSERT(ChildBoundingBox.Height() >= ChildPreferredSize.Y);
 
 			Child->SetBoundingBox(ChildBoundingBox);
 

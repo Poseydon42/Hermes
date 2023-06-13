@@ -25,7 +25,7 @@ namespace Hermes::UI
 	protected:
 		ViewportContainer() = default;
 		
-		virtual Vec2 ComputeMinimumSize() const override;
+		virtual Vec2 ComputePreferredSize() const override;
 
 		virtual void Layout() override;
 

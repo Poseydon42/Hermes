@@ -140,6 +140,22 @@ namespace Hermes
 		return const_cast<World*>(this)->GetComponent<ComponentType>(Entity);
 	}
 
+	// NOTE: overload for view with no required components - should return all entities except for the invalid entity
+	template<>
+	inline std::vector<EntityID> World::View() const
+	{
+		std::vector<EntityID> Result;
+		Result.reserve(Entities.size());
+
+		for (const auto& Entity : Entities)
+		{
+			if (Entity.first != InvalidEntity)
+				Result.push_back(Entity.first);
+		}
+
+		return Result;
+	}
+
 	template<typename... ComponentTypes>
 	std::vector<EntityID> World::View() const
 	{

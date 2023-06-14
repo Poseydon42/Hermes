@@ -17,6 +17,8 @@ set(SOURCES
     Widgets/Containers/Container.h
     Widgets/Containers/HorizontalContainer.cpp
     Widgets/Containers/HorizontalContainer.h
+    Widgets/Containers/TableContainer.cpp
+    Widgets/Containers/TableContainer.h
     Widgets/Containers/VerticalContainer.cpp
     Widgets/Containers/VerticalContainer.h
     Widgets/Containers/ViewportContainer.cpp

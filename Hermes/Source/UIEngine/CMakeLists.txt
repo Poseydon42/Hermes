@@ -15,6 +15,8 @@ set(SOURCES
     Widgets/Button.h
     Widgets/Containers/Container.cpp
     Widgets/Containers/Container.h
+    Widgets/Containers/HorizontalContainer.cpp
+    Widgets/Containers/HorizontalContainer.h
     Widgets/Containers/VerticalContainer.cpp
     Widgets/Containers/VerticalContainer.h
     Widgets/Containers/ViewportContainer.cpp

@@ -22,6 +22,7 @@ namespace Hermes::UI
 		void AddChild(std::shared_ptr<Widget> Child);
 
 		bool RemoveChild(const Widget* Child);
+		void ClearChildren();
 
 		const Widget& GetChild(size_t Index) const;
 		Widget& GetChild(size_t Index);

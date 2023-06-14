@@ -25,6 +25,11 @@ namespace Hermes::UI
 		return false;
 	}
 
+	void Container::ClearChildren()
+	{
+		Children.clear();
+	}
+
 	const Widget& Container::GetChild(size_t Index) const
 	{
 		return const_cast<Container*>(this)->GetChild(Index);

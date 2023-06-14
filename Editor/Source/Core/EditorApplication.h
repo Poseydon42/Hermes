@@ -2,7 +2,9 @@
 
 #include "ApplicationCore/Application.h"
 #include "Core/Core.h"
+#include "UIEngine/Widgets/Containers/HorizontalContainer.h"
 #include "WorldEditor/WorldEditorCamera.h"
+#include "WorldEditor/WorldEditorEntityList.h"
 #include "WorldEditor/WorldEditorViewport.h"
 
 namespace Hermes::Editor
@@ -21,5 +23,8 @@ namespace Hermes::Editor
 	private:
 		std::shared_ptr<WorldEditorCamera> Camera;
 		std::shared_ptr<WorldEditorViewport> Viewport;
+		std::shared_ptr<WorldEditorEntityList> EntityList;
+
+		std::shared_ptr<UI::HorizontalContainer> RootWidget;
 	};
 }

@@ -5,6 +5,8 @@ include(HermesSublib)
 set(SOURCES
     WorldEditorCamera.cpp
     WorldEditorCamera.h
+    WorldEditorEntityList.cpp
+    WorldEditorEntityList.h
     WorldEditorViewport.cpp
     WorldEditorViewport.h
 )

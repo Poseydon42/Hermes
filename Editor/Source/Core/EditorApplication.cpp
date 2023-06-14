@@ -57,8 +57,17 @@ namespace Hermes::Editor
 	{
 		HERMES_LOG_INFO("Initializing the editor");
 
+		RootWidget = UI::HorizontalContainer::Create();
+		GGameLoop->SetRootWidget(RootWidget);
+		
 		Viewport = WorldEditorViewport::Create();
-		GGameLoop->SetRootWidget(Viewport);
+		Viewport->HorizontalScalingPolicy = { UI::ScalingType::Extend, 1.0f };
+		Viewport->VerticalScalingPolicy = { UI::ScalingType::Extend, 1.0f };
+		RootWidget->AddChild(Viewport);
+
+		EntityList = WorldEditorEntityList::Create();
+		EntityList->SetWorld(&GGameLoop->GetWorld());
+		RootWidget->AddChild(EntityList);
 
 		Camera = std::make_shared<WorldEditorCamera>(Vec3(0.0f), 0.0f, 0.0f);
 		GGameLoop->OverrideCamera(Camera);
@@ -71,6 +80,7 @@ namespace Hermes::Editor
 	void EditorApplication::Run(float DeltaTime)
 	{
 		Camera->Update(GGameLoop->GetInputEngine(), DeltaTime);
+		EntityList->Update();
 	}
 
 	void EditorApplication::Shutdown()

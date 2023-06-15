@@ -253,7 +253,7 @@ namespace Hermes
 
 
 		/*
-		 * Copying the rendered scene into the destination image
+		 * Clearing the destination image and copying the rendered scene into it
 		 */
 		VkImageMemoryBarrier BeforeBlitBarriers[2];
 		// Destination image to TRANSFER_DST_OPTIMAL
@@ -284,6 +284,9 @@ namespace Hermes
 		};
 		CommandBuffer->InsertImageMemoryBarriers(BeforeBlitBarriers, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
 
+		VkClearColorValue ClearColor = { .float32 = { 0.0f, 0.0f, 0.0f, 1.0f } };
+		VkImageSubresourceRange ClearRange = DestinationImage->GetFullSubresourceRange();
+		CommandBuffer->ClearColorImage(*DestinationImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, ClearColor, { &ClearRange, 1 });
 		VkImageBlit Blit = {
 			.srcSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1 },
 			.srcOffsets = { { 0, 0, 0 }, { static_cast<int32>(RenderedScene.GetDimensions().X), static_cast<int32>(RenderedScene.GetDimensions().Y), 1 } },

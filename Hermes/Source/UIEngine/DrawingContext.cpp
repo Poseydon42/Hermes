@@ -9,15 +9,15 @@ namespace Hermes::UI
 	{
 	}
 
-	void DrawingContext::DrawRectangle(Rect2D Rect, Vec4 Color)
+	void DrawingContext::DrawRectangle(Rect2D Rect, Vec4 Color, float CornerRadius)
 	{
 		// FIXME: proper rounding
-		Rectangles.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), WhiteUnitTexture, Color, 0.0f);
+		Rectangles.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), WhiteUnitTexture, Color, 0.0f, CornerRadius);
 	}
 
 	void DrawingContext::DrawTexturedRectangle(Rect2D Rect, AssetHandle<Texture2D> Texture)
 	{
-		Rectangles.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), std::move(Texture), Vec4(0.0f), 1.0f);
+		Rectangles.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), std::move(Texture), Vec4(0.0f), 1.0f, 0.0f);
 	}
 
 	void DrawingContext::DrawText(Rect2D Rect, String Text, uint32 TextSize, AssetHandle<Font> Font)

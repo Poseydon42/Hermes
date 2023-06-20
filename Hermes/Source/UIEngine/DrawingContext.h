@@ -45,6 +45,11 @@ namespace Hermes::UI
 			 * the rectangle.
 			 */
 			float TextureWeight = 0.0f;
+
+			/*
+			 * Radius of the rectangle corners in pixels, leave as 0 if the rectangle should not have round corners.
+			 */
+			float CornerRadius = 0.0;
 		};
 
 		/**
@@ -52,8 +57,9 @@ namespace Hermes::UI
 		 *
 		 * @param Rect Rectangle to draw
 		 * @param Color Color of the rectangle
+		 * @param CornerRadius Radius of the rounded corners in pixels, 0 if no rounding should be performed
 		 */
-		void DrawRectangle(Rect2D Rect, Vec4 Color);
+		void DrawRectangle(Rect2D Rect, Vec4 Color, float CornerRadius = 0.0f);
 		
 		/**
 		 * Issues a draw of a rectangle that will be filled with the given texture. The texture will be stretched to

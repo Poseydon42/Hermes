@@ -11,13 +11,35 @@ namespace Hermes::UI
 
 	void DrawingContext::DrawRectangle(Rect2D Rect, Vec4 Color, float CornerRadius)
 	{
-		// FIXME: proper rounding
-		Rectangles.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), WhiteUnitTexture, Color, 0.0f, CornerRadius);
+		Rectangles.push_back(DrawableRectangle {
+			.Rect = Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)),
+			.Texture = WhiteUnitTexture,
+			.Color =Color,
+			.TextureWeight = 0.0f,
+			.CornerRadius = CornerRadius
+		});
+	}
+
+	void DrawingContext::DrawRectangle(Rect2D Rect, Vec4 Color, Vec4 OutlineColor, float OutlineRadius, float CornerRadius)
+	{
+		Rectangles.push_back(DrawableRectangle{
+			.Rect = Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)),
+			.Texture = WhiteUnitTexture,
+			.Color = Color,
+			.OutlineColor = OutlineColor,
+			.TextureWeight = 0.0f,
+			.CornerRadius = CornerRadius,
+			.OutlineRadius = OutlineRadius
+		});
 	}
 
 	void DrawingContext::DrawTexturedRectangle(Rect2D Rect, AssetHandle<Texture2D> Texture)
 	{
-		Rectangles.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), std::move(Texture), Vec4(0.0f), 1.0f, 0.0f);
+		Rectangles.push_back(DrawableRectangle{
+			.Rect = Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)),
+			.Texture = std::move(Texture),
+			.TextureWeight = 1.0f,
+		});
 	}
 
 	void DrawingContext::DrawText(Rect2D Rect, String Text, uint32 TextSize, AssetHandle<Font> Font)

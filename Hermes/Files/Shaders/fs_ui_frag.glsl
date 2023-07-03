@@ -28,13 +28,15 @@ void main()
     RectanglePrimitive Rectangle = u_RectanglePrimitives.Array[i_RectangleIndex];
 
     vec4 TextureColor = texture(u_Textures[i_RectangleIndex], i_TextureCoordinates);
-    vec4 OwnColor = Rectangle.Color;
 
     float TextureWeight = Rectangle.TextureWeight;
     float ColorWeight = 1.0 - TextureWeight;
 
+    float SDF = RectangleSDF(i_RelativeFragmentLocation * Rectangle.DimensionsInPixels / 2.0, Rectangle.DimensionsInPixels / 2.0, Rectangle.CornerRadius);
+    vec4 OwnColor = Rectangle.OutlineColor * step(-Rectangle.OutlineRadius, SDF) + Rectangle.Color * (1.0 - step(-Rectangle.OutlineRadius, SDF));
+
     vec4 ComputedColor = TextureColor * TextureWeight + OwnColor * ColorWeight;
-    if (RectangleSDF(i_RelativeFragmentLocation * Rectangle.DimensionsInPixels / 2.0, Rectangle.DimensionsInPixels / 2.0, Rectangle.CornerRadius) > 0.0)
+    if (SDF > 0.0)
         ComputedColor.a = 0.0;
 
     o_Color = ComputedColor;

@@ -463,8 +463,10 @@ namespace Hermes
 			RectangleVertices[RectangleIndex * 6 + 5] = { BottomLeft, { 0.0f, 1.0f }, { -1.0f, 1.0f } };
 
 			RectanglePrimitives[RectangleIndex].Color = Rectangle.Color;
+			RectanglePrimitives[RectangleIndex].OutlineColor = Rectangle.OutlineColor;
 			RectanglePrimitives[RectangleIndex].DimensionsInPixels = Vec2(Rectangle.Rect.Dimensions());
-			RectanglePrimitives[RectangleIndex].CornerRadius = { Rectangle.CornerRadius };
+			RectanglePrimitives[RectangleIndex].CornerRadius = Rectangle.CornerRadius;
+			RectanglePrimitives[RectangleIndex].OutlineRadius = Rectangle.OutlineRadius;
 			RectanglePrimitives[RectangleIndex].TextureWeight = Rectangle.TextureWeight;
 
 			RectangleDescriptorSet->UpdateWithImageAndSampler(RectangleTexturesDescriptorBinding, RectangleIndex, Rectangle.Texture->GetView(ColorSpace::SRGB), *RectangleTextureSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

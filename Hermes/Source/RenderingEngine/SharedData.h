@@ -102,8 +102,10 @@ namespace Hermes
 	struct ALIGNAS_16 RectanglePrimitive
 	{
 		Vec4 Color;
+		Vec4 OutlineColor;
 		Vec2 DimensionsInPixels;
 		float CornerRadius;
+		float OutlineRadius;
 		float TextureWeight;
 	};
 

@@ -68,6 +68,14 @@ namespace Hermes::UI
 	{
 	}
 
+	void Widget::ForEachChild(const ForEachChildSharedPtrCallbackType&)
+	{
+	}
+
+	void Widget::ForEachChild(const ForEachChildConstSharedPtrCallbackType&) const
+	{
+	}
+
 	Rect2D Widget::GetBoundingBox() const
 	{
 		return BoundingBox;

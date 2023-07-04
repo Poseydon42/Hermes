@@ -31,6 +31,8 @@ namespace Hermes::UI
 
 		virtual void ForEachChild(const ForEachChildCallbackType& Callback) override;
 		virtual void ForEachChild(const ForEachChildConstCallbackType& Callback) const override;
+		virtual void ForEachChild(const ForEachChildSharedPtrCallbackType& Callback) override;
+		virtual void ForEachChild(const ForEachChildConstSharedPtrCallbackType& Callback) const override;
 
 		virtual bool OnMouseDown(MouseButton Button) override;
 	};

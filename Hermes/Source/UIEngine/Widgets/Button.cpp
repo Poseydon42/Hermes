@@ -57,6 +57,16 @@ namespace Hermes::UI
 			Callback(*Label);
 	}
 
+	void Button::ForEachChild(const ForEachChildSharedPtrCallbackType& Callback)
+	{
+		Callback(Label);
+	}
+
+	void Button::ForEachChild(const ForEachChildConstSharedPtrCallbackType& Callback) const
+	{
+		Callback(Label);
+	}
+
 	bool Button::OnMouseDown(MouseButton Button)
 	{
 		if (Button != MouseButton::Left)

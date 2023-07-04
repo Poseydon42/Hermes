@@ -126,6 +126,8 @@ namespace Hermes::UI
 		 */
 		virtual void ForEachChild(const ForEachChildConstCallbackType& Callback) const;
 		virtual void ForEachChild(const ForEachChildCallbackType& Callback);
+		virtual void ForEachChild(const ForEachChildSharedPtrCallbackType& Callback);
+		virtual void ForEachChild(const ForEachChildConstSharedPtrCallbackType& Callback) const;
 
 	protected:
 		Widget() = default;

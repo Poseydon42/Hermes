@@ -57,4 +57,16 @@ namespace Hermes::UI
 		for (auto& Child : Children)
 			Callback(*Child);
 	}
+
+	void Container::ForEachChild(const ForEachChildSharedPtrCallbackType& Callback)
+	{
+		for (auto& Child : Children)
+			Callback(Child);
+	}
+
+	void Container::ForEachChild(const ForEachChildConstSharedPtrCallbackType& Callback) const
+	{
+		for (auto& Child : Children)
+			Callback(Child);
+	}
 }

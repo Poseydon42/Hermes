@@ -27,14 +27,14 @@ namespace Hermes::UI
 		Parent = std::move(NewParent);
 	}
 
-	const Widget* Widget::GetParent() const
+	std::shared_ptr<const Widget> Widget::GetParent() const
 	{
-		return Parent.get();
+		return Parent;
 	}
 
-	Widget* Widget::GetParent()
+	std::shared_ptr<Widget> Widget::GetParent()
 	{
-		return Parent.get();
+		return Parent;
 	}
 
 	Vec2 Widget::ComputePreferredSize() const

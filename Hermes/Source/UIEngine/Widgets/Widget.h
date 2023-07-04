@@ -79,8 +79,8 @@ namespace Hermes::UI
 		 */
 		void SetParent(std::shared_ptr<Widget> NewParent);
 
-		const Widget* GetParent() const;
-		Widget* GetParent();
+		std::shared_ptr<const Widget> GetParent() const;
+		std::shared_ptr<Widget> GetParent();
 
 		/**
 		 * Computes the size that would be enough for this widget to display all of its information without

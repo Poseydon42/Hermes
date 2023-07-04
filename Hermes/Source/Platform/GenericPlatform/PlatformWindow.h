@@ -2,6 +2,7 @@
 
 #include <format>
 #include <memory>
+#include <optional>
 
 #include "Core/Core.h"
 #include "Core/Event/Event.h"
@@ -18,9 +19,10 @@ namespace Hermes
 		EVENT_BODY(WindowKeyboardEvent);
 
 	public:
-		WindowKeyboardEvent(KeyCode InKeyCode, bool InIsPressEvent)
+		WindowKeyboardEvent(KeyCode InKeyCode, bool InIsPressEvent, std::optional<uint32> InCodepoint)
 			: KeyCode(InKeyCode)
 			, IsPressEvent(InIsPressEvent)
+			, Codepoint(InCodepoint)
 		{
 		}
 
@@ -44,9 +46,15 @@ namespace Hermes
 			return !IsPressed();
 		}
 
+		std::optional<uint32> GetUnicodeCodepoint() const
+		{
+			return Codepoint;
+		}
+
 	private:
 		KeyCode KeyCode;
 		bool IsPressEvent;
+		std::optional<uint32> Codepoint;
 	};
 
 	class HERMES_API WindowMouseMoveEvent : public IEvent

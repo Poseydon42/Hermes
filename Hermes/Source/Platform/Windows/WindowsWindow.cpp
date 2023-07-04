@@ -370,7 +370,21 @@ namespace Hermes
 					break;
 				}
 
-				MessagePump->PushEvent(WindowKeyboardEvent(Iterator->second, IsPressEvent));
+				BYTE KeyboardState[256];
+				GetKeyboardState(KeyboardState);
+
+				UINT ScanCode = (LParam >> 16) & 0xFF;
+
+				wchar_t Buffer[2];
+				auto CharsWritten = ToUnicode(VKCode, ScanCode, KeyboardState, Buffer, 2, 0);
+
+				std::optional<uint32> Codepoint = {};
+				if (CharsWritten > 0 && Buffer[1] == 0) // FIXME: this discards any unicode values above 0xFFFF, fix it
+				{
+					Codepoint = Buffer[0];
+				}
+
+				MessagePump->PushEvent(WindowKeyboardEvent(Iterator->second, IsPressEvent, Codepoint));
 				break;
 			}
 			case WM_LBUTTONDOWN:

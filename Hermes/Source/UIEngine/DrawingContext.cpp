@@ -44,6 +44,8 @@ namespace Hermes::UI
 
 	void DrawingContext::DrawText(Rect2D Rect, String Text, uint32 TextSize, AssetHandle<Font> Font)
 	{
+		if (Text.empty())
+			return;
 		Texts.emplace_back(Rect2Dui(Vec2ui(Rect.Min), Vec2ui(Rect.Max)), std::move(Text), TextSize, std::move(Font));
 	}
 

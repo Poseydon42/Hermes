@@ -104,6 +104,8 @@ namespace Hermes
 		Subtract,
 		Decimal,
 		Divide,
+		Comma,
+		Period,
 		F1,
 		F2,
 		F3,
@@ -289,6 +291,10 @@ namespace Hermes
 			return "Decimal";
 		case KeyCode::Divide:
 			return "Divide";
+		case KeyCode::Comma:
+			return "Comma";
+		case KeyCode::Period:
+			return "Period";
 		case KeyCode::F1:
 			return "F1";
 		case KeyCode::F2:

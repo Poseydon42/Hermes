@@ -329,6 +329,10 @@ namespace Hermes
 					{ VK_SUBTRACT, KeyCode::Subtract },
 					{ VK_DECIMAL, KeyCode::Decimal },
 					{ VK_DIVIDE, KeyCode::Divide },
+					{ VK_OEM_PLUS, KeyCode::Add },
+					{ VK_OEM_COMMA, KeyCode::Comma },
+					{ VK_OEM_MINUS, KeyCode::Subtract },
+					{ VK_OEM_PERIOD, KeyCode::Period },
 					{ VK_F1, KeyCode::F1 },
 					{ VK_F2, KeyCode::F2 },
 					{ VK_F3, KeyCode::F3 },
@@ -354,7 +358,7 @@ namespace Hermes
 					{ VK_F23, KeyCode::F23 },
 					{ VK_F24, KeyCode::F24 },
 					{ VK_NUMLOCK, KeyCode::NumLock },
-					{ VK_SCROLL, KeyCode::ScrollLock }
+					{ VK_SCROLL, KeyCode::ScrollLock },
 				};
 				bool IsPressEvent = Message == WM_KEYDOWN;
 				auto VKCode = static_cast<uint32>(WParam);

@@ -29,6 +29,8 @@ set(SOURCES
     Widgets/Label.h
     Widgets/Panel.cpp
     Widgets/Panel.h
+    Widgets/TextBox.cpp
+    Widgets/TextBox.h
     Widgets/Widget.cpp
     Widgets/Widget.h
 )

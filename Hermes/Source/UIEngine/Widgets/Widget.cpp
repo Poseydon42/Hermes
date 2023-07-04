@@ -60,6 +60,14 @@ namespace Hermes::UI
 		return false;
 	}
 
+	void Widget::OnKeyDown(KeyCode, std::optional<uint32>)
+	{
+	}
+
+	void Widget::OnKeyUp(KeyCode, std::optional<uint32>)
+	{
+	}
+
 	void Widget::ForEachChild(const ForEachChildConstCallbackType&) const
 	{
 	}

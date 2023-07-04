@@ -10,6 +10,7 @@ namespace Hermes::UI
 		: RootWidget(std::move(InRootWidget))
 	{
 		WindowEventQueue.Subscribe(WindowMouseButtonEvent::GetStaticType(), BIND_CALLBACK(MouseButtonEventCallback, WindowMouseButtonEvent));
+		WindowEventQueue.Subscribe(WindowKeyboardEvent::GetStaticType(), BIND_CALLBACK(KeyboardEventCallback, WindowKeyboardEvent));
 	}
 
 	void InputController::MouseButtonEventCallback(const WindowMouseButtonEvent& Event)
@@ -17,6 +18,8 @@ namespace Hermes::UI
 		auto LowestWidget = GetLowestWidgetAtCoordinates(Event.GetCursorCoordinates());
 		if (!LowestWidget)
 			return;
+
+		WidgetInFocus = LowestWidget;
 
 		auto CurrentWidget = LowestWidget;
 		while (CurrentWidget)
@@ -34,21 +37,36 @@ namespace Hermes::UI
 		}
 	}
 
-	Widget* InputController::GetLowestWidgetAtCoordinates(Vec2i Coordinates) const
+	void InputController::KeyboardEventCallback(const WindowKeyboardEvent& Event)
+	{
+		if (WidgetInFocus.expired())
+			return;
+
+		auto LockedWidgetInFocus = WidgetInFocus.lock();
+		if (!LockedWidgetInFocus)
+			return;
+		
+		if (Event.IsPressed())
+			LockedWidgetInFocus->OnKeyDown(Event.GetKeyCode(), Event.GetUnicodeCodepoint());
+		else if (Event.IsReleased())
+			LockedWidgetInFocus->OnKeyUp(Event.GetKeyCode(), Event.GetUnicodeCodepoint());
+	}
+
+	std::shared_ptr<Widget> InputController::GetLowestWidgetAtCoordinates(Vec2i Coordinates) const
 	{
 		auto LockedRootWidget = RootWidget.lock();
 		if (!LockedRootWidget->GetBoundingBox().Contains(Coordinates))
 			return nullptr;
 
-		auto* CurrentWidget = LockedRootWidget.get();
+		auto CurrentWidget = LockedRootWidget;
 		while (CurrentWidget)
 		{
 			bool FoundLowerWidget = false;
-			CurrentWidget->ForEachChild([&](Widget& Child)
+			CurrentWidget->ForEachChild([&](std::shared_ptr<Widget> Child)
 			{
-				if (!Child.GetBoundingBox().Contains(Coordinates))
+				if (!Child->GetBoundingBox().Contains(Coordinates))
 					return;
-				CurrentWidget = &Child;
+				CurrentWidget = std::move(Child);
 				FoundLowerWidget = true;
 			});
 

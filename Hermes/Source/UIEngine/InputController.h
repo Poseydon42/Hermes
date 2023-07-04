@@ -16,8 +16,12 @@ namespace Hermes::UI
 	private:
 		std::weak_ptr<Widget> RootWidget;
 
+		std::weak_ptr<Widget> WidgetInFocus;
+
 		void MouseButtonEventCallback(const WindowMouseButtonEvent& Event);
 
-		Widget* GetLowestWidgetAtCoordinates(Vec2i Coordinates) const;
+		void KeyboardEventCallback(const WindowKeyboardEvent& Event);
+
+		std::shared_ptr<Widget> GetLowestWidgetAtCoordinates(Vec2i Coordinates) const;
 	};
 }

@@ -116,8 +116,24 @@ namespace Hermes::UI
 		 */
 		virtual bool OnMouseUp(MouseButton Button);
 
+		/**
+		 * Gets called when a key is pressed while the current widget is in focus. 
+		 * @param Key Key code of the key being pressed
+		 * @param Codepoint Unicode codepoint of the key that was pressed, if available/applicable
+		 */
+		virtual void OnKeyDown(KeyCode Key, std::optional<uint32> Codepoint);
+
+		/**
+		 * Gets called when a key is released while the current widget is in focus.
+		 * @param Key Key code of the key being pressed
+		 * @param Codepoint Unicode codepoint of the key that was pressed, if available/applicable
+		 */
+		virtual void OnKeyUp(KeyCode Key, std::optional<uint32> Codepoint);
+
 		using ForEachChildConstCallbackType = std::function<void(const Widget&)>;
 		using ForEachChildCallbackType = std::function<void(Widget&)>;
+		using ForEachChildSharedPtrCallbackType = std::function<void(std::shared_ptr<Widget>)>;
+		using ForEachChildConstSharedPtrCallbackType = std::function<void(std::shared_ptr<const Widget>)>;
 
 		/**
 		 * Calls the provided callback function for each child of current widget, including both

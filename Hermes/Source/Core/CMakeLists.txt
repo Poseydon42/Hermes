@@ -14,10 +14,12 @@ set(SOURCES
     Misc/NonCopyableMovable.h
     Misc/ArgsParser.cpp
     Misc/ArgsParser.h
-    Misc/UTF8StringView.cpp
-    Misc/UTF8StringView.h
     Misc/Version.h
     Profiling.h
+    UTF8/UTF8Iterator.cpp
+    UTF8/UTF8Iterator.h
+    UTF8/UTF8Utils.cpp
+    UTF8/UTF8Utils.h
 )
 
 add_engine_sublib(Hermes_Core "${SOURCES}")

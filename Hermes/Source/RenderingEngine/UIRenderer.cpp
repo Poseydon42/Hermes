@@ -1,7 +1,7 @@
 #include "UIRenderer.h"
 
-#include "Core/Misc/UTF8StringView.h"
 #include "Core/Profiling.h"
+#include "Core/UTF8/UTF8Iterator.h"
 #include "RenderingEngine/DescriptorAllocator.h"
 #include "RenderingEngine/FontPack.h"
 #include "RenderingEngine/GPUInteractionUtilities.h"
@@ -502,8 +502,10 @@ namespace Hermes
 
 		for (const auto& Text : DrawingContext.GetDrawableTexts())
 		{
-			for (auto Char : UTF8StringView(Text.Text))
+			for (auto CurrentIt = UTF8::Begin(Text.Text), EndIt = UTF8::End(Text.Text); CurrentIt != EndIt; ++CurrentIt)
 			{
+				auto Char = *CurrentIt;
+
 				auto GlyphIndex = Text.Font->GetGlyphIndex(Char);
 				HERMES_ASSERT(GlyphIndex.has_value());
 				FontPack.RequestGlyph(*Text.Font, GlyphIndex.value(), Text.FontSize);

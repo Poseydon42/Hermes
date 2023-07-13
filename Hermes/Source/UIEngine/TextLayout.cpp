@@ -2,8 +2,8 @@
 
 #include <freetype/freetype.h>
 
-#include "Core/Misc/UTF8StringView.h"
 #include "Core/Profiling.h"
+#include "Core/UTF8/UTF8Iterator.h"
 
 namespace Hermes::UI
 {
@@ -13,8 +13,10 @@ namespace Hermes::UI
 
 		float Cursor = 0.0f;
 		float Baseline = 0.0f;
-		for (auto Char : UTF8StringView(Text))
+		for (auto CurrentIt = UTF8::Begin(Text), EndIt = UTF8::End(Text); CurrentIt != EndIt; ++CurrentIt)
 		{
+			auto Char = *CurrentIt;
+
 			auto MaybeGlyphIndex = Font.GetGlyphIndex(Char);
 			HERMES_ASSERT(MaybeGlyphIndex.has_value());
 			auto GlyphIndex = MaybeGlyphIndex.value();

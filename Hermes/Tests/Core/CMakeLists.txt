@@ -5,6 +5,8 @@ include(TestExecutable)
 project(Test_Core)
 
 set(SOURCES
+    TestUTF8Iterator.cpp
+    TestUTF8Utils.cpp
     TestVersion.cpp
 )
 

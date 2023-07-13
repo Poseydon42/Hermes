@@ -1,5 +1,7 @@
 #include "TextBox.h"
 
+#include "UIEngine/TextLayout.h"
+
 namespace Hermes::UI
 {
 	std::shared_ptr<TextBox> TextBox::Create(AssetHandle<UI::Font> InFont, uint32 InFontSize, float InPreferredWidth)
@@ -31,11 +33,27 @@ namespace Hermes::UI
 	{
 		Context.DrawRectangle(BoundingBox, BackgroundColor, OutlineColor, OutlineWidth, CornerRadius);
 
+		auto MaxTextWidth = BoundingBox.Width() - 2 * (OutlineWidth + HorizontalPadding + CaretSpacing) - CaretWidth;
+		auto TextWidth = Math::Min(TextLayout::Measure(CurrentText, FontSize, *Font).X, MaxTextWidth);
+		auto TextHeight = Font->GetMaxAscent(FontSize) + Font->GetMaxDescent(FontSize);
+		auto LeftHorizontalPaddingCoefficient = (CurrentText.empty() ? 0.0f : 1.0f);
 		Rect2D TextRect = {
-			BoundingBox.Min + Vec2(OutlineWidth + HorizontalPadding, OutlineWidth + VerticalPadding),
-			BoundingBox.Max - Vec2(OutlineWidth + HorizontalPadding, OutlineWidth + VerticalPadding)
+			BoundingBox.Min + Vec2(OutlineWidth + LeftHorizontalPaddingCoefficient * HorizontalPadding, OutlineWidth + VerticalPadding),
+			BoundingBox.Min + Vec2(OutlineWidth + LeftHorizontalPaddingCoefficient * HorizontalPadding + TextWidth, OutlineWidth + VerticalPadding + TextHeight)
 		};
 		Context.DrawText(TextRect, CurrentText, FontSize, Font);
+
+		Rect2D CaretRect = {
+			.Min = {
+				TextRect.Max.X + CaretSpacing,
+				TextRect.Min.Y
+			},
+			.Max = {
+				TextRect.Max.X + CaretSpacing + CaretWidth,
+				TextRect.Max.Y
+			}
+		};
+		Context.DrawRectangle(CaretRect, Vec4(1.0f));
 	}
 
 	void TextBox::OnKeyDown(KeyCode, std::optional<uint32> Codepoint)

@@ -8,12 +8,14 @@ set(SOURCES
     Event/Event.h
     Event/EventQueue.cpp
     Event/EventQueue.h
+    Misc/ArgsParser.cpp
+    Misc/ArgsParser.h
     Misc/DefaultConstructors.h
     Misc/EnumClassOperators.h
     Misc/KeyCode.h
     Misc/NonCopyableMovable.h
-    Misc/ArgsParser.cpp
-    Misc/ArgsParser.h
+    Misc/Timer.cpp
+    Misc/Timer.h
     Misc/Version.h
     Profiling.h
     UTF8/UTF8Iterator.cpp

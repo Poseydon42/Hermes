@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Core/Misc/Timer.h"
 #include "UIEngine/Widgets/Widget.h"
 
 namespace Hermes::UI
@@ -19,12 +20,16 @@ namespace Hermes::UI
 
 		String CurrentText;
 
+		mutable Timer CaretBlinkTimer;
+		mutable bool IsCaretInVisiblePhase = true;
+		static constexpr float CaretBlinkPeriod = 0.7f;
+
 		static constexpr float CornerRadius = 2.0f;
 		static constexpr float VerticalPadding = 3.0f;
-		static constexpr float HorizontalPadding = 4.0f;
+		static constexpr float HorizontalPadding = 3.0f;
 		static constexpr float OutlineWidth = 2.0f;
 		static constexpr float CaretWidth = 2.0f;
-		static constexpr float CaretSpacing = 3.0f;
+		static constexpr float CaretSpacing = 2.0f;
 		static constexpr Vec4 BackgroundColor = Vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		static constexpr Vec4 OutlineColor = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
 

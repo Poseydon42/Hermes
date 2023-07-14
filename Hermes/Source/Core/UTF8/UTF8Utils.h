@@ -21,5 +21,9 @@ namespace Hermes::UTF8
 
 	void Erase(String& String, const Iterator& Begin, const Iterator& End);
 
+	size_t Length(const String& String);
+	size_t Length(StringView String);
+	size_t Length(Iterator Begin, Iterator End);
+
 	String Encode(uint32 CodePoint);
 }

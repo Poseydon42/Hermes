@@ -78,3 +78,14 @@ TEST(TestUTF8Utils, EraseRange)
 	Erase(String, Begin(String) + 1, Begin(String) + 4);
 	EXPECT_EQ(String, "a");
 }
+
+TEST(TestUTF8Utils, Length)
+{
+	String String = "a\xD0\x90\xE0\xBC\x94\xF0\x9F\x9E\x85";
+
+	EXPECT_EQ(Length(String), 4);
+	EXPECT_EQ(Length(StringView(String)), 4);
+
+	EXPECT_EQ(Length(Begin(String) + 1, End(String)), 3);
+	EXPECT_EQ(Length(Begin(String) + 1, End(String) - 1), 2);
+}

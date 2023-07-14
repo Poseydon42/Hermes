@@ -28,6 +28,27 @@ namespace Hermes::UTF8
 		String.erase(StringBeginIterator, StringEndIterator);
 	}
 
+	size_t Length(const String& String)
+	{
+		return Length(Begin(String), End(String));
+	}
+
+	size_t Length(StringView String)
+	{
+		return Length(Begin(String), End(String));
+	}
+
+	size_t Length(Iterator Begin, Iterator End)
+	{
+		size_t Counter = 0;
+		while (Begin < End)
+		{
+			Counter++;
+			++Begin;
+		}
+		return Counter;
+	}
+
 	String Encode(uint32 CodePoint)
 	{
 		if (CodePoint <= 0x007F)

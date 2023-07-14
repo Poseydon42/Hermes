@@ -20,6 +20,8 @@ namespace Hermes::UI
 
 		String CurrentText;
 
+		int32 CursorPosition = 0;
+
 		mutable Timer CaretBlinkTimer;
 		mutable bool IsCaretInVisiblePhase = true;
 		static constexpr float CaretBlinkPeriod = 0.7f;
@@ -28,8 +30,7 @@ namespace Hermes::UI
 		static constexpr float VerticalPadding = 3.0f;
 		static constexpr float HorizontalPadding = 3.0f;
 		static constexpr float OutlineWidth = 2.0f;
-		static constexpr float CaretWidth = 2.0f;
-		static constexpr float CaretSpacing = 2.0f;
+		static constexpr float CaretWidth = 1.0f;
 		static constexpr Vec4 BackgroundColor = Vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		static constexpr Vec4 OutlineColor = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -40,5 +41,7 @@ namespace Hermes::UI
 		virtual void Draw(DrawingContext& Context) const override;
 
 		virtual void OnKeyDown(KeyCode Key, std::optional<uint32> Codepoint) override;
+
+		void MoveCursor(int32 Offset);
 	};
 }

@@ -1,5 +1,6 @@
 #include "TextBox.h"
 
+#include "Core/UTF8/UTF8Utils.h"
 #include "UIEngine/TextLayout.h"
 
 namespace Hermes::UI
@@ -33,7 +34,7 @@ namespace Hermes::UI
 	{
 		Context.DrawRectangle(BoundingBox, BackgroundColor, OutlineColor, OutlineWidth, CornerRadius);
 
-		auto MaxTextWidth = BoundingBox.Width() - 2 * (OutlineWidth + HorizontalPadding + CaretSpacing) - CaretWidth;
+		auto MaxTextWidth = BoundingBox.Width() - 2 * (OutlineWidth + HorizontalPadding) - CaretWidth;
 		auto TextWidth = Math::Min(TextLayout::Measure(CurrentText, FontSize, *Font).X, MaxTextWidth);
 		auto TextHeight = Font->GetMaxAscent(FontSize) + Font->GetMaxDescent(FontSize);
 		Rect2D TextRect = {
@@ -50,13 +51,16 @@ namespace Hermes::UI
 
 		if (IsCaretInVisiblePhase)
 		{
+			auto CursorUTF8Iterator = UTF8::Begin(CurrentText) + CursorPosition;
+			auto CursorIterator = CursorUTF8Iterator.ToStringIterator(CurrentText);
+			auto WidthOfTextBeforeCursor = TextLayout::Measure(CurrentText.substr(0, CursorIterator - CurrentText.begin()), FontSize, *Font).X;
 			Rect2D CaretRect = {
 				.Min = {
-					TextRect.Max.X + CaretSpacing,
+					BoundingBox.Left() + OutlineWidth + HorizontalPadding + WidthOfTextBeforeCursor,
 					TextRect.Min.Y
 				},
 				.Max = {
-					TextRect.Max.X + CaretSpacing + CaretWidth,
+					BoundingBox.Left() + OutlineWidth + HorizontalPadding + WidthOfTextBeforeCursor + CaretWidth,
 					TextRect.Max.Y
 				}
 			};
@@ -64,8 +68,13 @@ namespace Hermes::UI
 		}
 	}
 
-	void TextBox::OnKeyDown(KeyCode, std::optional<uint32> Codepoint)
+	void TextBox::OnKeyDown(KeyCode Key, std::optional<uint32> Codepoint)
 	{
+		if (Key == KeyCode::ArrowLeft)
+			MoveCursor(-1);
+		if (Key == KeyCode::ArrowRight)
+			MoveCursor(1);
+
 		if (!Codepoint.has_value())
 			return;
 
@@ -79,5 +88,11 @@ namespace Hermes::UI
 
 		auto Character = static_cast<char>(Codepoint.value());
 		CurrentText += Character;
+		MoveCursor(1);
+	}
+
+	void TextBox::MoveCursor(int32 Offset)
+	{
+		CursorPosition = Math::Clamp(0, static_cast<int32>(UTF8::Length(CurrentText)), CursorPosition + Offset);
 	}
 }

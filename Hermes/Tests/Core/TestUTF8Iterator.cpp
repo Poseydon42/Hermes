@@ -7,15 +7,29 @@ using namespace Hermes::UTF8;
 
 StringView TestString = "\x41\xD0\x91\xE0\xBC\x94\xF0\x9F\x9E\x85";
 
-TEST(TestUTF8Iterator, TestEqualsNotEquals)
+TEST(TestUTF8Iterator, Comparison)
 {
-	auto Iterator = Begin(TestString);
-	EXPECT_TRUE(Iterator == Iterator);
-	EXPECT_FALSE(Iterator != Iterator);
+	auto First = Begin(TestString);
 
-	auto SecondIterator = End(TestString);
-	EXPECT_FALSE(Iterator == SecondIterator);
-	EXPECT_TRUE(Iterator != SecondIterator);
+	EXPECT_TRUE(First == Begin(TestString));
+	EXPECT_FALSE(First != Begin(TestString));
+	EXPECT_FALSE(First < Begin(TestString));
+	EXPECT_TRUE(First <= Begin(TestString));
+	EXPECT_TRUE(First >= Begin(TestString));
+	EXPECT_FALSE(First > Begin(TestString));
+
+	auto Second = First + 1;
+	EXPECT_FALSE(First == Second);
+	EXPECT_TRUE(First != Second);
+	EXPECT_TRUE(First < Second);
+	EXPECT_TRUE(First <= Second);
+	EXPECT_FALSE(First >= Second);
+	EXPECT_FALSE(First > Second);
+
+	EXPECT_FALSE(Second < First);
+	EXPECT_FALSE(Second <= First);
+	EXPECT_TRUE(Second >= First);
+	EXPECT_TRUE(Second > First);
 }
 
 TEST(TestUTF8Iterator, TestForwardIteration)

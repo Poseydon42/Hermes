@@ -69,6 +69,27 @@ namespace Hermes::UTF8
 		return !this->operator==(Other);
 	}
 
+	bool Iterator::operator<(const Iterator& Other) const
+	{
+		HERMES_ASSERT(Start == Other.Start && End == Other.End);
+		return Ptr < Other.Ptr;
+	}
+
+	bool Iterator::operator<=(const Iterator& Other) const
+	{
+		return this->operator<(Other) || this->operator==(Other);
+	}
+
+	bool Iterator::operator>(const Iterator& Other) const
+	{
+		return !this->operator<=(Other);
+	}
+
+	bool Iterator::operator>=(const Iterator& Other) const
+	{
+		return !this->operator<(Other);
+	}
+
 	uint32 Iterator::operator*() const
 	{
 		auto FirstByte = ReadByte(0);

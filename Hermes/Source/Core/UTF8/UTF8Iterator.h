@@ -20,6 +20,11 @@ namespace Hermes::UTF8
 		bool operator==(const Iterator& Other) const;
 		bool operator!=(const Iterator& Other) const;
 
+		bool operator<(const Iterator& Other) const;
+		bool operator<=(const Iterator& Other) const;
+		bool operator>(const Iterator& Other) const;
+		bool operator>=(const Iterator& Other) const;
+
 		uint32 operator*() const;
 
 		String::const_iterator ToStringIterator(const String& String) const;

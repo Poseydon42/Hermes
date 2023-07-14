@@ -98,10 +98,6 @@ namespace Hermes::UI
 		if (Codepoint.value() < 0x20 || Codepoint.value() == 0x7F || (Codepoint.value() >= 0x80 && Codepoint.value() < 0xA0))
 			return;
 
-		// FIXME: add Unicode support later
-		if (Codepoint.value() > 0xFF)
-			return;
-
 		Insert(CurrentText, UTF8::Begin(CurrentText) + CursorPosition, Codepoint.value());
 		MoveCursor(1);
 	}

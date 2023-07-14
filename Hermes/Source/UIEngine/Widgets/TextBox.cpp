@@ -75,6 +75,22 @@ namespace Hermes::UI
 		if (Key == KeyCode::ArrowRight)
 			MoveCursor(1);
 
+		if (Key == KeyCode::Backspace)
+		{
+			if (CursorPosition == 0)
+				return;
+
+			Erase(CurrentText, UTF8::Begin(CurrentText) + CursorPosition - 1);
+			MoveCursor(-1);
+		}
+		if (Key == KeyCode::Delete)
+		{
+			if (CursorPosition == UTF8::Length(CurrentText))
+				return;
+
+			Erase(CurrentText, UTF8::Begin(CurrentText) + CursorPosition);
+		}
+
 		if (!Codepoint.has_value())
 			return;
 

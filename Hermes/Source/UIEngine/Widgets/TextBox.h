@@ -20,7 +20,7 @@ namespace Hermes::UI
 
 		String CurrentText;
 
-		int32 CursorPosition = 0;
+		uint32 CursorPosition = 0;
 
 		mutable Timer CaretBlinkTimer;
 		mutable bool IsCaretInVisiblePhase = true;

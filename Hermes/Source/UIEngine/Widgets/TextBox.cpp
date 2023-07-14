@@ -86,13 +86,12 @@ namespace Hermes::UI
 		if (Codepoint.value() > 0xFF)
 			return;
 
-		auto Character = static_cast<char>(Codepoint.value());
-		CurrentText += Character;
+		Insert(CurrentText, UTF8::Begin(CurrentText) + CursorPosition, Codepoint.value());
 		MoveCursor(1);
 	}
 
 	void TextBox::MoveCursor(int32 Offset)
 	{
-		CursorPosition = Math::Clamp(0, static_cast<int32>(UTF8::Length(CurrentText)), CursorPosition + Offset);
+		CursorPosition = Math::Clamp(0u, static_cast<uint32>(UTF8::Length(CurrentText)), CursorPosition + Offset);
 	}
 }

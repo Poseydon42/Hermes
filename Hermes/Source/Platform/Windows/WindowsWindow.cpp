@@ -157,7 +157,7 @@ namespace Hermes
 				auto DeltaMousePosition = CurrentMousePosition - LastCursorPosition;
 				LastCursorPosition = CurrentMousePosition;
 
-				MessagePump->PushEvent(WindowMouseMoveEvent(DeltaMousePosition));
+				MessagePump->PushEvent(WindowMouseMoveEvent(DeltaMousePosition, CurrentMousePosition));
 
 				// NOTE: If cursor is not visible we should move it back to the centre of the screen
 				if (!CursorVisibility)

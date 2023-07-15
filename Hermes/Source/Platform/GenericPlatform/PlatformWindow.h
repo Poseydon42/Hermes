@@ -62,14 +62,15 @@ namespace Hermes
 		EVENT_BODY(WindowMouseMoveEvent);
 
 	public:
-		explicit WindowMouseMoveEvent(Vec2i InMouseDelta)
+		WindowMouseMoveEvent(Vec2i InMouseDelta, Vec2i InCursorCoordinates)
 			: MouseDelta(InMouseDelta)
+			, CursorCoordinates(InCursorCoordinates)
 		{
 		}
 
 		virtual String ToString() const override
 		{
-			return std::format("WindowMouseMoveEvent (MouseDelta: ({}, {}))", MouseDelta.X, MouseDelta.Y);
+			return std::format("WindowMouseMoveEvent (MouseDelta: ({}, {}), CursorCoordinates: ({}, {}))", MouseDelta.X, MouseDelta.Y, CursorCoordinates.X, CursorCoordinates.Y);
 		}
 
 		Vec2i GetMouseDelta() const
@@ -77,8 +78,14 @@ namespace Hermes
 			return MouseDelta;
 		}
 
+		Vec2i GetCursorCoordinates() const
+		{
+			return CursorCoordinates;
+		}
+
 	private:
 		Vec2i MouseDelta;
+		Vec2i CursorCoordinates;
 	};
 
 	enum class WindowMouseButtonEventType

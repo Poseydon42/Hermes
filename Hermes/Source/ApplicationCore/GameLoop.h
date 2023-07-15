@@ -77,13 +77,6 @@ namespace Hermes
 		std::unique_ptr<Scene> Scene;
 		std::shared_ptr<UI::Widget> RootWidget;
 
-
-		/*
-		 * DEBUG ONLY
-		 */
-		void KeyEventHandler(const WindowKeyboardEvent& Event);
-		bool IsFullscreen = false;
-
 		float TotalTime = 0.0f;
 		uint32 NumFrames = 0;
 	};

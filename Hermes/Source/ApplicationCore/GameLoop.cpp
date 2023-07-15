@@ -62,10 +62,6 @@ namespace Hermes
 			else
 				Paused = true;
 		});
-		ApplicationWindow->GetWindowQueue().Subscribe(WindowKeyboardEvent::GetStaticType(), [this](const IEvent& Event)
-		{
-			KeyEventHandler(static_cast<const WindowKeyboardEvent&>(Event));
-		});
 		
 		HERMES_ASSERT_LOG(Renderer::Init(), "Failed to initialize the renderer");
 
@@ -183,24 +179,5 @@ namespace Hermes
 	void GameLoop::OverrideCamera(std::shared_ptr<Camera> NewCamera)
 	{
 		OverridingCamera = std::move(NewCamera);
-	}
-
-	/*
-	 * DEBUG ONLY
-	 */
-	void GameLoop::KeyEventHandler(const WindowKeyboardEvent& Event)
-	{
-		if (Event.IsPressed() && Event.GetKeyCode() == KeyCode::F)
-		{
-			ApplicationWindow->ToggleFullscreen(!IsFullscreen);
-			IsFullscreen = !IsFullscreen;
-		}
-		if (Event.IsPressed() && Event.GetKeyCode() == KeyCode::C)
-		{
-			if (InputMode == InputMode::Game)
-				SetInputMode(InputMode::UI);
-			else if (InputMode == InputMode::UI)
-				SetInputMode(InputMode::Game);
-		}
 	}
 }

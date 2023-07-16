@@ -83,6 +83,12 @@ namespace Hermes::UI
 		std::shared_ptr<Widget> GetParent();
 
 		/**
+		 * Called every frame before rendering. Widgets are updated bottom to top, with the root widget
+		 * being updated last.
+		 */
+		virtual void OnUpdate(float DeltaTime);
+
+		/**
 		 * Computes the size that would be enough for this widget to display all of its information without
 		 * leaving any free space. The widget might get less space during layout, in which case it should
 		 * try to put as much information into its available space and truncate the rest or use scrolling

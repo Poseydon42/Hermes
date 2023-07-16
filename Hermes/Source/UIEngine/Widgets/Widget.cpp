@@ -37,6 +37,10 @@ namespace Hermes::UI
 		return Parent;
 	}
 
+	void Widget::OnUpdate(float)
+	{
+	}
+
 	Vec2 Widget::ComputePreferredSize() const
 	{
 		return {};

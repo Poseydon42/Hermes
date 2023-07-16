@@ -34,7 +34,7 @@ namespace Hermes
 		GameLoop& operator=(GameLoop&&) = default;
 
 		bool Init();
-		
+
 		void Run();
 
 		void RequestExit();
@@ -79,6 +79,8 @@ namespace Hermes
 
 		float TotalTime = 0.0f;
 		uint32 NumFrames = 0;
+
+		void UpdateWidgetTree(UI::Widget& Widget, float DeltaTime);
 	};
 
 	HERMES_API extern GameLoop* GGameLoop;

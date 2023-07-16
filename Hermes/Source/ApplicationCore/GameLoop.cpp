@@ -99,6 +99,7 @@ namespace Hermes
 				NumFrames++;
 
 				GameWorld->Update(*Scene, DeltaTime);
+				UpdateWidgetTree(*RootWidget, DeltaTime);
 
 				Application->Run(DeltaTime);
 				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
@@ -179,5 +180,11 @@ namespace Hermes
 	void GameLoop::OverrideCamera(std::shared_ptr<Camera> NewCamera)
 	{
 		OverridingCamera = std::move(NewCamera);
+	}
+
+	void GameLoop::UpdateWidgetTree(UI::Widget& Widget, float DeltaTime)
+	{
+		Widget.ForEachChild([&](UI::Widget& Child) { UpdateWidgetTree(Child, DeltaTime); });
+		Widget.OnUpdate(DeltaTime);
 	}
 }

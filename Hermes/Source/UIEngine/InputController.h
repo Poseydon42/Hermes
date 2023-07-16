@@ -18,6 +18,8 @@ namespace Hermes::UI
 
 		std::weak_ptr<Widget> WidgetInFocus;
 
+		void MouseMoveEventCallback(const WindowMouseMoveEvent& Event);
+
 		void MouseButtonEventCallback(const WindowMouseButtonEvent& Event);
 
 		void KeyboardEventCallback(const WindowKeyboardEvent& Event);

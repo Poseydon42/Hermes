@@ -60,6 +60,10 @@ namespace Hermes::UI
 		return false;
 	}
 
+	void Widget::OnMouseMove(Vec2, Vec2)
+	{
+	}
+
 	void Widget::OnKeyDown(KeyCode, std::optional<uint32>)
 	{
 	}

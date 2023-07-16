@@ -9,8 +9,41 @@ namespace Hermes::UI
 	InputController::InputController(EventQueue& WindowEventQueue, std::weak_ptr<Widget> InRootWidget)
 		: RootWidget(std::move(InRootWidget))
 	{
+		WindowEventQueue.Subscribe(WindowMouseMoveEvent::GetStaticType(), BIND_CALLBACK(MouseMoveEventCallback, WindowMouseMoveEvent));
 		WindowEventQueue.Subscribe(WindowMouseButtonEvent::GetStaticType(), BIND_CALLBACK(MouseButtonEventCallback, WindowMouseButtonEvent));
 		WindowEventQueue.Subscribe(WindowKeyboardEvent::GetStaticType(), BIND_CALLBACK(KeyboardEventCallback, WindowKeyboardEvent));
+	}
+
+	void InputController::MouseMoveEventCallback(const WindowMouseMoveEvent& Event)
+	{
+		auto InitialLowestWidget = GetLowestWidgetAtCoordinates(Event.GetCursorCoordinates() - Event.GetMouseDelta());
+		auto FinalLowestWidget = GetLowestWidgetAtCoordinates(Event.GetCursorCoordinates());
+
+		Vec2 InitialLocalCoordinates = {};
+		if (InitialLowestWidget)
+			InitialLocalCoordinates = Vec2(Event.GetCursorCoordinates() - Event.GetMouseDelta()) - InitialLowestWidget->GetBoundingBox().Min;
+
+		Vec2 FinalLocalCoordinates = {};
+		if (FinalLowestWidget)
+			FinalLocalCoordinates = Vec2(Event.GetCursorCoordinates()) - FinalLowestWidget->GetBoundingBox().Min;
+
+		if (InitialLowestWidget == FinalLowestWidget && InitialLowestWidget != nullptr)
+		{
+			InitialLowestWidget->OnMouseMove(InitialLocalCoordinates, FinalLocalCoordinates);
+		}
+		else
+		{
+			if (InitialLowestWidget)
+			{
+				auto FinalCoordinatesInInitialWidgetLocalSpace = Vec2(Event.GetCursorCoordinates()) - InitialLowestWidget->GetBoundingBox().Min;
+				InitialLowestWidget->OnMouseMove(InitialLocalCoordinates, FinalCoordinatesInInitialWidgetLocalSpace);
+			}
+			if (FinalLowestWidget)
+			{
+				auto InitialCoordinatesInFinalWidgetLocalSpace = Vec2(Event.GetCursorCoordinates() - Event.GetMouseDelta()) - FinalLowestWidget->GetBoundingBox().Min;
+				FinalLowestWidget->OnMouseMove(InitialCoordinatesInFinalWidgetLocalSpace, FinalLocalCoordinates);
+			}
+		}
 	}
 
 	void InputController::MouseButtonEventCallback(const WindowMouseButtonEvent& Event)

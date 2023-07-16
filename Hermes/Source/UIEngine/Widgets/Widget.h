@@ -117,6 +117,14 @@ namespace Hermes::UI
 		virtual bool OnMouseUp(MouseButton Button);
 
 		/**
+		 * Gets called when mouse was moved inside, into or out of the widget bounding box.
+		 *
+		 * @param From Coordinates of the mouse cursor at the end of last frame, in widget's local coordinates
+		 * @param To Coordinates of the mouse cursor at the end of current frame, in widget's local coordinates
+		 */
+		virtual void OnMouseMove(Vec2 From, Vec2 To);
+
+		/**
 		 * Gets called when a key is pressed while the current widget is in focus. 
 		 * @param Key Key code of the key being pressed
 		 * @param Codepoint Unicode codepoint of the key that was pressed, if available/applicable

@@ -6,9 +6,11 @@ namespace Hermes
 {
 	enum class MouseButton
 	{
-		Left,
+		Left = 0,
 		Middle,
-		Right
+		Right,
+
+		Count_
 	};
 
 	inline StringView MouseButtonToString(MouseButton Button)
@@ -28,7 +30,7 @@ namespace Hermes
 
 	enum class KeyCode : int16
 	{
-		Space,
+		Space = 0,
 		Backspace,
 		Tab,
 		Enter,

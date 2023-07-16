@@ -118,9 +118,8 @@ public:
 			auto* Transform = World.GetComponent<Hermes::TransformComponent>(Camera);
 			auto& Pitch = Transform->Transform.Rotation.X;
 			auto& Yaw = Transform->Transform.Rotation.Z;
-			const auto& InputEngine = Hermes::GGameLoop->GetInputEngine();
 
-			auto MouseRotationInput = InputEngine.GetDeltaMousePosition();
+			auto MouseRotationInput = Hermes::InputEngine::GetDeltaMousePosition();
 
 			MouseRotationInput *= DeltaTime;
 			float DeltaPitch = -1.0f * MouseRotationInput.Y * RotationSpeed;
@@ -139,13 +138,13 @@ public:
 			auto RightVector = Direction.Cross(GlobalUp).Normalized();
 
 			Hermes::Vec3 DeltaLocation = {};
-			if (InputEngine.IsKeyPressed(Hermes::KeyCode::W))
+			if (Hermes::InputEngine::IsKeyPressed(Hermes::KeyCode::W))
 				DeltaLocation += Direction;
-			if (InputEngine.IsKeyPressed(Hermes::KeyCode::S))
+			if (Hermes::InputEngine::IsKeyPressed(Hermes::KeyCode::S))
 				DeltaLocation -= Direction;
-			if (InputEngine.IsKeyPressed(Hermes::KeyCode::D))
+			if (Hermes::InputEngine::IsKeyPressed(Hermes::KeyCode::D))
 				DeltaLocation += RightVector;
-			if (InputEngine.IsKeyPressed(Hermes::KeyCode::A))
+			if (Hermes::InputEngine::IsKeyPressed(Hermes::KeyCode::A))
 				DeltaLocation -= RightVector;
 
 			DeltaLocation = DeltaLocation.SafeNormalized() * MovementSpeed * DeltaTime;

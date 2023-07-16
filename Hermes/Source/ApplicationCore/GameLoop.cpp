@@ -50,7 +50,7 @@ namespace Hermes
 		if (!ApplicationWindow->IsValid())
 			return false;
 
-		InputEngine = std::make_unique<class InputEngine>(*ApplicationWindow);
+		InputEngine::Init(*ApplicationWindow);
 		SetInputMode(InputMode::UI);
 
 		ApplicationWindow->GetWindowQueue().Subscribe(WindowCloseEvent::GetStaticType(), [this](const IEvent&) { RequestedExit = true; });
@@ -102,7 +102,7 @@ namespace Hermes
 				UpdateWidgetTree(*RootWidget, DeltaTime);
 
 				Application->Run(DeltaTime);
-				InputEngine->ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
+				InputEngine::ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)
 
 				if (OverridingCamera)
 					Scene->ChangeActiveCamera(OverridingCamera);
@@ -141,11 +141,6 @@ namespace Hermes
 		return ApplicationWindow;
 	}
 
-	InputEngine& GameLoop::GetInputEngine()
-	{
-		return *InputEngine;
-	}
-
 	World& GameLoop::GetWorld()
 	{
 		return *GameWorld;
@@ -158,12 +153,10 @@ namespace Hermes
 		case InputMode::Game:
 			HERMES_LOG_INFO("Input type switched to Game");
 			ApplicationWindow->SetCursorVisibility(false);
-			InputEngine->Enable();
 			break;
 		case InputMode::UI:
 			HERMES_LOG_INFO("Input type switched to UI");
 			ApplicationWindow->SetCursorVisibility(true);
-			InputEngine->Disable();
 			break;
 		default:
 			HERMES_ASSERT(false);

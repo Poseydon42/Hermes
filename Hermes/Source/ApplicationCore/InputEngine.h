@@ -46,30 +46,30 @@ namespace Hermes
 	class HERMES_API InputEngine
 	{
 	public:
-		explicit InputEngine(IPlatformWindow& PlatformWindow);
+		static void Init(IPlatformWindow& Window);
 
-		void Enable();
-		void Disable();
+		static void ProcessDeferredEvents();
 
-		void ProcessDeferredEvents();
+		static void Subscribe(IEvent::EventType Type, std::function<EventQueue::CallbackFunctionPrototype> Callback);
 
-		EventQueue& GetEventQueue();
+		static bool IsKeyPressed(KeyCode Key);
+		static bool IsMouseButtonPressed(MouseButton Button);
 
-		bool IsKeyPressed(KeyCode Key) const;
+		static Vec2 GetCurrentMousePosition();
+		static Vec2 GetDeltaMousePosition();
 
-		void SetDeltaMousePosition(Vec2 Position);
-		Vec2 GetDeltaMousePosition() const;
 	private:
-		EventQueue Queue;
+		static EventQueue Queue;
 
-		bool IsEnabled = false;
-
-		bool KeyState[static_cast<int16>(KeyCode::Count_)] = {};
-		Vec2 DeltaMousePosition;
+		static bool KeyState[static_cast<size_t>(KeyCode::Count_)];
+		static bool MouseButtonState[static_cast<size_t>(MouseButton::Count_)];
+		static Vec2 CurrentMousePosition;
+		static Vec2 DeltaMousePosition;
 
 		static constexpr float MouseSensitivity = 0.01f;
 
-		void KeyEventHandler(const IEvent& Event);
-		void MouseEventHandler(const IEvent& Event);
+		static void KeyEventHandler(const IEvent& Event);
+		static void MouseButtonEventHandler(const IEvent& Event);
+		static void MouseMoveEventHandler(const IEvent& Event);
 	};
 }

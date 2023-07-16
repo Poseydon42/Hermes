@@ -4,6 +4,12 @@
 
 namespace Hermes
 {
+	EventQueue InputEngine::Queue;
+	bool InputEngine::KeyState[static_cast<size_t>(KeyCode::Count_)] = { false };
+	bool InputEngine::MouseButtonState[static_cast<size_t>(MouseButton::Count_)] = { false };
+	Vec2 InputEngine::CurrentMousePosition = {};
+	Vec2 InputEngine::DeltaMousePosition = {};
+
 	static StringView KeyEventTypeToString(KeyEventType Type)
 	{
 		switch (Type)
@@ -154,22 +160,12 @@ namespace Hermes
 		}
 	}
 
-	InputEngine::InputEngine(IPlatformWindow& PlatformWindow)
+	void InputEngine::Init(IPlatformWindow& Window)
 	{
-		auto& WindowEventQueue = PlatformWindow.GetWindowQueue();
-		WindowEventQueue.Subscribe(WindowKeyboardEvent::GetStaticType(), [this](const IEvent& Event) { KeyEventHandler(Event); });
-		WindowEventQueue.Subscribe(WindowMouseMoveEvent::GetStaticType(), [this](const IEvent& Event) { MouseEventHandler(Event); });
-	}
-
-	void InputEngine::Enable()
-	{
-		IsEnabled = true;
-	}
-
-	void InputEngine::Disable()
-	{
-		DeltaMousePosition = 0;
-		IsEnabled = false;
+		auto& WindowEventQueue = Window.GetWindowQueue();
+		WindowEventQueue.Subscribe(WindowKeyboardEvent::GetStaticType(), [](const IEvent& Event) { KeyEventHandler(Event); });
+		WindowEventQueue.Subscribe(WindowMouseButtonEvent::GetStaticType(), [](const IEvent& Event) { MouseButtonEventHandler(Event); });
+		WindowEventQueue.Subscribe(WindowMouseMoveEvent::GetStaticType(), [](const IEvent& Event) { MouseMoveEventHandler(Event); });
 	}
 
 	void InputEngine::ProcessDeferredEvents()
@@ -177,31 +173,33 @@ namespace Hermes
 		Queue.Run();
 	}
 
-	EventQueue& InputEngine::GetEventQueue()
+	void InputEngine::Subscribe(IEvent::EventType Type, std::function<EventQueue::CallbackFunctionPrototype> Callback)
 	{
-		return Queue;
+		Queue.Subscribe(Type, std::move(Callback));
 	}
 
-	bool InputEngine::IsKeyPressed(KeyCode Key) const
+	bool InputEngine::IsKeyPressed(KeyCode Key)
 	{
-		return KeyState[static_cast<int16>(Key)];
+		return KeyState[static_cast<size_t>(Key)];
 	}
 
-	void InputEngine::SetDeltaMousePosition(Vec2 Position)
+	bool InputEngine::IsMouseButtonPressed(MouseButton Button)
 	{
-		DeltaMousePosition = Position;
+		return MouseButtonState[static_cast<size_t>(Button)];
 	}
 
-	Vec2 InputEngine::GetDeltaMousePosition() const
+	Vec2 InputEngine::GetCurrentMousePosition()
+	{
+		return CurrentMousePosition;
+	}
+
+	Vec2 InputEngine::GetDeltaMousePosition()
 	{
 		return DeltaMousePosition;
 	}
 
 	void InputEngine::KeyEventHandler(const IEvent& Event)
 	{
-		if (!IsEnabled)
-			return;
-
 		HERMES_ASSERT(Event.GetType() == WindowKeyboardEvent::GetStaticType());
 
 		const auto& WindowKeyEvent = static_cast<const WindowKeyboardEvent&>(Event);
@@ -219,18 +217,26 @@ namespace Hermes
 		Queue.PushEvent(KeyEvent(WindowKeyEvent.GetKeyCode(), EventType));
 	}
 
-	void InputEngine::MouseEventHandler(const IEvent& Event)
+	void InputEngine::MouseButtonEventHandler(const IEvent& Event)
 	{
-		if (!IsEnabled)
-			return;
+		HERMES_ASSERT(Event.GetType() == WindowMouseButtonEvent::GetStaticType());
 
+		// FIXME: currently on Windows, this implementation does not receive mouse button release events if
+		//        the button was released while cursor was outside of the window rect. This means that the
+		//        program mistakenly thinks that the user is still holding mouse button, which might cause us
+		//        some problems in the future. Instead, we should directly query the platform layer about whether
+		//        a button is pressed.
+		const auto& MouseEvent = static_cast<const WindowMouseButtonEvent&>(Event);
+		MouseButtonState[static_cast<size_t>(MouseEvent.GetButton())] = (MouseEvent.GetButtonEventType() == WindowMouseButtonEventType::Pressed);
+	}
+
+	void InputEngine::MouseMoveEventHandler(const IEvent& Event)
+	{
 		HERMES_ASSERT(Event.GetType() == WindowMouseMoveEvent::GetStaticType());
 
 		const auto& MouseEvent = static_cast<const WindowMouseMoveEvent&>(Event);
 
-		auto AbsoluteMouseDelta = Vec2(MouseEvent.GetMouseDelta());
-
-		auto ScaledMouseDelta = AbsoluteMouseDelta * MouseSensitivity;
-		DeltaMousePosition = ScaledMouseDelta;
+		CurrentMousePosition = Vec2(MouseEvent.GetCursorCoordinates());
+		DeltaMousePosition = Vec2(MouseEvent.GetMouseDelta());
 	}
 }

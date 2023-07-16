@@ -74,24 +74,24 @@ namespace Hermes::Editor
 		return Result;
 	}
 
-	void WorldEditorCamera::Update(const InputEngine& Input, float DeltaTime)
+	void WorldEditorCamera::Update(float DeltaTime)
 	{
 		auto Forward = GetDirection();
 		auto Right = GetRightVector();
 
 		Vec3 DeltaLocation = {};
-		if (Input.IsKeyPressed(KeyCode::W))
+		if (InputEngine::IsKeyPressed(KeyCode::W))
 			DeltaLocation += Forward;
-		if (Input.IsKeyPressed(KeyCode::S))
+		if (InputEngine::IsKeyPressed(KeyCode::S))
 			DeltaLocation -= Forward;
-		if (Input.IsKeyPressed(KeyCode::D))
+		if (InputEngine::IsKeyPressed(KeyCode::D))
 			DeltaLocation += Right;
-		if (Input.IsKeyPressed(KeyCode::A))
+		if (InputEngine::IsKeyPressed(KeyCode::A))
 			DeltaLocation -= Right;
 		DeltaLocation = DeltaLocation.SafeNormalized() * DeltaTime * MovementSpeed;
 		Location += DeltaLocation;
 
-		auto MouseDelta = Input.GetDeltaMousePosition();
+		auto MouseDelta = InputEngine::GetDeltaMousePosition();
 		float DeltaPitch = -MouseDelta.Y * RotationSpeed * DeltaTime;
 		float DeltaYaw = -MouseDelta.X * RotationSpeed * DeltaTime;
 

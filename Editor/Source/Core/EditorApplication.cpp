@@ -77,10 +77,8 @@ namespace Hermes::Editor
 		return true;
 	}
 
-	void EditorApplication::Run(float DeltaTime)
+	void EditorApplication::Run(float)
 	{
-		Camera->Update(GGameLoop->GetInputEngine(), DeltaTime);
-		EntityList->Update();
 	}
 
 	void EditorApplication::Shutdown()

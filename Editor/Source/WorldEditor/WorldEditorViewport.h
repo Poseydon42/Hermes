@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "UIEngine/Widgets/Containers/ViewportContainer.h"
+#include "WorldEditor/WorldEditorCamera.h"
 
 namespace Hermes::Editor
 {
@@ -10,10 +11,11 @@ namespace Hermes::Editor
 	public:
 		static std::shared_ptr<WorldEditorViewport> Create();
 
-	private:
-		WorldEditorViewport() = default;
+		virtual void OnUpdate(float DeltaTime) override;
 
-		virtual bool OnMouseDown(MouseButton Button) override;
-		virtual bool OnMouseUp(MouseButton Button) override;
+	private:
+		WorldEditorViewport();
+
+		std::shared_ptr<WorldEditorCamera> Camera;
 	};
 }

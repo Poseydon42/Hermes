@@ -44,8 +44,6 @@ namespace Hermes
 		
 		std::shared_ptr<const IPlatformWindow> GetWindow() const;
 
-		InputEngine& GetInputEngine();
-
 		World& GetWorld();
 
 		void SetInputMode(InputMode NewMode);
@@ -67,7 +65,6 @@ namespace Hermes
 		std::unique_ptr<IApplication> Application;
 		std::shared_ptr<IPlatformWindow> ApplicationWindow;
 
-		std::unique_ptr<InputEngine> InputEngine;
 		std::unique_ptr<UI::InputController> UIInputController;
 		InputMode InputMode = InputMode::Game;
 

@@ -15,7 +15,7 @@ namespace Hermes::Editor
 		World = NewWorld;
 	}
 
-	void WorldEditorEntityList::Update()
+	void WorldEditorEntityList::OnUpdate(float)
 	{
 		Children.clear();
 

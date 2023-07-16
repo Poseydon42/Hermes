@@ -27,7 +27,7 @@ namespace Hermes::Editor
 
 		virtual Frustum GetFrustum(Vec2 ViewportDimensions) const override;
 
-		void Update(const InputEngine& Input, float DeltaTime);
+		void Update(float DeltaTime);
 
 	private:
 		Vec3 Location = { 0.0f };
@@ -39,7 +39,7 @@ namespace Hermes::Editor
 		static constexpr float FarZ = 1000.0f;
 
 		static constexpr float MovementSpeed = 10.0f;
-		static constexpr float RotationSpeed = 3.0f * Math::Pi;
+		static constexpr float RotationSpeed = 0.5f * Math::Pi;
 		static constexpr float PitchLimit = Math::Radians(85.0f);
 
 		Vec3 GetRightVector() const;

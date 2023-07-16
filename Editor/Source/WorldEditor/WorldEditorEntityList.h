@@ -13,11 +13,11 @@ namespace Hermes::Editor
 
 		void SetWorld(const World* NewWorld);
 
-		void Update();
-
 	private:
 		WorldEditorEntityList();
 
 		const World* World = nullptr;
+
+		virtual void OnUpdate(float DeltaTime) override;
 	};
 }

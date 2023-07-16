@@ -3,7 +3,6 @@
 #include "ApplicationCore/Application.h"
 #include "Core/Core.h"
 #include "UIEngine/Widgets/Containers/HorizontalContainer.h"
-#include "WorldEditor/WorldEditorCamera.h"
 #include "WorldEditor/WorldEditorEntityList.h"
 #include "WorldEditor/WorldEditorViewport.h"
 
@@ -21,7 +20,6 @@ namespace Hermes::Editor
 		virtual void Shutdown() override;
 
 	private:
-		std::shared_ptr<WorldEditorCamera> Camera;
 		std::shared_ptr<WorldEditorViewport> Viewport;
 		std::shared_ptr<WorldEditorEntityList> EntityList;
 

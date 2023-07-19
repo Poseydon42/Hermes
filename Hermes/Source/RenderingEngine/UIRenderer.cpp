@@ -475,6 +475,12 @@ namespace Hermes
 			RectangleIndex++;
 		}
 
+		// Update the rest of textures in the rectangle texture array with an empty texture to be compatible with the spec
+		for (; RectangleIndex < GMaxRectangleTextureCount; RectangleIndex++)
+		{
+			RectangleDescriptorSet->UpdateWithImageAndSampler(RectangleTexturesDescriptorBinding, RectangleIndex, EmptyTexture->GetView(ColorSpace::SRGB), *RectangleTextureSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
+
 		// No rectangles to draw so we don't need to update the buffers
 		if (RectanglePrimitives.empty())
 			return;

@@ -3,16 +3,16 @@
 namespace Hermes::UTF8
 {
 	Iterator::Iterator(String::const_iterator InPtr, String::const_iterator InStart, String::const_iterator InEnd)
-		: Ptr(&*InStart + (InPtr - InStart))
-		, Start(&*InStart)
-		, End(Start + (InEnd - InStart))
+		: Ptr(InStart == InEnd ? nullptr : &*InStart + (InPtr - InStart))
+		, Start(InStart == InEnd ? nullptr : &*InStart)
+		, End(InStart == InEnd ? nullptr : Start + (InEnd - InStart))
 	{
 	}
 
 	Iterator::Iterator(StringView::const_iterator InPtr, StringView::const_iterator InStart, StringView::const_iterator InEnd)
-		: Ptr(&*InStart + (InPtr - InStart))
-		, Start(&*InStart)
-		, End(Start + (InEnd - InStart))
+		: Ptr(InStart == InEnd ? nullptr : &*InStart + (InPtr - InStart))
+		, Start(InStart == InEnd ? nullptr : &*InStart)
+		, End(InStart == InEnd ? nullptr : Start + (InEnd - InStart))
 	{
 	}
 
@@ -122,6 +122,9 @@ namespace Hermes::UTF8
 
 	String::const_iterator Iterator::ToStringIterator(const String& String) const
 	{
+		if (String.empty())
+			return String.begin();
+
 		HERMES_ASSERT(&*String.begin() == Start && &*String.begin() + String.length() == End);
 		HERMES_ASSERT(Ptr >= Start && Ptr <= End);
 		return String.begin() + (Ptr - Start);
@@ -129,6 +132,9 @@ namespace Hermes::UTF8
 
 	StringView::const_iterator Iterator::ToStringViewIterator(StringView View) const
 	{
+		if (View.empty())
+			return View.begin();
+
 		HERMES_ASSERT(&*View.begin() == Start && &*View.begin() + View.length() == End);
 		HERMES_ASSERT(Ptr >= Start && Ptr <= End);
 		return View.begin() + (Ptr - Start);

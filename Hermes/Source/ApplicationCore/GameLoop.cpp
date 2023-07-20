@@ -99,7 +99,12 @@ namespace Hermes
 				NumFrames++;
 
 				GameWorld->Update(*Scene, DeltaTime);
+
 				UpdateWidgetTree(*RootWidget, DeltaTime);
+
+				Rect2D RootWidgetBoundingBox = { { 0, 0 }, Vec2(Renderer::GetSwapchainDimensions()) };
+				RootWidget->SetBoundingBox(RootWidgetBoundingBox);
+				RootWidget->Layout();
 
 				Application->Run(DeltaTime);
 				InputEngine::ProcessDeferredEvents(); // TODO : implement properly(input should be before update rather than after)

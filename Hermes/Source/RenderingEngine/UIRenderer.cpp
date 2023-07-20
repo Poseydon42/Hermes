@@ -221,7 +221,7 @@ namespace Hermes
 		TextFontSampler = Device.CreateSampler(TextFontSamplerDesc);
 	}
 
-	Rect2Dui UIRenderer::PrepareToRender(UI::Widget& RootWidget, Vec2ui RequiredDimensions)
+	Rect2Dui UIRenderer::PrepareToRender(const UI::Widget& RootWidget, Vec2ui RequiredDimensions)
 	{
 		HERMES_PROFILE_FUNC();
 
@@ -230,15 +230,6 @@ namespace Hermes
 			HERMES_LOG_INFO("UI renderer: resided to %u x %u", RequiredDimensions.X, RequiredDimensions.Y);
 			CurrentDimensions = RequiredDimensions;
 			RecreateDestinationImage();
-		}
-
-		{
-			HERMES_PROFILE_SCOPE("UI layout");
-
-			Rect2D RootWidgetBoundingBox = { { 0, 0 }, Vec2(CurrentDimensions) };
-			RootWidget.SetBoundingBox(RootWidgetBoundingBox);
-
-			RootWidget.Layout();
 		}
 
 		{

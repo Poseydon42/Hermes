@@ -13,6 +13,8 @@ set(SOURCES
     TextLayout.h
     Widgets/Button.cpp
     Widgets/Button.h
+    Widgets/Checkbox.cpp
+    Widgets/Checkbox.h
     Widgets/Containers/Container.cpp
     Widgets/Containers/Container.h
     Widgets/Containers/HorizontalContainer.cpp

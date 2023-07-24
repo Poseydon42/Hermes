@@ -71,7 +71,7 @@ namespace Hermes::UI
 			auto TopLeftCorner = BoundingBox.Min + Vec2(ColumnOffsets[ColumnIndex], RowOffsets[RowIndex]);
 			auto BottomRightCorner = TopLeftCorner + Child.ComputePreferredSize();
 
-			Rect2D ChildBoundingBox = Rect2D(TopLeftCorner, BottomRightCorner).Intersect(BoundingBox);
+			auto ChildBoundingBox = Rect2D(TopLeftCorner, BottomRightCorner);
 			Child.SetBoundingBox(ChildBoundingBox);
 
 			Child.Layout();

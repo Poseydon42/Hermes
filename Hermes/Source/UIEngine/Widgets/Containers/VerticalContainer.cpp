@@ -60,8 +60,7 @@ namespace Hermes::UI
 				ChildHeight += Child->VerticalScalingPolicy.ScalingWeight * PixelsPerUnitWeight;
 
 			ChildBoundingBox.Min.Y = NextChildTop;
-			ChildBoundingBox.Max.Y = NextChildTop + ChildHeight;
-			HERMES_ASSERT(ChildBoundingBox.Bottom() <= BoundingBox.Bottom());
+			ChildBoundingBox.Max.Y = Math::Min(NextChildTop + ChildHeight, BoundingBox.Bottom());
 
 			float LeftMargin = GetAbsoluteMarginValue(Child->Margins.Left, BoundingBox.Width());
 			float RightMargin = GetAbsoluteMarginValue(Child->Margins.Right, BoundingBox.Width());
@@ -70,14 +69,14 @@ namespace Hermes::UI
 			if (LeftMargin + ChildSize.X + RightMargin > BoundingBox.Width())
 			{
 				float TotalMargin = LeftMargin + RightMargin;
-				float AvailableMargin = BoundingBox.Width() - ChildSize.X;
-				MarginScalingFactor = AvailableMargin / TotalMargin;
+				float AvailableMargin = Math::Max(BoundingBox.Width() - ChildSize.X, 0.0f);
+				MarginScalingFactor = AvailableMargin / (TotalMargin + 0.0001f);
 			}
 			LeftMargin *= MarginScalingFactor;
 			RightMargin *= MarginScalingFactor;
 
-			ChildBoundingBox.Min.X = BoundingBox.Min.X + LeftMargin;
-			ChildBoundingBox.Max.X = BoundingBox.Max.X - RightMargin;
+			ChildBoundingBox.Min.X = Math::Max(BoundingBox.Min.X + LeftMargin, BoundingBox.Left());
+			ChildBoundingBox.Max.X = Math::Min(BoundingBox.Max.X - RightMargin, BoundingBox.Right());
 
 			NextChildTop += ChildBoundingBox.Height();
 

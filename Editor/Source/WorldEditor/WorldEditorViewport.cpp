@@ -13,8 +13,9 @@ namespace Hermes::Editor
 
 	void WorldEditorViewport::OnUpdate(float DeltaTime)
 	{
-		if (InputEngine::IsMouseButtonPressed(MouseButton::Right))
-			Camera->Update(DeltaTime);
+		// FIXME: we should remove this once we get proper camera-viewport relationship in the renderer
+		GGameLoop->OverrideCamera(Camera);
+		Camera->Update(DeltaTime);
 	}
 
 	WorldEditorViewport::WorldEditorViewport()

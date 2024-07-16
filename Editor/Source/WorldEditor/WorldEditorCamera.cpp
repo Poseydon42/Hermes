@@ -76,6 +76,9 @@ namespace Hermes::Editor
 
 	void WorldEditorCamera::Update(float DeltaTime)
 	{
+		if (!InputEngine::IsMouseButtonPressed(MouseButton::Right))
+			return;
+
 		auto Forward = GetDirection();
 		auto Right = GetRightVector();
 

@@ -69,9 +69,6 @@ namespace Hermes::Editor
 		EntityList->SetWorld(&GGameLoop->GetWorld());
 		RootWidget->AddChild(EntityList);
 
-		Camera = std::make_shared<WorldEditorCamera>(Vec3(0.0f), 0.0f, 0.0f);
-		GGameLoop->OverrideCamera(Camera);
-
 		BuildDebugWorld(GGameLoop->GetWorld());
 
 		return true;

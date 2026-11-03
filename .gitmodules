@@ -1,9 +1,12 @@
 [submodule "Hermes/ThirdParty/VulkanMemoryAllocator"]
 	path = Hermes/ThirdParty/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+	branch = master
 [submodule "Hermes/ThirdParty/SPIRV-Cross"]
 	path = Hermes/ThirdParty/SPIRV-Cross
 	url = https://github.com/KhronosGroup/SPIRV-Cross.git
+	branch = main
 [submodule "Hermes/ThirdParty/tracy"]
 	path = Hermes/ThirdParty/tracy
 	url = https://github.com/wolfpld/tracy.git
+	branch = master

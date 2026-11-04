@@ -1,18 +1,20 @@
 # Hermes
-Welcome to Hermes! This is my simple 3D game engine that I'm making for fun and learning. It's designed to be used in RTS and tycoon-like strategies
+Welcome to Hermes! This used to be a game engine I was developing a while ago to learn Vulkan and modern 3D graphics. The project was sadly abandoned due to me having less and less time in light of having to prepare for exams, and then starting university, but I think it's cool enough to keep here as a reminder of what I did back in the day.
 
-## History:
- - The first line of code was put down 15th February 2021
- - The first triangle was rendered on 2nd September 2021, after 5210 lines of code according to CLOC
- - The first actual 3D model was drawn on 21st October 2021 after aproximately 7200 lines of code
+## Main features:
+ - Forward+ rendering pipeline with compute-based light culling
+ - Fully automatic render graph system that allocates resources, managed swapchain and command buffers, and inserts synchronization completely on its own
+ - PBR rendering
+ - SDF-based text rendering
+ - Beginnings of a custom UI system
 
-## Current features:
- - Uhh, well, maybe readme file is already a good feature?
+## How to build and run:
+ - Make sure you have Vulkan SDK, Ninja, and a C++20 compiler installed
+ - `git clone https://github.com/Poseydon42/Hermes.git`
+ - `mkdir Build && cd Build && cmake -B . -S ..`
+ - `ninja`
+ - Run the built file from the project directory
 
-## Goals:
- - Cross-platformness(Windows/Linux/MacOS)
- - Modern rendering techniques based around DX12 and/or Vulkan
- - Usefull and user-friendly UI(I hate Workers and Resources: Soviet Republic for not having one)
- - Efficient pathfinding either on graph-like structures(e.g roads, railways etc.) or terrain
- - Native and flexible support of localization
- - List goes on, those are features that I prioritize the most
+## License:
+
+Everything is under MIT license.

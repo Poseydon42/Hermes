@@ -1,12 +1,12 @@
 # Hermes
-Welcome to Hermes! This used to be a game engine I was developing a while ago to learn Vulkan and modern 3D graphics. The project was sadly abandoned due to me having less and less time in light of having to prepare for exams, and then starting university, but I think it's cool enough to keep here as a reminder of what I did back in the day.
+Hermes is a personal C++20/Vulkan 3D rendering engine built to explore real-time graphics, GPU compute, and low-level rendering architecture.
 
-## Main features:
- - Forward+ rendering pipeline with compute-based light culling
- - Fully automatic render graph system that allocates resources, managed swapchain and command buffers, and inserts synchronization completely on its own
- - PBR rendering
- - SDF-based text rendering
- - Beginnings of a custom UI system
+Key features include:
+- Forward+ rendering with compute-based light culling.
+- An automatic render graph handling resource allocation, synchronization, and command submission.
+- Physically based rendering and SDF text rendering.
+
+The project is no longer under active development, but the repository preserves the implementation and the engineering techniques explored.
 
 ## How to build and run:
  - Make sure you have Vulkan SDK, Ninja, and a C++20 compiler installed
